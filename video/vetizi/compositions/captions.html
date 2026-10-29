@@ -1,0 +1,113 @@
+<template>
+  <style>
+    /* ЕДИНАЯ ТИПОГРАФИКА РОЛИКА — все надписи живут здесь.
+       Колонка текста: x 110–710 px, верх заголовка на y = 380 px. Графика сцен — только правее 760 px.
+       Заголовок (.cap-t): Inter Display Black 900, 80 px, межстрочный 1.04, трекинг −3%, #F2F6F4.
+       Описание  (.cap-d): Inter Display Bold 700, 34 px, межстрочный 1.3, #A9BDB6, отступ 26 px.
+       Акцент (.acc): #3FE0A0 — одно слово или фраза в заголовке.
+       Кнопка (.cap-btn): только в финале. */
+    @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
+    @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; }
+    .cap-g { position: absolute; left: 110px; top: 380px; width: 600px; display: flex; flex-direction: column; } /* верх заголовка всегда на y = 380 px */
+    .cap-t { font-weight: 900; font-size: 80px; line-height: 1.04; letter-spacing: -0.03em; color: #f2f6f4; white-space: nowrap; } /* строки задаются явно через <br> */
+    .cap-t .w { display: inline-block; }
+    .cap-d { position: relative; margin-top: 26px; height: 90px; }
+    .cap-d p { position: absolute; left: 0; top: 0; width: 600px; font-weight: 700; font-size: 34px; line-height: 1.3; color: #a9bdb6; letter-spacing: -0.005em; }
+    .acc { color: #3fe0a0; }
+    .cap-btn { margin-top: 44px; align-self: flex-start; height: 92px; padding: 0 40px 0 30px; border-radius: 46px; background: #3fe0a0; color: #052a22; display: flex; align-items: center; gap: 18px; font-weight: 900; font-size: 36px; letter-spacing: -0.01em; white-space: nowrap; }
+    .cap-btn svg { width: 44px; height: 44px; flex: none; }
+  </style>
+  <div id="root" data-composition-id="captions" data-width="1920" data-height="1080">
+    <!-- data-in / data-out — секунды от начала ролика; data-at у описания — когда оно сменяется -->
+    <div class="cap-g" data-in="0" data-out="4.15">
+      <div class="cap-t">Цифровые<br>платформы<br>для <span class="acc">ветклиник</span></div>
+      <div class="cap-d"><p data-at="0.5">Сайт, CRM и приложение для вашей клиники</p></div>
+    </div>
+
+    <div class="cap-g" data-in="4.4" data-out="5.13"><div class="cap-t"><span class="acc">Сайт</span></div><div class="cap-d"><p data-at="4.5">Всё, что нужно клинике</p></div></div>
+    <div class="cap-g" data-in="5.15" data-out="6.0"><div class="cap-t"><span class="acc">Заявки</span></div><div class="cap-d"><p data-at="5.15" data-keep>Всё, что нужно клинике</p></div></div>
+    <div class="cap-g" data-in="6.02" data-out="6.93"><div class="cap-t"><span class="acc">CRM</span></div><div class="cap-d"><p data-at="6.02" data-keep>Всё, что нужно клинике</p></div></div>
+    <div class="cap-g" data-in="6.95" data-out="7.48"><div class="cap-t"><span class="acc">Чаты</span></div><div class="cap-d"><p data-at="6.95" data-keep>Всё, что нужно клинике</p></div></div>
+    <div class="cap-g" data-in="7.5" data-out="9.3"><div class="cap-t"><span class="acc">Приложение</span><br>для команды</div><div class="cap-d"><p data-at="7.5" data-keep>Всё, что нужно клинике</p></div></div>
+    <div class="cap-g" data-in="9.41" data-out="10.5"><div class="cap-t">Vet.<span class="acc">izi</span></div><div class="cap-d"><p data-at="9.5">Всё в одной системе</p></div></div>
+
+    <div class="cap-g" data-in="10.75" data-out="15.8">
+      <div class="cap-t">Сайт под<br><span class="acc">ваш дизайн</span></div>
+      <div class="cap-d"><p data-at="11.0" data-until="13.0">Собираем сайт клиники с нуля</p><p data-at="13.05">Пример проекта: сайт PetGo</p></div>
+    </div>
+
+    <div class="cap-g" data-in="16.05" data-out="20.8">
+      <div class="cap-t">Заявки<br><span class="acc">с сайта</span></div>
+      <div class="cap-d"><p data-at="16.3">Клиент заполняет форму, заявка сразу попадает в CRM</p></div>
+    </div>
+
+    <div class="cap-g" data-in="20.95" data-out="21.78"><div class="cap-t"><span class="acc">Заявки</span></div><div class="cap-d"><p data-at="21.05">Вся работа клиники в одном кабинете</p></div></div>
+    <div class="cap-g" data-in="21.8" data-out="22.82"><div class="cap-t"><span class="acc">Заказы</span></div><div class="cap-d"><p data-at="21.8" data-keep>Вся работа клиники в одном кабинете</p></div></div>
+    <div class="cap-g" data-in="22.84" data-out="23.65"><div class="cap-t"><span class="acc">Календарь</span></div><div class="cap-d"><p data-at="22.84" data-keep>Вся работа клиники в одном кабинете</p></div></div>
+    <div class="cap-g" data-in="23.67" data-out="25.21"><div class="cap-t"><span class="acc">Сотрудники</span><br>и роли</div><div class="cap-d"><p data-at="23.67" data-keep>Вся работа клиники в одном кабинете</p></div></div>
+    <div class="cap-g" data-in="25.23" data-out="27.3"><div class="cap-t"><span class="acc">Чаты</span><br>с командой</div><div class="cap-d"><p data-at="25.23" data-keep>Вся работа клиники в одном кабинете</p></div></div>
+
+    <div class="cap-g" data-in="27.6" data-out="34.4">
+      <div class="cap-t"><span class="acc">Приложение</span><br>для команды</div>
+      <div class="cap-d"><p data-at="28.0" data-until="31.75">PWA: установим на телефоны ваших сотрудников</p><p data-at="31.8">Уведомления о новых заявках приходят сразу</p></div>
+    </div>
+
+    <div class="cap-g" data-in="34.75" data-out="99">
+      <div class="cap-t">Vet.<span class="acc">izi</span></div>
+      <div class="cap-d"><p data-at="35.0">Сайт, CRM, чаты и приложение для вашей клиники</p></div>
+      <div class="cap-btn" data-at="35.95">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#052a22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1 1 21 12z"/></svg>
+        Ответьте на это сообщение
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      var groups = document.querySelectorAll('#root .cap-g');
+      groups.forEach(function (g) {
+        var tIn = parseFloat(g.dataset.in), tOut = parseFloat(g.dataset.out);
+        // заголовок: по словам, blur 8 → 0, 0.18 с, шаг 0.05 с
+        var title = g.querySelector('.cap-t');
+        var words = [];
+        (function split(node) {
+          Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+            if (n.nodeType === 3) {
+              var parts = n.textContent.split(/(\s+)/);
+              var frag = document.createDocumentFragment();
+              parts.forEach(function (p) {
+                if (!p) return;
+                if (/^\s+$/.test(p)) { frag.appendChild(document.createTextNode(p)); return; }
+                var s = document.createElement('span'); s.className = 'w'; s.textContent = p; frag.appendChild(s); words.push(s);
+              });
+              node.replaceChild(frag, n);
+            } else if (n.nodeType === 1) split(n);
+          });
+        })(title);
+        var single = words.length === 1;
+        words.forEach(function (w, i) {
+          // первое слово первого заголовка видно уже в кадре 0 (превью ролика)
+          var first = tIn === 0 && i === 0;
+          tl.fromTo(w, { opacity: first ? 1 : 0, filter: first ? 'blur(0px)' : 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, tIn + i * 0.05);
+        });
+        // описание(я): появляются в data-at, уходят в data-until (если задано); data-keep — без анимации (то же описание)
+        g.querySelectorAll('.cap-d p, .cap-btn').forEach(function (p) {
+          var at = parseFloat(p.dataset.at), keep = p.hasAttribute('data-keep');
+          tl.fromTo(p, { opacity: 0, filter: keep ? 'blur(0px)' : 'blur(8px)', y: p.classList.contains('cap-btn') ? 24 : 0 },
+            { opacity: 1, filter: 'blur(0px)', y: 0, duration: keep ? 0.001 : 0.22, ease: 'power4.out' }, at);
+          if (p.dataset.until) tl.to(p, { opacity: 0, filter: 'blur(8px)', duration: 0.15, ease: 'power3.in' }, parseFloat(p.dataset.until));
+        });
+        // уход всей группы: заголовок размывается; описание с data-keep у следующей группы стоит на месте
+        if (tOut < 90) {
+          var next = g.nextElementSibling;
+          var keepDesc = next && next.querySelector('.cap-d p[data-keep]');
+          tl.to(words, { opacity: 0, filter: 'blur(10px)', duration: single ? 0.12 : 0.15, ease: 'power3.in' }, tOut - (single ? 0.1 : 0.14));
+          if (!keepDesc) tl.to(g.querySelectorAll('.cap-d p, .cap-btn'), { opacity: 0, filter: 'blur(8px)', duration: 0.15, ease: 'power3.in' }, tOut - 0.14);
+          else tl.to(g.querySelectorAll('.cap-d p'), { opacity: 0, duration: 0.001 }, parseFloat(keepDesc.dataset.at) + 0.001);
+        }
+      });
+      window.__timelines['captions'] = tl;
+    })();
+  </script>
+</template>

@@ -14,31 +14,18 @@
       #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; font-family: "VI Display", sans-serif; color: #f4f1e4; }
       #ec-ground { position: absolute; inset: 0; background: #0a3b33; }
       #ec-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
-      #ec-word { position: absolute; left: 896px; top: 300px; font-weight: 900; font-size: 210px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
-      #ec-word span { color: #3fe0a0; }
-      #ec-line { position: absolute; left: 904px; top: 530px; font-weight: 700; font-size: 44px; color: #a9c9bf; white-space: nowrap; letter-spacing: -0.01em; }
-      #ec-cta { position: absolute; left: 0; right: 0; top: 760px; margin: 0 auto; width: 860px; height: 132px; border-radius: 66px; background: #3fe0a0; color: #052a22; display: flex; align-items: center; justify-content: center; gap: 26px; box-shadow: 0 30px 70px rgba(0,0,0,.3); }
-      #ec-cta svg { width: 62px; height: 62px; flex: none; }
-      #ec-cta .ec-t { font-weight: 700; font-size: 34px; line-height: 1; }
-      #ec-cta .ec-n { font-weight: 900; font-size: 58px; letter-spacing: -0.02em; line-height: 1; white-space: nowrap; }
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080" data-start="0" data-duration="7.4">
+    <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080" data-start="0" data-duration="7.5">
       <div id="ec-ground"></div>
       <canvas id="ec-gl" width="1920" height="1080"></canvas>
-      <div id="ec-driver" class="clip" data-start="0" data-duration="7.4" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
-      <div id="ec-word">Vet.<span>izi</span></div>
-      <div id="ec-line">Сайт · CRM · чаты · приложение</div>
-      <div id="ec-cta">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#052a22" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8c-1-.4-1.9-1.3-2.3-2.3l.8-1-1-2L9 9.5z" fill="#052a22" stroke="none"/></svg>
-        <div><div class="ec-t">Напишите в WhatsApp</div><div class="ec-n">+7 747 817 57 12</div></div>
-      </div>
+      <div id="ec-driver" class="clip" data-start="0" data-duration="7.5" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
     </div>
     <script>
       (function () {
         var V = VI3D.create(document.getElementById('ec-gl'), { alpha: true, fov: 26, exposure: 1.1 });
-        var S = { rY: -2.6, rX: 0.35, s: 0.4, x: -1.3, y: 0.55, cz: 9.5 };
+        var S = { rY: -2.6, rX: 0.35, s: 0.5, x: 1.45, y: 0, cz: 9.5 };
         var mk = VI3D.mark({ tile: '#F2EFE2', paw: '#0E5A4C' });
         V.scene.add(mk);
         function render() {
@@ -50,13 +37,8 @@
         // заливка фирменным зелёным приходит из тёмного фона
         tl.fromTo('#ec-ground', { backgroundColor: '#08110f' }, { backgroundColor: '#0a3b33', duration: 0.4, ease: 'power2.inOut' }, 0);
         // знак влетает с вращением и встаёт на «Вет изи» (≈0.4–1.0)
-        tl.to(S, { rY: 0, rX: 0, s: 1, duration: 1.0, ease: 'expo.out' }, 0.25);
-        tl.to(S, { rY: 0.12, duration: 5.5, ease: 'power1.inOut' }, 1.3);
-        // вордмарк вытирается слева направо от знака
-        tl.fromTo('#ec-word', { clipPath: 'inset(0 100% 0 0)', x: -40 }, { clipPath: 'inset(0 0% 0 0)', x: 0, duration: 0.55, ease: 'power3.out' }, 0.75);
-        tl.fromTo('#ec-line', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 1.15);
-        // кнопка WhatsApp на «Напишите нам» (≈1.35), держится до конца
-        tl.fromTo('#ec-cta', { opacity: 0, scale: 0.7, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.55, ease: 'back.out(1.5)' }, 1.4);
+        tl.to(S, { rY: -0.25, rX: 0.05, s: 1.3, duration: 1.0, ease: 'expo.out' }, 0.25);
+        tl.to(S, { rY: -0.1, duration: 6.0, ease: 'power1.inOut' }, 1.3);
         tl.eventCallback('onUpdate', render);
         render();
         window.__timelines = window.__timelines || {};
