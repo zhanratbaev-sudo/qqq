@@ -27,7 +27,7 @@
       <div id="rq-bar"><span class="rq-dot"></span><span class="rq-dot"></span><span class="rq-dot"></span></div>
       <div id="rq-view">
         <div id="rq-zoom">
-          <video id="rq-video" class="clip" data-start="0" data-duration="5" data-media-start="4.34" data-playback-rate="2.95" data-track-index="0" src="assets/clips/d-request.mp4" muted playsinline></video>
+          <video id="rq-video" class="clip" data-start="0" data-duration="4" data-media-start="4.39" data-playback-rate="3.55" data-track-index="0" src="assets/clips/d-request.mp4" muted playsinline></video>
         </div>
         <div id="rq-dim"></div>
       </div>
@@ -44,10 +44,10 @@
       var tl = gsap.timeline({ paused: true });
       // наезд на форму, пока курсор её заполняет
       tl.fromTo('#rq-zoom', { scale: 1 }, { scale: 1.35, duration: 0.7, ease: 'power2.inOut' }, 0.2);
-      // форма отправлена (≈4.15 с): отъезд, затемнение, карточка вылетает из кнопки «Оставить заявку»
-      tl.to('#rq-zoom', { scale: 1.1, duration: 0.5, ease: 'power2.inOut' }, 4.05);
-      tl.fromTo('#rq-dim', { opacity: 0 }, { opacity: 0.6, duration: 0.35, ease: 'power2.out' }, 4.25);
-      tl.fromTo('#rq-card', { opacity: 0, scale: 0.15, x: 385, y: 450, filter: 'blur(10px)' }, { opacity: 1, scale: 0.95, x: 0, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 4.22);
+      // форма отправлена (≈3.55 с): отъезд, затемнение, карточка вылетает из кнопки «Оставить заявку»
+      tl.to('#rq-zoom', { scale: 1.1, duration: 0.45, ease: 'power2.inOut' }, 3.45);
+      tl.fromTo('#rq-dim', { opacity: 0 }, { opacity: 0.6, duration: 0.3, ease: 'power2.out' }, 3.65);
+      tl.fromTo('#rq-card', { opacity: 0, scale: 0.15, x: 385, y: 450, filter: 'blur(10px)' }, { opacity: 1, scale: 0.95, x: 0, y: 0, filter: 'blur(0px)', duration: 0.4, ease: 'expo.out' }, 3.6);
       window.__timelines['request'] = tl;
     })();
   </script>

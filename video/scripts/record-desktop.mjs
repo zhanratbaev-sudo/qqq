@@ -68,10 +68,21 @@ async function center(locator) {
   return [b.x + b.width / 2, b.y + b.height / 2];
 }
 
+// События для звука в ролике (клики и набор текста), время — по часам записи
+let events = [];
+const now = () => Date.now() / 1000;
+
+async function typeText(page, text, delay) {
+  const t = now();
+  await page.keyboard.type(text, { delay });
+  events.push({ type: 'type', t, dur: +(now() - t).toFixed(3), chars: text.length });
+}
+
 async function click(page, locator, seconds = 0.6) {
   const [x, y] = await center(typeof locator === 'string' ? page.locator(locator) : locator);
   await moveTo(page, x, y, seconds);
   await pause(page, 0.12);
+  events.push({ type: 'click', t: now() });
   await page.mouse.down();
   await pause(page, 0.08);
   await page.mouse.up();
@@ -80,7 +91,7 @@ async function click(page, locator, seconds = 0.6) {
 
 async function typeAt(page, selector, text, delay = 45) {
   await click(page, selector, 0.45);
-  await page.keyboard.type(text, { delay });
+  await typeText(page, text, delay);
   await pause(page, 0.15);
 }
 
@@ -139,8 +150,7 @@ const flows = {
     await typeAt(page, f + 'input[name="breed"]', 'Корги');
     await click(page, f + 'input[name="consent"]', 0.45);
     mark('ready-submit');
-    await click(page, f + 'button[type="submit"]', 0.5);
-    await page.waitForLoadState('networkidle');
+    await Promise.all([page.waitForNavigation({ waitUntil: 'networkidle' }), click(page, f + 'button[type="submit"]', 0.5)]);
     await page.evaluate(() => {
       const f = document.getElementById('petgo-request');
       scrollTo(0, f.getBoundingClientRect().top + scrollY - 90);
@@ -228,7 +238,8 @@ const flows = {
     mark('open');
     const box = page.locator('textarea:visible').last();
     await click(page, box, 0.5);
-    await page.keyboard.type('Отлично! Завтра в 10:00 снова Рекс', { delay: 35 });
+    await typeText(page, 'Отлично! Завтра в 10:00 снова Рекс', 35);
+    events.push({ type: 'send', t: now() });
     await page.keyboard.press('Enter');
     mark('sent');
     await pause(page, 2);
@@ -271,6 +282,7 @@ async function record(browser, name) {
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: size.width, maxHeight: size.height });
   const marks = {};
   const mark = (label = 'ready') => { marks[label] = Date.now() / 1000; };
+  events = [];
   try {
     await flows[name](page, mark, ctx);
   } finally {
@@ -287,7 +299,8 @@ async function record(browser, name) {
     fs.rmSync(tmp, { recursive: true, force: true });
     const t0 = frames[0]?.t ?? end;
     const rel = Object.fromEntries(Object.entries(marks).map(([k, v]) => [k, +Math.max(0, v - t0).toFixed(3)]));
-    fs.writeFileSync(path.join(OUT, `${name}.json`), JSON.stringify({ marks: rel, length: +(end - t0).toFixed(3) }, null, 2));
+    const ev = events.map((e) => ({ ...e, t: +Math.max(0, e.t - t0).toFixed(3) }));
+    fs.writeFileSync(path.join(OUT, `${name}.json`), JSON.stringify({ marks: rel, length: +(end - t0).toFixed(3), events: ev }, null, 2));
     console.log(`✓ ${name}.mp4 (${(end - t0).toFixed(1)} c, метки: ${Object.entries(rel).map(([k, v]) => `${k}=${v}`).join(', ')})`);
   }
 }

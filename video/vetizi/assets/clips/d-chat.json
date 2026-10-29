@@ -1,8 +1,32 @@
 {
   "marks": {
-    "ready": 1.397,
-    "open": 6.484,
-    "sent": 8.986
+    "ready": 1.431,
+    "open": 6.917,
+    "sent": 9.619
   },
-  "length": 10.987
+  "length": 11.62,
+  "events": [
+    {
+      "type": "click",
+      "t": 3.046
+    },
+    {
+      "type": "click",
+      "t": 6.164
+    },
+    {
+      "type": "click",
+      "t": 8.021
+    },
+    {
+      "type": "type",
+      "t": 8.26,
+      "dur": 1.352,
+      "chars": 34
+    },
+    {
+      "type": "send",
+      "t": 9.612
+    }
+  ]
 }

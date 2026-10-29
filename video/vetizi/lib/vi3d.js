@@ -137,6 +137,55 @@
     return g;
   }
 
+  function roundedRect(w, h, r) {
+    var s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+    s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+    s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    return s;
+  }
+
+  // Телефон: строгий корпус с умеренным скруглением (≈8% ширины), тонкая рамка, плоский экран.
+  // Экран — canvas 1170 x 2484: рисуйте содержимое через phoneScreen(...).draw(ctx). Экран смотрит на +Z.
+  var PHONE = { w: 1.55, h: 3.2, r: 0.13, d: 0.15, sw: 1.47, sh: 3.12 };
+  function phone(scr) {
+    var g = new THREE.Group();
+    var body = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(roundedRect(PHONE.w - 0.04, PHONE.h - 0.04, PHONE.r - 0.02), { depth: PHONE.d - 0.04, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4, curveSegments: 16 }),
+      new THREE.MeshPhysicalMaterial({ color: new THREE.Color('#2a2e33'), metalness: 0.85, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.2, envMapIntensity: 0.9 })
+    );
+    body.position.z = -PHONE.d / 2;
+    g.add(body);
+    // чёрная лицевая панель (рамка вокруг экрана)
+    var face = new THREE.Mesh(new THREE.ShapeGeometry(roundedRect(PHONE.w - 0.03, PHONE.h - 0.03, PHONE.r - 0.015), 16),
+      new THREE.MeshPhysicalMaterial({ color: 0x050607, roughness: 0.15, clearcoat: 1, envMapIntensity: 0.6 }));
+    face.position.z = PHONE.d / 2 + 0.001;
+    g.add(face);
+    var screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(PHONE.sw, PHONE.sh), new THREE.MeshBasicMaterial({ map: scr.tex, transparent: true, toneMapped: false }));
+    screenMesh.position.z = PHONE.d / 2 + 0.003;
+    g.add(screenMesh);
+    // боковые кнопки
+    var btnMat = new THREE.MeshStandardMaterial({ color: 0x33373c, metalness: 0.8, roughness: 0.35 });
+    [[PHONE.w / 2 + 0.012, 0.75, 0.38], [-PHONE.w / 2 - 0.012, 0.95, 0.22], [-PHONE.w / 2 - 0.012, 0.6, 0.3]].forEach(function (b) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(0.03, b[2], 0.06), btnMat); m.position.set(b[0], b[1], 0); g.add(m);
+    });
+    return g;
+  }
+
+  // Рисует содержимое экрана телефона с закруглёнными углами экрана и точкой камеры
+  function phoneFrame(ctx, w, h) {
+    var r = Math.round(w * 0.06);
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(r, 0); ctx.arcTo(w, 0, w, h, r); ctx.arcTo(w, h, 0, h, r); ctx.arcTo(0, h, 0, 0, r); ctx.arcTo(0, 0, w, 0, r); ctx.closePath();
+    ctx.clip();
+    return function done() {
+      ctx.fillStyle = '#050607'; ctx.beginPath(); ctx.arc(w / 2, 46, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    };
+  }
+
   // Рисует изображение по ширине экрана со сдвигом прокрутки (в пикселях исходника)
   function drawScroll(ctx, img, w, h, scrollPx, alpha) {
     if (!img || !img.width) return;
@@ -162,5 +211,5 @@
     };
   }
 
-  window.VI3D = { create: create, contactShadow: contactShadow, screen: screen, loadDevice: loadDevice, mark: mark, drawScroll: drawScroll, loadImage: loadImage, cbz: cbz };
+  window.VI3D = { create: create, contactShadow: contactShadow, screen: screen, loadDevice: loadDevice, mark: mark, phone: phone, phoneFrame: phoneFrame, PHONE: PHONE, drawScroll: drawScroll, loadImage: loadImage, cbz: cbz };
 })();

@@ -72,7 +72,7 @@
       tl.fromTo('#bd-nav', { opacity: 0 }, { opacity: 0, duration: 0.01 }, 0);
 
       // печать кода: каждая строка проявляет свой блок сайта
-      var t = 0.45, per = 0.024, cw = 12.6; // ширина символа JetBrains Mono 21 px
+      var t = 0.35, per = 0.018, cw = 12.6; // ширина символа JetBrains Mono 21 px
       var caret = document.getElementById('bd-caret');
       chars.forEach(function (list, li) {
         list.forEach(function (sp, ci) { tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, t + ci * per); });
@@ -84,14 +84,14 @@
         });
         t = tEnd + 0.05;
       });
-      // 2.45: проявляется настоящий сайт (пример — PetGo), панель кода уезжает
-      tl.to('#bd-site', { opacity: 1, filter: 'blur(0px)', duration: 0.25, ease: 'power2.out' }, 2.45);
-      tl.to('.wf', { opacity: 0, duration: 0.2 }, 2.55);
-      tl.to('#bd-panel', { x: -440, duration: 0.45, ease: 'power3.inOut' }, 2.5);
-      tl.to('#bd-site', { y: -620, duration: 1.3, ease: 'power2.inOut' }, 2.8);
-      // 4.2: доезжаем до формы заявки — ровно тот кадр, с которого начинается следующая сцена
-      tl.to('#bd-site', { y: -2859 * K, duration: 0.9, ease: 'power3.inOut' }, 4.2);
-      tl.to('#bd-nav', { opacity: 1, duration: 0.25, ease: 'power2.out' }, 4.85);
+      // 1.95: проявляется настоящий сайт (пример — PetGo), панель кода уезжает
+      tl.to('#bd-site', { opacity: 1, filter: 'blur(0px)', duration: 0.25, ease: 'power2.out' }, 1.95);
+      tl.to('.wf', { opacity: 0, duration: 0.2 }, 2.05);
+      tl.to('#bd-panel', { x: -440, duration: 0.45, ease: 'power3.inOut' }, 2.0);
+      tl.to('#bd-site', { y: -620, duration: 0.9, ease: 'power2.inOut' }, 2.25);
+      // 3.3: доезжаем до формы заявки — ровно тот кадр, с которого начинается следующая сцена
+      tl.to('#bd-site', { y: -2859 * K, duration: 0.8, ease: 'power3.inOut' }, 3.3);
+      tl.to('#bd-nav', { opacity: 1, duration: 0.25, ease: 'power2.out' }, 3.9);
       window.__timelines['build'] = tl;
     })();
   </script>

@@ -16,21 +16,26 @@
   </head>
   <body>
     <!-- 3D MacBook + iPhone. Только правая часть кадра (x > 760): слева колонка текста из captions.html -->
-    <div id="root" data-composition-id="stage3d" data-width="1920" data-height="1080" data-start="0" data-duration="10.6">
+    <div id="root" data-composition-id="stage3d" data-width="1920" data-height="1080" data-start="0" data-duration="8.6">
       <canvas id="st-gl" width="1920" height="1080"></canvas>
-      <div id="st-driver" class="clip" data-start="0" data-duration="10.6" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
+      <div id="st-driver" class="clip" data-start="0" data-duration="8.6" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
     </div>
     <script>
       (function () {
         var V = VI3D.create(document.getElementById('st-gl'), { bg: '#08110F', fov: 28 });
-        var lapScr = VI3D.screen(1440, 900), phScr = VI3D.screen(780, 1688);
+        var lapScr = VI3D.screen(1440, 900), phScr = VI3D.screen(1170, 2484);
         var imgs = {};
         // ноутбук ≈ 820 px шириной, центр экрана ≈ x 1290; телефон впереди справа
         var S = { cx: -0.2, cy: 1.3, cz: 13.2, lx: -0.45, ly: 0.15, lz: 0, lapX: 1.15, lapY: -0.35, lapZ: 0, lapRY: -0.3, phX: 2.35, phY: -0.2, phZ: 1.5, phRY: -0.42, phRX: 0.04, scr: 0, scroll: 0, dive: 0 };
         var lap, ph;
         var shows = ['crm-home', 'landing-desktop', 'crm-requests', 'crm-home', 'crm-chat'];
 
+        var lapKey = '', phDrawn = false;
         function drawLaptop() {
+          // перерисовываем экран только при смене содержимого (загрузка текстуры дорогая)
+          var key = S.scr.toFixed(3) + ',' + S.scroll.toFixed(1) + ',' + S.dive.toFixed(3);
+          if (key === lapKey) return;
+          lapKey = key;
           var c = lapScr.ctx, w = 1440, h = 900;
           var i = Math.floor(S.scr), f = S.scr - i;
           c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, w, h);
@@ -40,8 +45,12 @@
           lapScr.tex.needsUpdate = true;
         }
         function drawPhone() {
-          var c = phScr.ctx; c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, 780, 1688);
-          VI3D.drawScroll(c, imgs['app-home'], 780, 1688, 0, 1);
+          if (phDrawn) return;
+          phDrawn = true;
+          var c = phScr.ctx, done = VI3D.phoneFrame(c, 1170, 2484);
+          c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, 1170, 2484);
+          VI3D.drawScroll(c, imgs['app-home'], 1170, 2484, 0, 1);
+          done();
           phScr.tex.needsUpdate = true;
         }
         function render() {
@@ -57,26 +66,25 @@
         // наезд камеры, устройства доворачиваются к зрителю
         tl.to(S, { cz: 11.8, cy: 1.15, duration: 4.3, ease: 'power2.out' }, 0);
         tl.to(S, { lapRY: -0.22, phRY: -0.3, duration: 4.3, ease: 'power2.out' }, 0);
-        // экран ноутбука меняется вместе со словом в заголовке: Сайт 4.40, Заявки 5.15, CRM 6.02, Чаты 6.95
+        // экран ноутбука меняется вместе со словом в заголовке: Сайт 4.40, Заявки 5.00, CRM 5.60, Чаты 6.20
         tl.to(S, { scr: 1, duration: 0.14, ease: 'power2.inOut' }, 4.38);
-        tl.fromTo(S, { scroll: 0 }, { scroll: 1400, duration: 0.7, ease: 'power2.inOut', immediateRender: false }, 4.45);
-        tl.to(S, { scr: 2, duration: 0.14, ease: 'power2.inOut' }, 5.13);
-        tl.to(S, { scr: 3, duration: 0.14, ease: 'power2.inOut' }, 6.0);
-        tl.to(S, { scr: 4, duration: 0.14, ease: 'power2.inOut' }, 6.93);
-        // «Приложение» 7.50: телефон выходит вперёд
-        tl.to(S, { phX: 2.15, phZ: 2.7, phRY: -0.1, phY: -0.1, duration: 0.6, ease: 'expo.out' }, 7.48);
-        tl.to(S, { lapRY: -0.12, duration: 0.6, ease: 'power2.inOut' }, 7.48);
+        tl.fromTo(S, { scroll: 0 }, { scroll: 1400, duration: 0.5, ease: 'power2.inOut', immediateRender: false }, 4.45);
+        tl.to(S, { scr: 2, duration: 0.14, ease: 'power2.inOut' }, 4.98);
+        tl.to(S, { scr: 3, duration: 0.14, ease: 'power2.inOut' }, 5.58);
+        tl.to(S, { scr: 4, duration: 0.14, ease: 'power2.inOut' }, 6.18);
+        // «Приложение» 6.80: телефон выходит вперёд
+        tl.to(S, { phX: 2.15, phZ: 2.7, phRY: -0.1, phY: -0.1, duration: 0.6, ease: 'expo.out' }, 6.78);
+        tl.to(S, { lapRY: -0.12, duration: 0.6, ease: 'power2.inOut' }, 6.78);
         // уход: телефон уезжает, камера ныряет в экран ноутбука (экран темнеет до цвета фона)
-        tl.to(S, { phX: 6.5, duration: 0.45, ease: 'power3.in' }, 10.05);
-        tl.to(S, { lapRY: 0, cx: 1.15, lx: 1.15, ly: 0.55, cy: 0.55, cz: 1.6, dive: 1, duration: 0.55, ease: 'power3.in' }, 10.05);
+        tl.to(S, { phX: 6.5, duration: 0.45, ease: 'power3.in' }, 8.05);
+        tl.to(S, { lapRY: 0, cx: 1.15, lx: 1.15, ly: 0.55, cy: 0.55, cz: 1.6, dive: 1, duration: 0.55, ease: 'power3.in' }, 8.05);
         tl.eventCallback('onUpdate', render);
 
         var names = ['crm-home', 'landing-desktop', 'crm-requests', 'crm-chat', 'app-home'];
         Promise.all([
           VI3D.loadDevice('models/macbook.glb', 'laptop', lapScr),
-          VI3D.loadDevice('models/iphone.glb', 'phone', phScr),
         ].concat(names.map(function (n) { return VI3D.loadImage('assets/shots/' + n + '.png').then(function (i) { imgs[n] = i; }); }))).then(function (r) {
-          lap = r[0]; ph = r[1];
+          lap = r[0]; ph = VI3D.phone(phScr);
           ph.scale.setScalar(0.62);
           V.scene.add(lap); V.scene.add(ph);
           var sh = VI3D.contactShadow(6.5, 3.2, 0.6); sh.position.set(1.4, -1.25, 0.2); V.scene.add(sh);

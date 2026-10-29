@@ -13,27 +13,23 @@
     </style>
   </head>
   <body>
-    <!-- Vet.izi — промо для ветклиник. Сцены — графика справа; все надписи — compositions/captions.html.
-         Тайминг привязан к голосу (vo-script.json, make-vo.sh). -->
-    <div id="root" data-composition-id="main" data-start="0" data-duration="42" data-width="1920" data-height="1080">
+    <!-- Vet.izi — промо для ветклиник, 40 с, без голоса: надписи + музыка + звуки действий.
+         Сцены — графика справа; все надписи — compositions/captions.html.
+         Музыка: scripts/music2.py, звуки: scripts/sfx.py (CC0, uisfx). -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="40" data-width="1920" data-height="1080">
       <div id="bg"></div>
 
-      <div id="stage3d" data-composition-id="stage3d" data-composition-src="compositions/stage3d.html" data-start="0" data-duration="10.6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="build" data-composition-id="build" data-composition-src="compositions/build.html" data-start="10.6" data-duration="5.3" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="request" data-composition-id="request" data-composition-src="compositions/request.html" data-start="15.9" data-duration="5.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="crm" data-composition-id="crm" data-composition-src="compositions/crm.html" data-start="20.9" data-duration="6.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="phone3d" data-composition-id="phone3d" data-composition-src="compositions/phone3d.html" data-start="27.4" data-duration="7.1" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="endcard" data-composition-id="endcard" data-composition-src="compositions/endcard.html" data-start="34.5" data-duration="7.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="captions" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="42" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="stage3d" data-composition-id="stage3d" data-composition-src="compositions/stage3d.html" data-start="0" data-duration="8.6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="build" data-composition-id="build" data-composition-src="compositions/build.html" data-start="8.6" data-duration="4.4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="request" data-composition-id="request" data-composition-src="compositions/request.html" data-start="13.0" data-duration="4.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="crm" data-composition-id="crm" data-composition-src="compositions/crm.html" data-start="17.0" data-duration="5.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="phone3d" data-composition-id="phone3d" data-composition-src="compositions/phone3d.html" data-start="22.5" data-duration="5.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="sites" data-composition-id="sites" data-composition-src="compositions/sites.html" data-start="28.0" data-duration="5.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="endcard" data-composition-id="endcard" data-composition-src="compositions/endcard.html" data-start="33.0" data-duration="7.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="captions" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="40" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
 
-      <audio id="vo1" class="clip" data-start="0.3" data-duration="3.68" data-track-index="11" data-volume="1" src="assets/vo/v1.wav"></audio>
-      <audio id="vo2" class="clip" data-start="4.4" data-duration="5.79" data-track-index="10" data-volume="1" src="assets/vo/v2.wav"></audio>
-      <audio id="vo3" class="clip" data-start="10.8" data-duration="4.84" data-track-index="11" data-volume="1" src="assets/vo/v3.wav"></audio>
-      <audio id="vo4" class="clip" data-start="16.1" data-duration="4.25" data-track-index="10" data-volume="1" src="assets/vo/v4.wav"></audio>
-      <audio id="vo5" class="clip" data-start="21.8" data-duration="5.40" data-track-index="11" data-volume="1" src="assets/vo/v5.wav"></audio>
-      <audio id="vo6" class="clip" data-start="27.6" data-duration="6.67" data-track-index="10" data-volume="1" src="assets/vo/v6.wav"></audio>
-      <audio id="vo7" class="clip" data-start="34.8" data-duration="5.45" data-track-index="11" data-volume="1" src="assets/vo/v7.wav"></audio>
-      <audio id="music" class="clip" data-start="0" data-duration="42" data-track-index="12" data-volume="0.1" data-fade-out="1.5" src="assets/music.wav"></audio>
+      <audio id="music" class="clip" data-start="0" data-duration="40" data-track-index="10" data-volume="0.75" src="assets/music.wav"></audio>
+      <audio id="sfx" class="clip" data-start="0" data-duration="40" data-track-index="11" data-volume="2.8" src="assets/sfx.wav"></audio>
     </div>
     <script>
       window.__timelines = window.__timelines || {};

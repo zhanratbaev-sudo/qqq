@@ -1,0 +1,33 @@
+{
+  "marks": {
+    "ready": 0.519,
+    "in": 4.952
+  },
+  "length": 6.967,
+  "events": [
+    {
+      "type": "click",
+      "t": 1.403
+    },
+    {
+      "type": "type",
+      "t": 1.647,
+      "dur": 0.324,
+      "chars": 5
+    },
+    {
+      "type": "click",
+      "t": 2.921
+    },
+    {
+      "type": "type",
+      "t": 3.159,
+      "dur": 0.468,
+      "chars": 16
+    },
+    {
+      "type": "click",
+      "t": 4.7
+    }
+  ]
+}

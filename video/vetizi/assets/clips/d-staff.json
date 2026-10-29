@@ -1,8 +1,56 @@
 {
   "marks": {
-    "ready": 1.428,
-    "form": 5.145,
-    "saved": 14.561
+    "ready": 1.363,
+    "form": 5.174,
+    "saved": 15.953
   },
-  "length": 16.563
+  "length": 17.956,
+  "events": [
+    {
+      "type": "click",
+      "t": 3.105
+    },
+    {
+      "type": "click",
+      "t": 4.63
+    },
+    {
+      "type": "click",
+      "t": 6.729
+    },
+    {
+      "type": "type",
+      "t": 6.969,
+      "dur": 0.392,
+      "chars": 9
+    },
+    {
+      "type": "click",
+      "t": 8.962
+    },
+    {
+      "type": "type",
+      "t": 9.206,
+      "dur": 0.279,
+      "chars": 6
+    },
+    {
+      "type": "click",
+      "t": 11.192
+    },
+    {
+      "type": "type",
+      "t": 11.438,
+      "dur": 0.37,
+      "chars": 16
+    },
+    {
+      "type": "click",
+      "t": 13.417
+    },
+    {
+      "type": "click",
+      "t": 15.708
+    }
+  ]
 }
