@@ -4,3 +4,5 @@ build/
 node_modules/
 clips/.tmp-*
 demo-site/.wp/
+work-*/
+.*.hf-transaction-*/
