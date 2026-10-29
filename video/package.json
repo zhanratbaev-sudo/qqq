@@ -3,10 +3,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "record": "node scripts/record.mjs",
+    "demo-site": "demo-site/setup.sh",
+    "record": "php demo-site/seed.php demo-site/.wp && node scripts/record.mjs",
     "build": "node scripts/build.mjs",
     "preview": "node scripts/build.mjs --placeholder",
-    "all": "node scripts/record.mjs && node scripts/build.mjs"
+    "all": "npm run record && npm run build"
   },
   "dependencies": {
     "playwright": "1.63.0"

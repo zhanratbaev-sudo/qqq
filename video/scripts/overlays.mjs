@@ -22,6 +22,11 @@ export const LAYOUT = {
 };
 const { W, H, caption, screen: S, bezel: B } = LAYOUT;
 const { colorFrom, colorTo, accent } = cfg.brand;
+// иконка приложения для финала (если файла нет — рисуем лапку)
+const iconFile = cfg.brand.icon && path.resolve(ROOT, cfg.brand.icon);
+const ICON = iconFile && fs.existsSync(iconFile)
+  ? `<img src="data:image/png;base64,${fs.readFileSync(iconFile).toString('base64')}" style="width:100%;height:100%;display:block">`
+  : null;
 
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 // короткие предлоги/союзы не оставляем висеть в конце строки
@@ -71,13 +76,14 @@ const finalTextHtml = (s) => `<style>${base}
   body{background:transparent;color:#fff}
   .wrap{position:absolute;left:70px;right:70px;top:${LAYOUT.SAFE + 60}px;bottom:${LAYOUT.SAFE + 60}px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:56px}
-  .logo{width:220px;height:220px;border-radius:60px;background:#fff;color:${colorFrom};padding:42px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
+  .logo{width:240px;height:240px;border-radius:56px;overflow:hidden;background:#fff;color:${colorFrom};box-shadow:0 30px 70px rgba(0,0,0,.3)}
+  .logo.paw{padding:42px}
   h1{font-size:104px;font-weight:900;letter-spacing:-2px;line-height:1.04;text-wrap:balance;text-shadow:0 4px 18px rgba(0,0,0,.25)}
   ul{list-style:none;display:flex;flex-direction:column;gap:22px;font-size:54px;font-weight:700}
   .cta{background:${accent};color:#10202a;font-weight:800;font-size:50px;padding:30px 56px;border-radius:999px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 </style>
 <div class="wrap">
-  <div class="logo">${PAW}</div>
+  ${ICON ? `<div class="logo">${ICON}</div>` : `<div class="logo paw">${PAW}</div>`}
   <h1>${rich(s.title)}</h1>
   <ul>${(s.contacts || []).map((c) => `<li>${esc(c)}</li>`).join('')}</ul>
   ${s.cta ? `<div class="cta">${esc(s.cta)}</div>` : ''}

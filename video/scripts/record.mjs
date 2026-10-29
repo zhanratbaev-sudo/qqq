@@ -1,18 +1,19 @@
-// Записывает экранные клипы сайта PetGo в мобильной эмуляции iPhone 14 (390x844).
-// Каждый сценарий (flow) пишется в отдельный клип video/clips/<name>.mp4,
-// рядом кладётся <name>.json с моментом, когда страница готова (обрезаем белый старт).
+// Записывает экранные клипы PetGo в мобильной эмуляции iPhone 14 (390x844).
+// Каждый сценарий пишется в video/clips/<name>.mp4, рядом — <name>.json с метками времени
+// (ready — страница готова, дальше — моменты действий: submitted, saved и т. п.).
+// В scenes.json сцена берёт кадры от метки: "clip": "staff", "mark": "saved", "start": -0.3.
 //
-// Запуск:  node video/scripts/record.mjs            — все клипы
-//          node video/scripts/record.mjs chat home  — только указанные
+// Запуск:  node video/scripts/record.mjs              — все клипы
+//          node video/scripts/record.mjs chat staff   — только указанные
 //
-// Логины и адреса берутся из video/.env (см. video/.env.example). Не используйте реальные данные клиентов.
+// Адрес и логины — из video/.env (см. .env.example). По умолчанию — локальный стенд demo-site.
 import { createRequire } from 'node:module';
-const { chromium, devices } = createRequire(import.meta.url)('playwright');
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const { chromium, devices } = createRequire(import.meta.url)('playwright');
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CLIPS = process.env.CLIPS_DIR || path.join(ROOT, 'clips');
 const STATE = path.join(ROOT, '.auth');
@@ -23,21 +24,21 @@ const env = (k, def) => {
   if (v === undefined || v === '') throw new Error(`Не задана переменная ${k} в video/.env`);
   return v;
 };
-const BASE = env('PETGO_BASE_URL', 'https://pet.oscarclinic.kz').replace(/\/$/, '');
+const BASE = env('PETGO_BASE_URL', 'http://127.0.0.1:8080').replace(/\/$/, '');
+const CABINET = env('PETGO_CABINET_PATH', '/кабинет/');
 const url = (p) => (/^https?:/.test(p) ? p : BASE + (p.startsWith('/') ? p : '/' + p));
-// SUBMIT=0 — заполнить формы, но не отправлять (чтобы не создавать записи на боевом сайте).
-const SUBMIT = process.env.PETGO_SUBMIT !== '0';
+const cab = (pg) => url(CABINET) + (pg ? `?pg=${pg}` : '');
 
-const IPHONE = { ...devices['iPhone 14'], viewport: { width: 390, height: 844 } }; // во весь экран, как просили
+const IPHONE = { ...devices['iPhone 14'], viewport: { width: 390, height: 844 } }; // во весь экран, без панелей Safari
 delete IPHONE.defaultBrowserType; // в контейнере только Chromium
 const VIDEO_SIZE = { width: 780, height: 1688 }; // 2x от 390x844 для чёткости
 
-// Видимый «тап» и плавная прокрутка для красоты на видео.
+// Видимый «тап» в фирменном цвете, чтобы на видео было понятно, куда нажали.
 const TAP_SCRIPT = `
   addEventListener('pointerdown', (e) => {
     const d = document.createElement('div');
-    d.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;width:44px;height:44px;border-radius:50%;' +
-      'background:rgba(14,159,142,.35);border:3px solid rgba(14,159,142,.9);left:' + (e.clientX - 22) + 'px;top:' + (e.clientY - 22) + 'px;' +
+    d.style.cssText = 'position:fixed;z-index:2147483647;pointer-events:none;width:46px;height:46px;border-radius:50%;' +
+      'background:rgba(2,76,70,.28);border:3px solid rgba(2,76,70,.85);left:' + (e.clientX - 23) + 'px;top:' + (e.clientY - 23) + 'px;' +
       'transition:transform .45s ease-out,opacity .45s ease-out;transform:scale(.6)';
     document.documentElement.appendChild(d);
     requestAnimationFrame(() => { d.style.transform = 'scale(1.5)'; d.style.opacity = '0'; });
@@ -47,14 +48,24 @@ const TAP_SCRIPT = `
 
 const pause = (page, s) => page.waitForTimeout(s * 1000);
 
+// Плавно прокручивает страницу (или самый большой прокручиваемый блок, если кабинет скроллит внутри себя).
 async function smoothScroll(page, distance, seconds = 2.5) {
   await page.evaluate(async ([dist, ms]) => {
-    const start = scrollY, t0 = performance.now();
+    let el = document.scrollingElement;
+    if (el.scrollHeight <= el.clientHeight + 5) {
+      const all = [...document.querySelectorAll('*')].filter((x) => {
+        const o = getComputedStyle(x).overflowY;
+        return (o === 'auto' || o === 'scroll') && x.scrollHeight > x.clientHeight + 5 && x.offsetParent;
+      });
+      all.sort((a, b) => b.clientHeight - a.clientHeight);
+      if (all[0]) el = all[0];
+    }
+    const start = el.scrollTop, t0 = performance.now();
     await new Promise((res) => {
       const step = (now) => {
         const k = Math.min(1, (now - t0) / ms);
         const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // easeInOutQuad
-        scrollTo(0, start + dist * e);
+        el.scrollTop = start + dist * e;
         k < 1 ? requestAnimationFrame(step) : res();
       };
       requestAnimationFrame(step);
@@ -62,199 +73,167 @@ async function smoothScroll(page, distance, seconds = 2.5) {
   }, [distance, seconds * 1000]);
 }
 
-// Находит видимый элемент по тексту / роли из списка вариантов.
-async function findByText(page, patterns) {
-  for (const re of [].concat(patterns)) {
-    for (const loc of [
-      page.getByRole('button', { name: re }),
-      page.getByRole('link', { name: re }),
-      page.getByText(re),
-    ]) {
-      const n = await loc.count();
-      for (let i = 0; i < n; i++) if (await loc.nth(i).isVisible()) return loc.nth(i);
-    }
-  }
-  return null;
+// Плавно подводит элемент к верху экрана (с отступом сверху, чтобы не прятался под шапкой).
+async function scrollToEl(page, locator, seconds = 1.5, offset = 90) {
+  const box = await locator.first().evaluate((el) => el.getBoundingClientRect().top);
+  await smoothScroll(page, box - offset, seconds);
 }
 
-async function tap(page, patterns, { optional = false } = {}) {
-  const el = await findByText(page, patterns);
-  if (!el) {
-    if (optional) return false;
-    throw new Error(`Не найдена кнопка/ссылка: ${[].concat(patterns).join(' | ')} на ${page.url()}`);
-  }
+async function tap(page, locator) {
+  const el = typeof locator === 'string' ? page.locator(locator).first() : locator.first();
   await el.scrollIntoViewIfNeeded();
-  await pause(page, 0.4);
+  await pause(page, 0.35);
   await el.click();
-  return true;
 }
 
-async function typeInto(page, selectors, text) {
-  for (const sel of [].concat(selectors)) {
-    const loc = page.locator(sel).first();
-    if ((await loc.count()) && (await loc.isVisible())) {
-      await loc.scrollIntoViewIfNeeded();
-      await loc.click();
-      await loc.pressSequentially(text, { delay: 70 });
-      return true;
-    }
-  }
-  return false;
-}
-
-// Заполняет пустые видимые поля формы тестовыми значениями (по подсказкам label/placeholder/name).
-async function fillVisibleForm(page, values) {
-  const fields = page.locator('form input:visible, form textarea:visible, form select:visible');
-  const n = await fields.count();
-  for (let i = 0; i < n; i++) {
-    const f = fields.nth(i);
-    const info = await f.evaluate((el) => {
-      const lbl = (el.id && document.querySelector(`label[for="${el.id}"]`)?.textContent) || el.closest('label')?.textContent || '';
-      return { tag: el.tagName, type: el.type, value: el.value, hint: `${el.name} ${el.placeholder} ${lbl}`.toLowerCase() };
-    });
-    if (['hidden', 'submit', 'button', 'checkbox', 'radio', 'file', 'password'].includes(info.type)) continue;
-    if (info.tag === 'SELECT') {
-      const opts = await f.locator('option').evaluateAll((o) => o.map((x) => x.value).filter(Boolean));
-      if (opts.length) { await f.scrollIntoViewIfNeeded(); await f.selectOption(opts[0]); await pause(page, 0.5); }
-      continue;
-    }
-    if (info.value) continue;
-    const match = values.find(([re]) => re.test(info.hint));
-    let text = match ? match[1] : values.at(-1)[1];
-    if (info.type === 'date') { await f.fill(new Date(Date.now() + 864e5).toISOString().slice(0, 10)); continue; }
-    if (info.type === 'time') { await f.fill('11:00'); continue; }
-    if (info.type === 'tel') text = '+7 700 000 00 00';
-    if (info.type === 'email') text = 'demo@example.com';
-    await f.scrollIntoViewIfNeeded();
-    await f.click();
-    await f.pressSequentially(text, { delay: 45 });
-    await pause(page, 0.3);
-  }
-}
-
-const openPage = (page, p) => page.goto(url(p), { waitUntil: 'networkidle' });
-
-async function doLogin(page, user, pass) {
-  const userSel = ['#user_login', 'input[name="log"]', 'input[name="username"]', 'input[type="email"]', 'input[name*="login" i]', 'input[type="text"]'];
-  const passSel = ['#user_pass', 'input[name="pwd"]', 'input[name="password"]', 'input[type="password"]'];
-  if (!(await typeInto(page, userSel, user))) throw new Error('Не найдено поле логина на ' + page.url());
-  await pause(page, 0.3);
-  await typeInto(page, passSel, pass);
-  await pause(page, 0.5);
-  const submit = page.locator('#wp-submit, form button[type="submit"], form input[type="submit"]').first();
-  await Promise.all([page.waitForLoadState('networkidle'), submit.click()]);
+async function type(page, selector, text, delay = 65) {
+  const el = page.locator(selector).first();
+  await el.scrollIntoViewIfNeeded();
+  await el.click();
+  await el.pressSequentially(text, { delay });
+  await pause(page, 0.25);
 }
 
 // ---------- Сценарии ----------
 const flows = {
+  // Лендинг: главный экран и прокрутка по услугам
   async home(page, mark) {
-    await page.goto(url(env('PETGO_HOME_PATH', '/')), { waitUntil: 'networkidle' });
+    await page.goto(url('/'), { waitUntil: 'networkidle' });
     mark();
     await pause(page, 3);
+    await smoothScroll(page, 760, 3);
+    await pause(page, 1.2);
     await smoothScroll(page, 900, 3);
-    await pause(page, 1);
-    await smoothScroll(page, 900, 3);
-    await pause(page, 2);
+    await pause(page, 1.5);
   },
 
-  async 'owner-login'(page, mark, ctx) {
-    await openPage(page, env('PETGO_OWNER_LOGIN_URL'));
+  // Заявка с сайта: клиент заполняет форму и отправляет
+  async 'site-request'(page, mark) {
+    await page.goto(url('/'), { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+      const f = document.getElementById('petgo-request');
+      scrollTo(0, f.getBoundingClientRect().top + scrollY - 70);
+    });
+    await pause(page, 3.2); // форма принимает заявку не раньше чем через 3 с после загрузки
+    mark();
+    await pause(page, 0.6);
+    await type(page, '#petgo-request input[name="name"]', 'Жанар');
+    await type(page, '#petgo-request input[name="phone"]', '+7 700 123 45 67', 55);
+    await tap(page, page.locator('#petgo-request label:has(input[name="contact"][value="write"])'));
+    await tap(page, page.locator('#petgo-request label:has(input[name="species"][value="dog"])'));
+    await type(page, '#petgo-request input[name="weight"]', '11');
+    await type(page, '#petgo-request input[name="breed"]', 'Корги');
+    await tap(page, page.locator('#petgo-request input[name="consent"]'));
+    await pause(page, 0.4);
+    await tap(page, '#petgo-request button[type="submit"]');
+    await page.waitForLoadState('networkidle');
+    // после отправки страница перезагружается к форме — показываем сообщение «Спасибо! Заявка отправлена»
+    await page.evaluate(() => {
+      const f = document.getElementById('petgo-request');
+      scrollTo(0, f.getBoundingClientRect().top + scrollY - 70);
+    });
+    await pause(page, 0.3);
+    mark('submitted');
+    await pause(page, 3.5);
+  },
+
+  // Вход в кабинет
+  async login(page, mark, ctx) {
+    await page.goto(cab(), { waitUntil: 'networkidle' });
     mark();
     await pause(page, 1);
-    await doLogin(page, env('PETGO_OWNER_LOGIN'), env('PETGO_OWNER_PASSWORD'));
-    await pause(page, 2.5);
-    await smoothScroll(page, 500, 2.5);
-    await pause(page, 2);
+    await type(page, 'input[name="log"]', env('PETGO_LOGIN', 'owner'), 90);
+    await type(page, 'input[name="pwd"]', env('PETGO_PASSWORD', 'Demo-Owner-2026!'), 45);
+    await pause(page, 0.3);
+    await Promise.all([page.waitForLoadState('networkidle'), tap(page, 'button[type="submit"]:has-text("Войти")')]);
+    mark('in');
+    await pause(page, 3.5);
     await ctx.storageState({ path: path.join(STATE, 'owner.json') });
   },
 
-  async 'owner-request'(page, mark) {
-    await page.goto(url(env('PETGO_OWNER_REQUEST_URL', env('PETGO_OWNER_CABINET_URL', '/'))), { waitUntil: 'networkidle' });
+  // Питомцы: список и анкета питомца
+  async pets(page, mark) {
+    await page.goto(cab('pets'), { waitUntil: 'networkidle' });
     mark();
+    await pause(page, 2.4);
+    await tap(page, page.getByText('Рекс', { exact: true }));
+    await page.waitForLoadState('networkidle');
+    await pause(page, 0.5);
+    await scrollToEl(page, page.getByText('Рекс', { exact: true }), 1.4, 150);
+    mark('profile');
+    await pause(page, 1.6);
+    await smoothScroll(page, 420, 2.5);
     await pause(page, 1.5);
-    await tap(page, [/новая заявка/i, /создать заявку/i, /записаться/i, /оставить заявку/i], { optional: true });
-    await page.waitForLoadState('networkidle');
-    await pause(page, 1);
-    await fillVisibleForm(page, [
-      [/клич|питом|pet|имя жив/, 'Барсик'],
-      [/вид|порода|species/, 'Кот, британец'],
-      [/имя|name|фио/, 'Тест Демо'],
-      [/жалоб|причин|описан|коммент|message|симпт/, 'Плановая вакцинация, демо-заявка'],
-      [/./, 'Демо'],
-    ]);
-    await pause(page, 1);
-    if (SUBMIT) {
-      await tap(page, [/отправить/i, /создать/i, /записаться/i, /сохранить/i]);
-      await page.waitForLoadState('networkidle');
-    }
-    await pause(page, 3);
   },
 
-  async 'owner-chat'(page, mark) {
-    await page.goto(url(env('PETGO_OWNER_CHAT_URL', env('PETGO_OWNER_CABINET_URL', '/'))), { waitUntil: 'networkidle' });
+  // Чат: открыть переписку и отправить сообщение
+  async chat(page, mark) {
+    await page.goto(cab('home'), { waitUntil: 'networkidle' });
     mark();
-    await pause(page, 1);
-    await tap(page, [/^чат/i, /сообщения/i, /написать/i], { optional: true });
-    await page.waitForLoadState('networkidle');
-    await pause(page, 1);
-    await typeInto(page, ['textarea', 'input[type="text"][name*="message" i]', 'input[placeholder*="сообщ" i]'], 'Здравствуйте! Можно перенести приём на 11:00?');
-    await pause(page, 0.6);
-    if (SUBMIT) await tap(page, [/отправить/i, /send/i], { optional: true }) || await page.keyboard.press('Enter');
-    await pause(page, 3);
-  },
-
-  async 'staff-login'(page, mark, ctx) {
-    await openPage(page, env('PETGO_STAFF_LOGIN_URL'));
-    mark();
-    await pause(page, 1);
-    await doLogin(page, env('PETGO_STAFF_LOGIN'), env('PETGO_STAFF_PASSWORD'));
-    await pause(page, 3);
-    await ctx.storageState({ path: path.join(STATE, 'staff.json') });
-  },
-
-  async 'staff-employee'(page, mark) {
-    await page.goto(url(env('PETGO_STAFF_EMPLOYEES_URL', env('PETGO_STAFF_CABINET_URL', '/'))), { waitUntil: 'networkidle' });
-    mark();
-    await pause(page, 1.5);
-    await tap(page, [/добавить сотрудника/i, /новый сотрудник/i, /пригласить/i, /^добавить/i], { optional: true });
-    await page.waitForLoadState('networkidle');
     await pause(page, 0.8);
-    await fillVisibleForm(page, [
-      [/mail/, 'demo.vet@example.com'],
-      [/тел|phone/, '+7 700 000 00 00'],
-      [/имя|name|фио/, 'Анна Демо'],
-      [/должн|position/, 'Ветврач'],
-      [/./, 'Демо'],
-    ]);
-    // роль: select или радиокнопка «Врач»
-    const role = page.locator('select[name*="role" i]').first();
-    if (await role.count()) await role.selectOption({ index: 1 }).catch(() => {});
-    else await tap(page, [/врач/i], { optional: true });
+    await tap(page, 'button[data-chat][aria-label="Чаты"]');
+    await pause(page, 1.2);
+    await tap(page, page.locator('.pgc-cr', { hasText: 'Дана Ким' }));
+    await pause(page, 0.8);
+    mark('open');
     await pause(page, 1);
-    if (SUBMIT) await tap(page, [/добавить/i, /сохранить/i, /создать/i, /пригласить/i]);
-    await page.waitForLoadState('networkidle');
+    const box = page.locator('textarea:visible, [contenteditable="true"]:visible').last();
+    await box.click();
+    await box.pressSequentially('Спасибо! Завтра в 10:00 снова Рекс', { delay: 60 });
+    await pause(page, 0.4);
+    await box.press('Enter');
+    const send = page.locator('button[aria-label="Отправить"]:visible, button:visible:has-text("Отправить")');
+    if ((await box.inputValue().catch(() => '')) && (await send.count())) await tap(page, send);
+    mark('sent');
     await pause(page, 2.5);
   },
 
-  async 'staff-requests'(page, mark) {
-    await page.goto(url(env('PETGO_STAFF_REQUESTS_URL', env('PETGO_STAFF_CABINET_URL', '/'))), { waitUntil: 'networkidle' });
+  // Сотрудники: добавить нового и выбрать роль
+  async staff(page, mark) {
+    await page.goto(cab('staff'), { waitUntil: 'networkidle' });
     mark();
+    await pause(page, 1.5);
+    await tap(page, 'button.pgc-fab.mob');
+    await pause(page, 0.7);
+    await tap(page, 'button.pgc-mi[data-open="pgc-m-staff"]');
+    await pause(page, 0.7);
+    mark('form');
+    const f = '#pgc-m-staff ';
+    await type(page, f + 'input[name="name"]', 'Марина Ли');
+    await type(page, f + 'input[name="phone"]', '+7 700 500 60 70', 45);
+    await type(page, f + 'input[name="login"]', 'marina', 70);
+    await type(page, f + 'input[name="pass"]', 'Demo-Staff-2026!', 35);
+    const role = page.locator(f + 'select[name="role"]');
+    await role.scrollIntoViewIfNeeded();
+    await role.focus();
+    await pause(page, 0.4);
+    await role.selectOption('manager');
+    await pause(page, 0.9);
+    await Promise.all([page.waitForLoadState('networkidle'), tap(page, f + 'button[type="submit"]')]);
+    await pause(page, 0.4);
+    mark('saved');
+    await pause(page, 3);
+  },
+
+  // Заявки: список новых заявок с сайта
+  async requests(page, mark) {
+    await page.goto(cab('requests'), { waitUntil: 'networkidle' });
+    mark();
+    await pause(page, 2.2);
+    await smoothScroll(page, 850, 3.2);
     await pause(page, 1);
-    await tap(page, [/^заявки/i, /все заявки/i], { optional: true });
-    await page.waitForLoadState('networkidle');
-    await pause(page, 2.5);
-    await smoothScroll(page, 700, 3);
-    await pause(page, 2.5);
+    await smoothScroll(page, 850, 3.2);
+    await pause(page, 1.5);
   },
 };
 
-const NEEDS_STATE = { 'owner-request': 'owner', 'owner-chat': 'owner', 'staff-employee': 'staff', 'staff-requests': 'staff' };
+const NEEDS_LOGIN = new Set(['pets', 'chat', 'staff', 'requests']);
 
 // Пишем кадры через CDP-screencast в 2x разрешении (видео Playwright — 1x и мыльное),
 // затем склеиваем их ffmpeg с реальными паузами между кадрами.
 async function record(browser, name) {
-  const stateFile = NEEDS_STATE[name] && path.join(STATE, `${NEEDS_STATE[name]}.json`);
-  if (stateFile && !fs.existsSync(stateFile)) throw new Error(`Сначала запишите вход (${NEEDS_STATE[name]}-login)`);
+  const stateFile = NEEDS_LOGIN.has(name) && path.join(STATE, 'owner.json');
+  if (stateFile && !fs.existsSync(stateFile)) throw new Error('Сначала запишите вход: node video/scripts/record.mjs login');
   const tmp = path.join(CLIPS, '.tmp-' + name);
   fs.rmSync(tmp, { recursive: true, force: true });
   fs.mkdirSync(tmp, { recursive: true });
@@ -273,8 +252,8 @@ async function record(browser, name) {
     cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
   });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: VIDEO_SIZE.width, maxHeight: VIDEO_SIZE.height });
-  let readyAt = Date.now() / 1000;
-  const mark = () => { readyAt = Date.now() / 1000; };
+  const marks = {};
+  const mark = (label = 'ready') => { marks[label] = Date.now() / 1000; };
   try {
     await flows[name](page, mark, ctx);
   } finally {
@@ -290,9 +269,10 @@ async function record(browser, name) {
         '-c:v', 'libx264', '-crf', '14', '-preset', 'fast', '-pix_fmt', 'yuv420p', path.join(CLIPS, `${name}.mp4`)]);
     }
     fs.rmSync(tmp, { recursive: true, force: true });
-    const rel = Math.max(0, readyAt - (frames[0]?.t ?? readyAt));
-    fs.writeFileSync(path.join(CLIPS, `${name}.json`), JSON.stringify({ readyAt: rel, recordedAt: new Date().toISOString() }, null, 2));
-    console.log(`✓ ${name}.mp4 (${frames.length} кадров, страница готова на ${rel.toFixed(2)} c)`);
+    const t0 = frames[0]?.t ?? end;
+    const rel = Object.fromEntries(Object.entries(marks).map(([k, v]) => [k, +Math.max(0, v - t0).toFixed(3)]));
+    fs.writeFileSync(path.join(CLIPS, `${name}.json`), JSON.stringify({ marks: rel, length: +(end - t0).toFixed(3), recordedAt: new Date().toISOString() }, null, 2));
+    console.log(`✓ ${name}.mp4 (${(end - t0).toFixed(1)} c, метки: ${Object.entries(rel).map(([k, v]) => `${k}=${v}`).join(', ')})`);
   }
 }
 

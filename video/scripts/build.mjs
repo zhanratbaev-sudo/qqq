@@ -45,8 +45,11 @@ for (const [i, s] of cfg.scenes.entries()) {
     let input;
     if (fs.existsSync(clip)) {
       const meta = path.join(CLIPS, `${s.clip}.json`);
-      const readyAt = fs.existsSync(meta) ? JSON.parse(fs.readFileSync(meta, 'utf8')).readyAt : 0;
-      input = ['-ss', String(readyAt + s.start), '-i', clip];
+      // кадры берём от метки клипа (ready — страница готова; submitted, saved и т. п. — см. record.mjs)
+      const marks = fs.existsSync(meta) ? JSON.parse(fs.readFileSync(meta, 'utf8')).marks || {} : {};
+      const at = marks[s.mark || 'ready'];
+      if (at === undefined) throw new Error(`В клипе ${s.clip} нет метки «${s.mark}». Есть: ${Object.keys(marks).join(', ')}`);
+      input = ['-ss', String(Math.max(0, at + (s.start || 0))), '-i', clip];
     } else if (PLACEHOLDER) {
       input = ['-f', 'lavfi', '-i', `color=c=#dfe7ea:s=${S.w}x${S.h}:r=${FPS}`];
     } else {
