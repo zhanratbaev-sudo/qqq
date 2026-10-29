@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="lib/gsap.min.js"></script>
+    <script src="lib/three.min.js"></script>
+    <script src="lib/GLTFLoader.js"></script>
+    <script src="lib/vi3d.js"></script>
+    <style>
+      @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
+      @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #08110f; overflow: hidden; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #08110f; font-family: "VI Display", sans-serif; color: #eef4f1; }
+      #ph-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+      .ph-acc { color: #3fe0a0; }
+      #ph-h { position: absolute; left: 132px; top: 310px; font-weight: 900; font-size: 108px; line-height: 1; letter-spacing: -0.04em; white-space: nowrap; }
+      #ph-sub { position: absolute; left: 136px; top: 436px; font-weight: 700; font-size: 58px; letter-spacing: -0.02em; white-space: nowrap; }
+      #ph-step { position: absolute; left: 136px; top: 600px; height: 88px; padding: 0 36px; border-radius: 44px; background: #10201c; border: 2px solid #1f3a33; display: flex; align-items: center; gap: 18px; font-weight: 700; font-size: 38px; white-space: nowrap; }
+      #ph-step b { color: #3fe0a0; font-weight: 900; }
+      #ph-note { position: absolute; left: 136px; top: 740px; font-weight: 700; font-size: 44px; color: #8da39b; white-space: nowrap; }
+      #ph-note b { color: #eef4f1; font-weight: 900; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="phone3d" data-width="1920" data-height="1080" data-start="0" data-duration="6.6">
+      <canvas id="ph-gl" width="1920" height="1080"></canvas>
+      <div id="ph-driver" class="clip" data-start="0" data-duration="6.6" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
+      <div id="ph-h"><span class="ph-acc">PWA</span>-приложение</div>
+      <div id="ph-sub">для ваших сотрудников</div>
+      <div id="ph-step">Установим на телефоны <b>команды</b></div>
+      <div id="ph-note"><b>Уведомления</b> о заявках — сразу</div>
+    </div>
+    <script>
+      (function () {
+        var V = VI3D.create(document.getElementById('ph-gl'), { bg: '#08110F', fov: 26 });
+        var scr = VI3D.screen(1170, 2532);
+        var imgs = {};
+        // pX/pY в мировых единицах; b1/b2 — 0..1 появление баннеров
+        var S = { pX: 4.6, pY: -4.2, pZ: 0, rY: -1.1, rX: 0.25, rZ: 0.12, cx: 0.9, cy: 0.1, cz: 9.6, lx: 0.9, ly: 0.1, b1: 0, b2: 0, exit: 0 };
+        var phone;
+
+        function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+        function banner(c, k, y, title, text) {
+          if (k <= 0) return;
+          var e = 1 - Math.pow(1 - Math.min(1, k), 4);
+          var yy = y - (1 - e) * 260;
+          c.save(); c.globalAlpha = Math.min(1, k * 2.5);
+          c.shadowColor = 'rgba(0,0,0,0.28)'; c.shadowBlur = 40; c.shadowOffsetY = 12;
+          rr(c, 36, yy, 1098, 230, 64); c.fillStyle = 'rgba(248,248,250,0.97)'; c.fill();
+          c.shadowColor = 'transparent';
+          if (imgs.icon) { c.save(); rr(c, 72, yy + 46, 120, 120, 28); c.clip(); c.drawImage(imgs.icon, 72, yy + 46, 120, 120); c.restore(); }
+          c.fillStyle = '#111'; c.font = '700 46px "Inter SemiBold", "Inter", sans-serif'; c.fillText(title, 224, yy + 92);
+          c.fillStyle = '#8a8a90'; c.font = '500 38px "Inter Medium", "Inter", sans-serif'; c.fillText('сейчас', 940, yy + 92);
+          c.fillStyle = '#222'; c.font = '500 44px "Inter Medium", "Inter", sans-serif'; c.fillText(text, 224, yy + 160);
+          c.restore();
+        }
+        function drawScreen() {
+          var c = scr.ctx; c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, 1170, 2532);
+          VI3D.drawScroll(c, imgs.app, 1170, 2532, 0, 1);
+          banner(c, S.b2, 400, 'PetGo', 'Вам назначен заказ: Рекс, 10:00');
+          banner(c, S.b1, 140, 'PetGo', 'Новая заявка: Жанар, корги');
+          scr.tex.needsUpdate = true;
+        }
+        function render() {
+          if (!phone) return;
+          drawScreen();
+          phone.position.set(S.pX, S.pY, S.pZ); phone.rotation.set(S.rX, S.rY, S.rZ);
+          V.camera.position.set(S.cx, S.cy, S.cz); V.camera.lookAt(S.lx, S.ly, 0);
+          V.render();
+        }
+
+        var tl = gsap.timeline({ paused: true });
+        // телефон вылетает снизу справа и разворачивается экраном к зрителю
+        tl.to(S, { pX: 2.45, pY: -0.05, rY: -0.32, rX: 0.04, rZ: 0, duration: 0.9, ease: 'expo.out' }, 0);
+        tl.to(S, { rY: -0.2, duration: 2.1, ease: 'power2.inOut' }, 0.9);
+        // текст: заголовок по словам, подпись, шаг установки (на «Установим сами» ≈ 2.34)
+        tl.fromTo('#ph-h', { opacity: 0, filter: 'blur(12px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'power4.out' }, 0.45);
+        tl.fromTo('#ph-sub', { opacity: 0, filter: 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 0.62);
+        tl.fromTo('#ph-step', { opacity: 0, x: -50, filter: 'blur(8px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.4, ease: 'expo.out' }, 2.3);
+        // «уведомления» ≈ 3.28: камера подходит к экрану, падают баннеры
+        tl.to(S, { pZ: 1.3, pY: -0.35, rY: -0.12, duration: 0.8, ease: 'power2.inOut' }, 3.0);
+        tl.to(S, { b1: 1, duration: 0.6, ease: 'none' }, 3.3);
+        tl.to(S, { b2: 1, duration: 0.6, ease: 'none' }, 4.05);
+        tl.fromTo('#ph-note', { opacity: 0, x: -50, filter: 'blur(8px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.4, ease: 'expo.out' }, 3.32);
+        // уход: всё уходит в размытие, телефон улетает вверх
+        tl.to(['#ph-h', '#ph-sub', '#ph-step', '#ph-note'], { opacity: 0, filter: 'blur(12px)', duration: 0.18, stagger: 0.03, ease: 'power3.in' }, 6.1);
+        tl.to(S, { pY: 5.5, rX: -0.4, duration: 0.45, ease: 'power3.in' }, 6.15);
+        tl.eventCallback('onUpdate', render);
+
+        Promise.all([
+          VI3D.loadDevice('models/iphone.glb', 'phone', scr),
+          VI3D.loadImage('assets/shots/app-home.png').then(function (i) { imgs.app = i; }),
+          VI3D.loadImage('assets/petgo-icon.png').then(function (i) { imgs.icon = i; }),
+          document.fonts.load('600 46px "Inter SemiBold"'),
+        ]).then(function (r) {
+          phone = r[0];
+          V.scene.add(phone);
+          var sh = VI3D.contactShadow(2.6, 1.4, 0.5); sh.position.set(2.45, -1.75, 0); V.scene.add(sh);
+          render();
+          window.__timelines = window.__timelines || {};
+          window.__timelines['phone3d'] = tl;
+        });
+      })();
+    </script>
+  </body>
+</html>

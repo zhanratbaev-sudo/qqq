@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="lib/gsap.min.js"></script>
+    <script src="lib/three.min.js"></script>
+    <script src="lib/GLTFLoader.js"></script>
+    <script src="lib/vi3d.js"></script>
+    <style>
+      @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
+      @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #08110f; overflow: hidden; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #08110f; font-family: "VI Display", sans-serif; color: #eef4f1; }
+      #st-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+      .st-layer { position: absolute; left: 132px; top: 0; width: 900px; height: 1080px; }
+      .st-w { display: inline-block; }
+      .acc { color: #3fe0a0; }
+      #st-h1 { position: absolute; left: 0; top: 330px; font-weight: 900; font-size: 112px; line-height: 1.02; letter-spacing: -0.03em; }
+      #st-kicker { position: absolute; left: 4px; top: 382px; font-weight: 700; font-size: 44px; color: #8da39b; letter-spacing: -0.01em; }
+      #st-slot { position: absolute; left: 0; top: 440px; height: 170px; width: 900px; overflow: hidden; }
+      .st-sw { position: absolute; left: 0; top: 0; font-weight: 900; font-size: 140px; line-height: 170px; letter-spacing: -0.035em; white-space: nowrap; }
+      #st-all { position: absolute; left: 4px; top: 362px; font-weight: 700; font-size: 48px; color: #8da39b; }
+      #st-word { position: absolute; left: 0; top: 420px; font-weight: 900; font-size: 210px; line-height: 1; letter-spacing: -0.045em; white-space: nowrap; }
+      .st-l { display: inline-block; }
+      #st-vignette { position: absolute; inset: 0; background: radial-gradient(130% 100% at 60% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.42) 100%); pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="stage3d" data-width="1920" data-height="1080" data-start="0" data-duration="7.9">
+      <canvas id="st-gl" width="1920" height="1080"></canvas>
+      <div id="st-vignette"></div>
+      <div id="st-driver" class="clip" data-start="0" data-duration="7.9" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
+
+      <div class="st-layer" data-layout-allow-overflow>
+        <h1 id="st-h1"><span class="st-w">Цифровые</span> <span class="st-w">платформы</span><br /><span class="st-w">для</span> <span class="st-w acc">ветклиник</span></h1>
+
+        <div id="st-kicker">Для вашей клиники</div>
+        <div id="st-slot">
+          <div class="st-sw" id="st-s0">Сайт</div>
+          <div class="st-sw" id="st-s1">Заявки</div>
+          <div class="st-sw" id="st-s2">CRM</div>
+          <div class="st-sw" id="st-s3">Чаты</div>
+          <div class="st-sw" id="st-s4">Приложение</div>
+        </div>
+
+        <div id="st-all">Всё в одном</div>
+        <div id="st-word"><span class="st-l">V</span><span class="st-l">e</span><span class="st-l">t</span><span class="st-l">.</span><span class="st-l acc">i</span><span class="st-l acc">z</span><span class="st-l acc">i</span></div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var PI = Math.PI;
+        var V = VI3D.create(document.getElementById('st-gl'), { bg: '#08110F', fov: 28 });
+        var lapScr = VI3D.screen(1440, 900), phScr = VI3D.screen(780, 1688);
+        var imgs = {};
+        var S = { cx: -0.3, cy: 1.35, cz: 12.5, lx: -0.72, ly: 0.15, lz: 0, lapX: 1.15, lapY: -0.35, lapZ: 0, lapRY: -0.32, phX: 2.5, phY: -0.15, phZ: 1.55, phRY: -0.42, phRX: 0.04, scr: 0, scroll: 0, dive: 0 };
+        var lap, ph;
+        var shows = ['crm-home', 'landing-desktop', 'crm-requests', 'crm-home', 'crm-chat'];
+
+        function drawLaptop() {
+          var c = lapScr.ctx, w = 1440, h = 900;
+          var i = Math.floor(S.scr), f = S.scr - i;
+          c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, w, h);
+          var a = imgs[shows[Math.min(i, shows.length - 1)]];
+          VI3D.drawScroll(c, a, w, h, i === 1 ? S.scroll : 0, 1);
+          if (f > 0 && i + 1 < shows.length) VI3D.drawScroll(c, imgs[shows[i + 1]], w, h, i + 1 === 1 ? S.scroll : 0, f);
+          if (S.dive > 0) { c.fillStyle = 'rgba(13,23,21,' + S.dive + ')'; c.fillRect(0, 0, w, h); }
+          lapScr.tex.needsUpdate = true;
+        }
+        function drawPhone() {
+          var c = phScr.ctx; c.fillStyle = '#f2f2f7'; c.fillRect(0, 0, 780, 1688);
+          VI3D.drawScroll(c, imgs['app-home'], 780, 1688, 0, 1);
+          phScr.tex.needsUpdate = true;
+        }
+        function render() {
+          if (!lap) return;
+          drawLaptop(); drawPhone();
+          lap.position.set(S.lapX, S.lapY, S.lapZ); lap.rotation.set(0, S.lapRY, 0);
+          ph.position.set(S.phX, S.phY, S.phZ); ph.rotation.set(S.phRX, S.phRY, 0);
+          V.camera.position.set(S.cx, S.cy, S.cz); V.camera.lookAt(S.lx, S.ly, S.lz);
+          V.render();
+        }
+
+        // ---- типографика ----
+        var tl = gsap.timeline({ paused: true });
+        var words = gsap.utils.toArray('#st-h1 .st-w');
+        words.forEach(function (w, i) {
+          var t0 = i === 0 ? 0 : 0.12 + i * 0.16;
+          tl.fromTo(w, { opacity: i === 0 ? 1 : 0, filter: i === 0 ? 'blur(0px)' : 'blur(10px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, t0);
+        });
+        tl.to(words, { opacity: 0, filter: 'blur(10px)', duration: 0.16, stagger: 0.04, ease: 'power3.in' }, 3.28);
+
+        // слот-слово: смена по голосу (Сайт 3.50, Заявки 3.90, CRM 4.35, Чаты 4.97, Приложение 5.45)
+        var slotT = [3.5, 3.9, 4.35, 4.97, 5.45];
+        tl.fromTo('#st-kicker', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 3.42);
+        slotT.forEach(function (t, i) {
+          var el = '#st-s' + i;
+          tl.fromTo(el, { yPercent: 100, filter: 'blur(6px)' }, { yPercent: 0, filter: 'blur(0px)', duration: 0.22, ease: 'expo.out' }, t);
+          if (i < slotT.length - 1) tl.to(el, { yPercent: -100, filter: 'blur(6px)', duration: 0.14, ease: 'power3.in' }, slotT[i + 1] - 0.02);
+        });
+        tl.to(['#st-s4', '#st-kicker'], { opacity: 0, filter: 'blur(10px)', duration: 0.16, ease: 'power3.in' }, 6.72);
+        // Vet.izi по буквам на «всё в одном» (6.89)
+        tl.fromTo('#st-all', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.18, ease: 'power4.out' }, 6.86);
+        gsap.utils.toArray('#st-word .st-l').forEach(function (l, i) {
+          tl.fromTo(l, { opacity: 0.0, filter: 'blur(14px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.22, ease: 'power4.out' }, 6.95 + i * 0.05);
+        });
+        tl.to(['#st-all', '#st-word'], { opacity: 0, filter: 'blur(12px)', duration: 0.12, ease: 'power3.in' }, 7.76);
+
+        // ---- 3D: камера и устройства ----
+        tl.to(S, { cz: 10.4, cy: 1.15, cx: -0.45, duration: 3.5, ease: 'power2.out' }, 0);
+        tl.to(S, { lapRY: -0.24, phRY: -0.3, duration: 3.5, ease: 'power2.out' }, 0);
+        // экран ноутбука меняется по словам
+        tl.to(S, { scr: 1, duration: 0.14, ease: 'power2.inOut' }, 3.48);
+        tl.fromTo(S, { scroll: 0 }, { scroll: 1500, duration: 0.42, ease: 'power2.inOut', immediateRender: false }, 3.52);
+        tl.to(S, { scr: 2, duration: 0.14, ease: 'power2.inOut' }, 3.88);
+        tl.to(S, { scr: 3, duration: 0.14, ease: 'power2.inOut' }, 4.33);
+        tl.to(S, { scr: 4, duration: 0.14, ease: 'power2.inOut' }, 4.95);
+        // «Приложение»: телефон выходит вперёд и разворачивается к зрителю
+        tl.to(S, { phX: 2.3, phZ: 2.6, phRY: -0.08, phY: -0.05, duration: 0.6, ease: 'expo.out' }, 5.42);
+        tl.to(S, { lapX: 1.25, lapRY: -0.12, duration: 0.6, ease: 'power2.inOut' }, 5.42);
+        // «Всё в одном»: камера отъезжает
+        tl.to(S, { cz: 11.2, cx: -0.2, duration: 0.55, ease: 'power2.inOut' }, 6.8);
+        // уход: ныряем в экран ноутбука
+        tl.to(S, { phX: 6.5, duration: 0.45, ease: 'power3.in' }, 7.35);
+        tl.to(S, { lapRY: 0, lapX: 1.25, cx: 1.25, lx: 1.25, ly: 0.55, cy: 0.55, cz: 1.6, dive: 1, duration: 0.55, ease: 'power3.in' }, 7.35);
+        tl.eventCallback('onUpdate', render);
+
+        var names = ['crm-home', 'landing-desktop', 'crm-requests', 'crm-chat', 'app-home'];
+        Promise.all([
+          VI3D.loadDevice('models/macbook.glb', 'laptop', lapScr),
+          VI3D.loadDevice('models/iphone.glb', 'phone', phScr),
+        ].concat(names.map(function (n) { return VI3D.loadImage('assets/shots/' + n + '.png').then(function (i) { imgs[n] = i; }); }))).then(function (r) {
+          lap = r[0]; ph = r[1];
+          ph.scale.setScalar(0.62);
+          V.scene.add(lap); V.scene.add(ph);
+          var sh = VI3D.contactShadow(6.5, 3.2, 0.6); sh.position.set(1.15, -1.25, 0.2); V.scene.add(sh);
+          render();
+          window.__timelines = window.__timelines || {};
+          window.__timelines['stage3d'] = tl;
+        });
+      })();
+    </script>
+  </body>
+</html>

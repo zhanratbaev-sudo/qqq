@@ -22,6 +22,8 @@ if ($m) {
     wp_delete_user($m->ID);
 }
 $wpdb->delete($wpdb->prefix . 'petgo_reqs', array('name' => 'Жанар', 'breed' => 'Корги'));
+// сбрасываем лимит «5 заявок в час с одного адреса», иначе повторная запись формы упирается в него
+$wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_petgo\\_rq\\_%' OR option_name LIKE '\\_transient\\_timeout\\_petgo\\_rq\\_%'");
 
 // --- сотрудники ---
 $staff = array(
@@ -117,12 +119,17 @@ $a = min($owner->ID, $uid['dana']);
 $b = max($owner->ID, $uid['dana']);
 $ct = $wpdb->prefix . 'petgo_chats';
 $key = 'dm_' . $a . '_' . $b;
-if (!$wpdb->get_var($wpdb->prepare("SELECT id FROM $ct WHERE ckey=%s", $key))) {
+$cid = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM $ct WHERE ckey=%s", $key));
+if (!$cid) {
     $wpdb->insert($ct, array('ckey' => $key, 'type' => 'dm', 'title' => '', 'created' => time() - 7200));
     $cid = (int) $wpdb->insert_id;
     foreach (array($owner->ID, $uid['dana']) as $m) {
         $wpdb->insert($wpdb->prefix . 'petgo_members', array('chat_id' => $cid, 'user_id' => $m, 'last_read' => 0));
     }
+}
+// переписку каждый раз начинаем заново, чтобы сообщения из прошлых записей не копились
+$wpdb->delete($wpdb->prefix . 'petgo_msgs', array('chat_id' => $cid));
+{
     $msgs = array(
         array($uid['dana'], 'Добрый день! Забрала Рекса, идём в парк', 3000),
         array($owner->ID, 'Отлично, спасибо! Он сегодня поел?', 2900),
