@@ -1,0 +1,35 @@
+{
+  "output": "petgo-promo-mobile.mp4",
+  "transitionSeconds": 0.4,
+  "brand": {
+    "colorFrom": "#0E9F8E",
+    "colorTo": "#0B5E8C",
+    "accent": "#FFD24A"
+  },
+  "scenes": [
+    { "id": "intro",       "clip": "home",            "start": 0.0, "duration": 4.5, "title": "*PetGo* — цифровой кабинет для ветклиники", "transition": "fade" },
+    { "id": "home-scroll", "clip": "home",            "start": 4.5, "duration": 4.0, "title": "*PetGo* — цифровой кабинет для ветклиники", "transition": "fade" },
+    { "id": "owner-login", "clip": "owner-login",     "start": 0.0, "duration": 4.0, "title": "Личный кабинет для *владельцев питомцев*", "transition": "smoothleft" },
+    { "id": "owner-cab",   "clip": "owner-login",     "start": 5.5, "duration": 4.0, "title": "Личный кабинет для *владельцев питомцев*", "transition": "fade" },
+    { "id": "request",     "clip": "owner-request",   "start": 0.0, "duration": 5.0, "title": "Онлайн-заявки *за 1 минуту*", "transition": "smoothleft" },
+    { "id": "request-ok",  "clip": "owner-request",   "start": 7.0, "duration": 3.5, "title": "Онлайн-заявки *за 1 минуту*", "transition": "fade" },
+    { "id": "chat",        "clip": "owner-chat",      "start": 0.0, "duration": 5.0, "title": "*Чат* с клиникой", "transition": "smoothleft" },
+    { "id": "staff-login", "clip": "staff-login",     "start": 0.0, "duration": 4.0, "title": "Добавляйте *сотрудников и роли*", "transition": "smoothleft" },
+    { "id": "staff-add",   "clip": "staff-employee",  "start": 0.0, "duration": 5.0, "title": "Добавляйте *сотрудников и роли*", "transition": "fade" },
+    { "id": "staff-list",  "clip": "staff-requests",  "start": 0.0, "duration": 5.0, "title": "Все заявки *в одном месте*", "transition": "smoothleft" },
+    { "id": "staff-list2", "clip": "staff-requests",  "start": 5.0, "duration": 4.0, "title": "Все заявки *в одном месте*", "transition": "fade" },
+    {
+      "id": "final",
+      "final": true,
+      "duration": 5.5,
+      "title": "*PetGo* — подключите свою клинику",
+      "contacts": [
+        "+7 (700) 000-00-00",
+        "pet.oscarclinic.kz",
+        "WhatsApp: +7 (700) 000-00-00"
+      ],
+      "cta": "Оставьте заявку на подключение",
+      "transition": "fade"
+    }
+  ]
+}

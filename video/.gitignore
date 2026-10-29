@@ -1,0 +1,5 @@
+.env
+.auth/
+build/
+node_modules/
+clips/.tmp-*
