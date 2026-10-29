@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>PetGo Маркет — товары для питомцев</title>
+  <meta name="description" content="Корм, игрушки, амуниция и уход для собак и кошек. Заказ онлайн за минуту." />
+  <meta name="theme-color" content="#FBF9E8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/shop.css" />
+</head>
+<body>
+  <!-- БЛОК 0: меню -->
+  <header class="nav" id="nav">
+    <a class="logo" href="#top" aria-label="PetGo Маркет — наверх">
+      <i><svg viewBox="0 0 64 64" fill="#FBF9E8" aria-hidden="true"><ellipse cx="32" cy="42" rx="14" ry="12"/><ellipse cx="15" cy="27" rx="6" ry="8"/><ellipse cx="49" cy="27" rx="6" ry="8"/><ellipse cx="24" cy="15" rx="5.5" ry="7.5"/><ellipse cx="40" cy="15" rx="5.5" ry="7.5"/></svg></i>
+      <span data-shop-name>PetGo Маркет</span>
+    </a>
+    <nav class="nav-links" aria-label="Разделы">
+      <a href="#catalog">Каталог</a>
+      <a href="#how">Как заказать</a>
+      <a href="#contacts">Контакты</a>
+    </nav>
+    <button class="btn btn-primary cart-btn" type="button" id="cartBtn" aria-label="Корзина">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2"/><circle cx="10" cy="20.5" r="1.3"/><circle cx="17" cy="20.5" r="1.3"/></svg>
+      Корзина <span class="cart-n" id="cartN">0</span>
+    </button>
+  </header>
+
+  <main id="top">
+    <!-- БЛОК 1: главный экран -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div class="hero-copy rise">
+          <span class="trust"><b>Новинки</b> каждую неделю</span>
+          <h1 class="h">Всё для вашего питомца — с&nbsp;доставкой по&nbsp;Алматы</h1>
+          <p class="sub">Корм, игрушки, амуниция и уход. Соберите корзину, а мы подтвердим заказ в WhatsApp или по телефону.</p>
+          <div class="row">
+            <a class="btn btn-primary" href="#catalog">Перейти в каталог</a>
+          </div>
+          <ul class="checks">
+            <li>Только проверенные бренды</li>
+            <li>Доставка в день заказа</li>
+            <li>Оплата при получении</li>
+          </ul>
+        </div>
+        <div class="hero-art rise" id="heroArt" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- БЛОК 2: каталог -->
+    <section class="sec" id="catalog">
+      <div class="wrap">
+        <div class="sec-head rise">
+          <h2 class="h">Каталог</h2>
+          <p class="sub">Выберите категорию и добавьте товары в корзину.</p>
+        </div>
+        <div class="picker rise" id="picker" role="tablist" aria-label="Категории"><span class="picker-ind" id="pickerInd"></span></div>
+        <div class="grid" id="grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- БЛОК 3: как заказать -->
+    <section class="sec" id="how">
+      <div class="wrap">
+        <div class="sec-head rise"><h2 class="h">Как заказать</h2></div>
+        <div class="steps">
+          <div class="step rise"><span class="num">1</span><h3 class="h3">Соберите корзину</h3><p>Добавьте нужные товары из каталога.</p></div>
+          <div class="step rise"><span class="num">2</span><h3 class="h3">Оставьте контакты</h3><p>Имя и телефон — больше ничего не нужно.</p></div>
+          <div class="step rise"><span class="num">3</span><h3 class="h3">Получите заказ</h3><p>Подтвердим наличие и привезём в удобное время.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- БЛОК 4: подвал -->
+  <footer class="foot" id="contacts">
+    <div class="wrap">
+      <div class="foot-row">
+        <span class="logo"><i><svg viewBox="0 0 64 64" fill="#024C46" aria-hidden="true"><ellipse cx="32" cy="42" rx="14" ry="12"/><ellipse cx="15" cy="27" rx="6" ry="8"/><ellipse cx="49" cy="27" rx="6" ry="8"/><ellipse cx="24" cy="15" rx="5.5" ry="7.5"/><ellipse cx="40" cy="15" rx="5.5" ry="7.5"/></svg></i><span data-shop-name>PetGo Маркет</span></span>
+        <div class="foot-links">
+          <a href="#catalog">Каталог</a>
+          <a href="#how">Как заказать</a>
+          <a href="admin.html">Панель магазина</a>
+        </div>
+      </div>
+      <div class="foot-bottom"><span>© <span id="year"></span> <span data-shop-name>PetGo Маркет</span></span><span>Товары для питомцев в Алматы</span></div>
+    </div>
+  </footer>
+
+  <button class="btn btn-primary cart-float" type="button" id="cartFloat" aria-label="Открыть корзину">Корзина · <span id="cfN">0</span> <b id="cfSum"></b></button>
+
+  <!-- ОКНО: товар -->
+  <div class="ovl" id="ovl" hidden></div>
+  <section class="sheet" id="pSheet" role="dialog" aria-modal="true" aria-labelledby="pName" hidden>
+    <div class="sheet-head"><h3 class="h3" id="pName"></h3><button class="x" type="button" data-close aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sheet-body">
+      <div class="gal"><img id="pImg" alt="" /></div>
+      <div class="thumbs" id="pThumbs"></div>
+      <div class="price-row"><span class="price" id="pPrice"></span><span class="old" id="pOld"></span></div>
+      <p class="desc" id="pDesc"></p>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-primary btn-wide" type="button" id="pAdd">В корзину</button></div>
+  </section>
+
+  <!-- ОКНО: корзина и оформление -->
+  <section class="sheet" id="cSheet" role="dialog" aria-modal="true" aria-labelledby="cTitle" hidden>
+    <div class="sheet-head"><h3 class="h3" id="cTitle">Корзина</h3><button class="x" type="button" data-close aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sheet-body" id="cBody"></div>
+    <div class="sheet-foot" id="cFoot"></div>
+  </section>
+
+  <script src="js/store.js"></script>
+  <script src="js/shop.js"></script>
+</body>
+</html>

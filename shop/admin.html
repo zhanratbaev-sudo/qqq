@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Панель магазина — PetGo Маркет</title>
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <header class="top" id="top">
+    <div><span class="hello" id="hello"></span><h1 class="ttl" id="ttl">Товары</h1></div>
+    <a class="iconb glass" href="index.html" target="_blank" rel="noopener" aria-label="Открыть сайт магазина">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4"/></svg>
+    </a>
+  </header>
+
+  <main class="in" id="view"></main>
+
+  <!-- плавающая панель вкладок и кнопка «Добавить товар» -->
+  <div class="dock">
+    <nav class="tabs glass" id="tabs" aria-label="Разделы">
+      <span class="lens" id="lens"></span>
+      <button class="tab on" type="button" data-tab="products">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg>Товары</button>
+      <button class="tab" type="button" data-tab="orders">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Заказы <span class="n" id="newN" hidden></span></button>
+    </nav>
+    <button class="fab" type="button" id="fab" aria-label="Добавить товар">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
+
+  <!-- лист: товар -->
+  <div class="ovl" id="ovl" hidden></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+    <div class="sh-head">
+      <button class="x glass" type="button" data-close aria-label="Закрыть"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h2 id="shTitle">Новый товар</h2>
+      <span style="width:44px"></span>
+    </div>
+    <form class="sh-body" id="pForm" novalidate>
+      <div class="grp">
+        <span>Фото</span>
+        <div class="photos" id="photos"></div>
+        <p class="hint">Первое фото — обложка. Перетащите фото сюда или нажмите «+». Фото сжимаются до 1200 px.</p>
+        <input type="file" id="file" accept="image/*" multiple hidden />
+      </div>
+      <div class="grp">
+        <span>Товар</span>
+        <div class="cell">
+          <label class="f"><input name="name" placeholder="Название" maxlength="120" required /></label>
+          <label class="f"><select name="cat" aria-label="Категория"></select></label>
+          <label class="f"><textarea name="desc" placeholder="Описание" maxlength="1500"></textarea></label>
+        </div>
+      </div>
+      <div class="grp">
+        <span>Цена, ₸</span>
+        <div class="two">
+          <div class="cell"><label class="f"><input name="price" type="number" inputmode="numeric" min="0" step="1" placeholder="Цена" required /></label></div>
+          <div class="cell"><label class="f"><input name="old" type="number" inputmode="numeric" min="0" step="1" placeholder="Старая цена" /></label></div>
+        </div>
+      </div>
+      <div class="grp">
+        <div class="cell"><label class="tgl">В наличии<span class="sw"><input type="checkbox" name="stock" checked /><i></i></span></label></div>
+      </div>
+    </form>
+    <div class="sh-foot">
+      <button class="btn wide" type="submit" form="pForm" id="save">Опубликовать</button>
+      <button class="btn wide red" type="button" id="del" hidden>Удалить товар</button>
+    </div>
+  </section>
+
+  <div class="toast glass" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/store.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
