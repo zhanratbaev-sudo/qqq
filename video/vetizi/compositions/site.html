@@ -1,0 +1,97 @@
+<template>
+  <style>
+    @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
+    @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
+    @font-face { font-family: "VI Mono"; src: local("JetBrains Mono Medium"), local("JetBrainsMono-Medium"), local("JetBrains Mono"); font-weight: 500; }
+    /* Сцена на экране ноутбука, глобально 16.5–23 с: пишем код → запускаем → сайт готов (пример — PetGo) */
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; }
+    .st-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
+    .cap-g { position: absolute; left: 120px; top: 430px; width: 700px; display: flex; flex-direction: column; }
+    .cap-t { font-weight: 900; font-size: 96px; line-height: 1.02; letter-spacing: -0.035em; color: #f2f6f4; white-space: nowrap; }
+    .cap-t .w { display: inline-block; }
+    .cap-d { position: relative; margin-top: 30px; height: 120px; }
+    .cap-d p { position: absolute; left: 0; top: 0; width: 700px; font-weight: 700; font-size: 46px; line-height: 1.25; color: #b5ccc4; }
+    .acc { color: #3fe0a0; }
+    .win { position: absolute; border-radius: 22px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.55); }
+    .bar { height: 46px; display: flex; align-items: center; gap: 9px; padding: 0 18px; font-family: "VI Mono", monospace; font-size: 20px; }
+    .bar i { width: 13px; height: 13px; border-radius: 50%; display: block; }
+    #st-ed { left: 880px; top: 150px; width: 940px; height: 560px; background: #0a1412; border: 1px solid #1d2f2a; }
+    #st-ed .bar { color: #6f857d; border-bottom: 1px solid #1d2f2a; } #st-ed .bar i { background: #23362f; }
+    #st-code { padding: 26px 28px; font-family: "VI Mono", monospace; font-size: 27px; line-height: 50px; white-space: pre; }
+    .ch { opacity: 0; }
+    .t { color: #6fd3ff; } .a { color: #ffd479; } .s { color: #3fe0a0; } .x { color: #eef4f1; } .c { color: #5f746c; }
+    #st-term { left: 880px; top: 740px; width: 940px; height: 330px; background: #050908; border: 1px solid #1d2f2a; }
+    #st-term .bar { color: #6f857d; } #st-term .bar i { background: #23362f; }
+    #st-out { padding: 18px 28px; font-family: "VI Mono", monospace; font-size: 27px; line-height: 48px; white-space: pre; color: #cfe3dc; }
+    #st-out div { opacity: 0; }
+    .ok { color: #3fe0a0; } .dim { color: #6f857d; }
+    #st-br { left: 860px; top: 140px; width: 980px; height: 950px; background: #fbf9e8; }
+    #st-br .bar { background: #e9e6d6; color: #024c46; justify-content: flex-start; } #st-br .bar i { background: #c9c5b2; }
+    #st-br .bar b { margin: 0 auto; height: 30px; padding: 0 18px; border-radius: 15px; background: #fbf9e8; display: flex; align-items: center; font-family: "VI Display", sans-serif; font-size: 18px; }
+    #st-view { position: absolute; left: 0; top: 46px; width: 980px; height: 904px; overflow: hidden; }
+    #st-site { position: absolute; left: 0; top: 0; width: 980px; }
+    #st-site img { display: block; width: 980px; }
+  </style>
+  <div id="root" data-composition-id="site" data-width="1920" data-height="1080">
+    <div class="st-scr" id="st-scr">
+      <div class="cap-g" data-in="16.7" data-out="22.9">
+        <div class="cap-t">Сайт под<br><span class="acc">ваш дизайн</span></div>
+        <div class="cap-d"><p data-at="16.9" data-until="18.55">1. Пишем код сайта</p><p data-at="18.6" data-until="19.65">2. Запускаем</p><p data-at="19.7">3. Сайт готов — пример: PetGo</p></div>
+      </div>
+      <div class="win" id="st-ed"><div class="bar"><i></i><i></i><i></i>&nbsp;clinic-site/index.html</div><div id="st-code" data-layout-ignore></div></div>
+      <div class="win" id="st-term"><div class="bar"><i></i><i></i><i></i>&nbsp;Терминал</div>
+        <div id="st-out" data-layout-ignore>
+          <div><span class="s">$</span> npm run build</div>
+          <div class="dim">› собираем страницы, стили и формы…</div>
+          <div class="ok">✓ Сайт собран</div>
+          <div><span class="s">$</span> npm run start</div>
+          <div class="ok">✓ Сайт запущен</div>
+        </div>
+      </div>
+      <div class="win" id="st-br"><div class="bar"><i></i><i></i><i></i><b>Пример проекта — PetGo</b></div>
+        <div id="st-view"><div id="st-site"><img src="assets/shots/landing-desktop.png" alt="" /></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var T0 = 16.5;
+      var scr = document.getElementById('st-scr');
+      var lines = [
+        [['t', '<header'], ['a', ' class'], ['x', '='], ['s', '"menu"'], ['t', '>']],
+        [['t', '<h1>'], ['x', 'Забота о питомцах'], ['t', '</h1>']],
+        [['t', '<a'], ['a', ' class'], ['x', '='], ['s', '"btn"'], ['t', '>'], ['x', 'Записаться'], ['t', '</a>']],
+        [['t', '<section'], ['a', ' id'], ['x', '='], ['s', '"uslugi"'], ['t', '>']],
+        [['t', '<form'], ['a', ' id'], ['x', '='], ['s', '"zayavka"'], ['t', '>']],
+        [['c', '<!-- ваш стиль и цвета -->']],
+      ];
+      var code = document.getElementById('st-code'), chars = [];
+      lines.forEach(function (ln) {
+        var row = document.createElement('div');
+        ln.forEach(function (seg) { seg[1].split('').forEach(function (ch) { var sp = document.createElement('span'); sp.className = 'ch ' + seg[0]; sp.textContent = ch; row.appendChild(sp); chars.push(sp); }); });
+        code.appendChild(row);
+      });
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 6.5);
+      tl.fromTo('#st-ed', { opacity: 0, x: 60, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.1);
+      tl.fromTo('#st-term', { opacity: 0, x: 60, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.2);
+      // печать кода: 0.4–2.0
+      var per = 1.6 / chars.length;
+      chars.forEach(function (sp, i) { tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, 0.4 + i * per); });
+      // запуск: 2.1–3.1
+      gsap.utils.toArray('#st-out div').forEach(function (d, i) {
+        tl.fromTo(d, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.12, ease: 'power2.out' }, [2.1, 2.35, 2.75, 2.95, 3.15][i]);
+      });
+      // сайт готов: браузер раскрывается поверх окон (3.2), прокрутка
+      tl.to(['#st-ed', '#st-term'], { opacity: 0, scale: 0.96, filter: 'blur(10px)', duration: 0.3, ease: 'power3.in' }, 3.2);
+      tl.fromTo('#st-br', { opacity: 0, scale: 0.9, filter: 'blur(12px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.55, ease: 'expo.out' }, 3.25);
+      tl.fromTo('#st-site', { y: 0 }, { y: -760, duration: 1.4, ease: 'power2.inOut', immediateRender: false }, 3.9);
+      tl.to('#st-site', { y: -2859 * 980 / 1440, duration: 0.8, ease: 'power3.inOut' }, 5.4);
+      tl.to('#st-br', { opacity: 0, scale: 0.94, filter: 'blur(12px)', duration: 0.3, ease: 'power3.in' }, 6.2);
+      CAPS.build(tl, scr, T0);
+      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, T0 + tl.time()); });
+      LAPTOP.mapScreen(scr, T0);
+      window.__timelines['site'] = tl;
+    })();
+  </script>
+</template>

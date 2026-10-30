@@ -183,6 +183,24 @@ const flows = {
     await pause(page, 1.2);
   },
 
+  // Меню кабинета раскрывается только при наведении курсора (как в PetGo 27)
+  async 'd-menu'(page, mark) {
+    await page.goto(cab('requests'), { waitUntil: 'networkidle' });
+    await settle(page);
+    mark();
+    await pause(page, 0.5);
+    await moveTo(page, 36, 330, 0.9); // наводим на боковое меню — оно раскрывается
+    mark('open');
+    await pause(page, 0.5);
+    for (const y of [150, 200, 250, 300, 380]) { await moveTo(page, 110, y, 0.28); await pause(page, 0.12); }
+    mark('items');
+    await moveTo(page, 640, 300, 0.7); // уводим курсор — меню сворачивается
+    mark('closed');
+    await pause(page, 0.6);
+    await moveTo(page, 300, 280, 0.6); // показываем новую заявку
+    await pause(page, 1.2);
+  },
+
   async 'd-orders'(page, mark) {
     await page.goto(cab('orders'), { waitUntil: 'networkidle' });
     await settle(page);
@@ -253,7 +271,7 @@ const flows = {
   },
 };
 
-const NEEDS_LOGIN = new Set(['d-crm', 'd-orders', 'd-cal', 'd-staff', 'd-chat', 'm-app']);
+const NEEDS_LOGIN = new Set(['d-menu', 'd-crm', 'd-orders', 'd-cal', 'd-staff', 'd-chat', 'm-app']);
 
 async function record(browser, name) {
   const mobile = name.startsWith('m-');

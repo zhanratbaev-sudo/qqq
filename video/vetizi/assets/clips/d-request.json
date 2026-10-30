@@ -1,66 +1,66 @@
 {
   "marks": {
-    "ready": 4.392,
-    "ready-submit": 15.086,
-    "submitted": 16.994
+    "ready": 4.788,
+    "ready-submit": 13.657,
+    "submitted": 15.461
   },
-  "length": 19.498,
+  "length": 17.964,
   "events": [
     {
       "type": "click",
-      "t": 5.497
+      "t": 5.636
     },
     {
       "type": "type",
-      "t": 5.738,
-      "dur": 0.248,
+      "t": 5.883,
+      "dur": 0.241,
       "chars": 5
     },
     {
       "type": "click",
-      "t": 7.055
+      "t": 7.03
     },
     {
       "type": "type",
-      "t": 7.296,
-      "dur": 0.58,
+      "t": 7.275,
+      "dur": 0.571,
       "chars": 16
     },
     {
       "type": "click",
-      "t": 9.075
+      "t": 8.758
     },
     {
       "type": "click",
-      "t": 10.315
+      "t": 9.758
     },
     {
       "type": "click",
-      "t": 11.603
+      "t": 10.771
     },
     {
       "type": "type",
-      "t": 11.848,
-      "dur": 0.109,
+      "t": 11.011,
+      "dur": 0.097,
       "chars": 2
     },
     {
       "type": "click",
-      "t": 13.194
+      "t": 12.012
     },
     {
       "type": "type",
-      "t": 13.435,
-      "dur": 0.245,
+      "t": 12.251,
+      "dur": 0.238,
       "chars": 5
     },
     {
       "type": "click",
-      "t": 14.844
+      "t": 13.418
     },
     {
       "type": "click",
-      "t": 16.192
+      "t": 14.465
     }
   ]
 }

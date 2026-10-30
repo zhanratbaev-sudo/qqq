@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="lib/gsap.min.js"></script>
+    <script src="lib/three.min.js"></script>
+    <script src="lib/GLTFLoader.js"></script>
+    <script src="lib/vi3d.js"></script>
+    <script src="lib/laptop.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { background: #000; overflow: hidden; }
+      #root { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: #000; }
+      #rm-gl { position: absolute; inset: 0; width: 1920px; height: 1080px; }
+    </style>
+  </head>
+  <body>
+    <!-- Тёмная комната с ноутбуком. Содержимое экрана накладывают сцены (lib/laptop.js, mapScreen). -->
+    <div id="root" data-composition-id="room" data-width="1920" data-height="1080" data-start="0" data-duration="50">
+      <canvas id="rm-gl" width="1920" height="1080"></canvas>
+      <div id="rm-driver" class="clip" data-start="0" data-duration="50" data-track-index="0" style="position:absolute;width:1px;height:1px;opacity:0"></div>
+    </div>
+    <script>
+      (function () {
+        var V = VI3D.create(document.getElementById('rm-gl'), { bg: '#000000', fov: 30, exposure: 1.0 });
+        V.scene.environment = null;
+        V.scene.fog = new THREE.Fog(0x000000, 9, 17); // дальняя часть стола растворяется в темноте
+        V.scene.children.slice().forEach(function (o) { if (o.isLight) V.scene.remove(o); });
+        // свет: экран светит на клавиатуру и стол, слабый холодный контровой
+        V.scene.add(new THREE.AmbientLight(0x0a1a22, 0.6));
+        var glow = new THREE.PointLight(0x3fd7c2, 2.6, 9, 2); glow.position.set(0, 0.2, -0.6); V.scene.add(glow);
+        var glow2 = new THREE.PointLight(0x2f7bff, 1.2, 8, 2); glow2.position.set(0, -0.6, 0.8); V.scene.add(glow2);
+        var rim = new THREE.DirectionalLight(0x9fc4ff, 0.35); rim.position.set(3, 4, -5); V.scene.add(rim);
+        // стол
+        var desk = new THREE.Mesh(new THREE.PlaneGeometry(40, 30), new THREE.MeshStandardMaterial({ color: 0x030405, roughness: 0.8, metalness: 0.1 }));
+        desk.rotation.x = -Math.PI / 2; desk.position.y = -1.667; V.scene.add(desk);
+        // пятно света от экрана на столе
+        var c = document.createElement('canvas'); c.width = c.height = 256;
+        var x = c.getContext('2d'), gr = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+        gr.addColorStop(0, 'rgba(63,215,194,0.55)'); gr.addColorStop(1, 'rgba(63,215,194,0)');
+        x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+        var spill = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+        spill.rotation.x = -Math.PI / 2; spill.position.set(0, -1.66, 0.6); V.scene.add(spill);
+
+        var scr = VI3D.screen(16, 10);
+        scr.ctx.fillStyle = '#04100f'; scr.ctx.fillRect(0, 0, 16, 10); scr.tex.needsUpdate = true;
+        var lap = null;
+        var S = { t: 0 };
+        function render() {
+          if (!lap) return;
+          var c = LAPTOP.cam(S.t);
+          V.camera.fov = c.fov; V.camera.updateProjectionMatrix();
+          V.camera.position.set(c.pos[0], c.pos[1], c.pos[2]);
+          V.camera.lookAt(c.look[0], c.look[1], c.look[2]);
+          var k = 0.85 + 0.15 * Math.sin(S.t * 0.8);
+          glow.intensity = 2.6 * k; spill.material.opacity = 0.8 * k;
+          V.render();
+        }
+        var tl = gsap.timeline({ paused: true });
+        tl.fromTo(S, { t: 0 }, { t: 50, duration: 50, ease: 'none' }, 0);
+        tl.eventCallback('onUpdate', render);
+        VI3D.loadDevice('models/macbook.glb', 'laptop', scr).then(function (g) {
+          lap = g; V.scene.add(lap);
+          var sh = VI3D.contactShadow(6.5, 4.4, 0.85); sh.position.set(0, -1.66, 0.1); V.scene.add(sh);
+          render();
+          window.__timelines = window.__timelines || {};
+          window.__timelines['room'] = tl;
+        });
+      })();
+    </script>
+  </body>
+</html>

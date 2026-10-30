@@ -11,7 +11,8 @@ import wave
 import numpy as np
 
 SR = 48000
-BAR = 2.0625
+DROP_BAR = int(__import__('os').environ.get('DROP_BAR', 16))  # такт удара (начало финала)
+BAR = float(__import__('os').environ.get('BAR', 2.0625))
 BEAT = BAR / 4
 rng = np.random.default_rng(11)
 
@@ -127,7 +128,7 @@ def main(seconds, out):
     for b in range(bars):
         t0 = b * BAR
         ch = CHORDS[b % 4]
-        final = b >= 16
+        final = b >= DROP_BAR
         # пэд
         ln = int(BAR * SR * 1.1)
         for m in ch[1:]:
@@ -147,17 +148,17 @@ def main(seconds, out):
                 k += 1
                 t += step
         # бас восьмыми с такта 2
-        if 2 <= b < 16 or final:
+        if 2 <= b < DROP_BAR or final:
             root = ch[0] - 12 if ch[0] > 45 else ch[0]
             for i in range(8):
                 if final and i % 2:
                     continue
                 place(low, bass(hz(root), int(BEAT / 2 * SR * 0.95)), t0 + i * BEAT / 2, 0.16)
         # ударные
-        build = 13 <= b < 16
-        if 2 <= b < 16 or final:
+        build = DROP_BAR - 3 <= b < DROP_BAR
+        if 2 <= b < DROP_BAR or final:
             for i in range(4):
-                if b == 15 and i >= 2:
+                if b == DROP_BAR - 1 and i >= 2:
                     break  # пауза перед ударом
                 kt = t0 + i * BEAT
                 place(drums, kick(int(0.45 * SR)), kt, 0.5 if not final else 0.38)
@@ -168,11 +169,11 @@ def main(seconds, out):
             for i in range(16 if build else 8):
                 sub = BEAT / 4 if build else BEAT / 2
                 place(drums, hat(int(0.06 * SR)), t0 + i * sub + (0 if build else BEAT / 2 * 0), 0.05 if i % 2 else 0.08)
-            if b >= 4 and not (b == 15):
+            if b >= 4 and not (b == DROP_BAR - 1):
                 for i in (1, 3):
                     place(drums, clap(int(0.25 * SR)), t0 + i * BEAT, 0.16)
     # подъём перед финалом (такт 15) и удар на 33.0
-    rs, re_ = 15 * BAR, 16 * BAR
+    rs, re_ = (DROP_BAR - 1) * BAR, DROP_BAR * BAR
     m = int((re_ - rs) * SR)
     t = np.arange(m) / SR
     noise = np.diff(rng.standard_normal(m + 1)) * (t / t[-1]) ** 2
@@ -180,9 +181,9 @@ def main(seconds, out):
     place(drums, 0.10 * noise + 0.05 * sweep, rs)
     it = np.arange(int(1.8 * SR)) / SR
     boom = np.sin(2 * np.pi * np.cumsum(38 + 60 * np.exp(-it * 8)) / SR) * np.exp(-it * 2.2)
-    place(drums, 0.7 * boom + 0.15 * hat(len(it), 9), 16 * BAR)
+    place(drums, 0.7 * boom + 0.15 * hat(len(it), 9), DROP_BAR * BAR)
     for mm in CHORDS[0][1:]:
-        place(music, ep(hz(mm + 12), int(3 * SR)), 16 * BAR, 0.1)
+        place(music, ep(hz(mm + 12), int(3 * SR)), DROP_BAR * BAR, 0.1)
 
     # шина: реверб на гармонии и арпеджио, сайдчейн, стерео
     ir = reverb_ir(2.2)

@@ -1,0 +1,36 @@
+<template>
+  <style>
+    /* Фон экрана ноутбука: тёмный с плавающими пятнами свечения (бирюза WebFor и синий). Ставится на экран через LAPTOP.mapScreen. */
+    #root { position: absolute; inset: 0; pointer-events: none; }
+    .gw-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; background: #020a0c; }
+    .gw-b { position: absolute; border-radius: 50%; filter: blur(40px); }
+    #gw-a { left: -420px; top: 120px; width: 1100px; height: 1100px; background: radial-gradient(circle, rgba(22,190,170,.75), rgba(22,190,170,0) 65%); }
+    #gw-b { right: -460px; top: -80px; width: 1200px; height: 1200px; background: radial-gradient(circle, rgba(36,110,255,.7), rgba(36,110,255,0) 65%); }
+    #gw-c { left: 560px; top: 760px; width: 900px; height: 700px; background: radial-gradient(circle, rgba(63,224,160,.35), rgba(63,224,160,0) 65%); }
+    #gw-dark { position: absolute; inset: 0; background: #000; }
+  </style>
+  <div id="root" data-composition-id="glow" data-width="1920" data-height="1080">
+    <div class="gw-scr" id="gw-scr">
+      <div class="gw-b" id="gw-a"></div>
+      <div class="gw-b" id="gw-b"></div>
+      <div class="gw-b" id="gw-c"></div>
+      <div id="gw-dark"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var scr = document.getElementById('gw-scr');
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo('#gw-dark', { opacity: 1 }, { opacity: 0, duration: 1.4, ease: 'power2.inOut' }, 0.3);
+      // медленный дрейф пятен (без зацикливания — одна длинная траектория)
+      tl.fromTo('#gw-a', { x: 0, y: 0 }, { x: 260, y: -140, duration: 25, ease: 'sine.inOut' }, 0);
+      tl.to('#gw-a', { x: -60, y: 60, duration: 25, ease: 'sine.inOut' }, 25);
+      tl.fromTo('#gw-b', { x: 0, y: 0 }, { x: -300, y: 180, duration: 25, ease: 'sine.inOut' }, 0);
+      tl.to('#gw-b', { x: 40, y: -40, duration: 25, ease: 'sine.inOut' }, 25);
+      tl.fromTo('#gw-c', { x: 0, y: 0 }, { x: -380, y: -120, duration: 50, ease: 'sine.inOut' }, 0);
+      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, tl.time()); });
+      LAPTOP.mapScreen(scr, 0);
+      window.__timelines['glow'] = tl;
+    })();
+  </script>
+</template>

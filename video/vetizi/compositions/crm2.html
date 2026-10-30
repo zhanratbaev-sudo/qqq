@@ -1,0 +1,67 @@
+<template>
+  <style>
+    @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
+    @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
+    /* Сцена на экране ноутбука, глобально 30–39 с: заявка в CRM, меню по наведению, кадры кабинета */
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; }
+    .c2-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
+    .cap-g { position: absolute; left: 120px; top: 430px; width: 700px; display: flex; flex-direction: column; }
+    .cap-t { font-weight: 900; font-size: 96px; line-height: 1.02; letter-spacing: -0.035em; color: #f2f6f4; white-space: nowrap; }
+    .cap-t .w { display: inline-block; }
+    .cap-d { position: relative; margin-top: 30px; height: 120px; }
+    .cap-d p { position: absolute; left: 0; top: 0; width: 700px; font-weight: 700; font-size: 46px; line-height: 1.25; color: #b5ccc4; }
+    .acc { color: #3fe0a0; }
+    #c2-win { position: absolute; left: 860px; top: 280px; width: 980px; height: 659px; border-radius: 22px; overflow: hidden; background: #f2f2f7; box-shadow: 0 40px 100px rgba(0,0,0,.55); }
+    #c2-bar { height: 46px; background: #e4e4ea; display: flex; align-items: center; gap: 9px; padding: 0 18px; }
+    #c2-bar i { width: 13px; height: 13px; border-radius: 50%; background: #c4c4cc; display: block; }
+    #c2-view { position: absolute; left: 0; top: 46px; width: 980px; height: 613px; overflow: hidden; }
+    #c2-zoom { position: absolute; left: 0; top: 0; width: 980px; height: 613px; transform-origin: 0 300px; }
+    .c2-shot { position: absolute; left: 0; top: 0; width: 980px; height: 613px; }
+    .c2-shot video { position: absolute; left: 0; top: 0; width: 980px; height: 613px; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="crm2" data-width="1920" data-height="1080">
+    <div class="c2-scr" id="c2-scr">
+      <div class="cap-g" data-in="30.2" data-out="34.55">
+        <div class="cap-t">Заявка<br>уже в <span class="acc">CRM</span></div>
+        <div class="cap-d"><p data-at="30.4" data-until="31.55">Новая заявка — первой в списке</p><p data-at="31.6">Меню раскрывается при наведении</p></div>
+      </div>
+      <div class="cap-g" data-in="34.65" data-out="38.9">
+        <div class="cap-t">Следите<br>за <span class="acc">работой</span></div>
+        <div class="cap-d"><p data-at="34.85" data-until="35.55">Заказы и статусы</p><p data-at="35.6" data-until="36.55">Календарь команды</p><p data-at="36.6" data-until="37.75">Сотрудники и роли</p><p data-at="37.8">Чаты с командой</p></div>
+      </div>
+      <div id="c2-win">
+        <div id="c2-bar"><i></i><i></i><i></i></div>
+        <div id="c2-view">
+          <div id="c2-zoom">
+            <div class="c2-shot" id="c2-s0"><video id="c2-v0" class="clip" data-start="0" data-duration="4.7" data-media-start="1.36" data-playback-rate="1.4" data-track-index="0" src="assets/clips/d-menu.mp4" muted playsinline></video></div>
+          </div>
+          <div class="c2-shot" id="c2-s1"><video id="c2-v1" class="clip" data-start="4.58" data-duration="1.1" data-media-start="1.5" data-playback-rate="1.3" data-track-index="1" src="assets/clips/d-orders.mp4" muted playsinline></video></div>
+          <div class="c2-shot" id="c2-s2"><video id="c2-v2" class="clip" data-start="5.58" data-duration="1.05" data-media-start="1.55" data-playback-rate="1.3" data-track-index="2" src="assets/clips/d-cal.mp4" muted playsinline></video></div>
+          <div class="c2-shot" id="c2-s3"><video id="c2-v3" class="clip" data-start="6.58" data-duration="1.25" data-media-start="12.9" data-playback-rate="1.3" data-track-index="3" src="assets/clips/d-staff.mp4" muted playsinline></video></div>
+          <div class="c2-shot" id="c2-s4"><video id="c2-v4" class="clip" data-start="7.78" data-duration="1.22" data-media-start="7.9" data-playback-rate="1.3" data-track-index="4" src="assets/clips/d-chat.mp4" muted playsinline></video></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var T0 = 30;
+      var scr = document.getElementById('c2-scr');
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 9);
+      tl.fromTo('#c2-win', { opacity: 0, y: 60, filter: 'blur(12px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.05);
+      // наезд на боковое меню, пока курсор на нём (меню раскрыто 1.2–4.5)
+      tl.fromTo('#c2-zoom', { scale: 1 }, { scale: 1.55, duration: 0.6, ease: 'power2.inOut' }, 1.0);
+      tl.to('#c2-zoom', { scale: 1, duration: 0.5, ease: 'power2.inOut' }, 3.9);
+      // смена кадров вместе с описанием
+      [4.6, 5.6, 6.6, 7.8].forEach(function (t, i) {
+        tl.fromTo('#c2-s' + (i + 1), { x: 200, opacity: 0, filter: 'blur(14px)' }, { x: 0, opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, t);
+      });
+      tl.to('#c2-win', { opacity: 0, scale: 0.95, filter: 'blur(14px)', duration: 0.28, ease: 'power3.in' }, 8.7);
+      CAPS.build(tl, scr, T0);
+      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, T0 + tl.time()); });
+      LAPTOP.mapScreen(scr, T0);
+      window.__timelines['crm2'] = tl;
+    })();
+  </script>
+</template>
