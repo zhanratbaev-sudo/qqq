@@ -2,41 +2,50 @@
   <style>
     @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
     @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
-    /* Сцена на экране ноутбука: логотип WebFor, затем продукт Vet.izi */
+    /* Интро: пятна цвета WebFor собираются в знак, затем он переворачивается в иконку Vet.izi */
     #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; color: #f2f6f4; }
     .in-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
     .in-c { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: center; }
-    #in-mark { top: 360px; }
-    #in-mark svg { width: 300px; height: 300px; }
-    #in-ring { position: absolute; left: 50%; top: 510px; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 50%; border: 4px solid rgba(63,224,160,.6); }
+    /* пятна: стартуют за краями и стягиваются в центр знака (960, 510) */
+    .in-blob { position: absolute; left: 960px; top: 510px; width: 420px; height: 420px; margin: -210px 0 0 -210px; border-radius: 50%; }
+    #in-b1 { background: radial-gradient(circle, #19b39c 0%, rgba(25,179,156,.6) 45%, rgba(25,179,156,0) 70%); }
+    #in-b2 { background: radial-gradient(circle, #0b6e63 0%, rgba(11,110,99,.6) 45%, rgba(11,110,99,0) 70%); }
+    #in-b3 { background: radial-gradient(circle, #3fe0a0 0%, rgba(63,224,160,.5) 45%, rgba(63,224,160,0) 70%); }
+    #in-stage { position: absolute; left: 810px; top: 360px; width: 300px; height: 300px; perspective: 1400px; }
+    .in-tile { position: absolute; inset: 0; backface-visibility: hidden; }
+    .in-tile svg { width: 300px; height: 300px; display: block; }
+    #in-wt { background: linear-gradient(135deg, #19b39c, #0b6e63); }
+    #in-ring { position: absolute; left: 960px; top: 510px; width: 300px; height: 300px; margin: -150px 0 0 -150px; border-radius: 75px; border: 4px solid rgba(63,224,160,.7); }
     #in-word { top: 700px; font-weight: 900; font-size: 150px; letter-spacing: -0.045em; line-height: 1; }
     #in-word span { color: #3fe0a0; }
     #in-sub { top: 880px; font-weight: 700; font-size: 52px; color: #a9c9bf; }
     #in-pre { top: 250px; font-weight: 700; font-size: 52px; color: #a9c9bf; }
-    #in-vt { top: 360px; }
-    #in-vt svg { width: 300px; height: 300px; filter: drop-shadow(0 30px 60px rgba(0,0,0,.45)); }
+    #in-vt svg { filter: drop-shadow(0 30px 60px rgba(0,0,0,.45)); }
     #in-vword { top: 700px; font-weight: 900; font-size: 150px; letter-spacing: -0.045em; line-height: 1; }
     #in-vword span { color: #3fe0a0; }
     #in-vsub { top: 880px; font-weight: 700; font-size: 52px; color: #a9c9bf; text-align: center; line-height: 1.25; }
   </style>
   <div id="root" data-composition-id="intro" data-width="1920" data-height="1080">
     <div class="in-scr" id="in-scr">
+      <div class="in-blob" id="in-b1"></div>
+      <div class="in-blob" id="in-b2"></div>
+      <div class="in-blob" id="in-b3"></div>
       <div id="in-ring"></div>
-      <div class="in-c" id="in-mark">
-        <!-- логотип WebFor: буква W на бирюзовой плитке -->
-        <svg viewBox="0 0 120 120"><defs><linearGradient id="in-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#0b6e63"/></linearGradient></defs>
-          <rect x="4" y="4" width="112" height="112" rx="30" fill="url(#in-g)"/><path d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div id="in-stage">
+        <!-- знак WebFor: градиентная плитка (она же «собранные» пятна) + буква W, которая прорисовывается -->
+        <div class="in-tile" id="in-wt">
+          <svg viewBox="0 0 120 120"><path id="in-w" d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <!-- обратная сторона: иконка Vet.izi с лапкой -->
+        <div class="in-tile" id="in-vt">
+          <svg viewBox="0 0 120 120"><defs><linearGradient id="in-v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f1e4"/><stop offset="1" stop-color="#e2dcc4"/></linearGradient></defs>
+            <rect x="4" y="4" width="112" height="112" rx="30" fill="url(#in-v)"/>
+            <g fill="#0e7c6b"><ellipse class="in-toe" cx="60" cy="76" rx="20" ry="16"/><ellipse class="in-toe" cx="34" cy="56" rx="8" ry="11" transform="rotate(-20 34 56)"/><ellipse class="in-toe" cx="48" cy="38" rx="8" ry="11" transform="rotate(-8 48 38)"/><ellipse class="in-toe" cx="72" cy="38" rx="8" ry="11" transform="rotate(8 72 38)"/><ellipse class="in-toe" cx="86" cy="56" rx="8" ry="11" transform="rotate(20 86 56)"/></g></svg>
+        </div>
       </div>
       <div class="in-c" id="in-word">Web<span>For</span></div>
       <div class="in-c" id="in-sub">Цифровые решения для бизнеса</div>
-
       <div class="in-c" id="in-pre">Представляем продукт</div>
-      <div class="in-c" id="in-vt">
-        <!-- иконка Vet.izi: лапка на плитке -->
-        <svg viewBox="0 0 120 120"><defs><linearGradient id="in-v" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f1e4"/><stop offset="1" stop-color="#e2dcc4"/></linearGradient></defs>
-          <rect x="4" y="4" width="112" height="112" rx="30" fill="url(#in-v)"/>
-          <g fill="#0e7c6b"><ellipse cx="60" cy="76" rx="20" ry="16"/><ellipse cx="34" cy="56" rx="8" ry="11" transform="rotate(-20 34 56)"/><ellipse cx="86" cy="56" rx="8" ry="11" transform="rotate(20 86 56)"/><ellipse cx="48" cy="38" rx="8" ry="11" transform="rotate(-8 48 38)"/><ellipse cx="72" cy="38" rx="8" ry="11" transform="rotate(8 72 38)"/></g></svg>
-      </div>
       <div class="in-c" id="in-vword">Vet.<span>izi</span></div>
       <div class="in-c" id="in-vsub">Для ветклиник и бизнесов,<br>которые помогают животным</div>
     </div>
@@ -47,22 +56,39 @@
       var T0 = 0;
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 7.5);
-      // логотип WebFor (1.2 с): появляется с кольцом
-      tl.fromTo('#in-mark', { opacity: 0, scale: 0.55, filter: 'blur(16px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.6, ease: 'expo.out' }, 1.2);
-      tl.fromTo('#in-ring', { opacity: 0.9, scale: 0.9 }, { opacity: 0, scale: 1.9, duration: 1.1, ease: 'power2.out' }, 1.3);
-      tl.fromTo('#in-word', { opacity: 0, clipPath: 'inset(0 50% 0 50%)' }, { opacity: 1, clipPath: 'inset(0 0% 0 0%)', duration: 0.6, ease: 'power3.out' }, 1.75);
-      tl.fromTo('#in-sub', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 2.3);
-      tl.to(['#in-mark', '#in-word', '#in-sub'], { opacity: 0, filter: 'blur(14px)', duration: 0.25, stagger: 0.04, ease: 'power3.in' }, 3.55);
-      // продукт Vet.izi (3.9 с)
-      tl.fromTo('#in-pre', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 3.9);
-      tl.fromTo('#in-vt', { opacity: 0, scale: 0.4, rotation: -14 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.7, ease: 'back.out(1.6)' }, 4.15);
-      tl.fromTo('#in-vword', { opacity: 0, y: 30, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.35, ease: 'power4.out' }, 4.6);
-      tl.fromTo('#in-vsub', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 5.0);
-      tl.to(['#in-pre', '#in-vword', '#in-vsub'], { opacity: 0, filter: 'blur(14px)', duration: 0.25, ease: 'power3.in' }, 6.9);
+      // 0.15–1.2: три пятна цвета логотипа влетают с разных сторон, кружат и стягиваются в одну точку
+      [['#in-b1', -900, -300, 1.6], ['#in-b2', 900, 260, 1.4], ['#in-b3', -100, 700, 1.2]].forEach(function (b, i) {
+        tl.fromTo(b[0], { x: b[1], y: b[2], scale: b[3], opacity: 0 }, { x: 0, y: 0, scale: 0.75, opacity: 1, duration: 1.0, ease: 'power3.inOut' }, 0.15 + i * 0.06);
+      });
+      tl.fromTo('#in-b1', { rotation: 0 }, { rotation: 140, duration: 1.1, ease: 'power2.inOut' }, 0.15);
+      // 1.05–1.45: пятна сливаются и «застывают» в плитку: круг → скруглённый квадрат
+      tl.to('.in-blob', { scale: 0.5, opacity: 0, duration: 0.35, ease: 'power2.in' }, 1.1);
+      tl.fromTo('#in-wt', { opacity: 0, scale: 0.55, borderRadius: '50%', filter: 'blur(18px)' },
+        { opacity: 1, scale: 1, borderRadius: '25%', filter: 'blur(0px)', duration: 0.5, ease: 'back.out(1.4)' }, 1.05);
+      tl.set('#in-ring', { opacity: 0 }, 0);
+      tl.fromTo('#in-ring', { opacity: 0.9, scale: 0.95 }, { opacity: 0, scale: 1.8, duration: 0.9, ease: 'power2.out', immediateRender: false }, 1.45);
+      // 1.5–1.95: буква W прорисовывается одним росчерком
+      var w = document.getElementById('in-w'), len = 170;
+      tl.fromTo(w, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.inOut' }, 1.5);
+      tl.fromTo('#in-word', { opacity: 0, clipPath: 'inset(0 50% 0 50%)' }, { opacity: 1, clipPath: 'inset(0 0% 0 0%)', duration: 0.6, ease: 'power3.out' }, 1.85);
+      tl.fromTo('#in-sub', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 2.35);
+      tl.to(['#in-word', '#in-sub'], { opacity: 0, filter: 'blur(14px)', duration: 0.25, stagger: 0.04, ease: 'power3.in' }, 3.4);
+      // 3.6–4.2: знак переворачивается — на обратной стороне иконка Vet.izi, лапка «отпечатывается» по пальцам
+      tl.fromTo('#in-stage', { y: 0 }, { y: -20, duration: 0.3, ease: 'power2.out' }, 3.55);
+      tl.to('#in-stage', { y: 0, duration: 0.3, ease: 'power2.in' }, 3.85);
+      tl.fromTo('#in-wt', { rotationY: 0 }, { rotationY: 180, duration: 0.6, ease: 'power3.inOut' }, 3.6);
+      tl.fromTo('#in-vt', { rotationY: -180 }, { rotationY: 0, duration: 0.6, ease: 'power3.inOut' }, 3.6);
+      gsap.utils.toArray('#in-vt .in-toe').forEach(function (t, i) {
+        tl.fromTo(t, { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: 0.25, ease: 'back.out(2.5)' }, 4.0 + i * 0.06);
+      });
+      tl.fromTo('#in-pre', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 3.75);
+      tl.fromTo('#in-vword', { opacity: 0, y: 30, filter: 'blur(10px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.35, ease: 'power4.out' }, 4.45);
+      tl.fromTo('#in-vsub', { opacity: 0, filter: 'blur(8px)' }, { opacity: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power4.out' }, 4.85);
+      tl.to(['#in-pre', '#in-vword', '#in-vsub'], { opacity: 0, filter: 'blur(14px)', duration: 0.25, ease: 'power3.in' }, 6.8);
       // иконка уходит вниз — туда, откуда выедет телефон
-      tl.to('#in-vt', { y: 700, scale: 0.4, opacity: 0, duration: 0.5, ease: 'power3.in' }, 6.95);
-      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, T0 + tl.time()); });
-      LAPTOP.mapScreen(scr, T0);
+      tl.to('#in-stage', { y: 760, scale: 0.4, opacity: 0, duration: 0.5, ease: 'power3.in' }, 6.95);
+      tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
+      SCREEN.map(scr, T0);
       window.__timelines['intro'] = tl;
     })();
   </script>

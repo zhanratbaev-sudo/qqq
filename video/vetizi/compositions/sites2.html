@@ -2,7 +2,7 @@
   <style>
     @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
     @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
-    /* Сцена на экране ноутбука, глобально 39–44 с: сайты разных бизнесов тасуются и раскладываются в сетку */
+    /* Сцена, глобально 39–44 с: сайты разных бизнесов тасуются и раскладываются в сетку */
     #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; }
     .s2-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; perspective: 1800px; }
     .cap-g { position: absolute; left: 120px; top: 430px; width: 700px; display: flex; flex-direction: column; }
@@ -49,27 +49,29 @@
       var DECK = { x: 1210, y: 440 };
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 5);
-      tl.fromTo('#s2-c0', { x: DECK.x, y: DECK.y, scale: 1.7, rotationY: -25, rotationZ: 0, opacity: 0, filter: 'blur(12px)' }, { rotationY: 0, opacity: 1, filter: 'blur(0px)', duration: 0.45, ease: 'expo.out' }, 0.05);
+      // первая карточка (PetGo) проявляется там, где сжался градиент перехода (~39.35)
+      tl.fromTo('#s2-c0', { x: DECK.x, y: DECK.y, scale: 1.7, rotationY: 0, rotationZ: 0, opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'none' }, 0.3);
       order.slice(1).forEach(function (sel, i) {
         var rz = [-7, 5, -3, 8, -5][i];
         tl.fromTo(sel, { x: DECK.x + 700, y: DECK.y + 40, scale: 1.4, rotationY: -40, rotationZ: 0, opacity: 0, filter: 'blur(10px)' },
-          { x: DECK.x + (i - 2) * 24, y: DECK.y + (i % 2 ? -16 : 12), rotationY: 0, rotationZ: rz, opacity: 1, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.25 + i * 0.08);
+          { x: DECK.x + (i - 2) * 24, y: DECK.y + (i % 2 ? -16 : 12), rotationY: 0, rotationZ: rz, opacity: 1, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.45 + i * 0.08);
       });
-      tl.to('#s2-c0', { x: DECK.x - 380, rotationZ: -10, scale: 1.4, duration: 0.3, ease: 'power3.in' }, 0.95);
-      tl.set('#s2-c0', { zIndex: 0 }, 1.25);
-      tl.to('#s2-c0', { x: DECK.x + 40, rotationZ: 4, duration: 0.3, ease: 'power3.out' }, 1.25);
-      tl.to('#s2-c2', { x: 1186 + 330, rotationZ: 9, duration: 0.25, ease: 'power2.inOut', yoyo: true, repeat: 1 }, 1.05);
-      tl.to('#s2-c4', { x: 1234 + 330, rotationZ: 9, duration: 0.25, ease: 'power2.inOut', yoyo: true, repeat: 1 }, 1.1);
+      tl.to('#s2-c0', { x: DECK.x - 380, rotationZ: -10, scale: 1.4, duration: 0.3, ease: 'power3.in' }, 1.15);
+      tl.set('#s2-c0', { zIndex: 0 }, 1.45);
+      tl.to('#s2-c0', { x: DECK.x + 40, rotationZ: 4, duration: 0.3, ease: 'power3.out' }, 1.45);
+      tl.to('#s2-c2', { x: 1186 + 330, rotationZ: 9, duration: 0.25, ease: 'power2.inOut', yoyo: true, repeat: 1 }, 1.25);
+      tl.to('#s2-c4', { x: 1234 + 330, rotationZ: 9, duration: 0.25, ease: 'power2.inOut', yoyo: true, repeat: 1 }, 1.3);
       order.forEach(function (sel, i) {
-        tl.to(sel, { x: grid[i][0], y: grid[i][1], scale: 1, rotationZ: 0, rotationY: 0, duration: 0.55, ease: 'expo.out' }, 1.7 + i * 0.05);
+        tl.to(sel, { x: grid[i][0], y: grid[i][1], scale: 1, rotationZ: 0, rotationY: 0, duration: 0.55, ease: 'expo.out' }, 1.85 + i * 0.05);
       });
       for (var k = 0; k < 4; k++) {
-        tl.fromTo('#s2-k' + k, { opacity: 0, y: 40, scale: 0.8, filter: 'blur(8px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'back.out(1.6)' }, 2.65 + k * 0.12);
+        tl.fromTo('#s2-k' + k, { opacity: 0, y: 40, scale: 0.8, filter: 'blur(8px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'back.out(1.6)' }, 2.8 + k * 0.12);
       }
-      tl.to(order.concat(['#s2-k0', '#s2-k1', '#s2-k2', '#s2-k3']), { opacity: 0, filter: 'blur(14px)', duration: 0.25, stagger: 0.02, ease: 'power3.in' }, 4.65);
+      // сетка «перетекает» в градиент, а он — в знак WebFor (morph.html, 43.55–44.4)
+      tl.set(order.concat(['#s2-k0', '#s2-k1', '#s2-k2', '#s2-k3']), { opacity: 0 }, 4.98);
       CAPS.build(tl, scr, T0);
-      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, T0 + tl.time()); });
-      LAPTOP.mapScreen(scr, T0);
+      tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
+      SCREEN.map(scr, T0);
       window.__timelines['sites2'] = tl;
     })();
   </script>

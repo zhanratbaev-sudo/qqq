@@ -1,7 +1,7 @@
 """Фоновая музыка для ролика Vet.izi (без авторских прав — синтезируется кодом).
 
 Ре минор, ~116 BPM, такт = 2.0625 с (16 тактов = 33.0 с — начало финала).
-Интро (такты 0–1): пэд и электропиано. Такт 2: вступают бочка, бас и арпеджио. Такт 4: хлопки.
+Интро (до такта GROOVE_BAR): пэд и электропиано. Такт GROOVE_BAR: вступают бочка, бас и арпеджио, через 2 такта — хлопки.
 Такты 13–15: нарастание (хэты 16-ми, подъём шума). Такт 16: удар и большой аккорд, затем спокойный финал.
 Использование: python3 music2.py <секунд> <out.wav>
 """
@@ -13,6 +13,7 @@ import numpy as np
 SR = 48000
 DROP_BAR = int(__import__('os').environ.get('DROP_BAR', 16))  # такт удара (начало финала)
 BAR = float(__import__('os').environ.get('BAR', 2.0625))
+GROOVE = int(__import__('os').environ.get('GROOVE_BAR', 2))  # такт, где вступают бочка, бас и арпеджио
 BEAT = BAR / 4
 rng = np.random.default_rng(11)
 
@@ -134,11 +135,11 @@ def main(seconds, out):
         for m in ch[1:]:
             place(music, pad(hz(m), ln), t0, 0.05 if not final else 0.07)
         # электропиано: аккорд на 1 и на «и» 2-й доли
-        for at in ((0, 2.5) if b >= 2 else (0,)):
+        for at in ((0, 2.5) if b >= GROOVE else (0,)):
             for m in ch[1:]:
                 place(music, ep(hz(m + 12), int(1.6 * SR)), t0 + at * BEAT, 0.07)
-        # арпеджио 16-ми с такта 2 (в финале — восьмыми)
-        if b >= 2:
+        # арпеджио 16-ми с такта GROOVE (в финале — восьмыми)
+        if b >= GROOVE:
             step = BEAT / 4 if not final else BEAT / 2
             notes = [ch[1] + 24, ch[2] + 24, ch[3] + 24, ch[4] + 12]
             k = 0
@@ -147,8 +148,8 @@ def main(seconds, out):
                 place(arp, pluck(hz(notes[k % 4]), int(0.4 * SR)), t, 0.05)
                 k += 1
                 t += step
-        # бас восьмыми с такта 2
-        if 2 <= b < DROP_BAR or final:
+        # бас восьмыми с такта GROOVE
+        if GROOVE <= b < DROP_BAR or final:
             root = ch[0] - 12 if ch[0] > 45 else ch[0]
             for i in range(8):
                 if final and i % 2:
@@ -156,7 +157,7 @@ def main(seconds, out):
                 place(low, bass(hz(root), int(BEAT / 2 * SR * 0.95)), t0 + i * BEAT / 2, 0.16)
         # ударные
         build = DROP_BAR - 3 <= b < DROP_BAR
-        if 2 <= b < DROP_BAR or final:
+        if GROOVE <= b < DROP_BAR or final:
             for i in range(4):
                 if b == DROP_BAR - 1 and i >= 2:
                     break  # пауза перед ударом
@@ -169,7 +170,7 @@ def main(seconds, out):
             for i in range(16 if build else 8):
                 sub = BEAT / 4 if build else BEAT / 2
                 place(drums, hat(int(0.06 * SR)), t0 + i * sub + (0 if build else BEAT / 2 * 0), 0.05 if i % 2 else 0.08)
-            if b >= 4 and not (b == DROP_BAR - 1):
+            if b >= GROOVE + 2 and not (b == DROP_BAR - 1):
                 for i in (1, 3):
                     place(drums, clap(int(0.25 * SR)), t0 + i * BEAT, 0.16)
     # подъём перед финалом (такт 15) и удар на 33.0

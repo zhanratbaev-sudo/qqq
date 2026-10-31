@@ -3,7 +3,7 @@
     @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
     @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
     @font-face { font-family: "VI Mono"; src: local("JetBrains Mono Medium"), local("JetBrainsMono-Medium"), local("JetBrains Mono"); font-weight: 500; }
-    /* Сцена на экране ноутбука, глобально 16.5–23 с: пишем код → запускаем → сайт готов (пример — PetGo) */
+    /* Сцена, глобально 16.5–23 с: пишем код → запускаем → сайт готов (пример — PetGo) */
     #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; }
     .st-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
     .cap-g { position: absolute; left: 120px; top: 430px; width: 700px; display: flex; flex-direction: column; }
@@ -34,18 +34,18 @@
   </style>
   <div id="root" data-composition-id="site" data-width="1920" data-height="1080">
     <div class="st-scr" id="st-scr">
-      <div class="cap-g" data-in="16.7" data-out="22.9">
+      <div class="cap-g" data-in="16.8" data-out="22.75">
         <div class="cap-t">Сайт под<br><span class="acc">ваш дизайн</span></div>
-        <div class="cap-d"><p data-at="16.9" data-until="18.55">1. Пишем код сайта</p><p data-at="18.6" data-until="19.65">2. Запускаем</p><p data-at="19.7">3. Сайт готов — пример: PetGo</p></div>
+        <div class="cap-d"><p data-at="17.0" data-until="18.5">1. Пишем код сайта</p><p data-at="18.55" data-until="20.05">2. Запускаем</p><p data-at="20.1">3. Сайт готов — пример: PetGo</p></div>
       </div>
       <div class="win" id="st-ed"><div class="bar"><i></i><i></i><i></i>&nbsp;clinic-site/index.html</div><div id="st-code" data-layout-ignore></div></div>
       <div class="win" id="st-term"><div class="bar"><i></i><i></i><i></i>&nbsp;Терминал</div>
         <div id="st-out" data-layout-ignore>
-          <div><span class="s">$</span> npm run build</div>
+          <div><span class="s">$ </span><span class="cmd">npm run build</span></div>
           <div class="dim">› собираем страницы, стили и формы…</div>
           <div class="ok">✓ Сайт собран</div>
-          <div><span class="s">$</span> npm run start</div>
-          <div class="ok">✓ Сайт запущен</div>
+          <div><span class="s">$ </span><span class="cmd">npm run start</span></div>
+          <div class="ok">✓ Сайт запущен → открываем</div>
         </div>
       </div>
       <div class="win" id="st-br"><div class="bar"><i></i><i></i><i></i><b>Пример проекта — PetGo</b></div>
@@ -73,24 +73,37 @@
       });
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 6.5);
-      tl.fromTo('#st-ed', { opacity: 0, x: 60, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.1);
-      tl.fromTo('#st-term', { opacity: 0, x: 60, filter: 'blur(10px)' }, { opacity: 1, x: 0, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }, 0.2);
-      // печать кода: 0.4–2.0
-      var per = 1.6 / chars.length;
-      chars.forEach(function (sp, i) { tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, 0.4 + i * per); });
-      // запуск: 2.1–3.1
-      gsap.utils.toArray('#st-out div').forEach(function (d, i) {
-        tl.fromTo(d, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.12, ease: 'power2.out' }, [2.1, 2.35, 2.75, 2.95, 3.15][i]);
-      });
-      // сайт готов: браузер раскрывается поверх окон (3.2), прокрутка
-      tl.to(['#st-ed', '#st-term'], { opacity: 0, scale: 0.96, filter: 'blur(10px)', duration: 0.3, ease: 'power3.in' }, 3.2);
-      tl.fromTo('#st-br', { opacity: 0, scale: 0.9, filter: 'blur(12px)' }, { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.55, ease: 'expo.out' }, 3.25);
-      tl.fromTo('#st-site', { y: 0 }, { y: -760, duration: 1.4, ease: 'power2.inOut', immediateRender: false }, 3.9);
-      tl.to('#st-site', { y: -2859 * 980 / 1440, duration: 0.8, ease: 'power3.inOut' }, 5.4);
-      tl.to('#st-br', { opacity: 0, scale: 0.94, filter: 'blur(12px)', duration: 0.3, ease: 'power3.in' }, 6.2);
+      // окно редактора проявляется там, где сжался градиент перехода (morph.html, ~16.8)
+      tl.fromTo('#st-ed', { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'none' }, 0.3);
+      // терминал открывается под редактором: раскрывается сверху вниз
+      tl.fromTo('#st-term', { opacity: 0, scaleY: 0.04, transformOrigin: '50% 0%' }, { opacity: 1, scaleY: 1, duration: 0.4, ease: 'expo.out' }, 0.55);
+      // печать кода: 0.75–2.0 (17.25–18.5)
+      var per = 1.25 / chars.length;
+      chars.forEach(function (sp, i) { tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none' }, 0.75 + i * per); });
+      // запуск: команды набираются по буквам, после Enter появляется вывод
+      var rows = gsap.utils.toArray('#st-out > div');
+      function typeCmd(row, t0, t1) {
+        var cmd = row.querySelector('.cmd'), txt = cmd.textContent; cmd.textContent = '';
+        var cs = txt.split('').map(function (ch) { var sp = document.createElement('span'); sp.textContent = ch; sp.style.opacity = 0; cmd.appendChild(sp); return sp; });
+        tl.fromTo(row, { opacity: 0 }, { opacity: 1, duration: 0.01 }, t0 - 0.05);
+        cs.forEach(function (sp, i) { tl.fromTo(sp, { opacity: 0 }, { opacity: 1, duration: 0.01, ease: 'none', immediateRender: false }, t0 + i * (t1 - t0) / cs.length); });
+      }
+      rows.forEach(function (r) { r.style.opacity = 0; });
+      typeCmd(rows[0], 2.05, 2.4);                                                    // 18.55–18.9, Enter 18.95
+      tl.fromTo(rows[1], { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.12, ease: 'power2.out', immediateRender: false }, 2.5);
+      tl.fromTo(rows[2], { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.12, ease: 'power2.out', immediateRender: false }, 2.85);
+      typeCmd(rows[3], 3.0, 3.35);                                                    // 19.5–19.85, Enter 19.9
+      tl.fromTo(rows[4], { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.12, ease: 'power2.out', immediateRender: false }, 3.45);
+      // сайт открывается окном браузера прямо из строки «Сайт запущен» (3.6 = 20.1)
+      tl.to(['#st-ed', '#st-term'], { opacity: 0, scale: 0.97, duration: 0.3, ease: 'power3.in' }, 3.65);
+      tl.fromTo('#st-br', { opacity: 0, scale: 0.08, transformOrigin: '30% 92%' }, { opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }, 3.6);
+      tl.fromTo('#st-site', { y: 0 }, { y: -760, duration: 1.4, ease: 'power2.inOut', immediateRender: false }, 4.25);
+      tl.to('#st-site', { y: -2859 * 980 / 1440, duration: 0.8, ease: 'power3.inOut' }, 5.7);
+      // браузер «перетекает» в градиент — переход к телефону (morph.html, 22.55–22.95)
+      tl.set('#st-br', { opacity: 0 }, 6.48);
       CAPS.build(tl, scr, T0);
-      tl.eventCallback('onUpdate', function () { LAPTOP.mapScreen(scr, T0 + tl.time()); });
-      LAPTOP.mapScreen(scr, T0);
+      tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
+      SCREEN.map(scr, T0);
       window.__timelines['site'] = tl;
     })();
   </script>

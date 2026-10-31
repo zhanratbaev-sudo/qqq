@@ -1,0 +1,46 @@
+<template>
+  <style>
+    /* Переходы между сценами: градиент цвета WebFor вырастает из уходящего элемента (окна, телефона),
+       на мгновение закрывает кадр и сжимается в первый элемент следующей сцены — тот проявляется на его месте. */
+    #root { position: absolute; inset: 0; pointer-events: none; }
+    .mo-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
+    .mo-shape { position: absolute; left: 0; top: 0; width: 10px; height: 10px; opacity: 0; overflow: hidden;
+      background: linear-gradient(135deg, #19b39c 0%, #0e8a78 55%, #0b6e63 100%); box-shadow: 0 40px 120px rgba(0,0,0,.45); }
+    .mo-shape i { position: absolute; left: -30%; top: -30%; width: 160%; height: 160%;
+      background: radial-gradient(circle at 30% 30%, rgba(63,224,160,.55), rgba(63,224,160,0) 45%); }
+  </style>
+  <div id="root" data-composition-id="morph" data-width="1920" data-height="1080">
+    <div class="mo-scr" id="mo-scr"></div>
+  </div>
+  <script>
+    (function () {
+      var scr = document.getElementById('mo-scr');
+      var FULL = [-60, -60, 2040, 1367, 0];
+      // [момент полного закрытия (с), откуда — x,y,w,h,радиус, куда — x,y,w,h,радиус] в координатах сцены 1920x1247
+      var T = [
+        [16.45, [1111, 198, 395, 821, 58], [880, 150, 940, 560, 22]],      // телефон → окно редактора
+        [22.95, [860, 140, 980, 950, 22], [1104, 209, 380, 801, 56]],      // браузер с сайтом → экран телефона с формой
+        [29.95, [1107, 211, 377, 797, 56], [860, 280, 980, 659, 22]],      // телефон → окно CRM
+        [38.95, [860, 280, 980, 659, 22], [1105, 368, 510, 350, 24]],      // CRM → первая карточка сайтов
+        [43.95, [880, 330, 960, 466, 14], [845, 220, 230, 230, 57.5]],     // сетка сайтов → знак WebFor
+      ];
+      function css(r) { return { left: r[0], top: r[1], width: r[2], height: r[3], borderRadius: r[4] }; }
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 50);
+      T.forEach(function (tr) {
+        var el = document.createElement('div'); el.className = 'mo-shape'; el.appendChild(document.createElement('i'));
+        scr.appendChild(el);
+        var t = tr[0], hi = el.firstChild;
+        tl.set(el, css(tr[1]), 0);
+        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'none', immediateRender: false }, t - 0.4);
+        tl.to(el, Object.assign(css(FULL), { duration: 0.36, ease: 'power3.in' }), t - 0.36);
+        tl.to(el, Object.assign(css(tr[2]), { duration: 0.42, ease: 'expo.out' }), t + 0.06);
+        tl.to(el, { opacity: 0, duration: 0.18, ease: 'power2.out' }, t + 0.36);
+        tl.fromTo(hi, { x: -200, y: -120 }, { x: 260, y: 160, duration: 0.95, ease: 'sine.inOut' }, t - 0.4);
+      });
+      tl.eventCallback('onUpdate', function () { SCREEN.map(scr, tl.time()); });
+      SCREEN.map(scr, 0);
+      window.__timelines['morph'] = tl;
+    })();
+  </script>
+</template>
