@@ -97,9 +97,9 @@
         tl.fromTo(S, { staff: 0 }, { staff: 1, duration: 0.9, ease: 'none', immediateRender: false }, 7.701);
         tl.to(S, { ry: 0.08, duration: 1.2, ease: 'sine.inOut' }, 5.6);
         tl.to(S, { ry: -0.06, duration: 1.2, ease: 'sine.inOut' }, 6.8);
-        // уход: экран телефона «перетекает» в градиент (morph.html, 16.05–16.45), под ним телефон прячется
-        tl.to(S, { ry: 0, duration: 0.4, ease: 'power2.out' }, 8.1);
-        tl.set(S, { py: -7 }, 8.98);
+        // плавный уход: телефон немного опускается и растворяется
+        tl.to(S, { py: -0.9, ry: 0.1, duration: 0.5, ease: 'power2.in' }, 8.45);
+        tl.to('#ph-gl', { opacity: 0, duration: 0.45, ease: 'power2.in' }, 8.5);
         CAPS.build(tl, root, T0);
         tl.eventCallback('onUpdate', render);
 

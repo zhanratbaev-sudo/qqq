@@ -73,8 +73,8 @@
       });
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 6.5);
-      // окно редактора проявляется там, где сжался градиент перехода (morph.html, ~16.8)
-      tl.fromTo('#st-ed', { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'none' }, 0.3);
+      // плавное появление окна редактора
+      tl.fromTo('#st-ed', { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out' }, 0.1);
       // терминал открывается под редактором: раскрывается сверху вниз
       tl.fromTo('#st-term', { opacity: 0, scaleY: 0.04, transformOrigin: '50% 0%' }, { opacity: 1, scaleY: 1, duration: 0.4, ease: 'expo.out' }, 0.55);
       // печать кода: 0.75–2.0 (17.25–18.5)
@@ -99,8 +99,8 @@
       tl.fromTo('#st-br', { opacity: 0, scale: 0.08, transformOrigin: '30% 92%' }, { opacity: 1, scale: 1, duration: 0.6, ease: 'expo.out' }, 3.6);
       tl.fromTo('#st-site', { y: 0 }, { y: -760, duration: 1.4, ease: 'power2.inOut', immediateRender: false }, 4.25);
       tl.to('#st-site', { y: -2859 * 980 / 1440, duration: 0.8, ease: 'power3.inOut' }, 5.7);
-      // браузер «перетекает» в градиент — переход к телефону (morph.html, 22.55–22.95)
-      tl.set('#st-br', { opacity: 0 }, 6.48);
+      // плавный уход браузера
+      tl.to('#st-br', { opacity: 0, y: -30, scale: 0.97, duration: 0.45, ease: 'power2.in' }, 6.0);
       CAPS.build(tl, scr, T0);
       tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
       SCREEN.map(scr, T0);

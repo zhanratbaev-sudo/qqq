@@ -49,8 +49,8 @@
       var DECK = { x: 1210, y: 440 };
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 5);
-      // первая карточка (PetGo) проявляется там, где сжался градиент перехода (~39.35)
-      tl.fromTo('#s2-c0', { x: DECK.x, y: DECK.y, scale: 1.7, rotationY: 0, rotationZ: 0, opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'none' }, 0.3);
+      // первая карточка (PetGo) плавно проявляется
+      tl.fromTo('#s2-c0', { x: DECK.x, y: DECK.y + 30, scale: 1.6, rotationY: 0, rotationZ: 0, opacity: 0 }, { y: DECK.y, scale: 1.7, opacity: 1, duration: 0.5, ease: 'power3.out' }, 0.1);
       order.slice(1).forEach(function (sel, i) {
         var rz = [-7, 5, -3, 8, -5][i];
         tl.fromTo(sel, { x: DECK.x + 700, y: DECK.y + 40, scale: 1.4, rotationY: -40, rotationZ: 0, opacity: 0, filter: 'blur(10px)' },
@@ -67,8 +67,8 @@
       for (var k = 0; k < 4; k++) {
         tl.fromTo('#s2-k' + k, { opacity: 0, y: 40, scale: 0.8, filter: 'blur(8px)' }, { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'back.out(1.6)' }, 2.8 + k * 0.12);
       }
-      // сетка «перетекает» в градиент, а он — в знак WebFor (morph.html, 43.55–44.4)
-      tl.set(order.concat(['#s2-k0', '#s2-k1', '#s2-k2', '#s2-k3']), { opacity: 0 }, 4.98);
+      // плавный уход сетки
+      tl.to(order.concat(['#s2-k0', '#s2-k1', '#s2-k2', '#s2-k3']), { opacity: 0, y: '-=24', duration: 0.45, stagger: 0.02, ease: 'power2.in' }, 4.4);
       CAPS.build(tl, scr, T0);
       tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
       SCREEN.map(scr, T0);

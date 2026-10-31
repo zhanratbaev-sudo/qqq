@@ -49,8 +49,8 @@
       var scr = document.getElementById('c2-scr');
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 9);
-      // окно CRM проявляется там, где сжался градиент перехода (morph.html, ~30.35)
-      tl.fromTo('#c2-win', { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'none' }, 0.3);
+      // плавное появление окна CRM
+      tl.fromTo('#c2-win', { opacity: 0, y: 40, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out' }, 0.1);
       // наезд на боковое меню, пока курсор на нём (меню раскрыто 1.2–4.5)
       tl.fromTo('#c2-zoom', { scale: 1 }, { scale: 1.55, duration: 0.6, ease: 'power2.inOut' }, 1.0);
       tl.to('#c2-zoom', { scale: 1, duration: 0.5, ease: 'power2.inOut' }, 3.9);
@@ -58,8 +58,8 @@
       [4.6, 5.6, 6.6, 7.8].forEach(function (t, i) {
         tl.fromTo('#c2-s' + (i + 1), { x: 200, opacity: 0, filter: 'blur(14px)' }, { x: 0, opacity: 1, filter: 'blur(0px)', duration: 0.2, ease: 'expo.out' }, t);
       });
-      // окно «перетекает» в градиент — переход к сайтам (morph.html, 38.55–38.95)
-      tl.set('#c2-win', { opacity: 0 }, 8.98);
+      // плавный уход окна
+      tl.to('#c2-win', { opacity: 0, y: -30, scale: 0.97, duration: 0.45, ease: 'power2.in' }, 8.5);
       CAPS.build(tl, scr, T0);
       tl.eventCallback('onUpdate', function () { SCREEN.map(scr, T0 + tl.time()); });
       SCREEN.map(scr, T0);

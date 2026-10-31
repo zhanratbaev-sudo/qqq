@@ -2,11 +2,10 @@
   <style>
     @font-face { font-family: "VI Display"; src: local("Inter Display Black"), local("InterDisplay-Black"); font-weight: 900; }
     @font-face { font-family: "VI Display"; src: local("Inter Display Bold"), local("InterDisplay-Bold"); font-weight: 700; }
-    /* Финал, глобально 44–50 с: градиент перехода сжимается в плитку знака WebFor, W прорисовывается, затем надпись, Vet.izi и сайт */
+    /* Финал, глобально 44–50 с: плитка знака WebFor появляется, W прорисовывается, затем надпись, Vet.izi и сайт */
     #root { position: absolute; inset: 0; pointer-events: none; font-family: "VI Display", sans-serif; color: #f2f6f4; }
     .ou-scr { position: absolute; left: 0; top: 0; width: 1920px; height: 1247px; transform-origin: 0 0; overflow: hidden; }
     .ou-c { position: absolute; left: 0; right: 0; display: flex; justify-content: center; align-items: center; }
-    /* плитка совпадает с конечной точкой перехода в morph.html: 845, 220, 230x230, радиус 57.5 */
     #ou-tile { position: absolute; left: 845px; top: 220px; width: 230px; height: 230px; border-radius: 57.5px; background: linear-gradient(135deg, #19b39c, #0b6e63); }
     #ou-tile svg { width: 230px; height: 230px; display: block; }
     #ou-ring { position: absolute; left: 845px; top: 220px; width: 230px; height: 230px; border-radius: 57.5px; border: 4px solid rgba(63,224,160,.7); }
@@ -32,8 +31,8 @@
       var scr = document.getElementById('ou-scr');
       var tl = gsap.timeline({ paused: true });
       tl.set({}, {}, 6);
-      // плитка проявляется под сжавшимся градиентом (44.3), потом W одним росчерком
-      tl.fromTo('#ou-tile', { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, 0.3);
+      // плитка плавно появляется, потом W одним росчерком
+      tl.fromTo('#ou-tile', { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.4)' }, 0.1);
       tl.fromTo('#ou-w', { strokeDasharray: 170, strokeDashoffset: 170 }, { strokeDashoffset: 0, duration: 0.45, ease: 'power2.inOut' }, 0.45);
       tl.set('#ou-ring', { opacity: 0 }, 0);
       tl.fromTo('#ou-ring', { opacity: 0.9, scale: 0.95 }, { opacity: 0, scale: 1.7, duration: 0.9, ease: 'power2.out', immediateRender: false }, 0.85);
