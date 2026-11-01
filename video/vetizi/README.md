@@ -32,13 +32,16 @@ WebFor — организация (сайт web.for.petgo.kz). Vet.izi — её 
 
 ## Звук
 
+Кликов и клавиатуры нет. В ролике только тихие фоновые «вибрации» на глобальных сменах кадра
+(знак собрался, телефон появился, смена сцены, финальная заливка):
+
 ```bash
 cd video/vetizi
-BAR=2.4444 GROOVE_BAR=3 DROP_BAR=18 python3 ../scripts/music2.py 50 assets/music.wav   # ритм с 7.3 с (телефон), удар на 44 с
-python3 ../scripts/sfx.py .                                            # звуки только на видимые действия (CC0, uisfx)
+python3 ../scripts/haptics.py .      # → assets/sfx.wav; моменты — HITS в скрипте
 ```
 
-Если меняете тайминг сцен, поправьте `SCENES`, `TYPING` и `FIXED` в `scripts/sfx.py`.
+Музыка — SEVER · Vision из библиотеки Instagram: её добавляют при публикации в Instagram
+(так трек лицензирован). Старые генераторы `music2.py` и `sfx.py` (клики) остались в `scripts/`, но не используются.
 
 ## Пересобрать видео
 
