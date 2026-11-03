@@ -416,9 +416,10 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-art-app { width: 38%; aspect-ratio: 9 / 19; right: 4%; top: 120px; border-radius: 28px !important; border-width: 5px !important; border-color: #1d2624 !important; transform: rotate(5deg); }
 .wf-art-bot { width: 34%; aspect-ratio: 9 / 16; left: 10%; top: 250px; border-radius: 24px !important; transform: rotate(-2deg); }
 .wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--glass-edge); border-radius: 20px; color: var(--text); font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
-.wf-glass.wf-art-chip { background: rgba(8, 12, 11, .58); }
+.wf-glass.wf-art-chip { background: rgba(14, 19, 18, .5); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.8); backdrop-filter: blur(30px) saturate(115%) brightness(.8); }
 .wf-art-chip b { display: block; font-size: 15px; }
-.wf-art-chip span { color: var(--text-2); min-width: 0; }
+.wf-art-chip span { color: rgba(255, 255, 255, .9); min-width: 0; }
+.wf-art-chip b { color: #fff; }
 .wf-art-chip .wf-i { width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
 .wf-art-chip-1 { left: 4%; top: 196px; animation: wf-float 6s ease-in-out infinite; }
 .wf-art-chip-2 { right: 4%; bottom: 36px; animation: wf-float 7s ease-in-out -2s infinite; }
@@ -539,11 +540,6 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                     <a class="wf-btn wf-btn-primary" href="#zayavka">Обсудить проект <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                     <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI-ассистента</button>
                                     </div>
-                <ul class="wf-facts">
-                    <li><b>Под ваш дизайн</b><span>без шаблонов</span></li>
-                    <li><b>Всё в одном</b><span>сайт, приложение, CRM и AI</span></li>
-                    <li><b>Поддержка</b><span>после запуска</span></li>
-                </ul>
                 </div>
                                                     <div class="wf-hero-art" aria-hidden="true">
                         <img class="wf-art-site" src="works/petgo-site.jpg" alt="">
@@ -945,7 +941,6 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                 <h3 id="wf-lb-title"></h3>
                 <p class="wf-lb-desc"></p>
                 <div class="wf-lb-actions">
-                    <a class="wf-btn wf-btn-primary wf-btn-sm wf-lb-url" target="_blank" rel="noopener">Открыть сайт <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                     <button class="wf-btn wf-btn-primary wf-btn-sm wf-lb-chat" type="button" data-wfai-open="">Попробовать ассистента</button>
                     <span class="wf-lb-nav"><button type="button" class="wf-lb-prev" aria-label="Предыдущая работа">‹</button><button type="button" class="wf-lb-next" aria-label="Следующая работа">›</button></span>
                 </div>
@@ -1101,9 +1096,6 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     lb.querySelector('.wf-lb-tag').textContent = d.tag || '';
     lb.querySelector('#wf-lb-title').textContent = d.title;
     lb.querySelector('.wf-lb-desc').textContent = d.desc || '';
-    var url = lb.querySelector('.wf-lb-url');
-    url.hidden = !d.url; if (d.url) url.href = d.url;
-    url.firstChild.textContent = /petgo|clinic|\.kz/.test(d.url || '') ? 'Открыть сайт ' : 'Открыть ';
     lb.querySelector('.wf-lb-chat').hidden = d.action !== 'chat' || !window.WFAI;
     lb.querySelector('.wf-lb-nav').hidden = list.length < 2;
   }

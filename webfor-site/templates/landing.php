@@ -43,11 +43,6 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <?php if (function_exists('wfai_opt') && wfai_opt('enabled')) : ?><button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><?php echo webfor_icon('bot'); ?>Спросить AI-ассистента</button>
                     <?php elseif ($wf_wa) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>Написать в WhatsApp</a><?php endif; ?>
                 </div>
-                <ul class="wf-facts">
-                    <li><b>Под ваш дизайн</b><span>без шаблонов</span></li>
-                    <li><b>Всё в одном</b><span>сайт, приложение, CRM и AI</span></li>
-                    <li><b>Поддержка</b><span>после запуска</span></li>
-                </ul>
                 </div>
                 <?php $art = array_filter([webfor_works('sites')[0] ?? null, webfor_works('apps')[0] ?? null, webfor_works('bots')[0] ?? null]); ?>
                 <?php if (count($art) === 3) : $art = array_values($art); ?>
@@ -290,7 +285,6 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <h3 id="wf-lb-title"></h3>
                 <p class="wf-lb-desc"></p>
                 <div class="wf-lb-actions">
-                    <a class="wf-btn wf-btn-primary wf-btn-sm wf-lb-url" target="_blank" rel="noopener">Открыть сайт <?php echo webfor_icon('arrow'); ?></a>
                     <button class="wf-btn wf-btn-primary wf-btn-sm wf-lb-chat" type="button" data-wfai-open="">Попробовать ассистента</button>
                     <span class="wf-lb-nav"><button type="button" class="wf-lb-prev" aria-label="Предыдущая работа">‹</button><button type="button" class="wf-lb-next" aria-label="Следующая работа">›</button></span>
                 </div>

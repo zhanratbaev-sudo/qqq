@@ -99,9 +99,6 @@
     lb.querySelector('.wf-lb-tag').textContent = d.tag || '';
     lb.querySelector('#wf-lb-title').textContent = d.title;
     lb.querySelector('.wf-lb-desc').textContent = d.desc || '';
-    var url = lb.querySelector('.wf-lb-url');
-    url.hidden = !d.url; if (d.url) url.href = d.url;
-    url.firstChild.textContent = /petgo|clinic|\.kz/.test(d.url || '') ? 'Открыть сайт ' : 'Открыть ';
     lb.querySelector('.wf-lb-chat').hidden = d.action !== 'chat' || !window.WFAI;
     lb.querySelector('.wf-lb-nav').hidden = list.length < 2;
   }
