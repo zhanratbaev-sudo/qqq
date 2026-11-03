@@ -588,15 +588,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   /* ---------- каркас: фон, экраны, нижняя панель, листы ---------- */
   const embedded = !CFG.sw && !CFG.demo; // внутри админки WordPress, а не отдельным приложением
   app.className = 'wfa' + (embedded ? ' is-embedded' : ' is-app');
-  function fitScreen() {
-    if (embedded || CFG.demo) return;
-    const standaloneIOS = navigator.standalone === true;
-    const full = standaloneIOS ? (window.matchMedia('(orientation: landscape)').matches ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height)) : 0;
-    app.style.height = full && full > window.innerHeight ? full + 'px' : '';
-  }
-  fitScreen();
-  window.addEventListener('resize', fitScreen);
-  window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
+  // высоту не растягиваем на весь экран: нижнюю полосу iPhone для приложений с экрана «Домой» страница не рисует
   app.innerHTML = '';
   const stage = h('div', { class: 'wfa-stage' });
   const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
