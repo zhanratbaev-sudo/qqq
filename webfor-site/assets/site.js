@@ -15,6 +15,7 @@
     burger.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
     nav.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    document.addEventListener('click', function (e) { if (nav.classList.contains('is-open') && !e.target.closest('.wf-header')) setMenu(false); });
   }
 
   // папки: открываются отдельной страницей, которая «вырастает» из папки (адрес #sites, #apps, #bots, #izi)
@@ -35,7 +36,10 @@
     document.documentElement.classList.add('wf-locked');
     var btn = folderBtn(fk);
     if (!reduce && btn && page.animate) {
-      page.animate([{ clipPath: insetFrom(btn) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 560, easing: 'cubic-bezier(.2,.8,.2,1)' });
+      page.animate([
+        { clipPath: insetFrom(btn), opacity: 0.4 },
+        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1 },
+      ], { duration: 560, easing: 'cubic-bezier(.2,.8,.2,1)' });
     }
     requestAnimationFrame(function () { page.classList.add('is-open'); });
     page.querySelector('.wf-page-back').focus({ preventScroll: true });
@@ -47,7 +51,11 @@
     var done = function () { page.hidden = true; page.classList.remove('is-open'); if (!openPage) document.documentElement.classList.remove('wf-locked'); };
     var btn = folderBtn(page.getAttribute('data-folder'));
     if (!instant && !reduce && btn && page.animate) {
-      page.animate([{ clipPath: 'inset(0px 0px 0px 0px round 0px)' }, { clipPath: insetFrom(btn) }], { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
+      // страница плавно сжимается к папке и одновременно тает — сайт под ней не «вырезается» прямоугольником
+      page.animate([
+        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, filter: 'blur(0px)' },
+        { clipPath: insetFrom(btn), opacity: 0, filter: 'blur(6px)' },
+      ], { duration: 460, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
     } else done();
     if (btn) btn.focus({ preventScroll: true });
   }

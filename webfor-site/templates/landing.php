@@ -21,14 +21,12 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <a href="#uslugi">Услуги</a>
                 <a href="#izi">Izi</a>
                 <a href="#sravnenie">Сравнение</a>
-                <a href="#process">Как работаем</a>
                 <a href="#faq">Вопросы</a>
-                <a class="wf-nav-cta" href="#zayavka">Оставить заявку</a>
             </nav>
             <div class="wf-header-actions">
                 <?php if ($wf_tel) : ?><a class="wf-header-phone" href="<?php echo esc_url($wf_tel); ?>"><?php echo esc_html($wf_phone); ?></a><?php endif; ?>
                 <?php if ($wf_wa) : ?><a class="wf-btn wf-btn-sm wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>WhatsApp</a><?php endif; ?>
-                <button class="wf-burger" type="button" aria-controls="wf-nav" aria-expanded="false" aria-label="Открыть меню"><?php echo webfor_icon('menu'); ?></button>
+                <button class="wf-burger" type="button" aria-controls="wf-nav" aria-expanded="false" aria-label="Открыть меню"><i></i><i></i><i></i></button>
             </div>
         </div>
     </header>
@@ -81,7 +79,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                                     <?php endforeach; ?>
                                 </span>
                                 <span class="wf-folder-body">
-                                    <span class="wf-folder-icon"><?php echo webfor_icon($f['icon']); ?></span>
+                                    <span class="wf-folder-icon wf-anim-<?php echo esc_attr($f['icon']); ?>"><?php echo webfor_icon($f['icon']); ?></span>
                                     <span class="wf-folder-title"><?php echo esc_html($f['title']); ?></span>
                                     <span class="wf-folder-count"><?php echo count($works); ?> <?php echo esc_html(webfor_plural(count($works), 'работа', 'работы', 'работ')); ?> · открыть</span>
                                 </span>
@@ -102,7 +100,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         <div class="wf-page-scroll">
                             <div class="wf-wrap">
                                 <header class="wf-page-head">
-                                    <span class="wf-page-icon"><?php echo webfor_icon($f['icon']); ?></span>
+                                    <span class="wf-page-icon wf-anim-<?php echo esc_attr($f['icon']); ?>"><?php echo webfor_icon($f['icon']); ?></span>
                                     <h2 id="wf-ph-<?php echo esc_attr($fk); ?>"><?php echo esc_html($f['title']); ?></h2>
                                     <p><?php echo esc_html($f['text']); ?></p>
                                     <span class="wf-page-count"><?php echo count($works); ?> <?php echo esc_html(webfor_plural(count($works), 'работа', 'работы', 'работ')); ?></span>
@@ -141,7 +139,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <div class="wf-grid-2">
                     <article class="wf-card wf-product">
                         <div class="wf-product-head">
-                            <span class="wf-product-icon wf-product-vet"><?php echo webfor_icon('paw'); ?></span>
+                            <span class="wf-product-icon wf-product-vet wf-anim-paw"><?php echo webfor_icon('paw'); ?></span>
                             <div><h3>Vet.izi</h3><p class="wf-muted">Для ветклиник, груминга, зоомагазинов и всех, кто помогает животным</p></div>
                         </div>
                         <ul class="wf-list">
@@ -155,7 +153,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     </article>
                     <article class="wf-card wf-product">
                         <div class="wf-product-head">
-                            <span class="wf-product-icon"><?php echo webfor_icon('spark'); ?></span>
+                            <span class="wf-product-icon wf-anim-spark"><?php echo webfor_icon('spark'); ?></span>
                             <div><h3>Izi</h3><p class="wf-muted">Для любого бизнеса — с AI-ассистентом</p></div>
                         </div>
                         <ul class="wf-list">
@@ -190,21 +188,6 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </section>
-
-        <section class="wf-section" id="process" aria-labelledby="process-h">
-            <div class="wf-wrap">
-                <header class="wf-section-head">
-                    <p class="wf-eyebrow">Как работаем</p>
-                    <h2 id="process-h">Четыре шага до запуска</h2>
-                </header>
-                <ol class="wf-steps">
-                    <li><span class="wf-step-n">1</span><h3>Обсуждаем задачу</h3><p>Разбираемся, как устроена ваша работа и что хочется упростить.</p></li>
-                    <li><span class="wf-step-n">2</span><h3>Делаем дизайн</h3><p>Показываем, как будет выглядеть сайт и система, и согласуем.</p></li>
-                    <li><span class="wf-step-n">3</span><h3>Разрабатываем и запускаем</h3><p>Собираем, переносим данные, обучаем команду.</p></li>
-                    <li><span class="wf-step-n">4</span><h3>Поддерживаем</h3><p>Остаёмся на связи и добавляем новые функции, когда они нужны.</p></li>
-                </ol>
             </div>
         </section>
 

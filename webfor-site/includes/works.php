@@ -22,19 +22,10 @@ function webfor_default_works() {
     return [
         $w('sites', 'PetGo', 'petgo-site.jpg', 'Наш проект', 'Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды.', 'https://petgo.kz'),
         $w('sites', 'Oscar Clinic', 'oscarclinic.jpg', 'Наш проект', 'Сайт ветеринарной клиники.', 'https://oscarclinic.kz'),
-        $w('sites', 'Ветклиника', 'concept-vet.jpg', 'Концепт', 'Запись на приём, услуги и цены, врачи.'),
-        $w('sites', 'Груминг-салон', 'concept-groom.jpg', 'Концепт', 'Выбор услуги и онлайн-запись к мастеру.'),
-        $w('sites', 'Стоматология', 'concept-dent.jpg', 'Концепт', 'Услуги, онлайн-запись и консультация.'),
-        $w('sites', 'Салон красоты', 'concept-beauty.jpg', 'Концепт', 'Тёмный стильный сайт с записью.'),
-        $w('sites', 'Автосервис', 'concept-auto.jpg', 'Концепт', 'Заявка на ремонт и диагностику за один клик.'),
-        $w('sites', 'Кофейня', 'concept-cafe.jpg', 'Концепт', 'Меню и предзаказ без очереди.'),
         $w('apps', 'PetGo — приложение для сотрудников', 'petgo-app-home.jpg', 'Наш проект', 'Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы.', 'https://petgo.kz', 'phone'),
         $w('apps', 'PetGo — заказы', 'petgo-app-orders.jpg', 'Наш проект', 'Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание».', 'https://petgo.kz', 'phone'),
-        $w('apps', 'Груминг — запись клиента', 'app-groom.jpg', 'Концепт', 'Клиент выбирает услугу, день и время — и записывается сам.', '', 'phone'),
-        $w('apps', 'Кофейня — бонусная карта', 'app-cafe.jpg', 'Концепт', 'Бонусы, меню и заказ навынос в одном приложении.', '', 'phone'),
         $w('bots', 'AI-ассистент на этом сайте', 'bot-site.jpg', 'Работает здесь', 'Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».', '', 'phone', 'chat'),
-        $w('bots', 'Бот ветклиники в WhatsApp', 'bot-wa.jpg', 'Концепт', 'Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.', '', 'phone'),
-        $w('bots', 'Бот салона в Instagram', 'bot-ig.jpg', 'Концепт', 'Отвечает в директ, записывает к мастеру и напоминает о визите.', '', 'phone'),
+        $w('bots', 'Бот ветклиники в WhatsApp', 'bot-wa.jpg', 'Пример', 'Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.', '', 'phone'),
         $w('izi', 'Vet.izi — заявки', 'crm-requests.jpg', 'Пример: PetGo', 'Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка.'),
         $w('izi', 'Vet.izi — главная', 'crm-home.jpg', 'Пример: PetGo', 'Заказы на сегодня, новые заявки и питомцы на одном экране.'),
         $w('izi', 'Vet.izi — календарь', 'crm-cal.jpg', 'Пример: PetGo', 'Календарь команды: кто, когда и к какому питомцу.'),
@@ -51,11 +42,28 @@ add_action('init', function () {
     ]);
 });
 
+/** Встроенные концепты прошлых версий — удаляются один раз при обновлении (свои работы не трогаем). */
+function webfor_cleanup_concepts() {
+    if ((int) get_option('webfor_works_cleanup') >= 2) {
+        return;
+    }
+    $old = ['concept-vet.jpg', 'concept-groom.jpg', 'concept-dent.jpg', 'concept-beauty.jpg', 'concept-auto.jpg', 'concept-cafe.jpg', 'app-groom.jpg', 'app-cafe.jpg', 'bot-ig.jpg'];
+    foreach (get_posts(['post_type' => 'webfor_work', 'numberposts' => -1, 'post_status' => 'any', 'meta_key' => '_wf_img', 'meta_value' => $old, 'meta_compare' => 'IN']) as $p) {
+        if (!has_post_thumbnail($p)) {
+            wp_delete_post($p->ID, true);
+        }
+    }
+    update_option('webfor_works_cleanup', 2);
+}
+add_action('admin_init', 'webfor_cleanup_concepts');
+add_action('wp', 'webfor_cleanup_concepts');
+
 /** Создаёт примеры работ один раз (при активации или после обновления плагина). */
 function webfor_seed_works() {
     if (get_option('webfor_works_seeded')) {
         return;
     }
+    update_option('webfor_works_cleanup', 2);
     foreach (webfor_default_works() as $i => $w) {
         $id = wp_insert_post(['post_type' => 'webfor_work', 'post_status' => 'publish', 'post_title' => $w['title'], 'menu_order' => $i]);
         if ($id && !is_wp_error($id)) {

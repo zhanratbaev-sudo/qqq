@@ -67,11 +67,15 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 .wf-nav { display: flex; gap: 24px; margin-left: 8px; }
 .wf-nav a { color: var(--text-2); font-size: 15px; font-weight: 500; }
 .wf-nav a:hover { color: var(--text); }
-.wf-nav-cta { display: none; }
 .wf-header-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 .wf-header-phone { font-weight: 600; font-size: 15px; white-space: nowrap; }
 .wf-header-phone:hover { color: var(--accent); }
-.wf-burger { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; background: transparent; color: var(--text); border: 1px solid var(--line-strong); border-radius: 10px; cursor: pointer; }
+.wf-burger { display: none; position: relative; width: 44px; height: 44px; background: transparent; color: var(--text); border: 1px solid var(--line-strong); border-radius: 12px; cursor: pointer; }
+.wf-burger i { position: absolute; left: 12px; right: 12px; height: 2px; border-radius: 2px; background: currentColor; transition: transform .4s var(--spring), opacity .2s; }
+.wf-burger i:nth-child(1) { top: 14px; } .wf-burger i:nth-child(2) { top: 20px; } .wf-burger i:nth-child(3) { top: 26px; }
+.wf-burger[aria-expanded=true] i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.wf-burger[aria-expanded=true] i:nth-child(2) { opacity: 0; transform: scaleX(.3); }
+.wf-burger[aria-expanded=true] i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
 /* --- первый экран --- */
 .wf-hero { padding: 96px 0 64px; }
@@ -271,18 +275,24 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 
 /* --- адаптив --- */
 @media (max-width: 1080px) {
+  .wf-nav { position: absolute; left: 12px; right: 12px; top: calc(100% + 8px); flex-direction: column; gap: 0; margin: 0; padding: 8px 20px;
+    border: 1px solid var(--glass-edge); border-radius: 20px; background: #0b100f;
+    box-shadow: var(--glass-light), 0 24px 60px rgba(0, 0, 0, .55);
+    opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-14px) scale(.97); transform-origin: top right;
+    transition: opacity .2s ease, transform .45s var(--spring), visibility 0s linear .45s; }
+  .wf-nav.is-open { opacity: 1; visibility: visible; pointer-events: auto; transform: none; transition: opacity .2s ease, transform .45s var(--spring), visibility 0s; }
+  .wf-nav a { padding: 16px 4px; font-size: 17px; color: var(--text); border-bottom: 1px solid rgba(255, 255, 255, .08); opacity: 0; transform: translateY(-8px); transition: opacity .25s, transform .4s var(--spring); }
+  .wf-nav a:last-child { border-bottom: 0; }
+  .wf-nav.is-open a { opacity: 1; transform: none; }
+  .wf-nav.is-open a:nth-child(2) { transition-delay: .04s; } .wf-nav.is-open a:nth-child(3) { transition-delay: .08s; } .wf-nav.is-open a:nth-child(4) { transition-delay: .12s; }
+  .wf-header-in { position: relative; }
   .wf-folders { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
-  .wf-nav { display: none; }
   .wf-burger { display: inline-flex; }
-  .wf-nav.is-open { display: flex; position: absolute; left: 0; right: 0; top: 72px; flex-direction: column; gap: 0; margin: 0; padding: 8px 24px 24px; background: var(--bg); border-bottom: 1px solid var(--line); }
-  .wf-nav.is-open a { padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 17px; color: var(--text); }
-  .wf-nav.is-open .wf-nav-cta { display: flex; justify-content: center; margin-top: 16px; border: 0; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
   .wf-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .wf-wrap { padding: 0 16px; }
   .wf-header-in { height: 64px; gap: 16px; }
-  .wf-nav.is-open { top: 64px; padding: 8px 16px 24px; }
   .wf-header-phone, .wf-header-actions .wf-btn { display: none; }
   .wf-hero { padding: 48px 0 48px; }
   .wf-hero h1 { font-size: 36px; }
@@ -338,10 +348,10 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
    Стекло как в iOS: полупрозрачная заливка, размытие и насыщение того, что под ним,
    светлая кромка сверху и мягкое внутреннее свечение. Нажатия «пружинят». */
 .wf {
-  --glass: rgba(255, 255, 255, .055);
-  --glass-strong: rgba(255, 255, 255, .09);
+  --glass: rgba(20, 26, 25, .58);
+  --glass-strong: rgba(30, 38, 36, .66);
   --glass-edge: rgba(255, 255, 255, .16);
-  --glass-blur: blur(22px) saturate(180%);
+  --glass-blur: blur(28px) saturate(125%);
   --glass-light: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 -1px 0 rgba(255, 255, 255, .05), inset 0 0 0 1px rgba(255, 255, 255, .05), inset 0 0 24px rgba(255, 255, 255, .03);
   --glass-shadow: 0 10px 30px rgba(0, 0, 0, .35);
   --spring: cubic-bezier(.3, 1.4, .5, 1);
@@ -367,8 +377,8 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-folder:active { transform: scale(.98); }
 .wf-work-btn:active .wf-work-shot { transform: scale(.97); }
 /* папка: стекло поверх торчащих карточек — они просвечивают сквозь корпус */
-.wf-folder-body { background: rgba(255, 255, 255, .06); }
-.wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .28); }
+.wf-folder-body, .wf-folder-body::before { background: rgba(14, 19, 18, .72); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.85); backdrop-filter: blur(30px) saturate(115%) brightness(.85); }
+.wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(22, 29, 28, .74); border-color: rgba(255, 255, 255, .26); }
 .wf-folder-body::before { border-bottom: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
 .wf-card-accent { border-color: rgba(63, 224, 160, .55); }
 .wf-work-shot { box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset; }
@@ -378,9 +388,24 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-lightbox { background: rgba(12, 16, 15, .72); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-color: var(--glass-edge); box-shadow: var(--glass-light), 0 30px 80px rgba(0, 0, 0, .6); }
 .wf-lightbox::backdrop { background: rgba(0, 0, 0, .55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 
+/* иконки живут: у каждой своё зацикленное движение */
+.wf-folder-icon .wf-i, .wf-page-icon .wf-i, .wf-card-icon .wf-i, .wf-product-icon .wf-i { animation: 4.8s ease-in-out infinite; transform-origin: 50% 50%; }
+.wf-anim-globe .wf-i { animation-name: wf-spin-y; }
+.wf-anim-device .wf-i { animation-name: wf-tilt; }
+.wf-anim-bot .wf-i { animation-name: wf-hop; }
+.wf-anim-layers .wf-i { animation-name: wf-float-y; }
+.wf-anim-paw .wf-i, .wf-anim-spark .wf-i { animation-name: wf-pulse; }
+/* папки не синхронно: каждая на своей фазе */
+.wf-folder-wrap:nth-child(2) .wf-i { animation-delay: -1.2s; } .wf-folder-wrap:nth-child(3) .wf-i { animation-delay: -2.4s; } .wf-folder-wrap:nth-child(4) .wf-i { animation-delay: -3.6s; }
+@keyframes wf-spin-y { 0%, 55% { transform: rotateY(0); } 80%, 100% { transform: rotateY(360deg); } }
+@keyframes wf-tilt { 0%, 60%, 100% { transform: rotate(0); } 68% { transform: rotate(-12deg); } 76% { transform: rotate(10deg); } 84% { transform: rotate(-5deg); } 92% { transform: rotate(0); } }
+@keyframes wf-hop { 0%, 60%, 100% { transform: translateY(0) scale(1); } 70% { transform: translateY(-5px) scale(1.06); } 80% { transform: translateY(0) scale(.96, 1.04); } 88% { transform: translateY(-2px); } }
+@keyframes wf-float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes wf-pulse { 0%, 65%, 100% { transform: scale(1); } 75% { transform: scale(1.15); } 85% { transform: scale(.95); } }
+
 /* первый экран: работы под стеклом */
 .wf-hero-in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center; }
-.wf-hero-art { position: relative; height: 520px; }
+.wf-hero-art { position: relative; height: 520px; margin: 0 8px; }
 .wf-hero-art img { position: absolute; display: block; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 30px 60px rgba(0, 0, 0, .5); object-fit: cover; object-position: top; }
 .wf-art-site { width: 92%; aspect-ratio: 16 / 10; left: 0; top: 30px; transform: rotate(-4deg); }
 .wf-art-app { width: 38%; aspect-ratio: 9 / 19; right: 4%; top: 120px; border-radius: 28px !important; border-width: 5px !important; border-color: #1d2624 !important; transform: rotate(5deg); }
@@ -388,27 +413,28 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--glass-edge); border-radius: 20px; color: var(--text); font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
 .wf-glass.wf-art-chip { background: rgba(8, 12, 11, .58); }
 .wf-art-chip b { display: block; font-size: 15px; }
-.wf-art-chip span { color: var(--text-2); }
+.wf-art-chip span { color: var(--text-2); min-width: 0; }
 .wf-art-chip .wf-i { width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
-.wf-art-chip-1 { left: -6%; top: 190px; animation: wf-float 6s ease-in-out infinite; }
-.wf-art-chip-2 { right: -2%; bottom: 40px; animation: wf-float 7s ease-in-out -2s infinite; }
+.wf-art-chip-1 { left: 4%; top: 196px; animation: wf-float 6s ease-in-out infinite; }
+.wf-art-chip-2 { right: 4%; bottom: 36px; animation: wf-float 7s ease-in-out -2s infinite; }
 @keyframes wf-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @media (max-width: 1080px) {
   .wf-hero-in { grid-template-columns: 1fr; }
   .wf-hero-art { height: 420px; max-width: 560px; }
 }
 @media (max-width: 760px) {
-  .wf-hero-art { height: 340px; margin-top: 8px; }
+  .wf-hero-art { height: 360px; margin: 24px 4px 0; }
+  .wf-art-chip { max-width: 72%; }
   .wf-art-chip { padding: 10px 14px; font-size: 12px; }
   .wf-art-chip b { font-size: 13px; }
-  .wf-art-chip-1 { left: 0; top: 150px; }
-  .wf-art-chip-2 { right: 0; bottom: 10px; }
+  .wf-art-chip-1 { left: 12px; top: 150px; }
+  .wf-art-chip-2 { right: 12px; bottom: 16px; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .wf-header, .wf-page-bar, .wf-mobile-bar { background: rgba(5, 7, 7, .96); }
   .wf-glass, .wf-folder-body, .wf-folder-body::before, .wf-lightbox, .wf-art-chip { background: #121817; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .wf-art-chip-1, .wf-art-chip-2 { animation: none; }
+  .wf-art-chip-1, .wf-art-chip-2, .wf-folder-icon .wf-i, .wf-page-icon .wf-i, .wf-card-icon .wf-i, .wf-product-icon .wf-i { animation: none; }
   .wf-btn:active, .wf-folder:active, .wf-page-back:active { transform: none; }
 }

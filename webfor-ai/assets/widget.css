@@ -40,10 +40,10 @@
 .wfai-wa { width: 100%; font-size: 13px; color: var(--a-accent); text-decoration: none; }
 @media (max-width: 760px) {
   .wfai { right: 16px; bottom: 16px; }
-  .wfai.wfai-has-bar { bottom: 88px; }
+  .wfai.wfai-has-bar { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
   .wfai-launcher span { display: none; }
   .wfai-launcher { width: 56px; padding: 0; justify-content: center; }
-  .wfai.is-open { inset: 0; }
+  .wfai.is-open, .wfai.wfai-has-bar.is-open { inset: 0; }
   .wfai-panel { position: fixed; inset: 0; width: auto; height: 100%; border-radius: 0; border: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .wfai-typing i { animation: none; opacity: .7; } .wfai-launcher { transition: none; } }
