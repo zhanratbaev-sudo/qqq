@@ -7,7 +7,7 @@ defined('ABSPATH') || exit;
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#0d1211">
-    <meta name="description" content="WebFor — сайты и цифровые системы для бизнеса: сайты под ваш дизайн, Izi — сайт, CRM и приложение для команды в одном, Vet.izi для ветклиник.">
+    <meta name="description" content="WebFor — цифровые продукты для бизнеса: сайты, мобильные приложения, AI-чат-боты, Izi — сайт, CRM и приложение в одном, Vet.izi для ветклиник.">
     <?php wp_head(); ?>
 </head>
 <body <?php body_class('wf-body'); ?>>

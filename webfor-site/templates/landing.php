@@ -38,14 +38,14 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
             <div class="wf-wrap">
                 <p class="wf-eyebrow">Цифровые продукты для бизнеса</p>
                 <h1>Сайты и системы, с которыми работать проще</h1>
-                <p class="wf-lead">Делаем сайты под ваш дизайн и внедряем цифровые инструменты в работу: онлайн-заявки, CRM, приложение для сотрудников, чаты. Берём на себя всё — от идеи до запуска и поддержки.</p>
+                <p class="wf-lead">Делаем сайты и мобильные приложения, ставим AI-чат-ботов, которые сами отвечают клиентам, и внедряем CRM в работу команды. Берём на себя всё — от идеи до запуска и поддержки.</p>
                 <div class="wf-actions">
                     <a class="wf-btn wf-btn-primary" href="#zayavka">Обсудить проект <?php echo webfor_icon('arrow'); ?></a>
                     <?php if ($wf_wa) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>Написать в WhatsApp</a><?php endif; ?>
                 </div>
                 <ul class="wf-facts">
                     <li><b>Под ваш дизайн</b><span>без шаблонов</span></li>
-                    <li><b>Всё в одном</b><span>сайт, CRM и приложение</span></li>
+                    <li><b>Всё в одном</b><span>сайт, приложение, CRM и AI</span></li>
                     <li><b>Поддержка</b><span>после запуска</span></li>
                 </ul>
             </div>
@@ -56,20 +56,44 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <header class="wf-section-head">
                     <p class="wf-eyebrow">Услуги</p>
                     <h2 id="uslugi-h">Что мы делаем</h2>
-                    <p>Начните с сайта или сразу получите систему, в которой работает вся команда.</p>
+                    <p>Можно взять что-то одно или собрать всё в единую систему.</p>
                 </header>
-                <div class="wf-grid-2">
+                <div class="wf-grid-2 wf-services">
                     <article class="wf-card">
                         <div class="wf-card-icon"><?php echo webfor_icon('globe'); ?></div>
                         <h3>Сайты</h3>
-                        <p>Понятный сайт, который рассказывает о вас и приводит клиентов.</p>
+                        <p>Любой сайт под вашу задачу — понятный, быстрый и удобный на телефоне.</p>
                         <ul class="wf-list">
-                            <li>Лендинг или многостраничный сайт</li>
-                            <li>Интернет-магазин с загрузкой товаров</li>
-                            <li>Форма заявки, WhatsApp и звонок в один клик</li>
-                            <li>Адаптация под телефоны</li>
+                            <li>Лендинг, сайт-визитка, корпоративный сайт</li>
+                            <li>Интернет-магазин и каталог с загрузкой товаров</li>
+                            <li>Сайт с онлайн-записью и личным кабинетом</li>
+                            <li>Заявки, WhatsApp и звонок в один клик</li>
                         </ul>
                         <a class="wf-link" href="#zayavka" data-service="site">Заказать сайт <?php echo webfor_icon('arrow'); ?></a>
+                    </article>
+                    <article class="wf-card">
+                        <div class="wf-card-icon"><?php echo webfor_icon('device'); ?></div>
+                        <h3>Мобильные приложения</h3>
+                        <p>Приложение для ваших клиентов или для команды — на iPhone и Android.</p>
+                        <ul class="wf-list">
+                            <li>Приложение для клиентов: запись, заказы, бонусы</li>
+                            <li>Приложение для сотрудников: задачи, заявки, чаты</li>
+                            <li>Установка из браузера или публикация в App Store и Google Play</li>
+                            <li>Push-уведомления</li>
+                        </ul>
+                        <a class="wf-link" href="#zayavka" data-service="app">Обсудить приложение <?php echo webfor_icon('arrow'); ?></a>
+                    </article>
+                    <article class="wf-card">
+                        <div class="wf-card-icon"><?php echo webfor_icon('bot'); ?></div>
+                        <h3>AI-чат-боты для бизнеса</h3>
+                        <p>Искусственный интеллект, который отвечает клиентам вместо вас — днём и ночью.</p>
+                        <ul class="wf-list">
+                            <li>Отвечает в WhatsApp, Instagram, Telegram и на сайте</li>
+                            <li>Знает ваши услуги, цены и частые вопросы</li>
+                            <li>Записывает клиентов и собирает заявки</li>
+                            <li>Сложные вопросы передаёт менеджеру</li>
+                        </ul>
+                        <a class="wf-link" href="#zayavka" data-service="bot">Хочу чат-бота <?php echo webfor_icon('arrow'); ?></a>
                     </article>
                     <article class="wf-card wf-card-accent">
                         <div class="wf-card-icon"><?php echo webfor_icon('layers'); ?></div>
@@ -175,6 +199,8 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <details><summary>Можно начать с сайта, а CRM добавить потом?</summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
                     <details><summary>Нужно ли скачивать приложение из App Store?</summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
                     <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — универсальный вариант для любого бизнеса, и в нём есть AI-ассистент.</p></details>
+                    <details><summary>Как работает AI-чат-бот?</summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
+                    <details><summary>Можно поставить чат-бота на мой сайт?</summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
                     <details><summary>Вы поддерживаете сайт после запуска?</summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
                 </div>
             </div>

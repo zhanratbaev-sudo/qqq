@@ -7,6 +7,8 @@ defined('ABSPATH') || exit;
 function webfor_services() {
     return [
         'site'    => 'Сайт',
+        'app'     => 'Мобильное приложение',
+        'bot'     => 'AI-чат-бот для бизнеса',
         'vetizi'  => 'Vet.izi — для ветклиник и зоо-бизнеса',
         'izi'     => 'Izi — всё в одном + AI-ассистент',
         'unknown' => 'Пока не знаю, нужна консультация',

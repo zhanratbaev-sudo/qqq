@@ -62,6 +62,8 @@ function webfor_icon($name) {
         'paw'     => '<circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12.5 11c-3 0-5.5 3.5-5.5 6 0 1.7 1.3 2.5 2.8 2.2 1-.2 1.8-.6 2.7-.6s1.7.4 2.7.6c1.5.3 2.8-.5 2.8-2.2 0-2.5-2.5-6-5.5-6z"/>',
         'spark'   => '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
         'arrow'   => '<path d="M5 12h14M13 6l6 6-6 6"/>',
+        'device'  => '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/>',
+        'bot'     => '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
         'menu'    => '<path d="M4 7h16M4 12h16M4 17h16"/>',
         'close'   => '<path d="M6 6l12 12M18 6 6 18"/>',
     ];
