@@ -2,7 +2,7 @@
 /**
  * Чат: POST /wp-json/webfor-ai/v1/chat {chat, text} — ответ ассистента (разговор сохраняется, см. chats.php);
  * POST /wp-json/webfor-ai/v1/contact — контакт клиента к вопросу.
- * Модель отвечает по базе знаний. Если ответа там нет или вопрос сложный — вызывает инструмент escalate_to_owner,
+ * Отвечает Gemini (Google) или Claude (Anthropic) — что выбрано в настройках. Модель отвечает по базе знаний. Если ответа там нет или вопрос сложный — вызывает инструмент escalate_to_owner,
  * и вопрос уходит владельцу (раздел «Вопросы» + письмо).
  */
 defined('ABSPATH') || exit;
@@ -150,6 +150,8 @@ function wfai_rest_chat(WP_REST_Request $req) {
     $key = wfai_api_key();
     if ($key === '') {
         $escalate = ['question' => $text_in, 'reason' => 'Ассистент ещё не подключён (нет ключа API).'];
+    } elseif (wfai_provider() === 'gemini') {
+        [$text, $escalate] = wfai_ask_gemini($key, $history, $text_in);
     } else {
         try {
             $client = new Client(apiKey: $key, requestOptions: ['timeout' => 25.0, 'maxRetries' => 1]);
@@ -204,10 +206,76 @@ function wfai_rest_chat(WP_REST_Request $req) {
         update_post_meta($qid, '_chat', $id);
         wfai_chat_set_status($id, 'waiting');
         wfai_push_all('Нужно присоединиться к чату', mb_substr((string) ($escalate['question'] ?? $text_in), 0, 140), wfai_admin_url('chat-' . $id));
-        $resp += ['escalated' => true, 'question_id' => $qid, 'status' => 'waiting'];
+        $resp = array_merge($resp, ['escalated' => true, 'question_id' => $qid, 'status' => 'waiting']);
     }
     $resp['msgs'] = array_map(fn($m) => ['i' => $m['i'], 'r' => $m['r'], 'a' => $m['a'], 't' => $m['t']], $out);
     return new WP_REST_Response($resp);
+}
+
+/**
+ * Ответ через Gemini (Google): REST generateContent, те же правила и база знаний, тот же инструмент escalate_to_owner.
+ * Возвращает [текст, escalate|null]. Ошибки ключа и лимита не показываются клиенту — вопрос уходит менеджеру с причиной.
+ */
+function wfai_ask_gemini($key, $history, $text_in) {
+    $tool = wfai_escalate_tool();
+    $contents = array_map(fn($m) => ['role' => $m['role'] === 'user' ? 'user' : 'model', 'parts' => [['text' => $m['content']]]], $history);
+    $body = [
+        'systemInstruction' => ['parts' => [['text' => wfai_system_prompt() . "\n\n" . wfai_now_note()]]],
+        'contents' => $contents,
+        'tools' => [['functionDeclarations' => [[
+            'name' => $tool['name'],
+            'description' => $tool['description'],
+            'parameters' => ['type' => 'object', 'properties' => $tool['inputSchema']['properties'], 'required' => $tool['inputSchema']['required']],
+        ]]]],
+        'generationConfig' => ['maxOutputTokens' => 2048, 'temperature' => 0.5],
+    ];
+    $model = wfai_opt('gemini_model') ?: 'gemini-3.1-flash-lite';
+    $res = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent', [
+        'timeout' => 25,
+        'headers' => ['Content-Type' => 'application/json', 'x-goog-api-key' => $key],
+        'body' => wp_json_encode($body),
+    ]);
+    $fail = fn($reason) => ['', ['question' => $text_in, 'reason' => $reason]];
+    if (is_wp_error($res)) {
+        error_log('[webfor-ai] Gemini: нет связи: ' . $res->get_error_message());
+        return $fail('Ассистент временно недоступен (нет связи с Gemini).');
+    }
+    $code = (int) wp_remote_retrieve_response_code($res);
+    $data = json_decode(wp_remote_retrieve_body($res), true) ?: [];
+    if ($code !== 200) {
+        $msg = (string) ($data['error']['message'] ?? '');
+        error_log('[webfor-ai] Gemini ' . $code . ': ' . $msg);
+        if ($code === 429) {
+            return $fail('Закончился лимит Gemini (бесплатный лимит на сегодня или в минуту).');
+        }
+        if ($code === 401 || $code === 403 || stripos($msg, 'API key') !== false) {
+            return $fail('Ошибка ключа Gemini — проверьте его в настройках ассистента.');
+        }
+        if ($code === 404) {
+            return $fail('Модель Gemini «' . $model . '» не найдена — выберите другую в настройках.');
+        }
+        return $fail('Ассистент временно недоступен (Gemini ' . $code . ').');
+    }
+    if (!empty($data['promptFeedback']['blockReason'])) {
+        return $fail('Gemini отказался отвечать на это сообщение.');
+    }
+    $cand = $data['candidates'][0] ?? [];
+    $text = '';
+    $escalate = null;
+    foreach ((array) ($cand['content']['parts'] ?? []) as $part) {
+        if (!empty($part['thought'])) {
+            continue; // служебные «мысли» модели клиенту не показываем
+        }
+        if (isset($part['functionCall']) && ($part['functionCall']['name'] ?? '') === 'escalate_to_owner') {
+            $escalate = (array) ($part['functionCall']['args'] ?? []);
+        } elseif (isset($part['text'])) {
+            $text .= $part['text'];
+        }
+    }
+    if (in_array($cand['finishReason'] ?? '', ['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'RECITATION'], true) && trim($text) === '') {
+        $escalate = ['question' => $text_in, 'reason' => 'Gemini отказался отвечать на это сообщение.'];
+    }
+    return [$text, $escalate];
 }
 
 function wfai_rest_contact(WP_REST_Request $req) {

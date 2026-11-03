@@ -5,6 +5,25 @@
  */
 defined('ABSPATH') || exit;
 
+/** Модели Gemini (Google). Список подсказок: Google часто выпускает новые, поэтому в настройках можно вписать и свою. */
+function wfai_gemini_models() {
+    return [
+        'gemini-3.1-flash-lite'  => 'Gemini 3.1 Flash-Lite — быстрая, есть бесплатный лимит (рекомендуем)',
+        'gemini-3-flash-preview' => 'Gemini 3 Flash (preview) — умнее, лимит меньше',
+        'gemini-2.5-flash'       => 'Gemini 2.5 Flash',
+    ];
+}
+
+/** Какой сервис отвечает клиентам: gemini или claude. */
+function wfai_provider() {
+    return wfai_opt('provider') === 'claude' ? 'claude' : 'gemini';
+}
+
+/** Модель выбранного сервиса — для подписи в админке. */
+function wfai_current_model() {
+    return wfai_provider() === 'claude' ? (wfai_opt('model') ?: 'claude-haiku-5-5') : (wfai_opt('gemini_model') ?: 'gemini-3.1-flash-lite');
+}
+
 function wfai_models() {
     return [
         'claude-haiku-5-5'  => 'Claude Haiku 5.5 — быстрая и недорогая (рекомендуем)',
@@ -127,6 +146,9 @@ function wfai_old_knowledge_hashes() {
 function wfai_defaults() {
     return [
         'enabled'     => 1,
+        'provider'     => 'gemini',
+        'gemini_key'   => '',
+        'gemini_model' => 'gemini-3.1-flash-lite',
         'api_key'     => '',
         'model'       => 'claude-haiku-5-5',
         'name'        => 'Ассистент WebFor',
@@ -143,13 +165,36 @@ function wfai_opt($key) {
     return $all[$key] ?? '';
 }
 
-/** Ключ API: из настроек или из константы WFAI_ANTHROPIC_KEY в wp-config.php (так надёжнее). */
+/** Ключ выбранного сервиса: из настроек или из wp-config.php (WFAI_GEMINI_KEY / WFAI_ANTHROPIC_KEY — так надёжнее). */
 function wfai_api_key() {
+    if (wfai_provider() === 'gemini') {
+        return defined('WFAI_GEMINI_KEY') && WFAI_GEMINI_KEY ? WFAI_GEMINI_KEY : (string) wfai_opt('gemini_key');
+    }
     if (defined('WFAI_ANTHROPIC_KEY') && WFAI_ANTHROPIC_KEY) {
         return WFAI_ANTHROPIC_KEY;
     }
     return (string) wfai_opt('api_key');
 }
+
+/** Ключ Google (Gemini) узнаём по началу «AIza» — если его вставили в поле Claude, переносим куда надо. */
+function wfai_is_gemini_key($k) {
+    return strpos(trim((string) $k), 'AIza') === 0;
+}
+add_action('init', function () {
+    $s = get_option('wfai_settings');
+    if (!is_array($s)) {
+        return;
+    }
+    if (wfai_is_gemini_key($s['api_key'] ?? '')) {
+        $s['gemini_key'] = trim($s['api_key']);
+        $s['api_key'] = '';
+        $s['provider'] = 'gemini';
+        update_option('wfai_settings', $s);
+    } elseif (!isset($s['provider']) && (trim((string) ($s['api_key'] ?? '')) !== '' || (defined('WFAI_ANTHROPIC_KEY') && WFAI_ANTHROPIC_KEY))) {
+        $s['provider'] = 'claude'; // сайт уже работал с ключом Claude — после обновления ничего не ломаем
+        update_option('wfai_settings', $s);
+    }
+}, 5);
 
 /** Номера владельца: берём из плагина WebFor Site, если он установлен. */
 function wfai_contacts() {
@@ -194,8 +239,12 @@ add_action('admin_init', function () {
 function wfai_sanitize($in) {
     $in = (array) $in;
     $old = wp_parse_args((array) get_option('wfai_settings', []), wfai_defaults());
+    $gm = trim((string) ($in['gemini_model'] ?? ''));
     $out = [
         'enabled'     => empty($in['enabled']) ? 0 : 1,
+        'provider'     => ($in['provider'] ?? '') === 'claude' ? 'claude' : 'gemini',
+        'gemini_key'   => trim((string) ($in['gemini_key'] ?? '')) !== '' ? sanitize_text_field($in['gemini_key']) : $old['gemini_key'],
+        'gemini_model' => preg_match('/^gemini-[a-z0-9.\-]{1,60}$/', $gm) ? $gm : 'gemini-3.1-flash-lite',
         // пустое поле ключа не стирает сохранённый ключ
         'api_key'     => trim((string) ($in['api_key'] ?? '')) !== '' ? sanitize_text_field($in['api_key']) : $old['api_key'],
         'model'       => isset(wfai_models()[$in['model'] ?? '']) ? $in['model'] : 'claude-haiku-5-5',
@@ -208,6 +257,14 @@ function wfai_sanitize($in) {
     ];
     if (!empty($in['forget_key'])) {
         $out['api_key'] = '';
+    }
+    if (!empty($in['forget_gemini_key'])) {
+        $out['gemini_key'] = '';
+    }
+    if (wfai_is_gemini_key($out['api_key'])) { // ключ Google вставили в поле Claude
+        $out['gemini_key'] = $out['api_key'];
+        $out['api_key'] = '';
+        $out['provider'] = 'gemini';
     }
     return $out;
 }
@@ -236,14 +293,27 @@ function wfai_settings_page() {
             <?php settings_fields('wfai'); ?>
             <table class="form-table" role="presentation">
                 <tr><th scope="row">Ассистент на сайте</th><td><label><input type="checkbox" name="wfai_settings[enabled]" value="1" <?php checked($s['enabled'], 1); ?>> Показывать окно чата</label></td></tr>
-                <tr><th scope="row"><label for="wfai-key">Ключ Anthropic API</label></th><td>
-                    <input id="wfai-key" class="regular-text" type="password" name="wfai_settings[api_key]" value="" autocomplete="off" placeholder="<?php echo $has_key ? 'Ключ сохранён — введите новый, чтобы заменить' : 'sk-ant-…'; ?>">
-                    <?php if ($has_key && !defined('WFAI_ANTHROPIC_KEY')) : ?><label style="margin-left:8px"><input type="checkbox" name="wfai_settings[forget_key]" value="1"> удалить ключ</label><?php endif; ?>
-                    <p class="description">Создайте ключ на console.anthropic.com → API Keys. Надёжнее хранить его в wp-config.php: <code>define('WFAI_ANTHROPIC_KEY', 'sk-ant-…');</code><?php echo defined('WFAI_ANTHROPIC_KEY') ? ' — сейчас используется ключ из wp-config.php.' : ''; ?></p>
-                    <p><?php echo $has_key ? '✅ Ключ есть.' : '⚠️ Ключа нет — без него ассистент не отвечает сам, а сразу передаёт вопросы вам.'; ?></p></td></tr>
-                <tr><th scope="row"><label for="wfai-model">Модель</label></th><td><select id="wfai-model" name="wfai_settings[model]">
+                <tr><th scope="row">Кто отвечает клиентам</th><td>
+                    <label><input type="radio" name="wfai_settings[provider]" value="gemini" <?php checked($s['provider'] !== 'claude'); ?>> Gemini (Google) — есть бесплатный лимит</label><br>
+                    <label><input type="radio" name="wfai_settings[provider]" value="claude" <?php checked($s['provider'], 'claude'); ?>> Claude (Anthropic) — платно, лучше держит правила</label>
+                    <p><?php echo $has_key ? '✅ Ключ для выбранного сервиса есть.' : '⚠️ Для выбранного сервиса нет ключа — ассистент не отвечает сам, а сразу передаёт вопросы вам.'; ?></p></td></tr>
+                <tr><th scope="row"><label for="wfai-gkey">Ключ Gemini API</label></th><td>
+                    <?php $has_g = (defined('WFAI_GEMINI_KEY') && WFAI_GEMINI_KEY) || $s['gemini_key'] !== ''; ?>
+                    <input id="wfai-gkey" class="regular-text" type="password" name="wfai_settings[gemini_key]" value="" autocomplete="off" placeholder="<?php echo $has_g ? 'Ключ сохранён — введите новый, чтобы заменить' : 'AIza…'; ?>">
+                    <?php if ($has_g && !defined('WFAI_GEMINI_KEY')) : ?><label style="margin-left:8px"><input type="checkbox" name="wfai_settings[forget_gemini_key]" value="1"> удалить ключ</label><?php endif; ?>
+                    <p class="description">Бесплатно: aistudio.google.com → Get API key. Бесплатный лимит — несколько десятков или сотен ответов в день, Google его меняет; когда он кончится, вопросы на сегодня уйдут вам.</p></td></tr>
+                <tr><th scope="row"><label for="wfai-gmodel">Модель Gemini</label></th><td>
+                    <input id="wfai-gmodel" class="regular-text" list="wfai-gmodels" name="wfai_settings[gemini_model]" value="<?php echo esc_attr($s['gemini_model']); ?>">
+                    <datalist id="wfai-gmodels"><?php foreach (wfai_gemini_models() as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>"><?php echo esc_html($label); ?></option><?php endforeach; ?></datalist>
+                    <p class="description">По умолчанию <code>gemini-3.1-flash-lite</code>. Если Google выпустит новую модель, впишите её название (начинается с gemini-).</p></td></tr>
+                <tr><th scope="row"><label for="wfai-key">Ключ Anthropic API (Claude)</label></th><td>
+                    <?php $has_c = (defined('WFAI_ANTHROPIC_KEY') && WFAI_ANTHROPIC_KEY) || $s['api_key'] !== ''; ?>
+                    <input id="wfai-key" class="regular-text" type="password" name="wfai_settings[api_key]" value="" autocomplete="off" placeholder="<?php echo $has_c ? 'Ключ сохранён — введите новый, чтобы заменить' : 'sk-ant-…'; ?>">
+                    <?php if ($has_c && !defined('WFAI_ANTHROPIC_KEY')) : ?><label style="margin-left:8px"><input type="checkbox" name="wfai_settings[forget_key]" value="1"> удалить ключ</label><?php endif; ?>
+                    <p class="description">Нужен, только если выбран Claude: console.anthropic.com → API Keys.</p></td></tr>
+                <tr><th scope="row"><label for="wfai-model">Модель Claude</label></th><td><select id="wfai-model" name="wfai_settings[model]">
                     <?php foreach (wfai_models() as $id => $label) : ?><option value="<?php echo esc_attr($id); ?>" <?php selected($s['model'], $id); ?>><?php echo esc_html($label); ?></option><?php endforeach; ?>
-                    </select><p class="description">Для ответов клиентам хватает Haiku: она быстрая и стоит копейки. Сложное всё равно уходит вам.</p></td></tr>
+                    </select></td></tr>
                 <tr><th scope="row"><label for="wfai-name">Имя ассистента</label></th><td><input id="wfai-name" class="regular-text" name="wfai_settings[name]" value="<?php echo esc_attr($s['name']); ?>"></td></tr>
                 <tr><th scope="row"><label for="wfai-greet">Приветствие</label></th><td><textarea id="wfai-greet" class="large-text" rows="2" name="wfai_settings[greeting]"><?php echo esc_textarea($s['greeting']); ?></textarea></td></tr>
                 <tr><th scope="row"><label for="wfai-owner">Менеджер (имя в живом чате) и e-mail для уведомлений</label></th><td>

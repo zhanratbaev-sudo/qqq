@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: WebFor AI Assistant
- * Description: AI-ассистент на сайте: отвечает клиентам по базе знаний (Claude Haiku), сложные вопросы передаёт владельцу. Обучение — в разделе «AI-ассистент».
- * Version: 1.5.2
+ * Description: AI-ассистент на сайте: отвечает клиентам по базе знаний (Gemini или Claude), сложные вопросы передаёт владельцу. Обучение — в разделе «AI-ассистент».
+ * Version: 1.6.0
  * Author: WebFor
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('WFAI_VERSION', '1.5.2');
+define('WFAI_VERSION', '1.6.0');
 define('WFAI_DIR', plugin_dir_path(__FILE__));
 define('WFAI_URL', plugin_dir_url(__FILE__));
 

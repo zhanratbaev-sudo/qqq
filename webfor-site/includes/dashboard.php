@@ -56,7 +56,7 @@ function webfor_admin_state() {
     if (function_exists('wfai_opt')) {
         $qs = get_posts(['post_type' => 'wfai_question', 'numberposts' => 200, 'post_status' => 'publish']);
         $ai = [
-            'enabled' => (bool) wfai_opt('enabled'), 'has_key' => wfai_api_key() !== '', 'model' => wfai_opt('model'),
+            'enabled' => (bool) wfai_opt('enabled'), 'has_key' => wfai_api_key() !== '', 'model' => function_exists('wfai_current_model') ? wfai_current_model() : wfai_opt('model'),
             'knowledge' => wfai_opt('knowledge'), 'learned' => array_values((array) get_option('wfai_learned', [])),
             'questions' => array_map(fn($q) => [
                 'id' => $q->ID, 'q' => get_post_meta($q->ID, '_q', true), 'reason' => get_post_meta($q->ID, '_reason', true),
