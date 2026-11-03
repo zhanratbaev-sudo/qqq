@@ -11,14 +11,21 @@
   var pendingQuestion = 0, busy = false, contactAsked = false;
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-  var ICON_CHAT = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>';
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_SEND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
   var root = el('div', 'wfai');
   var launcher = el('button', 'wfai-launcher');
   launcher.type = 'button'; launcher.setAttribute('aria-label', 'Открыть чат с ассистентом'); launcher.setAttribute('aria-expanded', 'false');
-  launcher.innerHTML = ICON_CHAT + '<span>Спросить AI</span>';
+  // «живая» иконка: облачко с глазами; рука, мысли и прыжок включаются по таймеру (см. idle ниже)
+  var ICON_BOT = '<svg class="wfai-bot" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">'
+    + '<g class="wfai-bot-think"><circle cx="27.4" cy="3" r="2.1"/><circle cx="31.2" cy="-0.6" r="1.6"/><circle cx="34" cy="-3.4" r="1.1"/></g>'
+    + '<g class="wfai-bot-body"><path d="M16 4.5c6.6 0 11.5 4.6 11.5 10.4S22.6 25.3 16 25.3c-1.5 0-2.9-.2-4.2-.6L5.6 27.4l1.6-5.2C5.3 20.3 4.5 17.8 4.5 14.9 4.5 9.1 9.4 4.5 16 4.5z"/>'
+    + '<g class="wfai-bot-eyes"><rect class="wfai-eye" x="10.6" y="11.6" width="3.2" height="5.2" rx="1.6"/><rect class="wfai-eye" x="18.2" y="11.6" width="3.2" height="5.2" rx="1.6"/></g>'
+    + '<path class="wfai-bot-smile" d="M13.2 19.6q2.8 2 5.6 0"/></g>'
+    + '<g class="wfai-bot-hand"><path class="wfai-arm" d="M26.2 18.4 29.4 14.4"/><rect x="27.8" y="7.2" width="6.6" height="6.6" rx="2.6"/><rect x="28.1" y="3.6" width="1.7" height="5" rx=".85"/><rect x="30.25" y="3" width="1.7" height="5.4" rx=".85"/><rect x="32.4" y="3.6" width="1.7" height="5" rx=".85"/><rect x="26.4" y="8.6" width="1.9" height="4" rx=".95"/></g>'
+    + '</svg>';
+  launcher.innerHTML = ICON_BOT + '<span>Спросить AI</span>';
 
   var panel = el('section', 'wfai-panel'); panel.setAttribute('aria-label', C.name || 'Ассистент'); panel.hidden = true;
   var head = el('header', 'wfai-head');
@@ -156,20 +163,69 @@
   // открытие: кнопка «вырастает» в окно чата, зелёный цвет растворяется в стекле; закрытие — обратно
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var animating = false;
+  // окно обрезается clip-path, поэтому скругление всегда настоящее: прямоугольник плавно становится кругом, а не «прыгает»
+  function clipTo(r, big, radius) {
+    return 'inset(' + Math.max(0, r.top - big.top) + 'px ' + Math.max(0, big.right - r.right) + 'px ' + Math.max(0, big.bottom - r.bottom) + 'px ' + Math.max(0, r.left - big.left) + 'px round ' + radius + 'px)';
+  }
   function morph(btnRect, opening, done) {
-    var big = panel.getBoundingClientRect(), small = btnRect;
-    var t = 'translate(' + (small.left - big.left) + 'px,' + (small.top - big.top) + 'px) scale(' + small.width / big.width + ',' + small.height / big.height + ')';
-    var green = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
-    var frames = [
-      { transform: t, borderRadius: '28px', backgroundColor: green },
-      { transform: 'none', borderRadius: getComputedStyle(panel).borderRadius, backgroundColor: glass },
-    ];
-    if (!opening) frames.reverse();
-    panel.style.transformOrigin = '0 0';
+    var big = panel.getBoundingClientRect();
+    var accent = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
+    var full = 'inset(0px 0px 0px 0px round 0px)';
     panel.classList.add('is-morph');
-    var anim = panel.animate(frames, { duration: opening ? 460 : 380, easing: opening ? 'cubic-bezier(.2,.9,.25,1)' : 'cubic-bezier(.4,0,.2,1)' });
+    var anim;
+    if (opening) {
+      anim = panel.animate([
+        { clipPath: clipTo(btnRect, big, btnRect.height / 2), backgroundColor: accent },
+        { clipPath: full, backgroundColor: glass },
+      ], { duration: 520, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    } else {
+      // закрытие: окно сжимается, заливается цветом сайта и в конце становится кругом на месте кнопки
+      var d = btnRect.height, cx = btnRect.right - d / 2, cy = btnRect.top + d / 2;
+      var mid = { top: big.top + (cy - big.top) * .55, bottom: big.bottom + (cy - big.bottom) * .55, left: big.left + (cx - big.left) * .55, right: big.right + (cx - big.right) * .55 };
+      var circle = { top: cy - d / 2, bottom: cy + d / 2, left: cx - d / 2, right: cx + d / 2 };
+      anim = panel.animate([
+        { clipPath: full, backgroundColor: glass, offset: 0 },
+        { clipPath: clipTo(mid, big, 40), backgroundColor: accent, offset: .45 },
+        { clipPath: clipTo(circle, big, d / 2), backgroundColor: accent, offset: 1 },
+      ], { duration: 560, easing: 'cubic-bezier(.55,0,.25,1)' });
+    }
     anim.onfinish = function () { panel.classList.remove('is-morph'); done(); };
   }
+  // кнопка появляется после закрытия: круг «раскрывается» в кнопку, иконка выпрыгивает и моргает
+  function popLauncher() {
+    if (reduce || !launcher.animate) return;
+    var r = launcher.getBoundingClientRect(), d = r.height;
+    launcher.animate([
+      { clipPath: 'inset(0px 0px 0px ' + (r.width - d) + 'px round ' + d / 2 + 'px)' },
+      { clipPath: 'inset(0px 0px 0px 0px round ' + d / 2 + 'px)' },
+    ], { duration: 420, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    var bot = launcher.querySelector('.wfai-bot');
+    bot.animate([
+      { transform: 'scale(.2) rotate(-25deg)', opacity: 0 },
+      { transform: 'scale(1.18) rotate(6deg)', opacity: 1, offset: .6 },
+      { transform: 'scale(1) rotate(0)', opacity: 1 },
+    ], { duration: 520, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    var label = launcher.querySelector('span');
+    if (label) label.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, fill: 'backwards', easing: 'ease-out' });
+    setTimeout(function () { act('blink'); }, 560);
+  }
+
+  /* иконка «живёт»: моргает, оглядывается, иногда машет рукой, думает или подпрыгивает */
+  var ACTS = { blink: 450, look: 1600, wave: 2000, think: 2400, hop: 700, happy: 1300 };
+  var actTimer = 0;
+  function act(name) {
+    if (reduce || root.classList.contains('is-open')) return;
+    Object.keys(ACTS).forEach(function (k) { launcher.classList.remove('is-' + k); });
+    void launcher.offsetWidth; // перезапуск анимации
+    launcher.classList.add('is-' + name);
+    clearTimeout(actTimer);
+    actTimer = setTimeout(function () { launcher.classList.remove('is-' + name); }, ACTS[name]);
+  }
+  (function idle() {
+    var bag = ['blink', 'blink', 'blink', 'look', 'look', 'wave', 'think', 'hop', 'happy'];
+    setTimeout(function () { if (!document.hidden) act(bag[Math.floor(Math.random() * bag.length)]); idle(); }, 3500 + Math.random() * 4500);
+  })();
+  setTimeout(function () { act('wave'); }, 2500); // первое приветствие
   var lockY = null;
   function setOpen(open) {
     if (animating || open === !panel.hidden) return;
@@ -190,7 +246,7 @@
       var finish = function () { panel.hidden = true; root.classList.remove('is-open'); animating = false; launcher.focus({ preventScroll: true }); };
       if (!reduce && panel.animate) {
         animating = true; root.classList.add('is-closing'); root.classList.remove('is-open');
-        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); });
+        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); popLauncher(); });
       }
       else finish();
     }

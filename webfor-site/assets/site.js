@@ -191,3 +191,27 @@
       .then(function () { btn.disabled = false; btn.firstChild.textContent = 'Отправить заявку'; });
   });
 })();
+
+/* Izi: полоски под карточками следуют за свайпом, нажатие на полоску листает к карточке */
+(function () {
+  var track = document.getElementById('wf-izi-track');
+  if (!track) return;
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.wf-izi-dot'));
+  var cards = Array.prototype.slice.call(track.children);
+  var cur = 0;
+  function update() {
+    var max = track.scrollWidth - track.clientWidth;
+    if (max <= 0) return;
+    var i = Math.round(track.scrollLeft / max * (cards.length - 1));
+    if (i === cur) return;
+    cur = i;
+    dots.forEach(function (d, k) { d.classList.toggle('is-active', k === i); if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+  }
+  track.addEventListener('scroll', function () { requestAnimationFrame(update); }, { passive: true });
+  dots.forEach(function (d, k) {
+    d.addEventListener('click', function () {
+      var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      track.scrollTo({ left: cards[k].offsetLeft - cards[0].offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+})();

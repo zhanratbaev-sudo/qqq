@@ -100,3 +100,49 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
 .wfai-launcher { position: relative; }
 .wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }
+
+/* v5: «живая» иконка ассистента — глаза, рука, мысли */
+.wfai-launcher { overflow: visible; }
+.wfai-bot { flex: none; overflow: visible; display: block; }
+.wfai-eye, .wfai-bot-eyes, .wfai-bot-smile, .wfai-bot-body, .wfai-bot-hand, .wfai-bot-think circle { transform-box: fill-box; }
+.wfai-bot-body > path:first-child { fill: #04170f; }
+.wfai-eye { fill: #eafff6; transform-origin: 50% 50%; }
+.wfai-bot-eyes { transform-origin: 50% 50%; }
+.wfai-bot-smile { fill: none; stroke: #eafff6; stroke-width: 1.6; stroke-linecap: round; transform-origin: 50% 0; opacity: .9; }
+.wfai-bot-body { transform-origin: 30% 90%; }
+.wfai-bot-hand rect { fill: #04170f; }
+.wfai-arm { fill: none; stroke: #04170f; stroke-width: 2.4; stroke-linecap: round; }
+.wfai-bot-hand { transform-origin: 0% 100%; transform: scale(0); }
+.wfai-bot-think circle { fill: #04170f; opacity: 0; }
+/* моргнуть */
+.wfai-launcher.is-blink .wfai-eye { animation: wfai-blink-eye .45s ease-in-out; }
+@keyframes wfai-blink-eye { 0%, 100% { transform: scaleY(1); } 45%, 55% { transform: scaleY(.12); } }
+/* оглядеться */
+.wfai-launcher.is-look .wfai-bot-eyes { animation: wfai-look 1.6s ease-in-out; }
+@keyframes wfai-look { 0%, 100% { transform: none; } 18%, 40% { transform: translateX(-1.8px); } 60%, 85% { transform: translateX(1.8px); } }
+/* помахать рукой */
+.wfai-launcher.is-wave .wfai-bot-hand { animation: wfai-wave 2s cubic-bezier(.4,0,.2,1); }
+.wfai-launcher.is-wave .wfai-bot-body { animation: wfai-lean 2s ease-in-out; }
+.wfai-launcher.is-wave .wfai-eye { animation: wfai-squint 2s ease-in-out; }
+@keyframes wfai-wave { 0% { transform: scale(0) rotate(0); } 12% { transform: scale(1) rotate(0); } 24% { transform: scale(1) rotate(22deg); } 38% { transform: scale(1) rotate(-8deg); } 52% { transform: scale(1) rotate(22deg); } 66% { transform: scale(1) rotate(-8deg); } 80% { transform: scale(1) rotate(0); } 100% { transform: scale(0) rotate(0); } }
+@keyframes wfai-lean { 0%, 100% { transform: none; } 20%, 80% { transform: rotate(-6deg); } }
+@keyframes wfai-squint { 0%, 100% { transform: none; } 15%, 80% { transform: scaleY(.45); } }
+/* задуматься: глаза вверх-вбок, над головой точки */
+.wfai-launcher.is-think .wfai-bot-eyes { animation: wfai-ponder 2.4s ease-in-out; }
+.wfai-launcher.is-think .wfai-bot-think circle { animation: wfai-dot 2.4s ease-in-out; }
+.wfai-launcher.is-think .wfai-bot-think circle:nth-child(2) { animation-delay: .2s; }
+.wfai-launcher.is-think .wfai-bot-think circle:nth-child(3) { animation-delay: .4s; }
+.wfai-launcher.is-think .wfai-bot-smile { animation: wfai-flat 2.4s ease-in-out; }
+@keyframes wfai-ponder { 0%, 100% { transform: none; } 15%, 85% { transform: translate(1.6px, -1.8px); } }
+@keyframes wfai-dot { 0%, 10% { opacity: 0; transform: scale(.3); } 25%, 75% { opacity: 1; transform: scale(1); } 90%, 100% { opacity: 0; transform: scale(.3); } }
+@keyframes wfai-flat { 0%, 100% { transform: none; } 15%, 85% { transform: scaleY(.15); } }
+/* подпрыгнуть */
+.wfai-launcher.is-hop .wfai-bot { animation: wfai-hop .7s cubic-bezier(.3,1.4,.5,1); }
+@keyframes wfai-hop { 0%, 100% { transform: none; } 20% { transform: translateY(1px) scale(1.08, .9); } 50% { transform: translateY(-7px) scale(.95, 1.06); } 80% { transform: translateY(0) scale(1.05, .95); } }
+/* радость: прищур, улыбка шире, покачивание */
+.wfai-launcher.is-happy .wfai-eye { animation: wfai-squint 1.3s ease-in-out; }
+.wfai-launcher.is-happy .wfai-bot-smile { animation: wfai-grin 1.3s ease-in-out; }
+.wfai-launcher.is-happy .wfai-bot-body { animation: wfai-wiggle 1.3s ease-in-out; }
+@keyframes wfai-grin { 0%, 100% { transform: none; } 20%, 80% { transform: scale(1.25, 1.6); } }
+@keyframes wfai-wiggle { 0%, 100% { transform: none; } 25% { transform: rotate(-7deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) { .wfai-launcher[class*="is-"] * { animation: none !important; } }

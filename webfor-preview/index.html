@@ -697,6 +697,21 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
   .wf-nav { background-color: rgba(5, 7, 7, .82) !important; }
 }
 
+/* Izi: на телефоне Vet.izi и Izi в один ряд, листаются пальцем; снизу две полоски — активная длинная и цвета сайта */
+.wf-izi-dots { display: none; }
+@media (max-width: 860px) {
+  .wf-izi-track { display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin: 0 -16px; padding: 4px 16px 20px; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; }
+  .wf-izi-track::-webkit-scrollbar { display: none; }
+  .wf-izi-track > .wf-product { flex: 0 0 86%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .wf-izi-dots { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 4px; }
+  .wf-izi-dot { width: 14px; height: 4px; padding: 0; border: 0; border-radius: 2px; background: rgba(255,255,255,.9); cursor: pointer;
+    transition: width .45s cubic-bezier(.3,1.3,.5,1), background-color .35s ease; position: relative; }
+  .wf-izi-dot::after { content: ""; position: absolute; inset: -12px -4px; } /* больше площадь нажатия */
+  .wf-izi-dot.is-active { width: 34px; background: var(--accent); }
+}
+@media (prefers-reduced-motion: reduce) { .wf-izi-dot { transition: none; } }
+
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
 .wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #3fe0a0; --a-on: #04170f;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
@@ -799,6 +814,52 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
 .wfai-launcher { position: relative; }
 .wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }
+
+/* v5: «живая» иконка ассистента — глаза, рука, мысли */
+.wfai-launcher { overflow: visible; }
+.wfai-bot { flex: none; overflow: visible; display: block; }
+.wfai-eye, .wfai-bot-eyes, .wfai-bot-smile, .wfai-bot-body, .wfai-bot-hand, .wfai-bot-think circle { transform-box: fill-box; }
+.wfai-bot-body > path:first-child { fill: #04170f; }
+.wfai-eye { fill: #eafff6; transform-origin: 50% 50%; }
+.wfai-bot-eyes { transform-origin: 50% 50%; }
+.wfai-bot-smile { fill: none; stroke: #eafff6; stroke-width: 1.6; stroke-linecap: round; transform-origin: 50% 0; opacity: .9; }
+.wfai-bot-body { transform-origin: 30% 90%; }
+.wfai-bot-hand rect { fill: #04170f; }
+.wfai-arm { fill: none; stroke: #04170f; stroke-width: 2.4; stroke-linecap: round; }
+.wfai-bot-hand { transform-origin: 0% 100%; transform: scale(0); }
+.wfai-bot-think circle { fill: #04170f; opacity: 0; }
+/* моргнуть */
+.wfai-launcher.is-blink .wfai-eye { animation: wfai-blink-eye .45s ease-in-out; }
+@keyframes wfai-blink-eye { 0%, 100% { transform: scaleY(1); } 45%, 55% { transform: scaleY(.12); } }
+/* оглядеться */
+.wfai-launcher.is-look .wfai-bot-eyes { animation: wfai-look 1.6s ease-in-out; }
+@keyframes wfai-look { 0%, 100% { transform: none; } 18%, 40% { transform: translateX(-1.8px); } 60%, 85% { transform: translateX(1.8px); } }
+/* помахать рукой */
+.wfai-launcher.is-wave .wfai-bot-hand { animation: wfai-wave 2s cubic-bezier(.4,0,.2,1); }
+.wfai-launcher.is-wave .wfai-bot-body { animation: wfai-lean 2s ease-in-out; }
+.wfai-launcher.is-wave .wfai-eye { animation: wfai-squint 2s ease-in-out; }
+@keyframes wfai-wave { 0% { transform: scale(0) rotate(0); } 12% { transform: scale(1) rotate(0); } 24% { transform: scale(1) rotate(22deg); } 38% { transform: scale(1) rotate(-8deg); } 52% { transform: scale(1) rotate(22deg); } 66% { transform: scale(1) rotate(-8deg); } 80% { transform: scale(1) rotate(0); } 100% { transform: scale(0) rotate(0); } }
+@keyframes wfai-lean { 0%, 100% { transform: none; } 20%, 80% { transform: rotate(-6deg); } }
+@keyframes wfai-squint { 0%, 100% { transform: none; } 15%, 80% { transform: scaleY(.45); } }
+/* задуматься: глаза вверх-вбок, над головой точки */
+.wfai-launcher.is-think .wfai-bot-eyes { animation: wfai-ponder 2.4s ease-in-out; }
+.wfai-launcher.is-think .wfai-bot-think circle { animation: wfai-dot 2.4s ease-in-out; }
+.wfai-launcher.is-think .wfai-bot-think circle:nth-child(2) { animation-delay: .2s; }
+.wfai-launcher.is-think .wfai-bot-think circle:nth-child(3) { animation-delay: .4s; }
+.wfai-launcher.is-think .wfai-bot-smile { animation: wfai-flat 2.4s ease-in-out; }
+@keyframes wfai-ponder { 0%, 100% { transform: none; } 15%, 85% { transform: translate(1.6px, -1.8px); } }
+@keyframes wfai-dot { 0%, 10% { opacity: 0; transform: scale(.3); } 25%, 75% { opacity: 1; transform: scale(1); } 90%, 100% { opacity: 0; transform: scale(.3); } }
+@keyframes wfai-flat { 0%, 100% { transform: none; } 15%, 85% { transform: scaleY(.15); } }
+/* подпрыгнуть */
+.wfai-launcher.is-hop .wfai-bot { animation: wfai-hop .7s cubic-bezier(.3,1.4,.5,1); }
+@keyframes wfai-hop { 0%, 100% { transform: none; } 20% { transform: translateY(1px) scale(1.08, .9); } 50% { transform: translateY(-7px) scale(.95, 1.06); } 80% { transform: translateY(0) scale(1.05, .95); } }
+/* радость: прищур, улыбка шире, покачивание */
+.wfai-launcher.is-happy .wfai-eye { animation: wfai-squint 1.3s ease-in-out; }
+.wfai-launcher.is-happy .wfai-bot-smile { animation: wfai-grin 1.3s ease-in-out; }
+.wfai-launcher.is-happy .wfai-bot-body { animation: wfai-wiggle 1.3s ease-in-out; }
+@keyframes wfai-grin { 0%, 100% { transform: none; } 20%, 80% { transform: scale(1.25, 1.6); } }
+@keyframes wfai-wiggle { 0%, 100% { transform: none; } 25% { transform: rotate(-7deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-4deg); } }
+@media (prefers-reduced-motion: reduce) { .wfai-launcher[class*="is-"] * { animation: none !important; } }
 
 .wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
 </style>
@@ -1091,8 +1152,8 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                     <h2 id="izi-h">Два варианта Izi</h2>
                     <p>Одна основа — сайт, CRM и приложение. Разница в том, под какой бизнес она настроена.</p>
                 </header>
-                <div class="wf-grid-2">
-                    <article class="wf-card wf-product">
+                <div class="wf-grid-2 wf-izi-track" id="wf-izi-track">
+                    <article class="wf-card wf-product" id="wf-izi-vet" aria-label="Vet.izi">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-product-vet wf-anim-paw"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12.5 11c-3 0-5.5 3.5-5.5 6 0 1.7 1.3 2.5 2.8 2.2 1-.2 1.8-.6 2.7-.6s1.7.4 2.7.6c1.5.3 2.8-.5 2.8-2.2 0-2.5-2.5-6-5.5-6z"/></svg></span>
                             <div><h3>Vet.izi</h3><p class="wf-muted">Для ветклиник, груминга, зоомагазинов и всех, кто помогает животным</p></div>
@@ -1106,7 +1167,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                         </ul>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="vetizi">Хочу Vet.izi</a>
                     </article>
-                    <article class="wf-card wf-product">
+                    <article class="wf-card wf-product" id="wf-izi-max" aria-label="Izi">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-anim-spark"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg></span>
                             <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
@@ -1121,6 +1182,10 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                         </ul>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="izi">Хочу Izi</a>
                     </article>
+                </div>
+                <div class="wf-izi-dots" aria-label="Варианты Izi">
+                    <button type="button" class="wf-izi-dot is-active" aria-controls="wf-izi-vet" aria-current="true" aria-label="Vet.izi"></button>
+                    <button type="button" class="wf-izi-dot" aria-controls="wf-izi-max" aria-label="Izi"></button>
                 </div>
             </div>
         </section>
@@ -1494,6 +1559,30 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       .then(function () { btn.disabled = false; btn.firstChild.textContent = 'Отправить заявку'; });
   });
 })();
+
+/* Izi: полоски под карточками следуют за свайпом, нажатие на полоску листает к карточке */
+(function () {
+  var track = document.getElementById('wf-izi-track');
+  if (!track) return;
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.wf-izi-dot'));
+  var cards = Array.prototype.slice.call(track.children);
+  var cur = 0;
+  function update() {
+    var max = track.scrollWidth - track.clientWidth;
+    if (max <= 0) return;
+    var i = Math.round(track.scrollLeft / max * (cards.length - 1));
+    if (i === cur) return;
+    cur = i;
+    dots.forEach(function (d, k) { d.classList.toggle('is-active', k === i); if (k === i) d.setAttribute('aria-current', 'true'); else d.removeAttribute('aria-current'); });
+  }
+  track.addEventListener('scroll', function () { requestAnimationFrame(update); }, { passive: true });
+  dots.forEach(function (d, k) {
+    d.addEventListener('click', function () {
+      var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      track.scrollTo({ left: cards[k].offsetLeft - cards[0].offsetLeft, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+})();
 </script>
 <script>/* Окно AI-ассистента WebFor. Настройки приходят в window.WFAI (имя, приветствие, адреса REST).
    WFAI.transport (необязательно) — своя функция отправки, например для демо без сервера. */
@@ -1508,14 +1597,21 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   var pendingQuestion = 0, busy = false, contactAsked = false;
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-  var ICON_CHAT = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>';
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_SEND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
   var root = el('div', 'wfai');
   var launcher = el('button', 'wfai-launcher');
   launcher.type = 'button'; launcher.setAttribute('aria-label', 'Открыть чат с ассистентом'); launcher.setAttribute('aria-expanded', 'false');
-  launcher.innerHTML = ICON_CHAT + '<span>Спросить AI</span>';
+  // «живая» иконка: облачко с глазами; рука, мысли и прыжок включаются по таймеру (см. idle ниже)
+  var ICON_BOT = '<svg class="wfai-bot" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">'
+    + '<g class="wfai-bot-think"><circle cx="27.4" cy="3" r="2.1"/><circle cx="31.2" cy="-0.6" r="1.6"/><circle cx="34" cy="-3.4" r="1.1"/></g>'
+    + '<g class="wfai-bot-body"><path d="M16 4.5c6.6 0 11.5 4.6 11.5 10.4S22.6 25.3 16 25.3c-1.5 0-2.9-.2-4.2-.6L5.6 27.4l1.6-5.2C5.3 20.3 4.5 17.8 4.5 14.9 4.5 9.1 9.4 4.5 16 4.5z"/>'
+    + '<g class="wfai-bot-eyes"><rect class="wfai-eye" x="10.6" y="11.6" width="3.2" height="5.2" rx="1.6"/><rect class="wfai-eye" x="18.2" y="11.6" width="3.2" height="5.2" rx="1.6"/></g>'
+    + '<path class="wfai-bot-smile" d="M13.2 19.6q2.8 2 5.6 0"/></g>'
+    + '<g class="wfai-bot-hand"><path class="wfai-arm" d="M26.2 18.4 29.4 14.4"/><rect x="27.8" y="7.2" width="6.6" height="6.6" rx="2.6"/><rect x="28.1" y="3.6" width="1.7" height="5" rx=".85"/><rect x="30.25" y="3" width="1.7" height="5.4" rx=".85"/><rect x="32.4" y="3.6" width="1.7" height="5" rx=".85"/><rect x="26.4" y="8.6" width="1.9" height="4" rx=".95"/></g>'
+    + '</svg>';
+  launcher.innerHTML = ICON_BOT + '<span>Спросить AI</span>';
 
   var panel = el('section', 'wfai-panel'); panel.setAttribute('aria-label', C.name || 'Ассистент'); panel.hidden = true;
   var head = el('header', 'wfai-head');
@@ -1653,20 +1749,69 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   // открытие: кнопка «вырастает» в окно чата, зелёный цвет растворяется в стекле; закрытие — обратно
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var animating = false;
+  // окно обрезается clip-path, поэтому скругление всегда настоящее: прямоугольник плавно становится кругом, а не «прыгает»
+  function clipTo(r, big, radius) {
+    return 'inset(' + Math.max(0, r.top - big.top) + 'px ' + Math.max(0, big.right - r.right) + 'px ' + Math.max(0, big.bottom - r.bottom) + 'px ' + Math.max(0, r.left - big.left) + 'px round ' + radius + 'px)';
+  }
   function morph(btnRect, opening, done) {
-    var big = panel.getBoundingClientRect(), small = btnRect;
-    var t = 'translate(' + (small.left - big.left) + 'px,' + (small.top - big.top) + 'px) scale(' + small.width / big.width + ',' + small.height / big.height + ')';
-    var green = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
-    var frames = [
-      { transform: t, borderRadius: '28px', backgroundColor: green },
-      { transform: 'none', borderRadius: getComputedStyle(panel).borderRadius, backgroundColor: glass },
-    ];
-    if (!opening) frames.reverse();
-    panel.style.transformOrigin = '0 0';
+    var big = panel.getBoundingClientRect();
+    var accent = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
+    var full = 'inset(0px 0px 0px 0px round 0px)';
     panel.classList.add('is-morph');
-    var anim = panel.animate(frames, { duration: opening ? 460 : 380, easing: opening ? 'cubic-bezier(.2,.9,.25,1)' : 'cubic-bezier(.4,0,.2,1)' });
+    var anim;
+    if (opening) {
+      anim = panel.animate([
+        { clipPath: clipTo(btnRect, big, btnRect.height / 2), backgroundColor: accent },
+        { clipPath: full, backgroundColor: glass },
+      ], { duration: 520, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    } else {
+      // закрытие: окно сжимается, заливается цветом сайта и в конце становится кругом на месте кнопки
+      var d = btnRect.height, cx = btnRect.right - d / 2, cy = btnRect.top + d / 2;
+      var mid = { top: big.top + (cy - big.top) * .55, bottom: big.bottom + (cy - big.bottom) * .55, left: big.left + (cx - big.left) * .55, right: big.right + (cx - big.right) * .55 };
+      var circle = { top: cy - d / 2, bottom: cy + d / 2, left: cx - d / 2, right: cx + d / 2 };
+      anim = panel.animate([
+        { clipPath: full, backgroundColor: glass, offset: 0 },
+        { clipPath: clipTo(mid, big, 40), backgroundColor: accent, offset: .45 },
+        { clipPath: clipTo(circle, big, d / 2), backgroundColor: accent, offset: 1 },
+      ], { duration: 560, easing: 'cubic-bezier(.55,0,.25,1)' });
+    }
     anim.onfinish = function () { panel.classList.remove('is-morph'); done(); };
   }
+  // кнопка появляется после закрытия: круг «раскрывается» в кнопку, иконка выпрыгивает и моргает
+  function popLauncher() {
+    if (reduce || !launcher.animate) return;
+    var r = launcher.getBoundingClientRect(), d = r.height;
+    launcher.animate([
+      { clipPath: 'inset(0px 0px 0px ' + (r.width - d) + 'px round ' + d / 2 + 'px)' },
+      { clipPath: 'inset(0px 0px 0px 0px round ' + d / 2 + 'px)' },
+    ], { duration: 420, easing: 'cubic-bezier(.2,.9,.25,1)' });
+    var bot = launcher.querySelector('.wfai-bot');
+    bot.animate([
+      { transform: 'scale(.2) rotate(-25deg)', opacity: 0 },
+      { transform: 'scale(1.18) rotate(6deg)', opacity: 1, offset: .6 },
+      { transform: 'scale(1) rotate(0)', opacity: 1 },
+    ], { duration: 520, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    var label = launcher.querySelector('span');
+    if (label) label.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, fill: 'backwards', easing: 'ease-out' });
+    setTimeout(function () { act('blink'); }, 560);
+  }
+
+  /* иконка «живёт»: моргает, оглядывается, иногда машет рукой, думает или подпрыгивает */
+  var ACTS = { blink: 450, look: 1600, wave: 2000, think: 2400, hop: 700, happy: 1300 };
+  var actTimer = 0;
+  function act(name) {
+    if (reduce || root.classList.contains('is-open')) return;
+    Object.keys(ACTS).forEach(function (k) { launcher.classList.remove('is-' + k); });
+    void launcher.offsetWidth; // перезапуск анимации
+    launcher.classList.add('is-' + name);
+    clearTimeout(actTimer);
+    actTimer = setTimeout(function () { launcher.classList.remove('is-' + name); }, ACTS[name]);
+  }
+  (function idle() {
+    var bag = ['blink', 'blink', 'blink', 'look', 'look', 'wave', 'think', 'hop', 'happy'];
+    setTimeout(function () { if (!document.hidden) act(bag[Math.floor(Math.random() * bag.length)]); idle(); }, 3500 + Math.random() * 4500);
+  })();
+  setTimeout(function () { act('wave'); }, 2500); // первое приветствие
   var lockY = null;
   function setOpen(open) {
     if (animating || open === !panel.hidden) return;
@@ -1687,7 +1832,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       var finish = function () { panel.hidden = true; root.classList.remove('is-open'); animating = false; launcher.focus({ preventScroll: true }); };
       if (!reduce && panel.animate) {
         animating = true; root.classList.add('is-closing'); root.classList.remove('is-open');
-        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); });
+        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); popLauncher(); });
       }
       else finish();
     }

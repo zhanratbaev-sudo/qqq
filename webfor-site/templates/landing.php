@@ -139,8 +139,8 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <h2 id="izi-h">Два варианта Izi</h2>
                     <p>Одна основа — сайт, CRM и приложение. Разница в том, под какой бизнес она настроена.</p>
                 </header>
-                <div class="wf-grid-2">
-                    <article class="wf-card wf-product">
+                <div class="wf-grid-2 wf-izi-track" id="wf-izi-track">
+                    <article class="wf-card wf-product" id="wf-izi-vet" aria-label="Vet.izi">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-product-vet wf-anim-paw"><?php echo webfor_icon('paw'); ?></span>
                             <div><h3>Vet.izi</h3><p class="wf-muted">Для ветклиник, груминга, зоомагазинов и всех, кто помогает животным</p></div>
@@ -154,7 +154,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         </ul>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="vetizi">Хочу Vet.izi</a>
                     </article>
-                    <article class="wf-card wf-product">
+                    <article class="wf-card wf-product" id="wf-izi-max" aria-label="Izi">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-anim-spark"><?php echo webfor_icon('spark'); ?></span>
                             <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
@@ -169,6 +169,10 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         </ul>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="izi">Хочу Izi</a>
                     </article>
+                </div>
+                <div class="wf-izi-dots" aria-label="Варианты Izi">
+                    <button type="button" class="wf-izi-dot is-active" aria-controls="wf-izi-vet" aria-current="true" aria-label="Vet.izi"></button>
+                    <button type="button" class="wf-izi-dot" aria-controls="wf-izi-max" aria-label="Izi"></button>
                 </div>
             </div>
         </section>
