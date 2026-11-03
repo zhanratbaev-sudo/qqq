@@ -60,7 +60,7 @@
 
   function contactForm() {
     var f = el('form', 'wfai-contact');
-    var i = el('input'); i.type = 'tel'; i.placeholder = '+7 700 000 00 00'; i.setAttribute('aria-label', 'Телефон или WhatsApp'); i.autocomplete = 'tel';
+    var i = el('input'); i.type = 'tel'; i.placeholder = 'Ваш WhatsApp: +7 700 000 00 00'; i.setAttribute('aria-label', 'Ваш номер WhatsApp для ответа'); i.autocomplete = 'tel';
     var b = el('button', null, 'Отправить'); b.type = 'submit';
     f.appendChild(i); f.appendChild(b);
     if (C.wa) { var a = el('a', 'wfai-wa', 'или написать в WhatsApp'); a.href = C.wa; a.target = '_blank'; a.rel = 'noopener'; f.appendChild(a); }
