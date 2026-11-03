@@ -3,7 +3,7 @@
 .wfa {
   --bg: #040606; --text: #f2f7f5; --text-2: rgba(235,245,241,.72); --text-3: rgba(235,245,241,.48);
   --accent: #3fe0a0; --on-accent: #03170e; --blue: #5ab2ff; --gold: #ffd166; --red: #ff6b5e; --warn: #f5c451;
-  --glass: rgba(28,36,34,.52); --glass-2: rgba(255,255,255,.07); --glass-3: rgba(255,255,255,.12);
+  --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.07); --glass-3: rgba(255,255,255,.12);
   --rim: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.04), inset 0 0 0 .5px rgba(255,255,255,.08);
   --blur: blur(28px) saturate(190%);
   --r: 22px; --r-sm: 14px;
@@ -25,21 +25,14 @@
 .wfa.is-embedded { height: calc(100vh - 32px - 40px); min-height: 560px; margin: 16px 20px 0 0; border-radius: 28px; }
 
 /* фон: мягкие цветные пятна, чтобы стеклу было что «преломлять» */
-.wfa-bg { position: absolute; inset: -10%; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(42% 32% at 12% 8%, rgba(63,224,160,.30), transparent 70%),
-    radial-gradient(38% 30% at 92% 22%, rgba(15,138,118,.34), transparent 70%),
-    radial-gradient(46% 34% at 70% 92%, rgba(60,120,255,.18), transparent 70%),
-    radial-gradient(40% 30% at 8% 78%, rgba(63,224,160,.12), transparent 70%), var(--bg); }
+.wfa-bg { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--bg); }
 
 /* экраны */
 .wfa-stage { position: absolute; inset: 0; }
 .wfa-screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: transparent; }
 .wfa-screen.is-pushed { z-index: 5; background: var(--bg); box-shadow: -20px 0 60px rgba(0,0,0,.5); }
 .wfa-screen.is-pushed::before { content: ""; position: absolute; inset: 0; z-index: -1; background: inherit; }
-.wfa-screen.is-pushed .wfa-scroll { background:
-  radial-gradient(50% 30% at 100% 0%, rgba(63,224,160,.14), transparent 70%),
-  radial-gradient(50% 30% at 0% 100%, rgba(60,120,255,.10), transparent 70%); }
+.wfa-screen.is-pushed .wfa-scroll { background: none; }
 .wfa-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
   padding: calc(var(--safe-t) + 52px) 16px calc(var(--tabbar) + var(--safe-b) + 40px); scrollbar-width: none; }
 .wfa-scroll::-webkit-scrollbar { display: none; }
@@ -127,7 +120,7 @@
 .wfa-card.is-ok > .wfa-ico { background: #2fbf71; color: #fff; }
 .wfa-card.is-tip > .wfa-ico { background: #3478f6; color: #fff; }
 .wfa-hero { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border: 0; border-radius: var(--r); text-align: left; color: var(--on-accent);
-  background: linear-gradient(135deg, #46e6a8, #22c08a); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 14px 34px rgba(46,200,140,.28); transition: transform .2s; }
+  background: var(--accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 14px 34px rgba(46,200,140,.28); transition: transform .2s; }
 .wfa-hero:active { transform: scale(.98); }
 .wfa-hero-ico { width: 46px; height: 46px; display: grid; place-items: center; flex: none; border-radius: 50%; background: rgba(3,23,14,.14); }
 .wfa-hero-text { flex: 1; display: flex; flex-direction: column; }
@@ -161,7 +154,7 @@
 .wfa-chat-row { position: relative; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; border: 0; background: transparent; text-align: left; }
 .wfa-chat-row:active { background: rgba(255,255,255,.08); }
 .wfa-chat-row.is-waiting { background: rgba(63,224,160,.08); }
-.wfa-ava { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(160deg, rgba(255,255,255,.22), rgba(255,255,255,.06)); box-shadow: var(--rim); font-weight: 700; font-size: 15px; color: var(--text-2); }
+.wfa-ava { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.12); box-shadow: var(--rim); font-weight: 700; font-size: 15px; color: var(--text-2); }
 .wfa-chat-row.is-waiting .wfa-ava { background: var(--accent); color: var(--on-accent); }
 .wfa-chat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .wfa-chat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -229,7 +222,7 @@
 .wfa-input { width: 100%; min-height: 48px; padding: 12px 14px; border: 0 !important; border-radius: 14px !important; background: rgba(255,255,255,.08) !important; box-shadow: var(--rim) !important; color: var(--text) !important; font-size: 16px !important; line-height: 1.4; outline: none; -webkit-appearance: none; appearance: none; }
 .wfa-input:focus { box-shadow: var(--rim), 0 0 0 2px rgba(63,224,160,.6) !important; }
 textarea.wfa-input { resize: vertical; }
-select.wfa-input { background-image: linear-gradient(45deg, transparent 50%, var(--text-3) 50%), linear-gradient(135deg, var(--text-3) 50%, transparent 50%) !important; background-position: calc(100% - 20px) 22px, calc(100% - 15px) 22px !important; background-size: 5px 5px !important; background-repeat: no-repeat !important; padding-right: 36px; }
+select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a9b7b2' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") !important; background-position: right 16px center !important; background-repeat: no-repeat !important; padding-right: 40px; }
 .wfa-input::placeholder { color: var(--text-3); }
 .wfa-quote { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.07); font-size: 16px; font-weight: 600; }
 .wfa-muted { color: var(--text-3); font-size: 13px; }
