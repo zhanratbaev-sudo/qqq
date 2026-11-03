@@ -154,7 +154,7 @@ add_action('rest_api_init', function () {
         $out = [];
         foreach (get_posts(['post_type' => 'wfai_chat', 'post_status' => 'publish', 'numberposts' => 100, 'meta_key' => '_updated', 'orderby' => 'meta_value_num', 'order' => 'DESC']) as $p) {
             $msgs = wfai_chat_msgs($p->ID);
-            if (!$msgs) {
+            if (!$msgs || wfai_chat_status($p->ID) === 'closed') {
                 continue;
             }
             $out[] = ['id' => $p->ID, 'status' => wfai_chat_status($p->ID), 'last' => (string) get_post_meta($p->ID, '_last', true),
@@ -227,6 +227,17 @@ add_action('rest_api_init', function () {
         $hist[] = ['role' => 'user', 'content' => mb_substr($text, 0, 1500)];
         $a = wfai_model_answer($hist, $text);
         return ['reply' => $a['text'], 'escalated' => (bool) $a['escalate'], 'reason' => (string) ($a['escalate']['reason'] ?? ''), 'unsupported' => $a['unsupported']];
+    });
+
+    // закрыть разговор: он пропадает из списка; если клиент напишет снова — откроется заново и ответит ассистент
+    $r('/chat/(?P<id>\d+)/close', 'POST', function (WP_REST_Request $q) use ($chat_or_404) {
+        $id = $chat_or_404($q['id']);
+        if (!$id) {
+            return new WP_Error('nf', 'Чат не найден', ['status' => 404]);
+        }
+        wfai_chat_set_status($id, 'closed');
+        update_post_meta($id, '_unread', 0);
+        return ['ok' => true, 'status' => 'closed'];
     });
 
     $r('/faq', 'GET', function () {

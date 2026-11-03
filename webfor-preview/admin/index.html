@@ -339,6 +339,19 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa .wfa-sheet-head b { font-size: var(--fs-head); }
 .wfa-sheet-body { overflow-wrap: anywhere; }
 
+/* меню — ещё ниже, почти у края (над полоской «домой» на iPhone) */
+.wfa-tabbar { bottom: max(6px, calc(var(--safe-b) - 22px)); }
+
+/* смахнуть чат влево — «Закрыть» */
+.wfa-swipe { position: relative; overflow: hidden; }
+.wfa-swipe + .wfa-swipe::before { content: ""; position: absolute; z-index: 2; top: 0; right: 0; left: 72px; height: .5px; background: rgba(255,255,255,.09); }
+.wfa-swipe .wfa-chat-row { position: relative; z-index: 1; background: rgb(16,20,19); touch-action: pan-y; }
+.wfa-swipe .wfa-chat-row.is-waiting { background: rgb(18,32,27); }
+.wfa-swipe .wfa-chat-row + .wfa-chat-row::before { display: none; }
+.wfa-swipe-act { position: absolute; z-index: 0; top: 0; right: 0; bottom: 0; width: 96px; border: 0; background: #ff453a; color: #fff; font-weight: 600; font-size: var(--fs-sub); }
+.wfa-hint { margin-top: 8px; text-align: center; }
+.wfa-text-btn { height: 40px; padding: 0 10px; border: 0; background: transparent; color: var(--red); font-size: var(--fs-head); font-weight: 500; }
+
 </style>
 <div id="wfa-app" class="wfa"></div>
 <script>
@@ -373,6 +386,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         c = CH.find(function (x) { return x.id == m[1]; }); if (!c) return bad('Чат не найден');
         var act = m[2], after = +(m[3] || 0);
         if (!act) { c.unread = 0; return ok({ status: c.status, contact: c.contact, msgs: c.msgs.filter(function (x) { return x.i > after; }) }); }
+        if (act === '/close') { CH = CH.filter(function (x) { return x !== c; }); return ok({ ok: true, status: 'closed' }); }
         if (act === '/release') { c.status = 'bot'; addMsg(c, 'system', 'Менеджер вышел из чата — дальше снова отвечает ассистент.'); return ok({ ok: true, status: 'bot' }); }
         if (c.status !== 'live') { c.status = 'live'; addMsg(c, 'system', 'Менеджер присоединился, сейчас ответит вам.'); }
         if (act === '/send') {
@@ -574,6 +588,15 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   /* ---------- каркас: фон, экраны, нижняя панель, листы ---------- */
   const embedded = !CFG.sw && !CFG.demo; // внутри админки WordPress, а не отдельным приложением
   app.className = 'wfa' + (embedded ? ' is-embedded' : ' is-app');
+  function fitScreen() {
+    if (embedded || CFG.demo) return;
+    const standaloneIOS = navigator.standalone === true;
+    const full = standaloneIOS ? (window.matchMedia('(orientation: landscape)').matches ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height)) : 0;
+    app.style.height = full && full > window.innerHeight ? full + 'px' : '';
+  }
+  fitScreen();
+  window.addEventListener('resize', fitScreen);
+  window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
   app.innerHTML = '';
   const stage = h('div', { class: 'wfa-stage' });
   const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
@@ -800,18 +823,55 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   function viewChats(body) {
     notifyCards().forEach((c) => body.appendChild(c));
     const c = counts();
-    if (chatFilter === 'waiting' && !c.waiting) chatFilter = 'all';
     body.appendChild(segmented([['waiting', 'Ждут вас', c.waiting], ['all', 'Все', C.list.length]], chatFilter, (k) => { chatFilter = k; render('chats'); }));
     const list = C.list.filter((x) => chatFilter === 'all' || x.status === 'waiting');
-    if (!list.length) { body.appendChild(empty('chats', 'Разговоров пока нет', 'Когда клиент напишет ассистенту на сайте, разговор появится здесь. Если ассистент позовёт вас — придёт уведомление.')); return; }
-    body.appendChild(h('div', { class: 'wfa-list is-chats' }, list.map((x) => h('button', { type: 'button', class: 'wfa-chat-row is-' + x.status, onclick: () => openChat(x.id) }, [
+    if (!list.length) {
+      body.appendChild(chatFilter === 'waiting'
+        ? empty('check', 'Никто не ждёт', 'Когда ассистент позовёт вас, разговор появится здесь и придёт уведомление.')
+        : empty('chats', 'Разговоров пока нет', 'Когда клиент напишет ассистенту на сайте, разговор появится здесь.'));
+      return;
+    }
+    body.appendChild(h('div', { class: 'wfa-list is-chats' }, list.map((x) => swipeRow(h('button', { type: 'button', class: 'wfa-chat-row is-' + x.status, onclick: () => openChat(x.id) }, [
       h('span', { class: 'wfa-ava', text: x.contact ? '☎' : '#' + String(x.id).slice(-2) }),
       h('span', { class: 'wfa-chat-main' }, [
         h('span', { class: 'wfa-chat-top' }, [h('b', { text: x.contact || 'Клиент №' + x.id }), h('time', { text: timeAgo(x.updated) })]),
         h('span', { class: 'wfa-chat-last', text: x.last || '…' }),
         h('span', { class: 'wfa-chat-top' }, [h('span', { class: 'wfa-pill is-' + x.status, text: STATUS[x.status] || x.status }), x.unread ? h('span', { class: 'wfa-count', text: x.unread }) : null]),
       ]),
-    ]))));
+    ]), () => closeChat(x.id)))));
+    body.appendChild(h('p', { class: 'wfa-group-foot wfa-hint', text: 'Смахните чат влево, чтобы закрыть его. Если клиент напишет снова — чат вернётся.' }));
+  }
+  // строка, которую можно смахнуть влево — под ней кнопка «Закрыть»
+  function swipeRow(rowEl, onClose) {
+    const act = h('button', { type: 'button', class: 'wfa-swipe-act', text: 'Закрыть', onclick: (e) => { e.stopPropagation(); onClose(); } });
+    const wrap = h('div', { class: 'wfa-swipe' }, [act, rowEl]);
+    let x0 = null, y0 = 0, dx = 0, open = false, horiz = null;
+    const W = 96;
+    const set = (x, anim) => { rowEl.style.transition = anim ? 'transform .35s ' + EASE : 'none'; rowEl.style.transform = x ? 'translateX(' + x + 'px)' : ''; };
+    rowEl.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; horiz = null; }, { passive: true });
+    rowEl.addEventListener('touchmove', (e) => {
+      if (x0 == null) return;
+      const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+      if (horiz == null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) horiz = Math.abs(mx) > Math.abs(my);
+      if (!horiz) return;
+      dx = Math.min(0, Math.max(-W * 1.4, mx + (open ? -W : 0)));
+      set(dx);
+    }, { passive: true });
+    rowEl.addEventListener('touchend', () => {
+      if (x0 == null || !horiz) { x0 = null; return; }
+      x0 = null;
+      if (dx < -W * 1.25) { set(-wrap.offsetWidth, true); setTimeout(onClose, 200); return; } // смахнули до конца — сразу закрываем
+      open = dx < -W / 2; set(open ? -W : 0, true);
+    });
+    rowEl.addEventListener('click', (e) => { if (open) { e.preventDefault(); e.stopImmediatePropagation(); open = false; set(0, true); } }, true);
+    return wrap;
+  }
+  function closeChat(id) {
+    adapter.chatApi('POST', '/chat/' + id + '/close').then(() => {
+      C.list = C.list.filter((x) => x.id !== id);
+      if (chatView && chatView.id === id) pop();
+      updateBadges(); render('chats'); toast('Чат закрыт');
+    }).catch(fail);
   }
 
   let chatView = null, chatTimer = 0, listTimer = 0;
@@ -826,7 +886,8 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     const join = h('div', { class: 'wfa-join' });
     const ta = h('textarea', { class: 'wfa-composer-input', rows: 1, placeholder: 'Сообщение клиенту', 'aria-label': 'Сообщение клиенту', enterkeyhint: 'send' });
     const form = h('form', { class: 'wfa-composer' }, [ta, h('button', { type: 'submit', class: 'wfa-send', 'aria-label': 'Отправить', html: I.send })]);
-    const v = pushView(it.contact || 'Клиент №' + id, { backLabel: 'Чаты', subtitle: sub, actions: [waBtn], footer: h('div', { class: 'wfa-chat-foot' }, [join, form]), cls: 'is-chat' });
+    const closeB = h('button', { type: 'button', class: 'wfa-text-btn', text: 'Закрыть', onclick: () => closeChat(id) });
+    const v = pushView(it.contact || 'Клиент №' + id, { backLabel: 'Чаты', subtitle: sub, actions: [waBtn, closeB], footer: h('div', { class: 'wfa-chat-foot' }, [join, form]), cls: 'is-chat' });
     v.chat = id; v.body.appendChild(log);
     const st = { msgs: [], status: it.status || '', contact: it.contact || '' };
     chatView = { v, id, st, log, sub, join, waBtn };

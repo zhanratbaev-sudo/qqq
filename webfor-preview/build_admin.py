@@ -95,6 +95,7 @@ adapter = r"""
         c = CH.find(function (x) { return x.id == m[1]; }); if (!c) return bad('Чат не найден');
         var act = m[2], after = +(m[3] || 0);
         if (!act) { c.unread = 0; return ok({ status: c.status, contact: c.contact, msgs: c.msgs.filter(function (x) { return x.i > after; }) }); }
+        if (act === '/close') { CH = CH.filter(function (x) { return x !== c; }); return ok({ ok: true, status: 'closed' }); }
         if (act === '/release') { c.status = 'bot'; addMsg(c, 'system', 'Менеджер вышел из чата — дальше снова отвечает ассистент.'); return ok({ ok: true, status: 'bot' }); }
         if (c.status !== 'live') { c.status = 'live'; addMsg(c, 'system', 'Менеджер присоединился, сейчас ответит вам.'); }
         if (act === '/send') {

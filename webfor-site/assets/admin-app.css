@@ -332,3 +332,16 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa .wfa-note { margin: 4px auto 12px; }
 .wfa .wfa-sheet-head b { font-size: var(--fs-head); }
 .wfa-sheet-body { overflow-wrap: anywhere; }
+
+/* меню — ещё ниже, почти у края (над полоской «домой» на iPhone) */
+.wfa-tabbar { bottom: max(6px, calc(var(--safe-b) - 22px)); }
+
+/* смахнуть чат влево — «Закрыть» */
+.wfa-swipe { position: relative; overflow: hidden; }
+.wfa-swipe + .wfa-swipe::before { content: ""; position: absolute; z-index: 2; top: 0; right: 0; left: 72px; height: .5px; background: rgba(255,255,255,.09); }
+.wfa-swipe .wfa-chat-row { position: relative; z-index: 1; background: rgb(16,20,19); touch-action: pan-y; }
+.wfa-swipe .wfa-chat-row.is-waiting { background: rgb(18,32,27); }
+.wfa-swipe .wfa-chat-row + .wfa-chat-row::before { display: none; }
+.wfa-swipe-act { position: absolute; z-index: 0; top: 0; right: 0; bottom: 0; width: 96px; border: 0; background: #ff453a; color: #fff; font-weight: 600; font-size: var(--fs-sub); }
+.wfa-hint { margin-top: 8px; text-align: center; }
+.wfa-text-btn { height: 40px; padding: 0 10px; border: 0; background: transparent; color: var(--red); font-size: var(--fs-head); font-weight: 500; }

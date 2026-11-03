@@ -143,6 +143,9 @@ function wfai_rest_chat(WP_REST_Request $req) {
     if (!$id) {
         [$id, $token] = wfai_chat_create();
     }
+    if (wfai_chat_status($id) === 'closed') { // клиент вернулся в закрытый чат — разговор снова открыт, отвечает ассистент
+        wfai_chat_set_status($id, 'bot');
+    }
     $um = wfai_chat_add($id, 'user', ($voice ? '🎤 ' : '') . $text_in);
     wfai_log_question($text_in);
     $base = ['ok' => true, 'chat' => $token, 'user_i' => $um['i']] + ($voice ? ['transcript' => $text_in] : []);
