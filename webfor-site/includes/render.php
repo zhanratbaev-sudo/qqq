@@ -74,6 +74,7 @@ function webfor_icon($name) {
         'arrow'   => '<path d="M5 12h14M13 6l6 6-6 6"/>',
         'device'  => '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/>',
         'bot'     => '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
+        'back'    => '<path d="M19 12H5M11 18l-6-6 6-6"/>',
         'menu'    => '<path d="M4 7h16M4 12h16M4 17h16"/>',
         'close'   => '<path d="M6 6l12 12M18 6 6 18"/>',
     ];

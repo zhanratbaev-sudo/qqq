@@ -57,12 +57,12 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <header class="wf-section-head">
                     <p class="wf-eyebrow">Услуги и работы</p>
                     <h2 id="uslugi-h">Что мы делаем</h2>
-                    <p>Откройте папку — внутри примеры наших работ. Нажмите на карточку, чтобы рассмотреть её ближе.</p>
+                    <p>Откройте папку — внутри наши работы. Нажмите на карточку, чтобы рассмотреть её ближе.</p>
                 </header>
                 <div class="wf-folders" role="list">
                     <?php foreach (webfor_folders() as $fk => $f) : $works = webfor_works($fk); ?>
                         <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-<?php echo esc_attr($fk); ?>" aria-expanded="false" aria-controls="wf-p-<?php echo esc_attr($fk); ?>">
+                            <button class="wf-folder" type="button" id="wf-f-<?php echo esc_attr($fk); ?>" aria-haspopup="dialog" aria-controls="wf-p-<?php echo esc_attr($fk); ?>" data-folder="<?php echo esc_attr($fk); ?>">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                     <?php foreach (array_slice($works, 0, 3) as $i => $w) : ?>
                                         <img src="<?php echo esc_url($w['src']); ?>" alt="" loading="lazy" class="wf-peek-<?php echo (int) $i; ?>">
@@ -78,25 +78,42 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <?php endforeach; ?>
                 </div>
 
-                <?php foreach (webfor_folders() as $fk => $f) : $works = webfor_works($fk); ?>
-                    <div class="wf-drawer" id="wf-p-<?php echo esc_attr($fk); ?>" role="region" aria-labelledby="wf-f-<?php echo esc_attr($fk); ?>" hidden>
-                        <div class="wf-drawer-head">
-                            <div>
-                                <h3><?php echo esc_html($f['title']); ?></h3>
-                                <p><?php echo esc_html($f['text']); ?></p>
+                <?php foreach (webfor_folders() as $fk => $f) : $works = webfor_works($fk); $svc = ['sites' => 'site', 'apps' => 'app', 'bots' => 'bot', 'izi' => 'izi'][$fk]; ?>
+                    <div class="wf-page" id="wf-p-<?php echo esc_attr($fk); ?>" data-folder="<?php echo esc_attr($fk); ?>" role="dialog" aria-modal="true" aria-labelledby="wf-ph-<?php echo esc_attr($fk); ?>" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><?php echo webfor_icon('back'); ?><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> <?php echo esc_html($f['title']); ?></span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="<?php echo esc_attr($svc); ?>">Обсудить</a>
                             </div>
-                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="<?php echo esc_attr(['sites' => 'site', 'apps' => 'app', 'bots' => 'bot', 'izi' => 'izi'][$fk]); ?>">Обсудить <?php echo webfor_icon('arrow'); ?></a>
                         </div>
-                        <ul class="wf-cards">
-                            <?php foreach ($works as $i => $w) : ?>
-                                <li class="wf-work wf-work-<?php echo esc_attr($w['shape']); ?>" style="--i:<?php echo (int) $i; ?>">
-                                    <button type="button" class="wf-work-btn" data-title="<?php echo esc_attr($w['title']); ?>" data-desc="<?php echo esc_attr($w['desc']); ?>" data-tag="<?php echo esc_attr($w['tag']); ?>" data-url="<?php echo esc_url($w['url']); ?>" data-src="<?php echo esc_url($w['src']); ?>" data-shape="<?php echo esc_attr($w['shape']); ?>" data-action="<?php echo esc_attr($w['action']); ?>">
-                                        <span class="wf-work-shot"><img src="<?php echo esc_url($w['src']); ?>" alt="<?php echo esc_attr($w['title']); ?>" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b><?php echo esc_html($w['title']); ?></b><?php if ($w['tag']) : ?><em><?php echo esc_html($w['tag']); ?></em><?php endif; ?></span>
-                                    </button>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon"><?php echo webfor_icon($f['icon']); ?></span>
+                                    <h2 id="wf-ph-<?php echo esc_attr($fk); ?>"><?php echo esc_html($f['title']); ?></h2>
+                                    <p><?php echo esc_html($f['text']); ?></p>
+                                    <span class="wf-page-count"><?php echo count($works); ?> <?php echo esc_html(webfor_plural(count($works), 'работа', 'работы', 'работ')); ?></span>
+                                </header>
+                                <ul class="wf-cards">
+                                    <?php foreach ($works as $i => $w) : ?>
+                                        <li class="wf-work wf-work-<?php echo esc_attr($w['shape']); ?>" style="--i:<?php echo (int) $i; ?>">
+                                            <button type="button" class="wf-work-btn" data-title="<?php echo esc_attr($w['title']); ?>" data-desc="<?php echo esc_attr($w['desc']); ?>" data-tag="<?php echo esc_attr($w['tag']); ?>" data-url="<?php echo esc_url($w['url']); ?>" data-src="<?php echo esc_url($w['src']); ?>" data-shape="<?php echo esc_attr($w['shape']); ?>" data-action="<?php echo esc_attr($w['action']); ?>">
+                                                <span class="wf-work-shot"><img src="<?php echo esc_url($w['src']); ?>" alt="<?php echo esc_attr($w['title']); ?>" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b><?php echo esc_html($w['title']); ?></b><?php if ($w['tag']) : ?><em><?php echo esc_html($w['tag']); ?></em><?php endif; ?></span>
+                                            </button>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="<?php echo esc_attr($svc); ?>">Оставить заявку <?php echo webfor_icon('arrow'); ?></a>
+                                        <?php if (function_exists('wfai_opt') && wfai_opt('enabled')) : ?><button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><?php echo webfor_icon('bot'); ?>Спросить AI</button><?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             </div>

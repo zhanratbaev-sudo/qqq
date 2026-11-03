@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WebFor Site
  * Description: Сайт WebFor: папки с работами (сайты, приложения, AI-чат-боты, Izi), сравнение, форма заявки. Телефон и WhatsApp меняются в одном месте: WebFor → Настройки.
- * Version: 2.0.0
+ * Version: 2.1.0
  * Author: WebFor
  * Text Domain: webfor-site
  * Requires at least: 6.0
@@ -11,7 +11,7 @@
 
 defined('ABSPATH') || exit;
 
-define('WEBFOR_VERSION', '2.0.0');
+define('WEBFOR_VERSION', '2.1.0');
 define('WEBFOR_FILE', __FILE__);
 define('WEBFOR_DIR', plugin_dir_path(__FILE__));
 define('WEBFOR_URL', plugin_dir_url(__FILE__));
@@ -20,6 +20,7 @@ require_once WEBFOR_DIR . 'includes/settings.php';
 require_once WEBFOR_DIR . 'includes/leads.php';
 require_once WEBFOR_DIR . 'includes/render.php';
 require_once WEBFOR_DIR . 'includes/works.php';
+require_once WEBFOR_DIR . 'includes/dashboard.php';
 
 register_activation_hook(__FILE__, 'webfor_activate');
 

@@ -17,30 +17,72 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
   }
 
-  // папки: открывается одна, карточки «вылетают» из неё по очереди
-  var folders = root.querySelectorAll('.wf-folder');
-  function openFolder(btn) {
-    var open = btn.getAttribute('aria-expanded') !== 'true';
-    folders.forEach(function (f) {
-      var d = document.getElementById(f.getAttribute('aria-controls'));
-      f.setAttribute('aria-expanded', 'false');
-      d.classList.remove('is-open'); d.hidden = true;
-    });
-    if (!open) return;
-    var drawer = document.getElementById(btn.getAttribute('aria-controls'));
-    btn.setAttribute('aria-expanded', 'true');
-    drawer.hidden = false;
-    void drawer.offsetWidth; // запускаем переход после показа
-    drawer.classList.add('is-open');
-    var top = drawer.getBoundingClientRect().top;
-    if (top > window.innerHeight * 0.75) drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // папки: открываются отдельной страницей, которая «вырастает» из папки (адрес #sites, #apps, #bots, #izi)
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var openPage = null, pushed = false;
+  function folderBtn(fk) { return root.querySelector('.wf-folder[data-folder="' + fk + '"]'); }
+  function insetFrom(el) {
+    var r = (el.querySelector('.wf-folder-body') || el).getBoundingClientRect();
+    return 'inset(' + Math.max(0, r.top) + 'px ' + Math.max(0, innerWidth - r.right) + 'px ' + Math.max(0, innerHeight - r.bottom) + 'px ' + Math.max(0, r.left) + 'px round 16px)';
   }
-  folders.forEach(function (f) { f.addEventListener('click', function () { openFolder(f); }); });
+  function show(fk) {
+    var page = document.getElementById('wf-p-' + fk);
+    if (!page || openPage === page) return;
+    if (openPage) hide(true);
+    openPage = page;
+    page.hidden = false;
+    page.querySelector('.wf-page-scroll').scrollTop = 0;
+    document.documentElement.classList.add('wf-locked');
+    var btn = folderBtn(fk);
+    if (!reduce && btn && page.animate) {
+      page.animate([{ clipPath: insetFrom(btn) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 560, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+    requestAnimationFrame(function () { page.classList.add('is-open'); });
+    page.querySelector('.wf-page-back').focus({ preventScroll: true });
+  }
+  function hide(instant) {
+    var page = openPage;
+    if (!page) return;
+    openPage = null;
+    var done = function () { page.hidden = true; page.classList.remove('is-open'); if (!openPage) document.documentElement.classList.remove('wf-locked'); };
+    var btn = folderBtn(page.getAttribute('data-folder'));
+    if (!instant && !reduce && btn && page.animate) {
+      page.animate([{ clipPath: 'inset(0px 0px 0px 0px round 0px)' }, { clipPath: insetFrom(btn) }], { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
+    } else done();
+    if (btn) btn.focus({ preventScroll: true });
+  }
+  function fromHash() {
+    var fk = location.hash.replace('#', '');
+    if (document.getElementById('wf-p-' + fk) && fk) show(fk); else if (openPage) hide();
+  }
+  function closePage() {
+    if (pushed) { pushed = false; history.back(); } else { hide(); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
+  }
+  root.querySelectorAll('.wf-folder').forEach(function (f) {
+    f.addEventListener('click', function () { pushed = true; location.hash = f.getAttribute('data-folder'); });
+  });
+  root.querySelectorAll('.wf-page-back').forEach(function (b) { b.addEventListener('click', closePage); });
+  // ссылки на разделы сайта (например «Оставить заявку») закрывают страницу папки
+  root.querySelectorAll('.wf-page a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var target = document.querySelector(a.getAttribute('href'));
+      pushed = false; hide(true);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (err) {}
+      if (target) target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+  root.querySelectorAll('.wf-page [data-wfai-open]').forEach(function (b) { b.addEventListener('click', function () { pushed = false; hide(true); }); });
+  window.addEventListener('hashchange', fromHash);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && openPage && !(document.querySelector('.wf-lightbox[open]'))) closePage();
+  });
+  fromHash();
 
   // просмотр работы
   var lb = root.querySelector('.wf-lightbox');
   var list = [], cur = 0;
-  function show(i) {
+  function showWork(i) {
     cur = (i + list.length) % list.length;
     var d = list[cur].dataset;
     lb.classList.toggle('is-phone', d.shape === 'phone');
@@ -59,15 +101,15 @@
     root.querySelectorAll('.wf-work-btn').forEach(function (b) {
       b.addEventListener('click', function () {
         list = Array.prototype.slice.call(b.closest('.wf-cards').querySelectorAll('.wf-work-btn'));
-        show(list.indexOf(b)); lb.showModal();
+        showWork(list.indexOf(b)); lb.showModal();
       });
     });
     lb.querySelector('.wf-lb-close').addEventListener('click', function () { lb.close(); });
-    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { show(cur - 1); });
-    lb.querySelector('.wf-lb-next').addEventListener('click', function () { show(cur + 1); });
+    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { showWork(cur - 1); });
+    lb.querySelector('.wf-lb-next').addEventListener('click', function () { showWork(cur + 1); });
     lb.querySelector('.wf-lb-chat').addEventListener('click', function () { lb.close(); });
     lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
-    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') showWork(cur - 1); if (e.key === 'ArrowRight') showWork(cur + 1); });
   }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме

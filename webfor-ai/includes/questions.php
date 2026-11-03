@@ -74,21 +74,26 @@ function wfai_question_box($post) {
     <?php
 }
 
+/** Сохраняет ответ владельца; с $learn — добавляет пару «вопрос — ответ» в обучение (один раз). */
+function wfai_answer_question($id, $answer, $learn) {
+    update_post_meta($id, '_answer', $answer);
+    if ($answer === '') {
+        return;
+    }
+    update_post_meta($id, '_state', 'answered');
+    if ($learn && !get_post_meta($id, '_learned', true)) {
+        $learned = (array) get_option('wfai_learned', []);
+        $learned[] = ['q' => (string) get_post_meta($id, '_q', true), 'a' => $answer];
+        update_option('wfai_learned', wfai_sanitize_learned($learned));
+        update_post_meta($id, '_learned', 1);
+    }
+}
+
 add_action('save_post_wfai_question', function ($id) {
     if (!isset($_POST['_wfai_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_wfai_nonce'])), 'wfai_answer') || !current_user_can('edit_post', $id)) {
         return;
     }
-    $answer = sanitize_textarea_field(wp_unslash($_POST['_wfai_answer'] ?? ''));
-    update_post_meta($id, '_answer', $answer);
-    if ($answer !== '') {
-        update_post_meta($id, '_state', 'answered');
-        if (!empty($_POST['_wfai_learn']) && !get_post_meta($id, '_learned', true)) {
-            $learned = (array) get_option('wfai_learned', []);
-            $learned[] = ['q' => (string) get_post_meta($id, '_q', true), 'a' => $answer];
-            update_option('wfai_learned', $learned);
-            update_post_meta($id, '_learned', 1);
-        }
-    }
+    wfai_answer_question($id, sanitize_textarea_field(wp_unslash($_POST['_wfai_answer'] ?? '')), !empty($_POST['_wfai_learn']));
 });
 
 /** Счётчик неотвеченных вопросов в меню. */

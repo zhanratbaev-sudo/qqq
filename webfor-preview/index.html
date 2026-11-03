@@ -123,29 +123,50 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 .wf-peek-0 { transform: translate(-14%, 18px) rotate(-8deg); }
 .wf-peek-1 { transform: translate(14%, 14px) rotate(7deg); }
 .wf-peek-2 { transform: translate(0, 6px) rotate(-1deg); }
-.wf-folder:hover .wf-peek-0, .wf-folder[aria-expanded=true] .wf-peek-0 { transform: translate(-22%, -16px) rotate(-12deg); }
-.wf-folder:hover .wf-peek-1, .wf-folder[aria-expanded=true] .wf-peek-1 { transform: translate(22%, -20px) rotate(11deg); }
-.wf-folder:hover .wf-peek-2, .wf-folder[aria-expanded=true] .wf-peek-2 { transform: translate(0, -30px) rotate(-1deg); }
+.wf-folder:hover .wf-peek-0 { transform: translate(-22%, -16px) rotate(-12deg); }
+.wf-folder:hover .wf-peek-1 { transform: translate(22%, -20px) rotate(11deg); }
+.wf-folder:hover .wf-peek-2 { transform: translate(0, -30px) rotate(-1deg); }
 /* сама папка: корпус с язычком */
 .wf-folder-body { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 20px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 4px 16px 16px 16px; transition: border-color .2s, background-color .2s; }
 .wf-folder-body::before { content: ""; position: absolute; left: -1px; top: -18px; width: 42%; height: 19px; background: var(--surface); border: 1px solid var(--line-strong); border-bottom: 0; border-radius: 12px 14px 0 0; transition: border-color .2s, background-color .2s; }
 .wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { border-color: var(--text-3); }
-.wf-folder[aria-expanded=true] .wf-folder-body, .wf-folder[aria-expanded=true] .wf-folder-body::before { border-color: var(--accent); background: var(--surface-2); }
 .wf-folder-icon { position: absolute; top: 16px; left: 20px; color: var(--accent); }
 .wf-folder-icon .wf-i { width: 24px; height: 24px; }
 .wf-folder-title { font-size: 18px; font-weight: 700; line-height: 1.3; }
 .wf-folder-count { font-size: 13px; color: var(--text-3); }
-.wf-folder[aria-expanded=true] .wf-folder-count { color: var(--accent); }
 
-.wf-drawer { margin-top: 32px; padding: 32px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-.wf-drawer[hidden] { display: none; }
-.wf-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 32px; }
-.wf-drawer-head h3 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
-.wf-drawer-head p { margin-top: 8px; color: var(--text-2); max-width: 65ch; }
+/* страница папки: открывается поверх сайта, вырастая из папки */
+html.wf-locked, html.wf-locked body { overflow: hidden; }
+.wf-page { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; background: var(--bg); }
+.wf-page[hidden] { display: none; }
+.wf-page-bar { flex: none; border-bottom: 1px solid var(--line); background: var(--bg); padding-top: env(safe-area-inset-top, 0px); }
+.wf-page-bar-in { display: flex; align-items: center; gap: 16px; height: 64px; }
+.wf-page-back { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 10px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--surface); color: var(--text); font: 600 14px/1 var(--font); cursor: pointer; }
+.wf-page-back:hover { border-color: var(--text-3); }
+.wf-page-back .wf-i { width: 18px; height: 18px; }
+.wf-page-crumb { color: var(--text-3); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wf-page-crumb i { font-style: normal; margin: 0 4px; }
+.wf-page-bar-in .wf-btn { margin-left: auto; }
+.wf-page-scroll { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
+.wf-page-head { max-width: 720px; padding: 48px 0 40px; }
+.wf-page-icon { display: inline-grid; place-items: center; width: 56px; height: 56px; border-radius: 14px; background: var(--surface-2); color: var(--accent); margin-bottom: 24px; }
+.wf-page-icon .wf-i { width: 28px; height: 28px; }
+.wf-page-head h2 { font-size: 48px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 800; }
+.wf-page-head p { margin-top: 16px; color: var(--text-2); font-size: 18px; }
+.wf-page-count { display: inline-block; margin-top: 16px; font-size: 14px; color: var(--accent); font-weight: 600; }
+.wf-page-head > * { opacity: 0; transform: translateY(16px); }
+.wf-page.is-open .wf-page-head > * { opacity: 1; transform: none; transition: opacity .4s ease, transform .5s cubic-bezier(.2,.8,.2,1); }
+.wf-page.is-open .wf-page-head > :nth-child(2) { transition-delay: .05s; }
+.wf-page.is-open .wf-page-head > :nth-child(3) { transition-delay: .1s; }
+.wf-page.is-open .wf-page-head > :nth-child(4) { transition-delay: .15s; }
+.wf-page-foot { margin-top: 64px; padding: 32px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; }
+.wf-page-foot p { color: var(--text-2); max-width: 52ch; }
+.wf-page-foot b { color: var(--text); }
+.wf-page-foot .wf-actions { margin-top: 0; }
 .wf-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
 .wf-cards:has(.wf-work-phone) { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-.wf-work { opacity: 0; transform: translateY(-48px) scale(.92) rotate(-2deg); }
-.wf-drawer.is-open .wf-work { opacity: 1; transform: none; transition: opacity .4s ease, transform .5s cubic-bezier(.2,.9,.25,1.15); transition-delay: calc(var(--i) * 60ms); }
+.wf-work { opacity: 0; transform: translateY(40px) scale(.94); }
+.wf-page.is-open .wf-work { opacity: 1; transform: none; transition: opacity .4s ease, transform .5s cubic-bezier(.2,.9,.25,1.15); transition-delay: calc(120ms + var(--i) * 60ms); }
 .wf-work-btn { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; cursor: zoom-in; font: inherit; }
 .wf-work-shot { display: block; overflow: hidden; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--surface-2); aspect-ratio: 16 / 10; transition: border-color .2s, transform .25s; }
 .wf-work-phone .wf-work-shot { aspect-ratio: 9 / 19.5; border-radius: 22px; border-width: 6px; border-color: #1d2624; }
@@ -293,8 +314,13 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
   .wf-folder-icon { top: 14px; left: 16px; }
   .wf-folder-title { font-size: 15px; }
   .wf-folder-count { font-size: 12px; }
-  .wf-drawer { padding: 20px 16px; margin-top: 24px; }
-  .wf-drawer-head { flex-direction: column; gap: 16px; margin-bottom: 24px; }
+  .wf-page-bar-in { height: 56px; gap: 12px; }
+  .wf-page-crumb { display: none; }
+  .wf-page-head { padding: 32px 0 28px; }
+  .wf-page-head h2 { font-size: 34px; }
+  .wf-page-head p { font-size: 16px; }
+  .wf-page-foot { margin-top: 40px; padding: 20px; }
+  .wf-page-foot .wf-btn { width: 100%; }
   .wf-cards { grid-template-columns: 1fr; gap: 20px; }
   .wf-cards:has(.wf-work-phone) { grid-template-columns: 1fr 1fr; gap: 16px; }
   .wf-lightbox { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; margin: 0; }
@@ -308,7 +334,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .wf-work, .wf-drawer.is-open .wf-work { opacity: 1; transform: none; transition: none; }
+  .wf-work, .wf-page.is-open .wf-work { opacity: 1; transform: none; transition: none; }
   .wf-folder-peek img { transition: none; }
   .wf * { transition: none !important; }
 }
@@ -409,11 +435,11 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                 <header class="wf-section-head">
                     <p class="wf-eyebrow">Услуги и работы</p>
                     <h2 id="uslugi-h">Что мы делаем</h2>
-                    <p>Откройте папку — внутри примеры наших работ. Нажмите на карточку, чтобы рассмотреть её ближе.</p>
+                    <p>Откройте папку — внутри наши работы. Нажмите на карточку, чтобы рассмотреть её ближе.</p>
                 </header>
                 <div class="wf-folders" role="list">
                                             <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-sites" aria-expanded="false" aria-controls="wf-p-sites">
+                            <button class="wf-folder" type="button" id="wf-f-sites" aria-haspopup="dialog" aria-controls="wf-p-sites" data-folder="sites">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/petgo-site.jpg" alt="" loading="lazy" class="wf-peek-0">
                                                                             <img src="works/oscarclinic.jpg" alt="" loading="lazy" class="wf-peek-1">
@@ -422,12 +448,12 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                                 <span class="wf-folder-body">
                                     <span class="wf-folder-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
                                     <span class="wf-folder-title">Сайты</span>
-                                    <span class="wf-folder-count">8 работ · открыть</span>
+                                    <span class="wf-folder-count">10 работ · открыть</span>
                                 </span>
                             </button>
                         </div>
                                             <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-apps" aria-expanded="false" aria-controls="wf-p-apps">
+                            <button class="wf-folder" type="button" id="wf-f-apps" aria-haspopup="dialog" aria-controls="wf-p-apps" data-folder="apps">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/petgo-app-home.jpg" alt="" loading="lazy" class="wf-peek-0">
                                                                             <img src="works/petgo-app-orders.jpg" alt="" loading="lazy" class="wf-peek-1">
@@ -441,7 +467,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                             </button>
                         </div>
                                             <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-bots" aria-expanded="false" aria-controls="wf-p-bots">
+                            <button class="wf-folder" type="button" id="wf-f-bots" aria-haspopup="dialog" aria-controls="wf-p-bots" data-folder="bots">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/bot-site.jpg" alt="" loading="lazy" class="wf-peek-0">
                                                                             <img src="works/bot-wa.jpg" alt="" loading="lazy" class="wf-peek-1">
@@ -455,7 +481,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                             </button>
                         </div>
                                             <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-izi" aria-expanded="false" aria-controls="wf-p-izi">
+                            <button class="wf-folder" type="button" id="wf-f-izi" aria-haspopup="dialog" aria-controls="wf-p-izi" data-folder="izi">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/crm-requests.jpg" alt="" loading="lazy" class="wf-peek-0">
                                                                             <img src="works/crm-home.jpg" alt="" loading="lazy" class="wf-peek-1">
@@ -470,163 +496,239 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
                         </div>
                                     </div>
 
-                                    <div class="wf-drawer" id="wf-p-sites" role="region" aria-labelledby="wf-f-sites" hidden>
-                        <div class="wf-drawer-head">
-                            <div>
-                                <h3>Сайты</h3>
-                                <p>Лендинги, сайты-визитки, корпоративные сайты, интернет-магазины и сайты с онлайн-записью — под ваш дизайн и удобные на телефоне.</p>
+                                    <div class="wf-page" id="wf-p-sites" data-folder="sites" role="dialog" aria-modal="true" aria-labelledby="wf-ph-sites" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> Сайты</span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="site">Обсудить</a>
                             </div>
-                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="site">Обсудить <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                         </div>
-                        <ul class="wf-cards">
-                                                            <li class="wf-work wf-work-wide" style="--i:0">
-                                    <button type="button" class="wf-work-btn" data-title="PetGo" data-desc="Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-site.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/petgo-site.jpg" alt="PetGo" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>PetGo</b><em>Наш проект</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:1">
-                                    <button type="button" class="wf-work-btn" data-title="Oscar Clinic" data-desc="Сайт ветеринарной клиники." data-tag="Наш проект" data-url="https://oscarclinic.kz" data-src="works/oscarclinic.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/oscarclinic.jpg" alt="Oscar Clinic" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Oscar Clinic</b><em>Наш проект</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:2">
-                                    <button type="button" class="wf-work-btn" data-title="Ветклиника" data-desc="Запись на приём, услуги и цены, врачи." data-tag="Концепт" data-url="" data-src="works/concept-vet.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-vet.jpg" alt="Ветклиника" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Ветклиника</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:3">
-                                    <button type="button" class="wf-work-btn" data-title="Груминг-салон" data-desc="Выбор услуги и онлайн-запись к мастеру." data-tag="Концепт" data-url="" data-src="works/concept-groom.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-groom.jpg" alt="Груминг-салон" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Груминг-салон</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:4">
-                                    <button type="button" class="wf-work-btn" data-title="Стоматология" data-desc="Услуги, онлайн-запись и консультация." data-tag="Концепт" data-url="" data-src="works/concept-dent.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-dent.jpg" alt="Стоматология" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Стоматология</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:5">
-                                    <button type="button" class="wf-work-btn" data-title="Салон красоты" data-desc="Тёмный стильный сайт с записью." data-tag="Концепт" data-url="" data-src="works/concept-beauty.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-beauty.jpg" alt="Салон красоты" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Салон красоты</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:6">
-                                    <button type="button" class="wf-work-btn" data-title="Автосервис" data-desc="Заявка на ремонт и диагностику за один клик." data-tag="Концепт" data-url="" data-src="works/concept-auto.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-auto.jpg" alt="Автосервис" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Автосервис</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:7">
-                                    <button type="button" class="wf-work-btn" data-title="Кофейня" data-desc="Меню и предзаказ без очереди." data-tag="Концепт" data-url="" data-src="works/concept-cafe.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/concept-cafe.jpg" alt="Кофейня" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Кофейня</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                    </ul>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+                                    <h2 id="wf-ph-sites">Сайты</h2>
+                                    <p>Лендинги, сайты-визитки, корпоративные сайты, интернет-магазины и сайты с онлайн-записью — под ваш дизайн и удобные на телефоне.</p>
+                                    <span class="wf-page-count">10 работ</span>
+                                </header>
+                                <ul class="wf-cards">
+                                                                            <li class="wf-work wf-work-wide" style="--i:0">
+                                            <button type="button" class="wf-work-btn" data-title="PetGo" data-desc="Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-site.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/petgo-site.jpg" alt="PetGo" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>PetGo</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:1">
+                                            <button type="button" class="wf-work-btn" data-title="Oscar Clinic" data-desc="Сайт ветеринарной клиники." data-tag="Наш проект" data-url="https://oscarclinic.kz" data-src="works/oscarclinic.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/oscarclinic.jpg" alt="Oscar Clinic" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Oscar Clinic</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:2">
+                                            <button type="button" class="wf-work-btn" data-title="Ветклиника" data-desc="Запись на приём, услуги и цены, врачи." data-tag="Концепт" data-url="" data-src="works/concept-vet.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-vet.jpg" alt="Ветклиника" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Ветклиника</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:3">
+                                            <button type="button" class="wf-work-btn" data-title="Груминг-салон" data-desc="Выбор услуги и онлайн-запись к мастеру." data-tag="Концепт" data-url="" data-src="works/concept-groom.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-groom.jpg" alt="Груминг-салон" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Груминг-салон</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:4">
+                                            <button type="button" class="wf-work-btn" data-title="Стоматология" data-desc="Услуги, онлайн-запись и консультация." data-tag="Концепт" data-url="" data-src="works/concept-dent.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-dent.jpg" alt="Стоматология" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Стоматология</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:5">
+                                            <button type="button" class="wf-work-btn" data-title="Салон красоты" data-desc="Тёмный стильный сайт с записью." data-tag="Концепт" data-url="" data-src="works/concept-beauty.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-beauty.jpg" alt="Салон красоты" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Салон красоты</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:6">
+                                            <button type="button" class="wf-work-btn" data-title="Автосервис" data-desc="Заявка на ремонт и диагностику за один клик." data-tag="Концепт" data-url="" data-src="works/concept-auto.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-auto.jpg" alt="Автосервис" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Автосервис</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:7">
+                                            <button type="button" class="wf-work-btn" data-title="Кофейня" data-desc="Меню и предзаказ без очереди." data-tag="Концепт" data-url="" data-src="works/concept-cafe.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/concept-cafe.jpg" alt="Кофейня" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Кофейня</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:8">
+                                            <button type="button" class="wf-work-btn" data-title="Тестовая работа" data-desc="Проверка" data-tag="Наш проект" data-url="" data-src="" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="" alt="Тестовая работа" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Тестовая работа</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:9">
+                                            <button type="button" class="wf-work-btn" data-title="Тестовая работа" data-desc="Проверка" data-tag="Наш проект" data-url="" data-src="" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="" alt="Тестовая работа" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Тестовая работа</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                    </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="site">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                                    <div class="wf-drawer" id="wf-p-apps" role="region" aria-labelledby="wf-f-apps" hidden>
-                        <div class="wf-drawer-head">
-                            <div>
-                                <h3>Мобильные приложения</h3>
-                                <p>Приложения для клиентов и для сотрудников на iPhone и Android: запись, заказы, бонусы, задачи и чаты. Установка из браузера или App Store и Google Play.</p>
+                                    <div class="wf-page" id="wf-p-apps" data-folder="apps" role="dialog" aria-modal="true" aria-labelledby="wf-ph-apps" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> Мобильные приложения</span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="app">Обсудить</a>
                             </div>
-                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="app">Обсудить <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                         </div>
-                        <ul class="wf-cards">
-                                                            <li class="wf-work wf-work-phone" style="--i:0">
-                                    <button type="button" class="wf-work-btn" data-title="PetGo — приложение для сотрудников" data-desc="Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-home.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/petgo-app-home.jpg" alt="PetGo — приложение для сотрудников" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>PetGo — приложение для сотрудников</b><em>Наш проект</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-phone" style="--i:1">
-                                    <button type="button" class="wf-work-btn" data-title="PetGo — заказы" data-desc="Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание»." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-orders.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/petgo-app-orders.jpg" alt="PetGo — заказы" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>PetGo — заказы</b><em>Наш проект</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-phone" style="--i:2">
-                                    <button type="button" class="wf-work-btn" data-title="Груминг — запись клиента" data-desc="Клиент выбирает услугу, день и время — и записывается сам." data-tag="Концепт" data-url="" data-src="works/app-groom.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/app-groom.jpg" alt="Груминг — запись клиента" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Груминг — запись клиента</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-phone" style="--i:3">
-                                    <button type="button" class="wf-work-btn" data-title="Кофейня — бонусная карта" data-desc="Бонусы, меню и заказ навынос в одном приложении." data-tag="Концепт" data-url="" data-src="works/app-cafe.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/app-cafe.jpg" alt="Кофейня — бонусная карта" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Кофейня — бонусная карта</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                    </ul>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>
+                                    <h2 id="wf-ph-apps">Мобильные приложения</h2>
+                                    <p>Приложения для клиентов и для сотрудников на iPhone и Android: запись, заказы, бонусы, задачи и чаты. Установка из браузера или App Store и Google Play.</p>
+                                    <span class="wf-page-count">4 работы</span>
+                                </header>
+                                <ul class="wf-cards">
+                                                                            <li class="wf-work wf-work-phone" style="--i:0">
+                                            <button type="button" class="wf-work-btn" data-title="PetGo — приложение для сотрудников" data-desc="Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-home.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/petgo-app-home.jpg" alt="PetGo — приложение для сотрудников" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>PetGo — приложение для сотрудников</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:1">
+                                            <button type="button" class="wf-work-btn" data-title="PetGo — заказы" data-desc="Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание»." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-orders.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/petgo-app-orders.jpg" alt="PetGo — заказы" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>PetGo — заказы</b><em>Наш проект</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:2">
+                                            <button type="button" class="wf-work-btn" data-title="Груминг — запись клиента" data-desc="Клиент выбирает услугу, день и время — и записывается сам." data-tag="Концепт" data-url="" data-src="works/app-groom.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/app-groom.jpg" alt="Груминг — запись клиента" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Груминг — запись клиента</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:3">
+                                            <button type="button" class="wf-work-btn" data-title="Кофейня — бонусная карта" data-desc="Бонусы, меню и заказ навынос в одном приложении." data-tag="Концепт" data-url="" data-src="works/app-cafe.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/app-cafe.jpg" alt="Кофейня — бонусная карта" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Кофейня — бонусная карта</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                    </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="app">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                                    <div class="wf-drawer" id="wf-p-bots" role="region" aria-labelledby="wf-f-bots" hidden>
-                        <div class="wf-drawer-head">
-                            <div>
-                                <h3>AI-чат-боты</h3>
-                                <p>Искусственный интеллект отвечает клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, записывает и собирает заявки, сложное передаёт вам.</p>
+                                    <div class="wf-page" id="wf-p-bots" data-folder="bots" role="dialog" aria-modal="true" aria-labelledby="wf-ph-bots" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> AI-чат-боты</span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="bot">Обсудить</a>
                             </div>
-                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="bot">Обсудить <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                         </div>
-                        <ul class="wf-cards">
-                                                            <li class="wf-work wf-work-phone" style="--i:0">
-                                    <button type="button" class="wf-work-btn" data-title="AI-ассистент на этом сайте" data-desc="Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI»." data-tag="Работает здесь" data-url="" data-src="works/bot-site.jpg" data-shape="phone" data-action="chat">
-                                        <span class="wf-work-shot"><img src="works/bot-site.jpg" alt="AI-ассистент на этом сайте" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-phone" style="--i:1">
-                                    <button type="button" class="wf-work-btn" data-title="Бот ветклиники в WhatsApp" data-desc="Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу." data-tag="Концепт" data-url="" data-src="works/bot-wa.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/bot-wa.jpg" alt="Бот ветклиники в WhatsApp" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-phone" style="--i:2">
-                                    <button type="button" class="wf-work-btn" data-title="Бот салона в Instagram" data-desc="Отвечает в директ, записывает к мастеру и напоминает о визите." data-tag="Концепт" data-url="" data-src="works/bot-ig.jpg" data-shape="phone" data-action="">
-                                        <span class="wf-work-shot"><img src="works/bot-ig.jpg" alt="Бот салона в Instagram" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Бот салона в Instagram</b><em>Концепт</em></span>
-                                    </button>
-                                </li>
-                                                    </ul>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg></span>
+                                    <h2 id="wf-ph-bots">AI-чат-боты</h2>
+                                    <p>Искусственный интеллект отвечает клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, записывает и собирает заявки, сложное передаёт вам.</p>
+                                    <span class="wf-page-count">3 работы</span>
+                                </header>
+                                <ul class="wf-cards">
+                                                                            <li class="wf-work wf-work-phone" style="--i:0">
+                                            <button type="button" class="wf-work-btn" data-title="AI-ассистент на этом сайте" data-desc="Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI»." data-tag="Работает здесь" data-url="" data-src="works/bot-site.jpg" data-shape="phone" data-action="chat">
+                                                <span class="wf-work-shot"><img src="works/bot-site.jpg" alt="AI-ассистент на этом сайте" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:1">
+                                            <button type="button" class="wf-work-btn" data-title="Бот ветклиники в WhatsApp" data-desc="Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу." data-tag="Концепт" data-url="" data-src="works/bot-wa.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/bot-wa.jpg" alt="Бот ветклиники в WhatsApp" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:2">
+                                            <button type="button" class="wf-work-btn" data-title="Бот салона в Instagram" data-desc="Отвечает в директ, записывает к мастеру и напоминает о визите." data-tag="Концепт" data-url="" data-src="works/bot-ig.jpg" data-shape="phone" data-action="">
+                                                <span class="wf-work-shot"><img src="works/bot-ig.jpg" alt="Бот салона в Instagram" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Бот салона в Instagram</b><em>Концепт</em></span>
+                                            </button>
+                                        </li>
+                                                                    </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                                    <div class="wf-drawer" id="wf-p-izi" role="region" aria-labelledby="wf-f-izi" hidden>
-                        <div class="wf-drawer-head">
-                            <div>
-                                <h3>Izi — всё в одном</h3>
-                                <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли. Vet.izi — для ветклиник, Izi — для любого бизнеса, с AI-ассистентом.</p>
+                                    <div class="wf-page" id="wf-p-izi" data-folder="izi" role="dialog" aria-modal="true" aria-labelledby="wf-ph-izi" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> Izi — всё в одном</span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="izi">Обсудить</a>
                             </div>
-                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="izi">Обсудить <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
                         </div>
-                        <ul class="wf-cards">
-                                                            <li class="wf-work wf-work-wide" style="--i:0">
-                                    <button type="button" class="wf-work-btn" data-title="Vet.izi — заявки" data-desc="Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка." data-tag="Пример: PetGo" data-url="" data-src="works/crm-requests.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/crm-requests.jpg" alt="Vet.izi — заявки" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Vet.izi — заявки</b><em>Пример: PetGo</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:1">
-                                    <button type="button" class="wf-work-btn" data-title="Vet.izi — главная" data-desc="Заказы на сегодня, новые заявки и питомцы на одном экране." data-tag="Пример: PetGo" data-url="" data-src="works/crm-home.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/crm-home.jpg" alt="Vet.izi — главная" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Vet.izi — главная</b><em>Пример: PetGo</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:2">
-                                    <button type="button" class="wf-work-btn" data-title="Vet.izi — календарь" data-desc="Календарь команды: кто, когда и к какому питомцу." data-tag="Пример: PetGo" data-url="" data-src="works/crm-cal.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/crm-cal.jpg" alt="Vet.izi — календарь" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Vet.izi — календарь</b><em>Пример: PetGo</em></span>
-                                    </button>
-                                </li>
-                                                            <li class="wf-work wf-work-wide" style="--i:3">
-                                    <button type="button" class="wf-work-btn" data-title="Vet.izi — чаты" data-desc="Чаты с командой прямо в системе." data-tag="Пример: PetGo" data-url="" data-src="works/crm-chat.jpg" data-shape="wide" data-action="">
-                                        <span class="wf-work-shot"><img src="works/crm-chat.jpg" alt="Vet.izi — чаты" loading="lazy"></span>
-                                        <span class="wf-work-meta"><b>Vet.izi — чаты</b><em>Пример: PetGo</em></span>
-                                    </button>
-                                </li>
-                                                    </ul>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
+                                    <h2 id="wf-ph-izi">Izi — всё в одном</h2>
+                                    <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли. Vet.izi — для ветклиник, Izi — для любого бизнеса, с AI-ассистентом.</p>
+                                    <span class="wf-page-count">4 работы</span>
+                                </header>
+                                <ul class="wf-cards">
+                                                                            <li class="wf-work wf-work-wide" style="--i:0">
+                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — заявки" data-desc="Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка." data-tag="Пример: PetGo" data-url="" data-src="works/crm-requests.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/crm-requests.jpg" alt="Vet.izi — заявки" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Vet.izi — заявки</b><em>Пример: PetGo</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:1">
+                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — главная" data-desc="Заказы на сегодня, новые заявки и питомцы на одном экране." data-tag="Пример: PetGo" data-url="" data-src="works/crm-home.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/crm-home.jpg" alt="Vet.izi — главная" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Vet.izi — главная</b><em>Пример: PetGo</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:2">
+                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — календарь" data-desc="Календарь команды: кто, когда и к какому питомцу." data-tag="Пример: PetGo" data-url="" data-src="works/crm-cal.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/crm-cal.jpg" alt="Vet.izi — календарь" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Vet.izi — календарь</b><em>Пример: PetGo</em></span>
+                                            </button>
+                                        </li>
+                                                                            <li class="wf-work wf-work-wide" style="--i:3">
+                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — чаты" data-desc="Чаты с командой прямо в системе." data-tag="Пример: PetGo" data-url="" data-src="works/crm-chat.jpg" data-shape="wide" data-action="">
+                                                <span class="wf-work-shot"><img src="works/crm-chat.jpg" alt="Vet.izi — чаты" loading="lazy"></span>
+                                                <span class="wf-work-meta"><b>Vet.izi — чаты</b><em>Пример: PetGo</em></span>
+                                            </button>
+                                        </li>
+                                                                    </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="izi">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                             </div>
         </section>
@@ -876,30 +978,72 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
   }
 
-  // папки: открывается одна, карточки «вылетают» из неё по очереди
-  var folders = root.querySelectorAll('.wf-folder');
-  function openFolder(btn) {
-    var open = btn.getAttribute('aria-expanded') !== 'true';
-    folders.forEach(function (f) {
-      var d = document.getElementById(f.getAttribute('aria-controls'));
-      f.setAttribute('aria-expanded', 'false');
-      d.classList.remove('is-open'); d.hidden = true;
-    });
-    if (!open) return;
-    var drawer = document.getElementById(btn.getAttribute('aria-controls'));
-    btn.setAttribute('aria-expanded', 'true');
-    drawer.hidden = false;
-    void drawer.offsetWidth; // запускаем переход после показа
-    drawer.classList.add('is-open');
-    var top = drawer.getBoundingClientRect().top;
-    if (top > window.innerHeight * 0.75) drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // папки: открываются отдельной страницей, которая «вырастает» из папки (адрес #sites, #apps, #bots, #izi)
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var openPage = null, pushed = false;
+  function folderBtn(fk) { return root.querySelector('.wf-folder[data-folder="' + fk + '"]'); }
+  function insetFrom(el) {
+    var r = (el.querySelector('.wf-folder-body') || el).getBoundingClientRect();
+    return 'inset(' + Math.max(0, r.top) + 'px ' + Math.max(0, innerWidth - r.right) + 'px ' + Math.max(0, innerHeight - r.bottom) + 'px ' + Math.max(0, r.left) + 'px round 16px)';
   }
-  folders.forEach(function (f) { f.addEventListener('click', function () { openFolder(f); }); });
+  function show(fk) {
+    var page = document.getElementById('wf-p-' + fk);
+    if (!page || openPage === page) return;
+    if (openPage) hide(true);
+    openPage = page;
+    page.hidden = false;
+    page.querySelector('.wf-page-scroll').scrollTop = 0;
+    document.documentElement.classList.add('wf-locked');
+    var btn = folderBtn(fk);
+    if (!reduce && btn && page.animate) {
+      page.animate([{ clipPath: insetFrom(btn) }, { clipPath: 'inset(0px 0px 0px 0px round 0px)' }], { duration: 560, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    }
+    requestAnimationFrame(function () { page.classList.add('is-open'); });
+    page.querySelector('.wf-page-back').focus({ preventScroll: true });
+  }
+  function hide(instant) {
+    var page = openPage;
+    if (!page) return;
+    openPage = null;
+    var done = function () { page.hidden = true; page.classList.remove('is-open'); if (!openPage) document.documentElement.classList.remove('wf-locked'); };
+    var btn = folderBtn(page.getAttribute('data-folder'));
+    if (!instant && !reduce && btn && page.animate) {
+      page.animate([{ clipPath: 'inset(0px 0px 0px 0px round 0px)' }, { clipPath: insetFrom(btn) }], { duration: 420, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
+    } else done();
+    if (btn) btn.focus({ preventScroll: true });
+  }
+  function fromHash() {
+    var fk = location.hash.replace('#', '');
+    if (document.getElementById('wf-p-' + fk) && fk) show(fk); else if (openPage) hide();
+  }
+  function closePage() {
+    if (pushed) { pushed = false; history.back(); } else { hide(); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; } }
+  }
+  root.querySelectorAll('.wf-folder').forEach(function (f) {
+    f.addEventListener('click', function () { pushed = true; location.hash = f.getAttribute('data-folder'); });
+  });
+  root.querySelectorAll('.wf-page-back').forEach(function (b) { b.addEventListener('click', closePage); });
+  // ссылки на разделы сайта (например «Оставить заявку») закрывают страницу папки
+  root.querySelectorAll('.wf-page a[href^="#"]').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var target = document.querySelector(a.getAttribute('href'));
+      pushed = false; hide(true);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (err) {}
+      if (target) target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+  root.querySelectorAll('.wf-page [data-wfai-open]').forEach(function (b) { b.addEventListener('click', function () { pushed = false; hide(true); }); });
+  window.addEventListener('hashchange', fromHash);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && openPage && !(document.querySelector('.wf-lightbox[open]'))) closePage();
+  });
+  fromHash();
 
   // просмотр работы
   var lb = root.querySelector('.wf-lightbox');
   var list = [], cur = 0;
-  function show(i) {
+  function showWork(i) {
     cur = (i + list.length) % list.length;
     var d = list[cur].dataset;
     lb.classList.toggle('is-phone', d.shape === 'phone');
@@ -918,15 +1062,15 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     root.querySelectorAll('.wf-work-btn').forEach(function (b) {
       b.addEventListener('click', function () {
         list = Array.prototype.slice.call(b.closest('.wf-cards').querySelectorAll('.wf-work-btn'));
-        show(list.indexOf(b)); lb.showModal();
+        showWork(list.indexOf(b)); lb.showModal();
       });
     });
     lb.querySelector('.wf-lb-close').addEventListener('click', function () { lb.close(); });
-    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { show(cur - 1); });
-    lb.querySelector('.wf-lb-next').addEventListener('click', function () { show(cur + 1); });
+    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { showWork(cur - 1); });
+    lb.querySelector('.wf-lb-next').addEventListener('click', function () { showWork(cur + 1); });
     lb.querySelector('.wf-lb-chat').addEventListener('click', function () { lb.close(); });
     lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
-    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') showWork(cur - 1); if (e.key === 'ArrowRight') showWork(cur + 1); });
   }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме

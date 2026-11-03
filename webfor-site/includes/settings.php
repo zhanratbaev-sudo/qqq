@@ -49,8 +49,10 @@ function webfor_wa_href($text = null) {
 }
 
 add_action('admin_menu', function () {
-    add_menu_page('WebFor', 'WebFor', 'manage_options', 'webfor', 'webfor_settings_page', 'dashicons-admin-site-alt3', 3);
-    add_submenu_page('webfor', 'Настройки WebFor', 'Настройки', 'manage_options', 'webfor', 'webfor_settings_page');
+    // «WebFor» открывает панель управления (includes/dashboard.php), настройки — отдельным пунктом
+    add_menu_page('WebFor', 'WebFor', 'manage_options', 'webfor', 'webfor_panel_page', 'dashicons-admin-site-alt3', 3);
+    add_submenu_page('webfor', 'Панель WebFor', 'Панель', 'manage_options', 'webfor', 'webfor_panel_page');
+    add_submenu_page('webfor', 'Настройки WebFor', 'Настройки', 'manage_options', 'webfor-settings', 'webfor_settings_page');
 });
 
 add_action('admin_init', function () {
