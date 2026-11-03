@@ -6,8 +6,17 @@
   // меню
   var burger = root.querySelector('.wf-burger');
   var nav = root.querySelector('#wf-nav');
+  // преломление стекла включаем только там, где backdrop-filter понимает SVG-фильтры (Chromium)
+  var brands = (navigator.userAgentData && navigator.userAgentData.brands) || [];
+  if (brands.some(function (b) { return /Chromium|Google Chrome|Microsoft Edge|Opera/.test(b.brand); })) document.documentElement.classList.add('wf-refract');
+
+  var menuY = null;
   function setMenu(open) {
     nav.classList.toggle('is-open', open);
+    // меню справа на весь экран: сайт под ним не листается, а после закрытия остаётся на том же месте
+    if (open) menuY = window.scrollY;
+    document.documentElement.classList.toggle('wf-menu-open', open);
+    if (!open && menuY != null) { window.scrollTo({ top: menuY, behavior: 'instant' }); menuY = null; }
     burger.setAttribute('aria-expanded', open ? 'true' : 'false');
     burger.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
   }
@@ -15,7 +24,7 @@
     burger.addEventListener('click', function () { setMenu(!nav.classList.contains('is-open')); });
     nav.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
-    document.addEventListener('click', function (e) { if (nav.classList.contains('is-open') && !e.target.closest('.wf-header')) setMenu(false); });
+    document.addEventListener('click', function (e) { if (nav.classList.contains('is-open') && !e.target.closest('.wf-nav') && !e.target.closest('.wf-burger')) setMenu(false); });
   }
 
   // папки: открываются отдельной страницей, которая «вырастает» из папки (адрес #sites, #apps, #bots, #izi)

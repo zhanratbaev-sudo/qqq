@@ -135,7 +135,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 .wf-folder-count { font-size: 13px; color: var(--text-3); }
 
 /* страница папки: открывается поверх сайта, вырастая из папки */
-html.wf-locked, html.wf-locked body { overflow: hidden; }
+html.wf-locked { overflow: hidden; }
 .wf-page { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; background: var(--bg); }
 .wf-page[hidden] { display: none; }
 .wf-page-bar { flex: none; border-bottom: 1px solid var(--line); background: var(--bg); padding-top: env(safe-area-inset-top, 0px); }
@@ -567,3 +567,78 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 }
 .wf-folder-body, .wf-folder-body::before { border-color: transparent !important; box-shadow: 0 14px 34px rgba(0, 0, 0, .4) !important; }
 .wf-folder-body::before { box-shadow: none !important; }
+
+/* ===== Liquid Glass v3 (как liquid-glass-js) ===================================
+   Тонировка 30% (tintOpacity: 0.3), размытие фона, мягкое свечение кромки и лёгкий блик сверху.
+   В Chromium добавляется преломление по краям — SVG-фильтр #wf-lg в backdrop-filter. */
+.wf {
+  --lg-tint: rgba(150, 170, 164, .30);
+  --lg-tint-hover: rgba(160, 182, 175, .38);
+  --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .03) 38%, rgba(255, 255, 255, 0) 60%);
+  --lg-glow: inset 0 1px 14px rgba(255, 255, 255, .10), inset 0 -8px 18px rgba(0, 0, 0, .12);
+  --lg-blur: blur(18px) saturate(170%) brightness(.92);
+}
+.wf-lg-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.wf-btn-secondary, .wf-page-back, .wf-card, .wf-form, .wf-faq details, .wf-table-wrap, .wf-page-foot,
+.wf-glass, .wf-art-chip, .wf-folder-body, .wf-folder-body::before, .wf-pick-item span, .wf-mobile-bar, .wf-header, .wf-page-bar {
+  background-color: var(--lg-tint) !important;
+  background-image: var(--lg-sheen) !important;
+  box-shadow: var(--lg-glow), 0 12px 32px rgba(0, 0, 0, .35) !important;
+  -webkit-backdrop-filter: var(--lg-blur) !important;
+  backdrop-filter: var(--lg-blur) !important;
+}
+.wf-folder-body::before { box-shadow: inset 0 1px 10px rgba(255, 255, 255, .10) !important; }
+html.wf-refract .wf-btn-secondary, html.wf-refract .wf-page-back, html.wf-refract .wf-card, html.wf-refract .wf-form, html.wf-refract .wf-faq details,
+html.wf-refract .wf-table-wrap, html.wf-refract .wf-page-foot, html.wf-refract .wf-glass, html.wf-refract .wf-art-chip, html.wf-refract .wf-folder-body,
+html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refract .wf-header, html.wf-refract .wf-page-bar {
+  backdrop-filter: url(#wf-lg) blur(14px) saturate(170%) brightness(.92) !important;
+}
+.wf-btn-secondary:hover, .wf-page-back:hover, .wf-faq details[open] { background-color: var(--lg-tint-hover) !important; }
+.wf-header, .wf-page-bar { box-shadow: 0 10px 30px rgba(0, 0, 0, .3) !important; }
+.wf-mobile-bar { box-shadow: 0 -10px 30px rgba(0, 0, 0, .3) !important; }
+/* текст на стекле — белый и чёткий */
+.wf-card > p, .wf-list li, .wf-faq details p, .wf-page-foot p, .wf-muted { color: rgba(255, 255, 255, .78); }
+
+/* выбор услуги: яркие, без тусклости */
+.wf-pick-item span { color: #fff !important; background-color: rgba(255, 255, 255, .13) !important; -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.08) !important; backdrop-filter: blur(18px) saturate(190%) brightness(1.08) !important; }
+html.wf-refract .wf-pick-item span { backdrop-filter: url(#wf-lg) blur(14px) saturate(190%) brightness(1.08) !important; }
+.wf-pick-item .wf-i { color: var(--accent) !important; }
+.wf-pick-item b { color: #fff; }
+.wf-pick-item:hover span { background-color: rgba(63, 224, 160, .22) !important; }
+.wf-pick-item input:checked + span { background-color: rgba(63, 224, 160, .62) !important; color: #fff !important; box-shadow: inset 0 1px 14px rgba(255, 255, 255, .18), 0 8px 24px rgba(63, 224, 160, .25) !important; }
+.wf-pick-item input:checked + span .wf-i { color: #fff !important; }
+
+/* меню на телефоне: колонка выезжает справа и закрывает 90% экрана */
+@media (max-width: 1080px) {
+  .wf-nav {
+    position: fixed !important; top: 0 !important; right: 0 !important; bottom: 0 !important; left: auto !important;
+    width: 90vw; max-width: 520px; height: 100dvh; margin: 0 !important; z-index: 1;
+    display: flex; flex-direction: column; justify-content: flex-start; gap: 0;
+    padding: calc(88px + env(safe-area-inset-top, 0px)) 28px calc(28px + env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: var(--r) 0 0 var(--r) !important;
+    opacity: 1 !important; visibility: hidden; pointer-events: none; transform: none !important; clip-path: inset(0 0 0 100% round var(--r) 0 0 var(--r));
+    background-color: var(--lg-tint) !important; background-image: var(--lg-sheen) !important;
+    box-shadow: var(--lg-glow), -20px 0 60px rgba(0, 0, 0, .45) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(.85) !important; backdrop-filter: blur(22px) saturate(170%) brightness(.85) !important;
+    transition: clip-path .55s cubic-bezier(.2, .9, .25, 1), visibility 0s linear .55s !important;
+  }
+  .wf-nav.is-open { visibility: visible; pointer-events: auto; clip-path: inset(0 0 0 0 round var(--r) 0 0 var(--r)); transition: clip-path .55s cubic-bezier(.2, .9, .25, 1), visibility 0s !important; }
+  .wf-nav a { padding: 18px 4px !important; font-size: 24px !important; font-weight: 700; color: #fff !important; border-bottom: 1px solid rgba(255, 255, 255, .08); opacity: 0; transform: translateX(28px); transition: opacity .3s, transform .5s var(--spring); }
+  .wf-nav.is-open a { opacity: 1; transform: none; }
+  .wf-nav.is-open a:nth-child(1) { transition-delay: .12s; } .wf-nav.is-open a:nth-child(2) { transition-delay: .17s; } .wf-nav.is-open a:nth-child(3) { transition-delay: .22s; } .wf-nav.is-open a:nth-child(4) { transition-delay: .27s; }
+  .wf-burger { position: relative; z-index: 2; }
+  html.wf-refract .wf-nav { backdrop-filter: url(#wf-lg) blur(20px) saturate(170%) brightness(.85) !important; }
+  html.wf-menu-open .wf-burger { background: rgba(0, 0, 0, .35) !important; }
+  /* пока меню открыто, шапка не «запирает» меню внутри себя */
+  html.wf-menu-open .wf-header { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background-color: transparent !important; background-image: none !important; box-shadow: none !important; }
+  html.wf-menu-open .wf-header::after { content: ""; position: fixed; inset: 0; z-index: 0; background: rgba(0, 0, 0, .45); animation: wf-fade .3s ease both; }
+  html.wf-menu-open .wf-logo { position: relative; z-index: 2; }
+  html.wf-menu-open { overflow: hidden; }
+}
+@keyframes wf-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wf-nav, .wf-nav a { transition: none !important; } }
+/* ничего не выходит за ширину экрана (иначе телефон уменьшает масштаб страницы) */
+.wf { overflow-x: clip; }
+.wf-hero-art { overflow: visible; }
+@keyframes wf-in-app { from { opacity: 0; transform: translateY(10cqw) rotate(24deg) scale(.86); } to { opacity: 1; transform: rotate(5deg); } }
+@keyframes wf-in-bot { from { opacity: 0; transform: translateY(12cqw) rotate(-16deg) scale(.88); } to { opacity: 1; transform: rotate(-2deg); } }

@@ -63,7 +63,7 @@
 
 /* Liquid Glass v2: без рамок, одно скругление; чат «вырастает» из кнопки */
 .wfai { --wr: 14px; }
-.wfai-panel { border: 0 !important; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.6) !important; background: rgba(16,21,20,.78) !important; }
+.wfai-panel { border: 0 !important; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.6) !important; background-color: rgba(16,21,20,.78); }
 .wfai-head { border-bottom: 0 !important; background: rgba(255,255,255,.04); }
 .wfai-form { border-top: 0 !important; }
 .wfai-close, .wfai-chip, .wfai-input, .wfai-send, .wfai-contact, .wfai-contact input, .wfai-contact button { border: 0 !important; border-radius: var(--wr) !important; }
@@ -78,4 +78,12 @@
 .wfai-panel > * { transition: opacity .2s .12s; }
 .wfai.is-closing .wfai-panel > * { transition: none; }
 .wfai.is-open .wfai-launcher, .wfai.is-closing .wfai-launcher { visibility: hidden; }
-html.wfai-lock, html.wfai-lock body { overflow: hidden !important; }
+html.wfai-lock { overflow: hidden !important; }
+
+/* Liquid Glass v3: тонировка 30%, блик, свечение кромки, преломление в Chromium */
+.wfai-panel { background-color: rgba(150,170,164,.30); background-image: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.03) 38%, rgba(255,255,255,0) 60%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(170%) brightness(.8) !important; backdrop-filter: blur(22px) saturate(170%) brightness(.8) !important;
+  box-shadow: inset 0 1px 14px rgba(255,255,255,.1), 0 24px 64px rgba(0,0,0,.6) !important; }
+html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(170%) brightness(.8) !important; }
+.wfai-assistant { background: rgba(255,255,255,.14) !important; color: #fff; }
+.wfai-head { background: rgba(0,0,0,.18) !important; }

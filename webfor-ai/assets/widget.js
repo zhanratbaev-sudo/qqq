@@ -123,10 +123,14 @@
     var anim = panel.animate(frames, { duration: opening ? 460 : 380, easing: opening ? 'cubic-bezier(.2,.9,.25,1)' : 'cubic-bezier(.4,0,.2,1)' });
     anim.onfinish = function () { panel.classList.remove('is-morph'); done(); };
   }
+  var lockY = null;
   function setOpen(open) {
     if (animating || open === !panel.hidden) return;
     launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
-    document.documentElement.classList.toggle('wfai-lock', open); // сайт под открытым чатом не прокручивается
+    // сайт под открытым чатом не прокручивается и после закрытия остаётся на том же месте
+    if (open) lockY = window.scrollY;
+    document.documentElement.classList.toggle('wfai-lock', open);
+    if (!open && lockY != null) { window.scrollTo({ top: lockY, behavior: 'instant' }); lockY = null; }
     if (open) {
       if (!log.childElementCount) render();
       var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран

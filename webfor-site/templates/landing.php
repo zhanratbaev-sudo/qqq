@@ -13,6 +13,14 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
 ?>
 <div class="wf" id="wf-top">
     <a class="wf-skip" href="#wf-main">Перейти к содержимому</a>
+    <!-- Жидкое стекло: преломление по краям (как в liquid-glass-js). Работает там, где backdrop-filter понимает SVG-фильтры (Chrome, Android). -->
+    <svg class="wf-lg-defs" width="0" height="0" aria-hidden="true" focusable="false">
+        <filter id="wf-lg" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="noise"/>
+            <feGaussianBlur in="noise" stdDeviation="2" result="soft"/>
+            <feDisplacementMap in="SourceGraphic" in2="soft" scale="38" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+    </svg>
 
     <header class="wf-header">
         <div class="wf-wrap wf-header-in">
