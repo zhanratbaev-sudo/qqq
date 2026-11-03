@@ -100,21 +100,3 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
 .wfai-launcher { position: relative; }
 .wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }
-
-/* v6: иконка ассистента по эскизу — белое тело с хвостиком, аниме-глаза, рука с ровным зазором */
-.wfai-launcher { overflow: visible; }
-.wfai-bot { width: 36px; height: 36px; flex: none; display: block; overflow: visible; }
-.wfai-bot .b-skin, .wfai-bot .b-handp { fill: #f4fff9; }
-/* мягкие края руки: обводка того же цвета (зазор до тела учтён: 2.7 − 0.7 = 2) */
-.wfai-bot .b-handp { stroke: #f4fff9; stroke-width: 1.4; stroke-linejoin: round; }
-.wfai-bot .b-eye, .wfai-bot .b-smile, .wfai-bot .b-flat, .wfai-bot .b-o, .wfai-bot .b-d2 { fill: #04170f; }
-.wfai-bot .b-hl { fill: #fff; }
-.wfai-bot .b-hap { fill: none; stroke: #04170f; stroke-width: 1.6; stroke-linecap: round; }
-.wfai-bot .b-hap, .wfai-bot .b-flat, .wfai-bot .b-o, .wfai-bot .b-d2, .wfai-bot .b-handp { opacity: 0; }
-.wfai-bot .b-look, .wfai-bot .b-blink, .wfai-bot .b-eL, .wfai-bot .b-eR, .wfai-bot .b-eLm, .wfai-bot .b-eRm, .wfai-bot .b-hl, .wfai-bot .b-hap,
-.wfai-bot .b-smile, .wfai-bot .b-flat, .wfai-bot .b-o, .wfai-bot .b-d2w, .wfai-bot .b-d2, .wfai-bot .b-handp { transform-box: fill-box; transform-origin: 50% 50%; }
-/* рука поворачивается вокруг центра тела — зазор между рукой и телом не меняется */
-.wfai-bot .b-hand { transform-box: view-box; transform-origin: 15px 16.6px; }
-/* аватар в шапке чата */
-.wfai-who span.wfai-ava { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--a-accent); }
-.wfai-ava .wfai-bot { width: 32px; height: 32px; }
