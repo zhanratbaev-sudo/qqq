@@ -296,7 +296,8 @@
       else { el.style.transition = 'transform .3s ' + EASE; el.style.transform = ''; }
     });
     const first = el.querySelector('textarea, input:not([type=checkbox]):not([type=radio])');
-    if (first && opts.focus && !phoneUI()) setTimeout(() => first.focus(), 350);
+    // курсор ставим сам только с мышью: на телефоне фокус открывает клавиатуру и iPhone приближает страницу
+    if (first && opts.focus && window.matchMedia && matchMedia('(hover: hover) and (pointer: fine)').matches) setTimeout(() => first.focus(), 350);
     return { close, el };
   }
   const field = (label, input, hint) => h('label', { class: 'wfa-field' }, [h('span', { text: label }), input, hint ? h('small', { text: hint }) : null]);

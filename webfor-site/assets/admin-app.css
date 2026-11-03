@@ -18,7 +18,7 @@
 .wfa button, .wfa input, .wfa textarea, .wfa select { font: inherit; color: inherit; letter-spacing: inherit; }
 .wfa button { cursor: pointer; }
 .wfa a { color: inherit; text-decoration: none; }
-.wfa h1, .wfa h2, .wfa p { margin: 0; color: inherit; font-family: inherit; padding: 0; }
+.wfa h1, .wfa h2, .wfa p { margin: 0; color: inherit; font-family: inherit; }
 .wfa [hidden] { display: none !important; }
 .wfa :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .wfa.is-app { position: fixed; inset: 0; }
@@ -325,3 +325,10 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa-ptr .wfa-spinner { width: 20px; height: 20px; border-width: 2.5px; animation: none; }
 .wfa-ptr.is-busy { opacity: 1 !important; transform: translateY(56px) !important; }
 .wfa-ptr.is-busy .wfa-spinner { animation: wfa-spin .8s linear infinite; }
+
+/* вопрос клиента в листе: аккуратный блок с отступами, обычный размер текста */
+.wfa .wfa-quote { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.07); font-size: var(--fs-sub); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+.wfa .wfa-sys { margin: 6px 0; }
+.wfa .wfa-note { margin: 4px auto 12px; }
+.wfa .wfa-sheet-head b { font-size: var(--fs-head); }
+.wfa-sheet-body { overflow-wrap: anywhere; }
