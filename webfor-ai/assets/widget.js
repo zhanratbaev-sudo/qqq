@@ -3,10 +3,12 @@
 (function () {
   var C = window.WFAI;
   if (!C || document.querySelector('.wfai')) return;
-  var KEY = 'wfai-history';
-  var history = [];
-  try { history = JSON.parse(sessionStorage.getItem(KEY) || '[]'); } catch (e) { history = []; }
-  var pendingQuestion = 0, busy = false;
+  // разговор хранится на сервере; здесь — его токен, номер последнего полученного сообщения и копия для показа
+  var KEY = 'wfai-chat';
+  var st = { chat: '', last: 0, status: 'bot', msgs: [] };
+  try { st = Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+  var history = st.msgs;
+  var pendingQuestion = 0, busy = false, contactAsked = false;
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   var ICON_CHAT = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>';
@@ -45,19 +47,32 @@
   document.body.appendChild(root);
   if (document.querySelector('.wf-mobile-bar')) root.classList.add('wfai-has-bar');
 
-  function bubble(role, text) {
-    var b = el('div', 'wfai-msg wfai-' + role, text);
+  function bubble(role, text, author, err) {
+    var cls = role === 'user' ? 'user' : role === 'system' ? 'system' : role === 'manager' ? 'assistant wfai-manager' : 'assistant';
+    var b = el('div', 'wfai-msg wfai-' + cls + (err ? ' wfai-error' : ''));
+    if (role === 'manager') b.appendChild(el('b', 'wfai-author', author || 'Менеджер'));
+    b.appendChild(document.createTextNode(text));
     log.appendChild(b); log.scrollTop = log.scrollHeight;
     return b;
   }
-  function save() { try { sessionStorage.setItem(KEY, JSON.stringify(history.slice(-20))); } catch (e) {} }
+  function save() { st.msgs = history.slice(-40); try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
   function render() {
     log.innerHTML = '';
     bubble('assistant', C.greeting || 'Здравствуйте! Чем помочь?');
-    history.forEach(function (m) { bubble(m.role, m.content); });
+    history.forEach(function (m) { bubble(m.role, m.content, m.author, m.err); });
     chips.hidden = history.length > 0;
   }
-
+  // сообщения с сервера: ассистент, менеджер, служебные («Менеджер присоединился…»)
+  function addServer(list) {
+    (list || []).forEach(function (m) {
+      if (m.i <= st.last) return;
+      st.last = m.i;
+      var role = m.r === 'bot' ? 'assistant' : m.r;
+      history.push({ role: role, content: m.t, author: m.a });
+      if (log.childElementCount) bubble(role, m.t, m.a);
+    });
+    save();
+  }
   function contactForm() {
     var f = el('form', 'wfai-contact');
     var i = el('input'); i.type = 'tel'; i.placeholder = 'Ваш WhatsApp: +7 700 000 00 00'; i.setAttribute('aria-label', 'Ваш номер WhatsApp для ответа'); i.autocomplete = 'tel';
@@ -91,18 +106,50 @@
     history.push({ role: 'user', content: text }); save();
     bubble('user', text);
     input.value = ''; autosize();
-    var typing = el('div', 'wfai-msg wfai-assistant wfai-typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label', 'Ассистент печатает');
-    log.appendChild(typing); log.scrollTop = log.scrollHeight;
-    post(C.chat, { messages: history }).then(function (r) {
-      typing.remove();
-      var reply = (r && r.reply) || 'Не получилось ответить. Напишите нам в WhatsApp.';
-      history.push({ role: 'assistant', content: reply }); save();
-      bubble('assistant', reply);
-      if (r && r.escalated && r.question_id) { pendingQuestion = r.question_id; contactForm(); }
+    var live = st.status === 'live';
+    var typing = null;
+    if (!live) { typing = el('div', 'wfai-msg wfai-assistant wfai-typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label', 'Ассистент печатает'); log.appendChild(typing); log.scrollTop = log.scrollHeight; }
+    var body = C.transport ? { messages: history.filter(function (m) { return m.role === 'user' || m.role === 'assistant'; }).map(function (m) { return { role: m.role, content: m.content }; }) } : { chat: st.chat, text: text };
+    post(C.chat, body).then(function (r) {
+      if (typing) typing.remove();
+      r = r || {};
+      if (r.chat) st.chat = r.chat;
+      if (r.user_i) st.last = Math.max(st.last, r.user_i);
+      if (r.status) st.status = r.status;
+      if (r.msgs) addServer(r.msgs);
+      else if (r.reply) { history.push({ role: 'assistant', content: r.reply, err: !!r.unsupported }); bubble('assistant', r.reply, '', !!r.unsupported); }
+      else if (!live) bubble('assistant', 'Не получилось ответить. Напишите нам в WhatsApp.');
+      if (r.unsupported && r.msgs) { var lastB = log.querySelector('.wfai-msg:last-of-type'); if (lastB) lastB.classList.add('wfai-error'); history[history.length - 1].err = true; }
+      save();
+      if (r.escalated && r.question_id && !contactAsked && st.status !== 'live') { pendingQuestion = r.question_id; contactAsked = true; contactForm(); }
+      schedulePoll();
     }).catch(function () {
-      typing.remove();
+      if (typing) typing.remove();
       bubble('assistant', 'Нет связи с сервером. Попробуйте ещё раз или напишите нам в WhatsApp.');
     }).then(function () { busy = false; });
+  }
+
+  // новые сообщения от менеджера: часто, пока чат открыт; реже, если менеджер ждёт или в чате, а окно закрыто
+  var pollTimer = null;
+  function poll() {
+    pollTimer = null;
+    if (!st.chat || !C.poll || C.transport) return;
+    fetch(C.poll + (C.poll.indexOf('?') >= 0 ? '&' : '?') + 'chat=' + encodeURIComponent(st.chat) + '&after=' + st.last)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.ok) {
+          var before = history.length;
+          if (d.status) st.status = d.status;
+          addServer(d.msgs);
+          if (history.length > before && panel.hidden) root.classList.add('wfai-unread');
+        }
+      }).catch(function () {}).then(schedulePoll);
+  }
+  function schedulePoll() {
+    if (pollTimer || !st.chat || C.transport) return;
+    var active = st.status === 'waiting' || st.status === 'live';
+    if (panel.hidden && !active) return;
+    pollTimer = setTimeout(poll, panel.hidden ? 8000 : (active ? 2500 : 6000));
   }
 
   function autosize() { input.style.height = 'auto'; input.style.height = Math.min(120, input.scrollHeight) + 'px'; }
@@ -135,6 +182,8 @@
       if (!log.childElementCount) render();
       var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
       panel.hidden = false; root.classList.add('is-open');
+      root.classList.remove('wfai-unread');
+      if (st.chat && !C.transport) { clearTimeout(pollTimer); pollTimer = null; poll(); }
       if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
       setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
     } else {
@@ -158,4 +207,5 @@
     var t = e.target.closest && e.target.closest('[data-wfai-open]');
     if (t) { e.preventDefault(); setOpen(true); var q = t.getAttribute('data-wfai-open'); if (q) send(q); }
   });
+  schedulePoll();
 })();

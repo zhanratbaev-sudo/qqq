@@ -12,6 +12,7 @@ add_action('wp_enqueue_scripts', function () {
     wp_localize_script('wfai-widget', 'WFAI', [
         'chat'     => esc_url_raw(rest_url('webfor-ai/v1/chat')),
         'contact'  => esc_url_raw(rest_url('webfor-ai/v1/contact')),
+        'poll'     => esc_url_raw(rest_url('webfor-ai/v1/poll')),
         'name'     => wfai_opt('name'),
         'greeting' => wfai_opt('greeting'),
         'wa'       => $c['wa_href'],

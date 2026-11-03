@@ -165,3 +165,52 @@ textarea.wfa-input { resize: vertical; }
 .wfa-tab[aria-selected=true] { background: rgba(63,224,160,.18); }
 .wfa-form-actions { border-top: 0; }
 .wfa-mini-row { border-top-color: rgba(255,255,255,.05); }
+
+/* Чаты: список слева, разговор справа (на телефоне — по очереди) */
+.wfa-chats { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.wfa-chat-list { display: flex; flex-direction: column; gap: 8px; max-height: min(720px, calc(100dvh - 300px)); min-height: 200px; overflow-y: auto; overscroll-behavior: contain; }
+.wfa-chat-item { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 14px 16px; border: 0; border-radius: var(--r); background: rgba(255,255,255,.05); color: var(--text); text-align: left; font-family: inherit; cursor: pointer; transition: background .2s; }
+.wfa-chat-item:hover { background: rgba(255,255,255,.08); }
+.wfa-chat-item.is-open { background: rgba(63,224,160,.16); }
+.wfa-chat-item.is-waiting { box-shadow: inset 3px 0 0 var(--accent); }
+.wfa-chat-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wfa-chat-item b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfa-chat-item time { font-size: 12px; color: var(--text-3); flex: none; }
+.wfa-chat-last { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfa-pill { white-space: nowrap; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.08); color: var(--text-2); }
+.wfa-pill.is-waiting { background: var(--accent); color: var(--on-accent); }
+.wfa-pill.is-live { background: rgba(245,196,81,.2); color: var(--warn); }
+.wfa-chat-pane { display: flex; flex-direction: column; height: min(720px, calc(100dvh - 300px)); min-height: 420px; border-radius: var(--r); background: rgba(255,255,255,.05); box-shadow: 0 10px 28px rgba(0,0,0,.3); overflow: hidden; }
+.wfa-chat-placeholder { display: grid; place-items: center; padding: 24px; text-align: center; }
+.wfa-chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,.2); }
+.wfa-chat-head .wfa-grow { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.wfa-chat-head b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.wfa-chat-back { display: none !important; width: 40px; padding: 0 !important; font-size: 18px !important; }
+.wfa-chat-log { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.wfa-bubble { max-width: 78%; display: flex; flex-direction: column; gap: 2px; padding: 9px 13px; border-radius: 16px; white-space: pre-wrap; word-wrap: break-word; font-size: 15px; }
+.wfa-bubble small { font-size: 11px; font-weight: 600; color: var(--text-3); }
+.wfa-bubble.is-user { align-self: flex-start; background: rgba(255,255,255,.09); border-bottom-left-radius: 6px; }
+.wfa-bubble.is-bot { align-self: flex-end; background: rgba(255,255,255,.04); color: var(--text-2); border-bottom-right-radius: 6px; }
+.wfa-bubble.is-manager { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px; }
+.wfa-bubble.is-manager small { color: rgba(6,32,25,.7); }
+.wfa-chat-sys { align-self: center; padding: 5px 12px; border-radius: 12px; background: rgba(63,224,160,.12); color: #bff3dc; font-size: 13px; text-align: center; }
+.wfa-chat-form { display: flex; gap: 8px; align-items: flex-end; padding: 12px; background: rgba(0,0,0,.2); }
+.wfa-chat-input { min-height: 44px; max-height: 140px; field-sizing: content; resize: none !important; }
+.wfa-chat-form .wfa-btn { min-height: 44px; }
+.wfa-count { flex: none; font-size: 12px; font-weight: 700; color: var(--accent); }
+.wfa-logout { padding: 0 12px; }
+@media (max-width: 782px) {
+  .wfa-chats { grid-template-columns: 1fr; }
+  .wfa-chats.has-open .wfa-chat-list, .wfa-chats:not(.has-open) .wfa-chat-placeholder { display: none; }
+  .wfa-chat-list { max-height: none; }
+  .wfa-chat-back { display: inline-flex !important; }
+  /* открытый чат на телефоне — на весь экран, как в мессенджере */
+  .wfa-chats.has-open .wfa-chat-pane { position: fixed; inset: 0; z-index: 100001; height: 100dvh; min-height: 0; border-radius: 0 !important; background: #050707; box-shadow: none;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .wfa-chat-head { gap: 8px; }
+  .wfa-chat-head .wfa-btn { padding: 0 12px; font-size: 13px; }
+  .wfa-bubble { max-width: 88%; }
+  .wfa-top .wfa-row .wfa-btn { display: none; }
+  .wfa-top .wfa-row .wfa-logout { display: inline-flex; }
+}
+html.wfa-chat-full { overflow: hidden; }

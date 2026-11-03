@@ -40,6 +40,29 @@ demo = {
     },
 }
 
+# демо-чаты: вымышленные клиенты, все номера — примеры
+chats = [
+    {'id': 501, 'status': 'waiting', 'contact': '+7 700 000 33 01', 'mins': 2, 'msgs': [
+        ('user', '', 'Здравствуйте! Нужен сайт для салона красоты с онлайн-записью'),
+        ('bot', '', 'Здравствуйте! 😊 Сайт с онлайн-записью — 15 000 ₸, срок 3–7 дней. Хостинг на год включён, домен оформляем отдельно.'),
+        ('user', '', 'А скидку сделаете, если сразу закажу ещё и чат-бота?'),
+        ('bot', '', 'За комплекс можно обсудить скидку — уточняем у менеджера, сейчас он вам ответит.')]},
+    {'id': 502, 'status': 'bot', 'contact': '', 'mins': 25, 'msgs': [
+        ('user', '', 'Сколько стоит приложение в App Store?'),
+        ('bot', '', 'Приложение в App Store и Google Play — 95 000 ₸, срок 1–3 недели. Если нужен быстрый старт, есть PWA-приложение от 30 000 ₸ — ставится на телефон прямо с сайта.')]},
+    {'id': 503, 'status': 'bot', 'contact': '', 'mins': 190, 'msgs': [
+        ('user', '', 'Vet.izi подойдёт для зоомагазина?'),
+        ('bot', '', 'Да, Vet.izi подходит и для зоо-бизнеса: запись, склад, оплаты и отчёты. Стоимость — от 30 000 ₸, разово.')]},
+]
+faq = [
+    {'q': 'Сколько стоит сайт?', 'n': 14, 'mins': 30}, {'q': 'Какие сроки разработки?', 'n': 9, 'mins': 70},
+    {'q': 'Можно ли оплатить в рассрочку?', 'n': 6, 'mins': 200}, {'q': 'Что такое Vet.izi?', 'n': 5, 'mins': 300},
+    {'q': 'Делаете ли вы рекламу в Instagram?', 'n': 3, 'mins': 900},
+]
+demo['chats'] = [{'id': c['id'], 'status': c['status'], 'contact': c['contact'], 'mins': c['mins'],
+                  'msgs': [{'i': i + 1, 'r': r, 'a': a, 't': t} for i, (r, a, t) in enumerate(c['msgs'])]} for c in chats]
+demo['faq'] = faq
+
 adapter = r"""
 (function () {
   var S = __DEMO__;
@@ -48,9 +71,35 @@ adapter = r"""
   S.leads.forEach(function (l) { l.date = iso(l.minutes); l.tel = 'tel:' + l.phone.replace(/\s/g, ''); l.wa = 'https://wa.me/' + l.phone.replace(/\D/g, ''); });
   S.ai.questions.forEach(function (q) { q.date = iso(q.minutes); });
   var nextId = 1000;
+  var CH = S.chats; delete S.chats; var FAQ = S.faq; delete S.faq;
+  CH.forEach(function (c) { c.updated = Math.floor(now / 1000) - c.mins * 60; c.unread = c.status === 'waiting' ? 2 : 0; c.msgs.forEach(function (m) { m.at = c.updated; }); });
+  FAQ.forEach(function (f) { f.at = Math.floor(now / 1000) - f.mins * 60; });
+  function addMsg(c, r, t, a) { var m = { i: c.msgs.length + 1, r: r, a: a || '', t: t, at: Math.floor(Date.now() / 1000) }; c.msgs.push(m); c.updated = m.at; return m; }
   function ok(v) { return new Promise(function (r) { setTimeout(function () { r(JSON.parse(JSON.stringify(v))); }, 150); }); }
   function bad(msg) { return new Promise(function (_, j) { setTimeout(function () { j(new Error(msg)); }, 150); }); }
-  window.WFADMIN = { adapter: {
+  window.WFADMIN = { chats: { manager: 'Нуржан', vapid: '' }, adapter: {
+    chatApi: function (method, path, body) {
+      var m, c;
+      if (path === '/chats') return ok({ chats: CH.slice().sort(function (a, b) { var r = { waiting: 0, live: 1, bot: 2 }; return (r[a.status] - r[b.status]) || (b.updated - a.updated); }).map(function (c) {
+        var last = c.msgs.filter(function (x) { return x.r === 'user'; }).pop();
+        return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length };
+      }) });
+      if (path === '/faq') return ok({ items: FAQ });
+      if ((m = path.match(/^\/chat\/(\d+)(\/\w+)?(?:\?after=(\d+))?$/))) {
+        c = CH.find(function (x) { return x.id == m[1]; }); if (!c) return bad('Чат не найден');
+        var act = m[2], after = +(m[3] || 0);
+        if (!act) { c.unread = 0; return ok({ status: c.status, contact: c.contact, msgs: c.msgs.filter(function (x) { return x.i > after; }) }); }
+        if (act === '/release') { c.status = 'bot'; addMsg(c, 'system', 'Менеджер вышел из чата — дальше снова отвечает ассистент.'); return ok({ ok: true, status: 'bot' }); }
+        if (c.status !== 'live') { c.status = 'live'; addMsg(c, 'system', 'Менеджер присоединился, сейчас ответит вам.'); }
+        if (act === '/send') {
+          var msg = addMsg(c, 'manager', body.text, 'Нуржан');
+          if (!c.replied) { c.replied = true; setTimeout(function () { addMsg(c, 'user', 'Спасибо! Тогда давайте сайт и бота вместе 👍'); c.unread++; }, 3500); } // ответ «клиента» в демо
+          return ok({ ok: true, msg: msg });
+        }
+        return ok({ ok: true, status: 'live' });
+      }
+      return bad('Неизвестный запрос');
+    },
     api: function (method, path, body) {
       var m;
       if (path === '/state') return ok(S);
@@ -107,7 +156,7 @@ body {{ padding: 16px max(12px, env(safe-area-inset-right, 0px)) 16px max(12px, 
 #wfa-app {{ max-width: 1200px; margin: 0 auto; }}
 {css}
 </style>
-<div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, но после перезагрузки страницы изменения сбросятся. На вашем сайте это пункт «WebFor» в админке WordPress.</div>
+<div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, после перезагрузки всё сбросится. Откройте «Чаты» → «Присоединиться» и напишите клиенту. На сайте админка открывается по адресу /webfor-admin/ и ставится на телефон как приложение.</div>
 <div id="wfa-app" class="wfa"><p class="wfa-loading">Загружаем панель…</p></div>
 <script>{adapter}</script>
 <script>{js}</script>

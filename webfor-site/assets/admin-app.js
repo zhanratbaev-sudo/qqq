@@ -16,7 +16,17 @@
         return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
       });
     },
+    chatApi: CFG.chats ? function (method, path, body) {
+      return fetch(CFG.chats.root + path, {
+        method: method, credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
+        body: body ? JSON.stringify(body) : undefined,
+      }).then(function (r) {
+        return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
+      });
+    } : null,
     pickImage: function () {
+      if (!(window.wp && wp.media)) return uploadImage(); // приложение-админка: без медиатеки WordPress
       return new Promise(function (resolve) {
         var frame = wp.media({ title: 'Скриншот работы', button: { text: 'Выбрать' }, library: { type: 'image' }, multiple: false });
         frame.on('select', function () {
@@ -28,6 +38,28 @@
       });
     },
   };
+
+  /* загрузка скриншота напрямую в медиатеку (REST), когда окна медиатеки нет */
+  function uploadImage() {
+    return new Promise(function (resolve) {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0];
+        if (!f) { resolve(null); return; }
+        toast('Загружаем скриншот…');
+        fetch(CFG.media, { method: 'POST', credentials: 'same-origin', body: f, headers: {
+          'X-WP-Nonce': CFG.nonce, 'Content-Type': f.type || 'image/jpeg',
+          'Content-Disposition': 'attachment; filename="' + encodeURIComponent(f.name.replace(/"/g, '')) + '"' } })
+          .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Не загрузилось'); return d; }); })
+          .then(function (d) {
+            var sz = d.media_details && d.media_details.sizes || {};
+            resolve({ id: d.id, url: (sz.large || sz.full || {}).source_url || d.source_url });
+          }).catch(function (e) { fail(e); resolve(null); });
+      };
+      inp.click();
+    });
+  }
 
   /* ---------- мелочи ---------- */
   function h(tag, attrs, kids) {
@@ -72,9 +104,16 @@
   /* ---------- состояние ---------- */
   var S = null, tab = 'home', leadFilter = 'all', leadQuery = '', worksFolder = 'sites', aiTab = 'questions';
   try { tab = sessionStorage.getItem('wfa-tab') || 'home'; } catch (e) {}
+  var HAS_CHATS = !!adapter.chatApi;
+  var C = { list: [], open: 0, msgs: [], status: '', contact: '', draft: '', seenWaiting: null, faq: null };
+  readHash();
 
   function load() {
-    return adapter.api('GET', '/state').then(function (d) { S = d; render(); }).catch(function (e) {
+    return Promise.all([adapter.api('GET', '/state'), HAS_CHATS ? adapter.chatApi('GET', '/chats').catch(function () { return { chats: [] }; }) : null]).then(function (r) {
+      S = r[0]; if (r[1]) setChats(r[1].chats);
+      render(); if (C.open) openChat(C.open, true);
+      if (HAS_CHATS) pollList();
+    }).catch(function (e) {
       app.innerHTML = ''; app.appendChild(h('p', { class: 'wfa-loading', text: 'Не удалось загрузить панель: ' + e.message }));
     });
   }
@@ -82,35 +121,58 @@
     return {
       newLeads: S.leads.filter(function (l) { return l.status === 'new'; }).length,
       newQs: S.ai ? S.ai.questions.filter(function (q) { return q.state !== 'answered'; }).length : 0,
+      waiting: C.list.filter(function (c) { return c.status === 'waiting'; }).length,
     };
   }
-  function go(t) { tab = t; try { sessionStorage.setItem('wfa-tab', t); } catch (e) {} render(); app.scrollIntoView({ block: 'start' }); }
+  function go(t) {
+    tab = t; try { sessionStorage.setItem('wfa-tab', t); } catch (e) {}
+    if (t !== 'chats') { C.open = 0; if (/^#chat-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
+    render(); app.scrollIntoView({ block: 'start' });
+  }
+  function readHash() {
+    var m = /^#chat-(\d+)$/.exec(location.hash);
+    if (m && HAS_CHATS) { tab = 'chats'; C.open = +m[1]; }
+  }
+  window.addEventListener('hashchange', function () { var was = C.open; readHash(); if (S && C.open && C.open !== was) { render(); openChat(C.open); } });
 
   /* ---------- каркас ---------- */
   function render() {
     var c = counts();
-    var tabs = [['home', 'Обзор'], ['leads', 'Заявки', c.newLeads], ['works', 'Работы'], ['ai', 'AI-ассистент', c.newQs], ['settings', 'Номера']];
+    var tabs = [['home', 'Обзор'], ['chats', 'Чаты', c.waiting], ['leads', 'Заявки', c.newLeads], ['works', 'Работы'], ['ai', 'AI-ассистент', c.newQs], ['settings', 'Номера']];
     if (!S.ai) tabs = tabs.filter(function (t) { return t[0] !== 'ai'; });
-    if (tab === 'ai' && !S.ai) tab = 'home';
+    if (!HAS_CHATS) tabs = tabs.filter(function (t) { return t[0] !== 'chats'; });
+    if ((tab === 'ai' && !S.ai) || (tab === 'chats' && !HAS_CHATS)) tab = 'home';
+    // сохраняем фокус и текст в поле ввода, которое перерисовывается (поиск, ответ в чате)
+    var act = document.activeElement, keep = act && act.id && app.contains(act) ? { id: act.id, s: act.selectionStart, e: act.selectionEnd } : null;
+    var oldLog = app.querySelector('.wfa-chat-log'), stick = !oldLog || oldLog.scrollHeight - oldLog.scrollTop - oldLog.clientHeight < 40;
     var nav = h('nav', { class: 'wfa-tabs', role: 'tablist' }, tabs.map(function (t) {
       return h('button', { type: 'button', role: 'tab', class: 'wfa-tab', 'aria-selected': tab === t[0] ? 'true' : 'false', onclick: function () { go(t[0]); } },
         [t[1], t[2] ? h('span', { class: 'wfa-badge', text: t[2] }) : null]);
     }));
-    var view = { home: viewHome, leads: viewLeads, works: viewWorks, ai: viewAi, settings: viewSettings }[tab]();
+    var view = { home: viewHome, chats: viewChats, leads: viewLeads, works: viewWorks, ai: viewAi, settings: viewSettings }[tab]();
     app.innerHTML = '';
     app.appendChild(h('header', { class: 'wfa-top' }, [
       h('div', { class: 'wfa-brand' }, [h('span', { class: 'wfa-mark', text: 'W' }), h('div', null, [h('b', { text: 'WebFor' }), h('span', { text: 'Панель управления' })])]),
-      h('a', { class: 'wfa-btn wfa-btn-ghost', href: S.site_url, target: '_blank', rel: 'noopener', text: 'Открыть сайт ↗' }),
+      h('div', { class: 'wfa-row' }, [
+        h('a', { class: 'wfa-btn wfa-btn-ghost', href: S.site_url, target: '_blank', rel: 'noopener', text: 'Открыть сайт ↗' }),
+        CFG.logout ? h('a', { class: 'wfa-btn wfa-btn-ghost wfa-logout', href: CFG.logout, text: 'Выйти' }) : null,
+      ]),
     ]));
     app.appendChild(nav);
     app.appendChild(h('main', { class: 'wfa-view' }, view));
     app.appendChild(toastBox);
+    if (keep) { var el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+    var log = app.querySelector('.wfa-chat-log'); if (log && stick) log.scrollTop = log.scrollHeight;
+    document.documentElement.classList.toggle('wfa-chat-full', tab === 'chats' && !!C.open && matchMedia('(max-width: 782px)').matches);
+    if (navigator.setAppBadge) { try { c.waiting ? navigator.setAppBadge(c.waiting) : navigator.clearAppBadge(); } catch (e) {} }
   }
+  function busy() { return !!app.querySelector('dialog[open]'); }
 
   /* ---------- обзор ---------- */
   function viewHome() {
     var c = counts();
     var tiles = h('div', { class: 'wfa-tiles' }, [
+      HAS_CHATS ? tile('Чаты', c.waiting ? c.waiting + ' ждут' : C.list.length, c.waiting ? 'клиенту нужен менеджер' : 'разговоров с ассистентом', function () { go('chats'); }, c.waiting > 0) : null,
       tile('Новые заявки', c.newLeads, 'ждут звонка или сообщения', function () { leadFilter = 'new'; go('leads'); }, c.newLeads > 0),
       S.ai ? tile('Вопросы к вам', c.newQs, 'AI не смог ответить сам', function () { aiTab = 'questions'; go('ai'); }, c.newQs > 0) : null,
       tile('Работ на сайте', S.works.length, 'в ' + S.folders.length + ' папках', function () { go('works'); }),
@@ -157,7 +219,7 @@
         var n = f[0] === 'all' ? S.leads.length : S.leads.filter(function (l) { return l.status === f[0]; }).length;
         return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': leadFilter === f[0] ? 'true' : 'false', onclick: function () { leadFilter = f[0]; render(); } }, [f[1] + ' ', h('span', { text: n })]);
       })),
-      h('input', { class: 'wfa-input wfa-search', id: 'wfa-lead-search', type: 'search', placeholder: 'Поиск: имя, телефон, текст', value: leadQuery, oninput: function (e) { leadQuery = e.target.value; var pos = e.target.selectionStart; render(); var i = document.getElementById('wfa-lead-search'); i.focus(); i.setSelectionRange(pos, pos); } }),
+      h('input', { class: 'wfa-input wfa-search', id: 'wfa-lead-search', type: 'search', placeholder: 'Поиск: имя, телефон, текст', value: leadQuery, oninput: function (e) { leadQuery = e.target.value; render(); } }),
     ]);
     return [
       h('h2', { class: 'wfa-h', text: 'Заявки' }), filters,
@@ -294,7 +356,7 @@
   /* ---------- AI-ассистент ---------- */
   function viewAi() {
     var ai = S.ai;
-    var sub = h('div', { class: 'wfa-chips' }, [['questions', 'Вопросы к вам', counts().newQs], ['learn', 'Обучение', ai.learned.length], ['kb', 'База знаний']].map(function (t) {
+    var sub = h('div', { class: 'wfa-chips' }, [['questions', 'Вопросы к вам', counts().newQs]].concat(HAS_CHATS ? [['faq', 'Частые вопросы']] : []).concat([['learn', 'Обучение', ai.learned.length], ['kb', 'База знаний']]).map(function (t) {
       return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': aiTab === t[0] ? 'true' : 'false', onclick: function () { aiTab = t[0]; render(); } }, [t[1] + (t[2] != null ? ' ' : ''), t[2] != null ? h('span', { text: t[2] }) : null]);
     }));
     var status = h('div', { class: 'wfa-ai-status' + (ai.has_key ? '' : ' is-off') }, [
@@ -302,7 +364,8 @@
       ai.has_key ? 'Ассистент отвечает сам (' + ai.model + '). Сложное приходит сюда.' : 'Ключ API не добавлен — ассистент сразу передаёт все вопросы вам.',
       h('a', { href: ai.settings_url, class: 'wfa-link', text: ai.has_key ? 'Настройки' : 'Добавить ключ' }),
     ]);
-    var body = { questions: aiQuestions, learn: aiLearn, kb: aiKb }[aiTab]();
+    if (aiTab === 'faq' && !HAS_CHATS) aiTab = 'questions';
+    var body = { questions: aiQuestions, faq: aiFaq, learn: aiLearn, kb: aiKb }[aiTab]();
     return [h('h2', { class: 'wfa-h', text: 'AI-ассистент' }), status, sub].concat(body);
   }
   function aiQuestions() {
@@ -373,6 +436,184 @@
       } })]),
     ];
   }
+
+  /* ---------- частые вопросы: что клиенты спрашивают чаще всего ---------- */
+  function normQ(t) { return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim(); }
+  function aiFaq() {
+    if (!C.faq) {
+      adapter.chatApi('GET', '/faq').then(function (d) { C.faq = d.items || []; if (tab === 'ai' && aiTab === 'faq') render(); }).catch(fail);
+      return [h('p', { class: 'wfa-loading', text: 'Загружаем…' })];
+    }
+    if (!C.faq.length) return [h('p', { class: 'wfa-empty', text: 'Клиенты ещё ничего не спрашивали. Здесь появятся их вопросы — самые частые сверху.' })];
+    var known = {}; S.ai.learned.forEach(function (r) { known[normQ(r.q)] = r.a; });
+    return [
+      h('p', { class: 'wfa-note', text: 'Все вопросы клиентов из чата, самые частые сверху. Впишите ответ и нажмите «В обучение» — ассистент будет отвечать так же.' }),
+      h('div', { class: 'wfa-qs' }, C.faq.map(function (it, i) {
+        var done = known[normQ(it.q)];
+        var ans = h('textarea', { class: 'wfa-input', rows: 2, id: 'wfa-faq-' + i, placeholder: done ? '' : 'Ваш ответ на этот вопрос' }); ans.value = done || '';
+        return h('article', { class: 'wfa-q' + (done ? ' is-done' : '') }, [
+          h('div', { class: 'wfa-lead-title' }, [h('b', { text: it.q }), h('span', { class: 'wfa-count', text: it.n + (it.n % 10 >= 2 && it.n % 10 <= 4 && (it.n % 100 < 12 || it.n % 100 > 14) ? ' раза' : ' раз') })]),
+          ans,
+          h('div', { class: 'wfa-row' }, [h('span', { class: 'wfa-note', text: done ? '✓ Ассистент знает ответ' : 'Спросили последний раз: ' + fmtDate(new Date(it.at * 1000).toISOString()) }), h('span', { class: 'wfa-grow' }),
+            h('button', { type: 'button', class: 'wfa-btn', text: done ? 'Обновить ответ' : 'В обучение', onclick: function () {
+              var a = ans.value.trim();
+              if (!a) { ans.focus(); toast('Напишите ответ', true); return; }
+              var rows = S.ai.learned.filter(function (r) { return normQ(r.q) !== normQ(it.q); }).concat([{ q: it.q, a: a }]);
+              adapter.api('POST', '/ai/learned', { rows: rows }).then(function (r) { S.ai.learned = r.learned; render(); toast('Добавлено в обучение'); }).catch(fail);
+            } }),
+          ]),
+        ]);
+      })),
+    ];
+  }
+
+  /* ---------- чаты: менеджер подключается к разговору ---------- */
+  var STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
+  var listTimer = 0, chatTimer = 0;
+  function setChats(list) {
+    var waitingIds = list.filter(function (c) { return c.status === 'waiting'; }).map(function (c) { return c.id; });
+    if (C.seenWaiting) {
+      var fresh = waitingIds.filter(function (id) { return C.seenWaiting.indexOf(id) < 0; });
+      if (fresh.length) toast('Клиенту нужен менеджер — откройте «Чаты»');
+    }
+    C.seenWaiting = waitingIds; C.list = list;
+  }
+  function pollList() {
+    clearTimeout(listTimer);
+    listTimer = setTimeout(function () {
+      if (document.hidden) { pollList(); return; }
+      adapter.chatApi('GET', '/chats').then(function (d) {
+        var before = JSON.stringify(C.list); setChats(d.chats);
+        if (JSON.stringify(C.list) !== before && !busy() && (tab === 'chats' || tab === 'home')) render();
+      }).catch(function () {}).then(pollList);
+    }, tab === 'chats' ? 4000 : 10000);
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S && HAS_CHATS) { pollList(); if (C.open) pollChat(0); } });
+  function openChat(id, quiet) {
+    C.open = id; C.msgs = []; C.status = ''; C.contact = '';
+    if (location.hash !== '#chat-' + id) history.replaceState(null, '', '#chat-' + id);
+    if (!quiet) render();
+    pollChat(0, true);
+  }
+  function closeChat() {
+    C.open = 0; clearTimeout(chatTimer);
+    history.replaceState(null, '', location.pathname + location.search);
+    render();
+  }
+  function pollChat(delay, first) {
+    clearTimeout(chatTimer);
+    var id = C.open; if (!id) return;
+    chatTimer = setTimeout(function () {
+      if (C.open !== id) return;
+      var after = C.msgs.length ? C.msgs[C.msgs.length - 1].i : 0;
+      adapter.chatApi('GET', '/chat/' + id + '?after=' + after).then(function (d) {
+        if (C.open !== id) return;
+        var changed = first || d.msgs.length || d.status !== C.status || d.contact !== C.contact;
+        C.msgs = C.msgs.concat(d.msgs); C.status = d.status; C.contact = d.contact;
+        var it = C.list.find(function (c) { return c.id === id; }); if (it) { it.unread = 0; it.status = d.status; }
+        if (changed && !busy() && tab === 'chats') render();
+      }).catch(function (e) { if (first) { fail(e); closeChat(); } }).then(function () { if (C.open === id) pollChat(document.hidden ? 15000 : 2500); });
+    }, delay || 0);
+  }
+  function chatAction(path, body) {
+    var id = C.open;
+    return adapter.chatApi('POST', '/chat/' + id + path, body).then(function (r) {
+      if (r.status) C.status = r.status;
+      var it = C.list.find(function (c) { return c.id === id; }); if (it && r.status) it.status = r.status;
+      pollChat(0); return r;
+    });
+  }
+  function ago(ts) {
+    var s = Math.max(0, Date.now() / 1000 - ts);
+    if (s < 60) return 'только что'; if (s < 3600) return Math.floor(s / 60) + ' мин'; if (s < 86400) return Math.floor(s / 3600) + ' ч';
+    return fmtDate(new Date(ts * 1000).toISOString());
+  }
+  function viewChats() {
+    var list = h('div', { class: 'wfa-chat-list' }, C.list.length ? C.list.map(function (c) {
+      return h('button', { type: 'button', class: 'wfa-chat-item is-' + c.status + (c.id === C.open ? ' is-open' : ''), onclick: function () { openChat(c.id); } }, [
+        h('span', { class: 'wfa-chat-item-top' }, [h('b', { text: c.contact || 'Клиент №' + c.id }), h('time', { text: ago(c.updated) })]),
+        h('span', { class: 'wfa-chat-last', text: c.last || '…' }),
+        h('span', { class: 'wfa-chat-item-top' }, [h('span', { class: 'wfa-pill is-' + c.status, text: STATUS[c.status] || c.status }), c.unread && c.id !== C.open ? h('span', { class: 'wfa-badge', text: c.unread }) : null]),
+      ]);
+    }) : [h('p', { class: 'wfa-empty', text: 'Разговоров пока нет. Когда клиент напишет ассистенту на сайте, чат появится здесь.' })]);
+    return [
+      h('div', { class: 'wfa-h-row' }, [h('h2', { class: 'wfa-h', text: 'Чаты' }), pushControl()]),
+      installHint(),
+      h('div', { class: 'wfa-chats' + (C.open ? ' has-open' : '') }, [list, C.open ? chatPane() : h('div', { class: 'wfa-chat-pane wfa-chat-placeholder' }, h('p', { class: 'wfa-note', text: 'Выберите разговор слева. Чаты «Ждёт вас» — ассистент позвал менеджера.' }))]),
+    ];
+  }
+  function chatPane() {
+    var name = (CFG.chats && CFG.chats.manager) || 'Менеджер';
+    var log = h('div', { class: 'wfa-chat-log', 'aria-live': 'polite' }, C.msgs.length ? C.msgs.map(function (m) {
+      if (m.r === 'system') return h('p', { class: 'wfa-chat-sys', text: m.t });
+      var who = m.r === 'user' ? 'Клиент' : m.r === 'bot' ? 'Ассистент' : (m.a || name);
+      return h('div', { class: 'wfa-bubble is-' + m.r }, [h('small', { text: who + (m.at ? ' · ' + new Date(m.at * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '') }), h('span', { text: m.t })]);
+    }) : [h('p', { class: 'wfa-loading', text: 'Загружаем разговор…' })]);
+    var live = C.status === 'live';
+    var input = h('textarea', { class: 'wfa-input wfa-chat-input', id: 'wfa-chat-input', rows: 1, placeholder: live ? 'Ответ клиенту от имени «' + name + '»' : 'Напишите — и вы присоединитесь к чату', oninput: function (e) { C.draft = e.target.value; },
+      onkeydown: function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } } });
+    input.value = C.draft;
+    var form = h('form', { class: 'wfa-chat-form' }, [input, h('button', { type: 'submit', class: 'wfa-btn', text: 'Отправить' })]);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var t = C.draft.trim(); if (!t) return;
+      C.draft = ''; input.value = '';
+      chatAction('/send', { text: t }).then(function () { C.status = 'live'; }).catch(function (err) { C.draft = t; render(); fail(err); });
+    });
+    var digits = (C.contact || '').replace(/\D/g, '');
+    return h('section', { class: 'wfa-chat-pane' }, [
+      h('div', { class: 'wfa-chat-head' }, [
+        h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost wfa-chat-back', 'aria-label': 'К списку чатов', text: '←', onclick: closeChat }),
+        h('div', { class: 'wfa-grow' }, [h('b', { text: C.contact || 'Клиент №' + C.open }), h('span', { class: 'wfa-pill is-' + C.status, text: STATUS[C.status] || '…' })]),
+        digits ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: 'https://wa.me/' + digits, target: '_blank', rel: 'noopener', text: 'WhatsApp' }) : null,
+        live ? h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Вернуть ассистенту', onclick: function () { chatAction('/release').then(function () { toast('Дальше отвечает ассистент'); }).catch(fail); } })
+          : h('button', { type: 'button', class: 'wfa-btn', text: 'Присоединиться', onclick: function () { chatAction('/join').then(function () { toast('Клиент видит: «Менеджер присоединился»'); var i = document.getElementById('wfa-chat-input'); if (i) i.focus(); }).catch(fail); } }),
+      ]),
+      log,
+      form,
+    ]);
+  }
+
+  /* ---------- push-уведомления на телефон ---------- */
+  function pushState() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+    return Notification.permission; // default | granted | denied
+  }
+  function pushControl() {
+    if (!CFG.sw) return CFG.app ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: CFG.app, target: '_blank', rel: 'noopener', text: 'Приложение и уведомления ↗' }) : null;
+    var st = pushState();
+    if (st === 'unsupported') return null;
+    if (st === 'denied') return h('span', { class: 'wfa-note', text: 'Уведомления запрещены в настройках браузера' });
+    if (st === 'granted') return h('div', { class: 'wfa-row' }, [
+      h('span', { class: 'wfa-note', text: '🔔 Уведомления включены' }),
+      h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Проверить', onclick: function () { subscribePush().then(function () { return adapter.chatApi('POST', '/push/test'); }).then(function (r) { toast(r.sent ? 'Уведомление отправлено' : 'Не дошло — включите ещё раз', !r.sent); }).catch(fail); } }),
+    ]);
+    return h('button', { type: 'button', class: 'wfa-btn', text: '🔔 Включить уведомления', onclick: function () { subscribePush().then(function () { toast('Готово: уведомления будут приходить на это устройство'); render(); }).catch(function (e) { fail(e); render(); }); } });
+  }
+  function b64ToBytes(s) {
+    var pad = '='.repeat((4 - s.length % 4) % 4), raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out;
+  }
+  function subscribePush() {
+    if (pushState() === 'unsupported') return Promise.reject(new Error('Этот браузер не умеет уведомления. На iPhone добавьте админку на экран «Домой» и откройте оттуда.'));
+    if (!CFG.chats.vapid) return Promise.reject(new Error('Ключи уведомлений не созданы на сервере'));
+    return Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') throw new Error('Разрешите уведомления, чтобы они приходили');
+      return navigator.serviceWorker.register(CFG.sw);
+    }).then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.chats.vapid) }); });
+    }).then(function (sub) { return adapter.chatApi('POST', '/push/subscribe', { subscription: sub.toJSON() }); });
+  }
+  function installHint() {
+    if (!CFG.sw) return null;
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+    if (standalone) return null;
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    return h('p', { class: 'wfa-ai-status' }, [h('span', { class: 'wfa-dot is-new' }),
+      ios ? 'Установите админку как приложение: в Safari нажмите «Поделиться» → «На экран Домой», откройте её со значка и включите уведомления.'
+          : 'Установите админку как приложение: в меню браузера «Установить приложение» (или «Добавить на главный экран»), затем включите уведомления.']);
+  }
+  if ('serviceWorker' in navigator && CFG.sw) { navigator.serviceWorker.register(CFG.sw).catch(function () {}); }
 
   /* ---------- номера ---------- */
   function viewSettings() {

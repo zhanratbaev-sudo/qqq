@@ -174,20 +174,95 @@ textarea.wfa-input { resize: vertical; }
 .wfa-form-actions { border-top: 0; }
 .wfa-mini-row { border-top-color: rgba(255,255,255,.05); }
 
+/* Чаты: список слева, разговор справа (на телефоне — по очереди) */
+.wfa-chats { display: grid; grid-template-columns: minmax(240px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.wfa-chat-list { display: flex; flex-direction: column; gap: 8px; max-height: min(720px, calc(100dvh - 300px)); min-height: 200px; overflow-y: auto; overscroll-behavior: contain; }
+.wfa-chat-item { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 14px 16px; border: 0; border-radius: var(--r); background: rgba(255,255,255,.05); color: var(--text); text-align: left; font-family: inherit; cursor: pointer; transition: background .2s; }
+.wfa-chat-item:hover { background: rgba(255,255,255,.08); }
+.wfa-chat-item.is-open { background: rgba(63,224,160,.16); }
+.wfa-chat-item.is-waiting { box-shadow: inset 3px 0 0 var(--accent); }
+.wfa-chat-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.wfa-chat-item b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfa-chat-item time { font-size: 12px; color: var(--text-3); flex: none; }
+.wfa-chat-last { font-size: 13px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfa-pill { white-space: nowrap; display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px; font-size: 12px; font-weight: 600; background: rgba(255,255,255,.08); color: var(--text-2); }
+.wfa-pill.is-waiting { background: var(--accent); color: var(--on-accent); }
+.wfa-pill.is-live { background: rgba(245,196,81,.2); color: var(--warn); }
+.wfa-chat-pane { display: flex; flex-direction: column; height: min(720px, calc(100dvh - 300px)); min-height: 420px; border-radius: var(--r); background: rgba(255,255,255,.05); box-shadow: 0 10px 28px rgba(0,0,0,.3); overflow: hidden; }
+.wfa-chat-placeholder { display: grid; place-items: center; padding: 24px; text-align: center; }
+.wfa-chat-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,.2); }
+.wfa-chat-head .wfa-grow { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.wfa-chat-head b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.wfa-chat-back { display: none !important; width: 40px; padding: 0 !important; font-size: 18px !important; }
+.wfa-chat-log { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.wfa-bubble { max-width: 78%; display: flex; flex-direction: column; gap: 2px; padding: 9px 13px; border-radius: 16px; white-space: pre-wrap; word-wrap: break-word; font-size: 15px; }
+.wfa-bubble small { font-size: 11px; font-weight: 600; color: var(--text-3); }
+.wfa-bubble.is-user { align-self: flex-start; background: rgba(255,255,255,.09); border-bottom-left-radius: 6px; }
+.wfa-bubble.is-bot { align-self: flex-end; background: rgba(255,255,255,.04); color: var(--text-2); border-bottom-right-radius: 6px; }
+.wfa-bubble.is-manager { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px; }
+.wfa-bubble.is-manager small { color: rgba(6,32,25,.7); }
+.wfa-chat-sys { align-self: center; padding: 5px 12px; border-radius: 12px; background: rgba(63,224,160,.12); color: #bff3dc; font-size: 13px; text-align: center; }
+.wfa-chat-form { display: flex; gap: 8px; align-items: flex-end; padding: 12px; background: rgba(0,0,0,.2); }
+.wfa-chat-input { min-height: 44px; max-height: 140px; field-sizing: content; resize: none !important; }
+.wfa-chat-form .wfa-btn { min-height: 44px; }
+.wfa-count { flex: none; font-size: 12px; font-weight: 700; color: var(--accent); }
+.wfa-logout { padding: 0 12px; }
+@media (max-width: 782px) {
+  .wfa-chats { grid-template-columns: 1fr; }
+  .wfa-chats.has-open .wfa-chat-list, .wfa-chats:not(.has-open) .wfa-chat-placeholder { display: none; }
+  .wfa-chat-list { max-height: none; }
+  .wfa-chat-back { display: inline-flex !important; }
+  /* открытый чат на телефоне — на весь экран, как в мессенджере */
+  .wfa-chats.has-open .wfa-chat-pane { position: fixed; inset: 0; z-index: 100001; height: 100dvh; min-height: 0; border-radius: 0 !important; background: #050707; box-shadow: none;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .wfa-chat-head { gap: 8px; }
+  .wfa-chat-head .wfa-btn { padding: 0 12px; font-size: 13px; }
+  .wfa-bubble { max-width: 88%; }
+  .wfa-top .wfa-row .wfa-btn { display: none; }
+  .wfa-top .wfa-row .wfa-logout { display: inline-flex; }
+}
+html.wfa-chat-full { overflow: hidden; }
+
 </style>
-<div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, но после перезагрузки страницы изменения сбросятся. На вашем сайте это пункт «WebFor» в админке WordPress.</div>
+<div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, после перезагрузки всё сбросится. Откройте «Чаты» → «Присоединиться» и напишите клиенту. На сайте админка открывается по адресу /webfor-admin/ и ставится на телефон как приложение.</div>
 <div id="wfa-app" class="wfa"><p class="wfa-loading">Загружаем панель…</p></div>
 <script>
 (function () {
-  var S = {"site_url": "https://web.for.petgo.kz", "folders": [{"key": "sites", "title": "Сайты"}, {"key": "apps", "title": "Мобильные приложения"}, {"key": "bots", "title": "AI-чат-боты"}, {"key": "izi", "title": "Izi — всё в одном"}], "statuses": {"new": "Новая", "work": "В работе", "done": "Готово"}, "settings": {"phone": "+7 747 817 57 12", "whatsapp": "+7 747 817 57 12"}, "leads": [{"id": 1, "name": "Айгерим (пример)", "phone": "+7 700 000 11 01", "service_label": "Vet.izi — для ветклиник и зоо-бизнеса", "contact": "whatsapp", "message": "Ветклиника, 3 врача. Хотим онлайн-запись и CRM.", "status": "new", "minutes": 12}, {"id": 2, "name": "Данияр (пример)", "phone": "+7 700 000 11 02", "service_label": "AI-чат-бот для бизнеса", "contact": "call", "message": "Нужен бот в Instagram для салона.", "status": "new", "minutes": 95}, {"id": 3, "name": "Мария (пример)", "phone": "+7 700 000 11 03", "service_label": "Сайт", "contact": "call", "message": "", "status": "work", "minutes": 1560}, {"id": 4, "name": "Ерлан (пример)", "phone": "+7 700 000 11 04", "service_label": "Мобильное приложение", "contact": "whatsapp", "message": "Приложение для курьеров.", "status": "done", "minutes": 4320}], "ai": {"enabled": true, "has_key": true, "model": "claude-haiku-5-5", "settings_url": "#", "knowledge": "О нас\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, с клиентами по всему миру. Сайт: web.for.petgo.kz.\nГоворим на казахском, русском и английском. Отвечаем с 10:00 до 18:00. Удобнее всего связаться в WhatsApp.\nНе рассказывай, сколько людей в команде и кто именно работает, — просто «команда WebFor».\n\nУслуги и цены\n1. Сайты. Лендинг — от 10 000 до 15 000 ₸. Корпоративный сайт и интернет-магазин — цену называет менеджер после обсуждения.\n2. Мобильные приложения.\n   - Приложение, которое ставится на телефон через браузер (без App Store и Google Play, мы сами поможем установить), — от 30 000 ₸.\n   - Приложение в App Store или Google Play — тоже от 30 000 ₸, но плюс плата магазину за публикацию, поэтому выходит дороже. Точную сумму называет менеджер.\n3. AI-чат-боты для бизнеса — от 30 000 ₸. Отвечают клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, знают услуги и цены компании, записывают клиентов, собирают заявки. Ставятся и на уже готовый сайт.\n4. Izi — всё в одном: сайт + CRM + приложение для сотрудников. Заявки с сайта сразу попадают в CRM, есть чаты, календарь, роли и уведомления.\n   - Vet.izi — для ветклиник, груминга, зоомагазинов и всех, кто помогает животным: онлайн-запись, CRM клиентов и питомцев, календарь, приложение для сотрудников, чаты и роли. Оплата разовая, цену называет менеджер.\n   - Izi — максимальный тариф для любого бизнеса: всё из Vet.izi, плюс AI-ассистент и регистрация пользователей (личные кабинеты для клиентов). Цену называет менеджер.\n\nСроки\nОбычно от 3 до 7 дней — зависит от объёма. Большой проект займёт больше времени; точный срок сообщим, когда обсудим проект.\n\nОплата\n50% — предоплата, остальные 50% — после завершения проекта и тестирования. Можно счётом в Kaspi или переводом на карту.\nКонсультация бесплатная. При большом заказе можно обсудить скидку (решает менеджер).\n\nЧто входит\n- Хостинг входит в стоимость, домен — нет. Если у клиента уже есть домен, перенесём его на наш хостинг. Если клиент хочет свой хостинг — работаем на нём.\n- Тексты и фото, а также техническое задание даёт клиент. Если фото нет — подберём бесплатные фото. По желанию клиента можем организовать фотосессию — у нас есть фотографы.\n- Обучение сотрудников работе с системой — бесплатно.\n- Первая неделя после запуска — тестовая: найденные ошибки и правки, которые хочет клиент, входят в стоимость. После этой недели доработки платные — от 10 000 ₸.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников (заявки, заказы, календарь, чаты, роли).\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\n\nКак работаем\n1) Обсуждаем задачу (бесплатная консультация). 2) Делаем дизайн и согласуем. 3) Разрабатываем, тестируем, запускаем, обучаем команду. 4) Тестовая неделя и дальнейшая поддержка.\n\nЧастые вопросы\n- Можно начать с сайта и потом добавить CRM? Да.\n- Нужно ли скачивать приложение из App Store? Нет, можно установить через браузер. Если нужно именно в App Store или Google Play — тоже можно, но дороже из-за платы за публикацию.\n- Поддерживаете после запуска? Да: первая неделя бесплатно, дальше доработки от 10 000 ₸.", "learned": [{"q": "Работаете ли вы с клиниками в других городах?", "a": "Да, работаем по всему Казахстану: всё обсуждаем онлайн, запуск тоже удалённо."}], "questions": [{"id": 11, "q": "Сколько стоит Vet.izi для клиники с двумя филиалами?", "reason": "Точной цены нет в базе знаний.", "contact": "+7 700 000 22 01", "answer": "", "state": "new", "learned": false, "minutes": 40, "transcript": [{"role": "user", "content": "Здравствуйте, у нас 2 филиала ветклиники"}, {"role": "assistant", "content": "Здравствуйте! Vet.izi как раз для этого: запись, CRM и приложение для команды."}, {"role": "user", "content": "Сколько это будет стоить для двух филиалов?"}]}, {"id": 12, "q": "Можно ли подключить оплату Kaspi на сайте?", "reason": "В базе знаний нет информации об оплате.", "contact": "", "answer": "", "state": "new", "learned": false, "minutes": 180, "transcript": [{"role": "user", "content": "А оплату через Kaspi можно сделать на сайте?"}]}]}, "works": [{"id": 100, "title": "PetGo", "folder": "sites", "tag": "Наш проект", "desc": "Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды.", "url": "https://petgo.kz", "shape": "wide", "image_id": 0, "src": "works/petgo-site.jpg", "order": 0}, {"id": 101, "title": "Oscar Clinic", "folder": "sites", "tag": "Наш проект", "desc": "Сайт ветеринарной клиники.", "url": "https://oscarclinic.kz", "shape": "wide", "image_id": 0, "src": "works/oscarclinic.jpg", "order": 1}, {"id": 102, "title": "PetGo — приложение для сотрудников", "folder": "apps", "tag": "Наш проект", "desc": "Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы.", "url": "https://petgo.kz", "shape": "phone", "image_id": 0, "src": "works/petgo-app-home.jpg", "order": 2}, {"id": 103, "title": "PetGo — заказы", "folder": "apps", "tag": "Наш проект", "desc": "Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание».", "url": "https://petgo.kz", "shape": "phone", "image_id": 0, "src": "works/petgo-app-orders.jpg", "order": 3}, {"id": 104, "title": "AI-ассистент на этом сайте", "folder": "bots", "tag": "Работает здесь", "desc": "Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».", "url": "", "shape": "phone", "image_id": 0, "src": "works/bot-site.jpg", "order": 4}, {"id": 105, "title": "Бот ветклиники в WhatsApp", "folder": "bots", "tag": "Пример", "desc": "Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.", "url": "", "shape": "phone", "image_id": 0, "src": "works/bot-wa.jpg", "order": 5}, {"id": 106, "title": "Vet.izi — заявки", "folder": "izi", "tag": "Пример: PetGo", "desc": "Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-requests.jpg", "order": 6}, {"id": 107, "title": "Vet.izi — главная", "folder": "izi", "tag": "Пример: PetGo", "desc": "Заказы на сегодня, новые заявки и питомцы на одном экране.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-home.jpg", "order": 7}, {"id": 108, "title": "Vet.izi — календарь", "folder": "izi", "tag": "Пример: PetGo", "desc": "Календарь команды: кто, когда и к какому питомцу.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-cal.jpg", "order": 8}, {"id": 109, "title": "Vet.izi — чаты", "folder": "izi", "tag": "Пример: PetGo", "desc": "Чаты с командой прямо в системе.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-chat.jpg", "order": 9}]};
+  var S = {"site_url": "https://web.for.petgo.kz", "folders": [{"key": "sites", "title": "Сайты"}, {"key": "apps", "title": "Мобильные приложения"}, {"key": "bots", "title": "AI-чат-боты"}, {"key": "izi", "title": "Izi — всё в одном"}], "statuses": {"new": "Новая", "work": "В работе", "done": "Готово"}, "settings": {"phone": "+7 747 817 57 12", "whatsapp": "+7 747 817 57 12"}, "leads": [{"id": 1, "name": "Айгерим (пример)", "phone": "+7 700 000 11 01", "service_label": "Vet.izi — для ветклиник и зоо-бизнеса", "contact": "whatsapp", "message": "Ветклиника, 3 врача. Хотим онлайн-запись и CRM.", "status": "new", "minutes": 12}, {"id": 2, "name": "Данияр (пример)", "phone": "+7 700 000 11 02", "service_label": "AI-чат-бот для бизнеса", "contact": "call", "message": "Нужен бот в Instagram для салона.", "status": "new", "minutes": 95}, {"id": 3, "name": "Мария (пример)", "phone": "+7 700 000 11 03", "service_label": "Сайт", "contact": "call", "message": "", "status": "work", "minutes": 1560}, {"id": 4, "name": "Ерлан (пример)", "phone": "+7 700 000 11 04", "service_label": "Мобильное приложение", "contact": "whatsapp", "message": "Приложение для курьеров.", "status": "done", "minutes": 4320}], "ai": {"enabled": true, "has_key": true, "model": "claude-haiku-5-5", "settings_url": "#", "knowledge": "О нас\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, с клиентами по всему миру. Сайт: web.for.petgo.kz.\nГоворим на казахском, русском и английском. Отвечаем с 10:00 до 18:00. Удобнее всего связаться в WhatsApp.\nНе рассказывай, сколько людей в команде и кто именно работает, — просто «команда WebFor».\n\nУслуги и цены\n1. Сайты. Лендинг — от 10 000 до 15 000 ₸. Корпоративный сайт и интернет-магазин — цену называет менеджер после обсуждения.\n2. Мобильные приложения.\n   - Приложение, которое ставится на телефон через браузер (без App Store и Google Play, мы сами поможем установить), — от 30 000 ₸.\n   - Приложение в App Store или Google Play — тоже от 30 000 ₸, но плюс плата магазину за публикацию, поэтому выходит дороже. Точную сумму называет менеджер.\n3. AI-чат-боты для бизнеса — от 30 000 ₸. Отвечают клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, знают услуги и цены компании, записывают клиентов, собирают заявки. Ставятся и на уже готовый сайт.\n4. Izi — всё в одном: сайт + CRM + приложение для сотрудников. Заявки с сайта сразу попадают в CRM, есть чаты, календарь, роли и уведомления.\n   - Vet.izi — для ветклиник, груминга, зоомагазинов и всех, кто помогает животным: онлайн-запись, CRM клиентов и питомцев, календарь, приложение для сотрудников, чаты и роли. Оплата разовая, цену называет менеджер.\n   - Izi — максимальный тариф для любого бизнеса: всё из Vet.izi, плюс AI-ассистент и регистрация пользователей (личные кабинеты для клиентов). Цену называет менеджер.\n\nСроки\nОбычно от 3 до 7 дней — зависит от объёма. Большой проект займёт больше времени; точный срок сообщим, когда обсудим проект.\n\nОплата\n50% — предоплата, остальные 50% — после завершения проекта и тестирования. Можно счётом в Kaspi или переводом на карту.\nКонсультация бесплатная. При большом заказе можно обсудить скидку (решает менеджер).\n\nЧто входит\n- Хостинг входит в стоимость, домен — нет. Если у клиента уже есть домен, перенесём его на наш хостинг. Если клиент хочет свой хостинг — работаем на нём.\n- Тексты и фото, а также техническое задание даёт клиент. Если фото нет — подберём бесплатные фото. По желанию клиента можем организовать фотосессию — у нас есть фотографы.\n- Обучение сотрудников работе с системой — бесплатно.\n- Первая неделя после запуска — тестовая: найденные ошибки и правки, которые хочет клиент, входят в стоимость. После этой недели доработки платные — от 10 000 ₸.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников (заявки, заказы, календарь, чаты, роли).\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\n\nКак работаем\n1) Обсуждаем задачу (бесплатная консультация). 2) Делаем дизайн и согласуем. 3) Разрабатываем, тестируем, запускаем, обучаем команду. 4) Тестовая неделя и дальнейшая поддержка.\n\nЧастые вопросы\n- Можно начать с сайта и потом добавить CRM? Да.\n- Нужно ли скачивать приложение из App Store? Нет, можно установить через браузер. Если нужно именно в App Store или Google Play — тоже можно, но дороже из-за платы за публикацию.\n- Поддерживаете после запуска? Да: первая неделя бесплатно, дальше доработки от 10 000 ₸.", "learned": [{"q": "Работаете ли вы с клиниками в других городах?", "a": "Да, работаем по всему Казахстану: всё обсуждаем онлайн, запуск тоже удалённо."}], "questions": [{"id": 11, "q": "Сколько стоит Vet.izi для клиники с двумя филиалами?", "reason": "Точной цены нет в базе знаний.", "contact": "+7 700 000 22 01", "answer": "", "state": "new", "learned": false, "minutes": 40, "transcript": [{"role": "user", "content": "Здравствуйте, у нас 2 филиала ветклиники"}, {"role": "assistant", "content": "Здравствуйте! Vet.izi как раз для этого: запись, CRM и приложение для команды."}, {"role": "user", "content": "Сколько это будет стоить для двух филиалов?"}]}, {"id": 12, "q": "Можно ли подключить оплату Kaspi на сайте?", "reason": "В базе знаний нет информации об оплате.", "contact": "", "answer": "", "state": "new", "learned": false, "minutes": 180, "transcript": [{"role": "user", "content": "А оплату через Kaspi можно сделать на сайте?"}]}]}, "chats": [{"id": 501, "status": "waiting", "contact": "+7 700 000 33 01", "mins": 2, "msgs": [{"i": 1, "r": "user", "a": "", "t": "Здравствуйте! Нужен сайт для салона красоты с онлайн-записью"}, {"i": 2, "r": "bot", "a": "", "t": "Здравствуйте! 😊 Сайт с онлайн-записью — 15 000 ₸, срок 3–7 дней. Хостинг на год включён, домен оформляем отдельно."}, {"i": 3, "r": "user", "a": "", "t": "А скидку сделаете, если сразу закажу ещё и чат-бота?"}, {"i": 4, "r": "bot", "a": "", "t": "За комплекс можно обсудить скидку — уточняем у менеджера, сейчас он вам ответит."}]}, {"id": 502, "status": "bot", "contact": "", "mins": 25, "msgs": [{"i": 1, "r": "user", "a": "", "t": "Сколько стоит приложение в App Store?"}, {"i": 2, "r": "bot", "a": "", "t": "Приложение в App Store и Google Play — 95 000 ₸, срок 1–3 недели. Если нужен быстрый старт, есть PWA-приложение от 30 000 ₸ — ставится на телефон прямо с сайта."}]}, {"id": 503, "status": "bot", "contact": "", "mins": 190, "msgs": [{"i": 1, "r": "user", "a": "", "t": "Vet.izi подойдёт для зоомагазина?"}, {"i": 2, "r": "bot", "a": "", "t": "Да, Vet.izi подходит и для зоо-бизнеса: запись, склад, оплаты и отчёты. Стоимость — от 30 000 ₸, разово."}]}], "faq": [{"q": "Сколько стоит сайт?", "n": 14, "mins": 30}, {"q": "Какие сроки разработки?", "n": 9, "mins": 70}, {"q": "Можно ли оплатить в рассрочку?", "n": 6, "mins": 200}, {"q": "Что такое Vet.izi?", "n": 5, "mins": 300}, {"q": "Делаете ли вы рекламу в Instagram?", "n": 3, "mins": 900}], "works": [{"id": 100, "title": "PetGo", "folder": "sites", "tag": "Наш проект", "desc": "Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды.", "url": "https://petgo.kz", "shape": "wide", "image_id": 0, "src": "works/petgo-site.jpg", "order": 0}, {"id": 101, "title": "Oscar Clinic", "folder": "sites", "tag": "Наш проект", "desc": "Сайт ветеринарной клиники.", "url": "https://oscarclinic.kz", "shape": "wide", "image_id": 0, "src": "works/oscarclinic.jpg", "order": 1}, {"id": 102, "title": "PetGo — приложение для сотрудников", "folder": "apps", "tag": "Наш проект", "desc": "Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы.", "url": "https://petgo.kz", "shape": "phone", "image_id": 0, "src": "works/petgo-app-home.jpg", "order": 2}, {"id": 103, "title": "PetGo — заказы", "folder": "apps", "tag": "Наш проект", "desc": "Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание».", "url": "https://petgo.kz", "shape": "phone", "image_id": 0, "src": "works/petgo-app-orders.jpg", "order": 3}, {"id": 104, "title": "AI-ассистент на этом сайте", "folder": "bots", "tag": "Работает здесь", "desc": "Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».", "url": "", "shape": "phone", "image_id": 0, "src": "works/bot-site.jpg", "order": 4}, {"id": 105, "title": "Бот ветклиники в WhatsApp", "folder": "bots", "tag": "Пример", "desc": "Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.", "url": "", "shape": "phone", "image_id": 0, "src": "works/bot-wa.jpg", "order": 5}, {"id": 106, "title": "Vet.izi — заявки", "folder": "izi", "tag": "Пример: PetGo", "desc": "Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-requests.jpg", "order": 6}, {"id": 107, "title": "Vet.izi — главная", "folder": "izi", "tag": "Пример: PetGo", "desc": "Заказы на сегодня, новые заявки и питомцы на одном экране.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-home.jpg", "order": 7}, {"id": 108, "title": "Vet.izi — календарь", "folder": "izi", "tag": "Пример: PetGo", "desc": "Календарь команды: кто, когда и к какому питомцу.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-cal.jpg", "order": 8}, {"id": 109, "title": "Vet.izi — чаты", "folder": "izi", "tag": "Пример: PetGo", "desc": "Чаты с командой прямо в системе.", "url": "", "shape": "wide", "image_id": 0, "src": "works/crm-chat.jpg", "order": 9}]};
   var now = Date.now();
   function iso(min) { return new Date(now - min * 60000).toISOString(); }
   S.leads.forEach(function (l) { l.date = iso(l.minutes); l.tel = 'tel:' + l.phone.replace(/\s/g, ''); l.wa = 'https://wa.me/' + l.phone.replace(/\D/g, ''); });
   S.ai.questions.forEach(function (q) { q.date = iso(q.minutes); });
   var nextId = 1000;
+  var CH = S.chats; delete S.chats; var FAQ = S.faq; delete S.faq;
+  CH.forEach(function (c) { c.updated = Math.floor(now / 1000) - c.mins * 60; c.unread = c.status === 'waiting' ? 2 : 0; c.msgs.forEach(function (m) { m.at = c.updated; }); });
+  FAQ.forEach(function (f) { f.at = Math.floor(now / 1000) - f.mins * 60; });
+  function addMsg(c, r, t, a) { var m = { i: c.msgs.length + 1, r: r, a: a || '', t: t, at: Math.floor(Date.now() / 1000) }; c.msgs.push(m); c.updated = m.at; return m; }
   function ok(v) { return new Promise(function (r) { setTimeout(function () { r(JSON.parse(JSON.stringify(v))); }, 150); }); }
   function bad(msg) { return new Promise(function (_, j) { setTimeout(function () { j(new Error(msg)); }, 150); }); }
-  window.WFADMIN = { adapter: {
+  window.WFADMIN = { chats: { manager: 'Нуржан', vapid: '' }, adapter: {
+    chatApi: function (method, path, body) {
+      var m, c;
+      if (path === '/chats') return ok({ chats: CH.slice().sort(function (a, b) { var r = { waiting: 0, live: 1, bot: 2 }; return (r[a.status] - r[b.status]) || (b.updated - a.updated); }).map(function (c) {
+        var last = c.msgs.filter(function (x) { return x.r === 'user'; }).pop();
+        return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length };
+      }) });
+      if (path === '/faq') return ok({ items: FAQ });
+      if ((m = path.match(/^\/chat\/(\d+)(\/\w+)?(?:\?after=(\d+))?$/))) {
+        c = CH.find(function (x) { return x.id == m[1]; }); if (!c) return bad('Чат не найден');
+        var act = m[2], after = +(m[3] || 0);
+        if (!act) { c.unread = 0; return ok({ status: c.status, contact: c.contact, msgs: c.msgs.filter(function (x) { return x.i > after; }) }); }
+        if (act === '/release') { c.status = 'bot'; addMsg(c, 'system', 'Менеджер вышел из чата — дальше снова отвечает ассистент.'); return ok({ ok: true, status: 'bot' }); }
+        if (c.status !== 'live') { c.status = 'live'; addMsg(c, 'system', 'Менеджер присоединился, сейчас ответит вам.'); }
+        if (act === '/send') {
+          var msg = addMsg(c, 'manager', body.text, 'Нуржан');
+          if (!c.replied) { c.replied = true; setTimeout(function () { addMsg(c, 'user', 'Спасибо! Тогда давайте сайт и бота вместе 👍'); c.unread++; }, 3500); } // ответ «клиента» в демо
+          return ok({ ok: true, msg: msg });
+        }
+        return ok({ ok: true, status: 'live' });
+      }
+      return bad('Неизвестный запрос');
+    },
     api: function (method, path, body) {
       var m;
       if (path === '/state') return ok(S);
@@ -249,7 +324,17 @@ textarea.wfa-input { resize: vertical; }
         return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
       });
     },
+    chatApi: CFG.chats ? function (method, path, body) {
+      return fetch(CFG.chats.root + path, {
+        method: method, credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
+        body: body ? JSON.stringify(body) : undefined,
+      }).then(function (r) {
+        return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
+      });
+    } : null,
     pickImage: function () {
+      if (!(window.wp && wp.media)) return uploadImage(); // приложение-админка: без медиатеки WordPress
       return new Promise(function (resolve) {
         var frame = wp.media({ title: 'Скриншот работы', button: { text: 'Выбрать' }, library: { type: 'image' }, multiple: false });
         frame.on('select', function () {
@@ -261,6 +346,28 @@ textarea.wfa-input { resize: vertical; }
       });
     },
   };
+
+  /* загрузка скриншота напрямую в медиатеку (REST), когда окна медиатеки нет */
+  function uploadImage() {
+    return new Promise(function (resolve) {
+      var inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = function () {
+        var f = inp.files && inp.files[0];
+        if (!f) { resolve(null); return; }
+        toast('Загружаем скриншот…');
+        fetch(CFG.media, { method: 'POST', credentials: 'same-origin', body: f, headers: {
+          'X-WP-Nonce': CFG.nonce, 'Content-Type': f.type || 'image/jpeg',
+          'Content-Disposition': 'attachment; filename="' + encodeURIComponent(f.name.replace(/"/g, '')) + '"' } })
+          .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Не загрузилось'); return d; }); })
+          .then(function (d) {
+            var sz = d.media_details && d.media_details.sizes || {};
+            resolve({ id: d.id, url: (sz.large || sz.full || {}).source_url || d.source_url });
+          }).catch(function (e) { fail(e); resolve(null); });
+      };
+      inp.click();
+    });
+  }
 
   /* ---------- мелочи ---------- */
   function h(tag, attrs, kids) {
@@ -305,9 +412,16 @@ textarea.wfa-input { resize: vertical; }
   /* ---------- состояние ---------- */
   var S = null, tab = 'home', leadFilter = 'all', leadQuery = '', worksFolder = 'sites', aiTab = 'questions';
   try { tab = sessionStorage.getItem('wfa-tab') || 'home'; } catch (e) {}
+  var HAS_CHATS = !!adapter.chatApi;
+  var C = { list: [], open: 0, msgs: [], status: '', contact: '', draft: '', seenWaiting: null, faq: null };
+  readHash();
 
   function load() {
-    return adapter.api('GET', '/state').then(function (d) { S = d; render(); }).catch(function (e) {
+    return Promise.all([adapter.api('GET', '/state'), HAS_CHATS ? adapter.chatApi('GET', '/chats').catch(function () { return { chats: [] }; }) : null]).then(function (r) {
+      S = r[0]; if (r[1]) setChats(r[1].chats);
+      render(); if (C.open) openChat(C.open, true);
+      if (HAS_CHATS) pollList();
+    }).catch(function (e) {
       app.innerHTML = ''; app.appendChild(h('p', { class: 'wfa-loading', text: 'Не удалось загрузить панель: ' + e.message }));
     });
   }
@@ -315,35 +429,58 @@ textarea.wfa-input { resize: vertical; }
     return {
       newLeads: S.leads.filter(function (l) { return l.status === 'new'; }).length,
       newQs: S.ai ? S.ai.questions.filter(function (q) { return q.state !== 'answered'; }).length : 0,
+      waiting: C.list.filter(function (c) { return c.status === 'waiting'; }).length,
     };
   }
-  function go(t) { tab = t; try { sessionStorage.setItem('wfa-tab', t); } catch (e) {} render(); app.scrollIntoView({ block: 'start' }); }
+  function go(t) {
+    tab = t; try { sessionStorage.setItem('wfa-tab', t); } catch (e) {}
+    if (t !== 'chats') { C.open = 0; if (/^#chat-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
+    render(); app.scrollIntoView({ block: 'start' });
+  }
+  function readHash() {
+    var m = /^#chat-(\d+)$/.exec(location.hash);
+    if (m && HAS_CHATS) { tab = 'chats'; C.open = +m[1]; }
+  }
+  window.addEventListener('hashchange', function () { var was = C.open; readHash(); if (S && C.open && C.open !== was) { render(); openChat(C.open); } });
 
   /* ---------- каркас ---------- */
   function render() {
     var c = counts();
-    var tabs = [['home', 'Обзор'], ['leads', 'Заявки', c.newLeads], ['works', 'Работы'], ['ai', 'AI-ассистент', c.newQs], ['settings', 'Номера']];
+    var tabs = [['home', 'Обзор'], ['chats', 'Чаты', c.waiting], ['leads', 'Заявки', c.newLeads], ['works', 'Работы'], ['ai', 'AI-ассистент', c.newQs], ['settings', 'Номера']];
     if (!S.ai) tabs = tabs.filter(function (t) { return t[0] !== 'ai'; });
-    if (tab === 'ai' && !S.ai) tab = 'home';
+    if (!HAS_CHATS) tabs = tabs.filter(function (t) { return t[0] !== 'chats'; });
+    if ((tab === 'ai' && !S.ai) || (tab === 'chats' && !HAS_CHATS)) tab = 'home';
+    // сохраняем фокус и текст в поле ввода, которое перерисовывается (поиск, ответ в чате)
+    var act = document.activeElement, keep = act && act.id && app.contains(act) ? { id: act.id, s: act.selectionStart, e: act.selectionEnd } : null;
+    var oldLog = app.querySelector('.wfa-chat-log'), stick = !oldLog || oldLog.scrollHeight - oldLog.scrollTop - oldLog.clientHeight < 40;
     var nav = h('nav', { class: 'wfa-tabs', role: 'tablist' }, tabs.map(function (t) {
       return h('button', { type: 'button', role: 'tab', class: 'wfa-tab', 'aria-selected': tab === t[0] ? 'true' : 'false', onclick: function () { go(t[0]); } },
         [t[1], t[2] ? h('span', { class: 'wfa-badge', text: t[2] }) : null]);
     }));
-    var view = { home: viewHome, leads: viewLeads, works: viewWorks, ai: viewAi, settings: viewSettings }[tab]();
+    var view = { home: viewHome, chats: viewChats, leads: viewLeads, works: viewWorks, ai: viewAi, settings: viewSettings }[tab]();
     app.innerHTML = '';
     app.appendChild(h('header', { class: 'wfa-top' }, [
       h('div', { class: 'wfa-brand' }, [h('span', { class: 'wfa-mark', text: 'W' }), h('div', null, [h('b', { text: 'WebFor' }), h('span', { text: 'Панель управления' })])]),
-      h('a', { class: 'wfa-btn wfa-btn-ghost', href: S.site_url, target: '_blank', rel: 'noopener', text: 'Открыть сайт ↗' }),
+      h('div', { class: 'wfa-row' }, [
+        h('a', { class: 'wfa-btn wfa-btn-ghost', href: S.site_url, target: '_blank', rel: 'noopener', text: 'Открыть сайт ↗' }),
+        CFG.logout ? h('a', { class: 'wfa-btn wfa-btn-ghost wfa-logout', href: CFG.logout, text: 'Выйти' }) : null,
+      ]),
     ]));
     app.appendChild(nav);
     app.appendChild(h('main', { class: 'wfa-view' }, view));
     app.appendChild(toastBox);
+    if (keep) { var el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+    var log = app.querySelector('.wfa-chat-log'); if (log && stick) log.scrollTop = log.scrollHeight;
+    document.documentElement.classList.toggle('wfa-chat-full', tab === 'chats' && !!C.open && matchMedia('(max-width: 782px)').matches);
+    if (navigator.setAppBadge) { try { c.waiting ? navigator.setAppBadge(c.waiting) : navigator.clearAppBadge(); } catch (e) {} }
   }
+  function busy() { return !!app.querySelector('dialog[open]'); }
 
   /* ---------- обзор ---------- */
   function viewHome() {
     var c = counts();
     var tiles = h('div', { class: 'wfa-tiles' }, [
+      HAS_CHATS ? tile('Чаты', c.waiting ? c.waiting + ' ждут' : C.list.length, c.waiting ? 'клиенту нужен менеджер' : 'разговоров с ассистентом', function () { go('chats'); }, c.waiting > 0) : null,
       tile('Новые заявки', c.newLeads, 'ждут звонка или сообщения', function () { leadFilter = 'new'; go('leads'); }, c.newLeads > 0),
       S.ai ? tile('Вопросы к вам', c.newQs, 'AI не смог ответить сам', function () { aiTab = 'questions'; go('ai'); }, c.newQs > 0) : null,
       tile('Работ на сайте', S.works.length, 'в ' + S.folders.length + ' папках', function () { go('works'); }),
@@ -390,7 +527,7 @@ textarea.wfa-input { resize: vertical; }
         var n = f[0] === 'all' ? S.leads.length : S.leads.filter(function (l) { return l.status === f[0]; }).length;
         return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': leadFilter === f[0] ? 'true' : 'false', onclick: function () { leadFilter = f[0]; render(); } }, [f[1] + ' ', h('span', { text: n })]);
       })),
-      h('input', { class: 'wfa-input wfa-search', id: 'wfa-lead-search', type: 'search', placeholder: 'Поиск: имя, телефон, текст', value: leadQuery, oninput: function (e) { leadQuery = e.target.value; var pos = e.target.selectionStart; render(); var i = document.getElementById('wfa-lead-search'); i.focus(); i.setSelectionRange(pos, pos); } }),
+      h('input', { class: 'wfa-input wfa-search', id: 'wfa-lead-search', type: 'search', placeholder: 'Поиск: имя, телефон, текст', value: leadQuery, oninput: function (e) { leadQuery = e.target.value; render(); } }),
     ]);
     return [
       h('h2', { class: 'wfa-h', text: 'Заявки' }), filters,
@@ -527,7 +664,7 @@ textarea.wfa-input { resize: vertical; }
   /* ---------- AI-ассистент ---------- */
   function viewAi() {
     var ai = S.ai;
-    var sub = h('div', { class: 'wfa-chips' }, [['questions', 'Вопросы к вам', counts().newQs], ['learn', 'Обучение', ai.learned.length], ['kb', 'База знаний']].map(function (t) {
+    var sub = h('div', { class: 'wfa-chips' }, [['questions', 'Вопросы к вам', counts().newQs]].concat(HAS_CHATS ? [['faq', 'Частые вопросы']] : []).concat([['learn', 'Обучение', ai.learned.length], ['kb', 'База знаний']]).map(function (t) {
       return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': aiTab === t[0] ? 'true' : 'false', onclick: function () { aiTab = t[0]; render(); } }, [t[1] + (t[2] != null ? ' ' : ''), t[2] != null ? h('span', { text: t[2] }) : null]);
     }));
     var status = h('div', { class: 'wfa-ai-status' + (ai.has_key ? '' : ' is-off') }, [
@@ -535,7 +672,8 @@ textarea.wfa-input { resize: vertical; }
       ai.has_key ? 'Ассистент отвечает сам (' + ai.model + '). Сложное приходит сюда.' : 'Ключ API не добавлен — ассистент сразу передаёт все вопросы вам.',
       h('a', { href: ai.settings_url, class: 'wfa-link', text: ai.has_key ? 'Настройки' : 'Добавить ключ' }),
     ]);
-    var body = { questions: aiQuestions, learn: aiLearn, kb: aiKb }[aiTab]();
+    if (aiTab === 'faq' && !HAS_CHATS) aiTab = 'questions';
+    var body = { questions: aiQuestions, faq: aiFaq, learn: aiLearn, kb: aiKb }[aiTab]();
     return [h('h2', { class: 'wfa-h', text: 'AI-ассистент' }), status, sub].concat(body);
   }
   function aiQuestions() {
@@ -606,6 +744,184 @@ textarea.wfa-input { resize: vertical; }
       } })]),
     ];
   }
+
+  /* ---------- частые вопросы: что клиенты спрашивают чаще всего ---------- */
+  function normQ(t) { return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim(); }
+  function aiFaq() {
+    if (!C.faq) {
+      adapter.chatApi('GET', '/faq').then(function (d) { C.faq = d.items || []; if (tab === 'ai' && aiTab === 'faq') render(); }).catch(fail);
+      return [h('p', { class: 'wfa-loading', text: 'Загружаем…' })];
+    }
+    if (!C.faq.length) return [h('p', { class: 'wfa-empty', text: 'Клиенты ещё ничего не спрашивали. Здесь появятся их вопросы — самые частые сверху.' })];
+    var known = {}; S.ai.learned.forEach(function (r) { known[normQ(r.q)] = r.a; });
+    return [
+      h('p', { class: 'wfa-note', text: 'Все вопросы клиентов из чата, самые частые сверху. Впишите ответ и нажмите «В обучение» — ассистент будет отвечать так же.' }),
+      h('div', { class: 'wfa-qs' }, C.faq.map(function (it, i) {
+        var done = known[normQ(it.q)];
+        var ans = h('textarea', { class: 'wfa-input', rows: 2, id: 'wfa-faq-' + i, placeholder: done ? '' : 'Ваш ответ на этот вопрос' }); ans.value = done || '';
+        return h('article', { class: 'wfa-q' + (done ? ' is-done' : '') }, [
+          h('div', { class: 'wfa-lead-title' }, [h('b', { text: it.q }), h('span', { class: 'wfa-count', text: it.n + (it.n % 10 >= 2 && it.n % 10 <= 4 && (it.n % 100 < 12 || it.n % 100 > 14) ? ' раза' : ' раз') })]),
+          ans,
+          h('div', { class: 'wfa-row' }, [h('span', { class: 'wfa-note', text: done ? '✓ Ассистент знает ответ' : 'Спросили последний раз: ' + fmtDate(new Date(it.at * 1000).toISOString()) }), h('span', { class: 'wfa-grow' }),
+            h('button', { type: 'button', class: 'wfa-btn', text: done ? 'Обновить ответ' : 'В обучение', onclick: function () {
+              var a = ans.value.trim();
+              if (!a) { ans.focus(); toast('Напишите ответ', true); return; }
+              var rows = S.ai.learned.filter(function (r) { return normQ(r.q) !== normQ(it.q); }).concat([{ q: it.q, a: a }]);
+              adapter.api('POST', '/ai/learned', { rows: rows }).then(function (r) { S.ai.learned = r.learned; render(); toast('Добавлено в обучение'); }).catch(fail);
+            } }),
+          ]),
+        ]);
+      })),
+    ];
+  }
+
+  /* ---------- чаты: менеджер подключается к разговору ---------- */
+  var STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
+  var listTimer = 0, chatTimer = 0;
+  function setChats(list) {
+    var waitingIds = list.filter(function (c) { return c.status === 'waiting'; }).map(function (c) { return c.id; });
+    if (C.seenWaiting) {
+      var fresh = waitingIds.filter(function (id) { return C.seenWaiting.indexOf(id) < 0; });
+      if (fresh.length) toast('Клиенту нужен менеджер — откройте «Чаты»');
+    }
+    C.seenWaiting = waitingIds; C.list = list;
+  }
+  function pollList() {
+    clearTimeout(listTimer);
+    listTimer = setTimeout(function () {
+      if (document.hidden) { pollList(); return; }
+      adapter.chatApi('GET', '/chats').then(function (d) {
+        var before = JSON.stringify(C.list); setChats(d.chats);
+        if (JSON.stringify(C.list) !== before && !busy() && (tab === 'chats' || tab === 'home')) render();
+      }).catch(function () {}).then(pollList);
+    }, tab === 'chats' ? 4000 : 10000);
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S && HAS_CHATS) { pollList(); if (C.open) pollChat(0); } });
+  function openChat(id, quiet) {
+    C.open = id; C.msgs = []; C.status = ''; C.contact = '';
+    if (location.hash !== '#chat-' + id) history.replaceState(null, '', '#chat-' + id);
+    if (!quiet) render();
+    pollChat(0, true);
+  }
+  function closeChat() {
+    C.open = 0; clearTimeout(chatTimer);
+    history.replaceState(null, '', location.pathname + location.search);
+    render();
+  }
+  function pollChat(delay, first) {
+    clearTimeout(chatTimer);
+    var id = C.open; if (!id) return;
+    chatTimer = setTimeout(function () {
+      if (C.open !== id) return;
+      var after = C.msgs.length ? C.msgs[C.msgs.length - 1].i : 0;
+      adapter.chatApi('GET', '/chat/' + id + '?after=' + after).then(function (d) {
+        if (C.open !== id) return;
+        var changed = first || d.msgs.length || d.status !== C.status || d.contact !== C.contact;
+        C.msgs = C.msgs.concat(d.msgs); C.status = d.status; C.contact = d.contact;
+        var it = C.list.find(function (c) { return c.id === id; }); if (it) { it.unread = 0; it.status = d.status; }
+        if (changed && !busy() && tab === 'chats') render();
+      }).catch(function (e) { if (first) { fail(e); closeChat(); } }).then(function () { if (C.open === id) pollChat(document.hidden ? 15000 : 2500); });
+    }, delay || 0);
+  }
+  function chatAction(path, body) {
+    var id = C.open;
+    return adapter.chatApi('POST', '/chat/' + id + path, body).then(function (r) {
+      if (r.status) C.status = r.status;
+      var it = C.list.find(function (c) { return c.id === id; }); if (it && r.status) it.status = r.status;
+      pollChat(0); return r;
+    });
+  }
+  function ago(ts) {
+    var s = Math.max(0, Date.now() / 1000 - ts);
+    if (s < 60) return 'только что'; if (s < 3600) return Math.floor(s / 60) + ' мин'; if (s < 86400) return Math.floor(s / 3600) + ' ч';
+    return fmtDate(new Date(ts * 1000).toISOString());
+  }
+  function viewChats() {
+    var list = h('div', { class: 'wfa-chat-list' }, C.list.length ? C.list.map(function (c) {
+      return h('button', { type: 'button', class: 'wfa-chat-item is-' + c.status + (c.id === C.open ? ' is-open' : ''), onclick: function () { openChat(c.id); } }, [
+        h('span', { class: 'wfa-chat-item-top' }, [h('b', { text: c.contact || 'Клиент №' + c.id }), h('time', { text: ago(c.updated) })]),
+        h('span', { class: 'wfa-chat-last', text: c.last || '…' }),
+        h('span', { class: 'wfa-chat-item-top' }, [h('span', { class: 'wfa-pill is-' + c.status, text: STATUS[c.status] || c.status }), c.unread && c.id !== C.open ? h('span', { class: 'wfa-badge', text: c.unread }) : null]),
+      ]);
+    }) : [h('p', { class: 'wfa-empty', text: 'Разговоров пока нет. Когда клиент напишет ассистенту на сайте, чат появится здесь.' })]);
+    return [
+      h('div', { class: 'wfa-h-row' }, [h('h2', { class: 'wfa-h', text: 'Чаты' }), pushControl()]),
+      installHint(),
+      h('div', { class: 'wfa-chats' + (C.open ? ' has-open' : '') }, [list, C.open ? chatPane() : h('div', { class: 'wfa-chat-pane wfa-chat-placeholder' }, h('p', { class: 'wfa-note', text: 'Выберите разговор слева. Чаты «Ждёт вас» — ассистент позвал менеджера.' }))]),
+    ];
+  }
+  function chatPane() {
+    var name = (CFG.chats && CFG.chats.manager) || 'Менеджер';
+    var log = h('div', { class: 'wfa-chat-log', 'aria-live': 'polite' }, C.msgs.length ? C.msgs.map(function (m) {
+      if (m.r === 'system') return h('p', { class: 'wfa-chat-sys', text: m.t });
+      var who = m.r === 'user' ? 'Клиент' : m.r === 'bot' ? 'Ассистент' : (m.a || name);
+      return h('div', { class: 'wfa-bubble is-' + m.r }, [h('small', { text: who + (m.at ? ' · ' + new Date(m.at * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '') }), h('span', { text: m.t })]);
+    }) : [h('p', { class: 'wfa-loading', text: 'Загружаем разговор…' })]);
+    var live = C.status === 'live';
+    var input = h('textarea', { class: 'wfa-input wfa-chat-input', id: 'wfa-chat-input', rows: 1, placeholder: live ? 'Ответ клиенту от имени «' + name + '»' : 'Напишите — и вы присоединитесь к чату', oninput: function (e) { C.draft = e.target.value; },
+      onkeydown: function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } } });
+    input.value = C.draft;
+    var form = h('form', { class: 'wfa-chat-form' }, [input, h('button', { type: 'submit', class: 'wfa-btn', text: 'Отправить' })]);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var t = C.draft.trim(); if (!t) return;
+      C.draft = ''; input.value = '';
+      chatAction('/send', { text: t }).then(function () { C.status = 'live'; }).catch(function (err) { C.draft = t; render(); fail(err); });
+    });
+    var digits = (C.contact || '').replace(/\D/g, '');
+    return h('section', { class: 'wfa-chat-pane' }, [
+      h('div', { class: 'wfa-chat-head' }, [
+        h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost wfa-chat-back', 'aria-label': 'К списку чатов', text: '←', onclick: closeChat }),
+        h('div', { class: 'wfa-grow' }, [h('b', { text: C.contact || 'Клиент №' + C.open }), h('span', { class: 'wfa-pill is-' + C.status, text: STATUS[C.status] || '…' })]),
+        digits ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: 'https://wa.me/' + digits, target: '_blank', rel: 'noopener', text: 'WhatsApp' }) : null,
+        live ? h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Вернуть ассистенту', onclick: function () { chatAction('/release').then(function () { toast('Дальше отвечает ассистент'); }).catch(fail); } })
+          : h('button', { type: 'button', class: 'wfa-btn', text: 'Присоединиться', onclick: function () { chatAction('/join').then(function () { toast('Клиент видит: «Менеджер присоединился»'); var i = document.getElementById('wfa-chat-input'); if (i) i.focus(); }).catch(fail); } }),
+      ]),
+      log,
+      form,
+    ]);
+  }
+
+  /* ---------- push-уведомления на телефон ---------- */
+  function pushState() {
+    if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
+    return Notification.permission; // default | granted | denied
+  }
+  function pushControl() {
+    if (!CFG.sw) return CFG.app ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: CFG.app, target: '_blank', rel: 'noopener', text: 'Приложение и уведомления ↗' }) : null;
+    var st = pushState();
+    if (st === 'unsupported') return null;
+    if (st === 'denied') return h('span', { class: 'wfa-note', text: 'Уведомления запрещены в настройках браузера' });
+    if (st === 'granted') return h('div', { class: 'wfa-row' }, [
+      h('span', { class: 'wfa-note', text: '🔔 Уведомления включены' }),
+      h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Проверить', onclick: function () { subscribePush().then(function () { return adapter.chatApi('POST', '/push/test'); }).then(function (r) { toast(r.sent ? 'Уведомление отправлено' : 'Не дошло — включите ещё раз', !r.sent); }).catch(fail); } }),
+    ]);
+    return h('button', { type: 'button', class: 'wfa-btn', text: '🔔 Включить уведомления', onclick: function () { subscribePush().then(function () { toast('Готово: уведомления будут приходить на это устройство'); render(); }).catch(function (e) { fail(e); render(); }); } });
+  }
+  function b64ToBytes(s) {
+    var pad = '='.repeat((4 - s.length % 4) % 4), raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    var out = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out;
+  }
+  function subscribePush() {
+    if (pushState() === 'unsupported') return Promise.reject(new Error('Этот браузер не умеет уведомления. На iPhone добавьте админку на экран «Домой» и откройте оттуда.'));
+    if (!CFG.chats.vapid) return Promise.reject(new Error('Ключи уведомлений не созданы на сервере'));
+    return Notification.requestPermission().then(function (p) {
+      if (p !== 'granted') throw new Error('Разрешите уведомления, чтобы они приходили');
+      return navigator.serviceWorker.register(CFG.sw);
+    }).then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
+      return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.chats.vapid) }); });
+    }).then(function (sub) { return adapter.chatApi('POST', '/push/subscribe', { subscription: sub.toJSON() }); });
+  }
+  function installHint() {
+    if (!CFG.sw) return null;
+    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+    if (standalone) return null;
+    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    return h('p', { class: 'wfa-ai-status' }, [h('span', { class: 'wfa-dot is-new' }),
+      ios ? 'Установите админку как приложение: в Safari нажмите «Поделиться» → «На экран Домой», откройте её со значка и включите уведомления.'
+          : 'Установите админку как приложение: в меню браузера «Установить приложение» (или «Добавить на главный экран»), затем включите уведомления.']);
+  }
+  if ('serviceWorker' in navigator && CFG.sw) { navigator.serviceWorker.register(CFG.sw).catch(function () {}); }
 
   /* ---------- номера ---------- */
   function viewSettings() {

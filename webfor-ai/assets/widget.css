@@ -92,3 +92,11 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-panel { border-radius: 0 !important; background-color: rgba(8,12,11,.62); background-image: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,0) 50%) !important; }
 .wfai-assistant { background: rgba(255,255,255,.08) !important; }
 .wfai-head { background: rgba(0,0,0,.25) !important; }
+
+/* живой чат: сообщения менеджера, служебные строки, ошибка языка, непрочитанное */
+.wfai-manager { background: rgba(63,224,160,.16) !important; }
+.wfai-author { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; color: #3fe0a0; }
+.wfai-system { align-self: center; max-width: 92%; padding: 6px 12px; border-radius: 12px; background: rgba(63,224,160,.12); color: #bff3dc; font-size: 13px; text-align: center; }
+.wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
+.wfai-launcher { position: relative; }
+.wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }

@@ -16,10 +16,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     wp_enqueue_media();
     wp_enqueue_style('webfor-admin-app', WEBFOR_URL . 'assets/admin-app.css', [], WEBFOR_VERSION);
     wp_enqueue_script('webfor-admin-app', WEBFOR_URL . 'assets/admin-app.js', [], WEBFOR_VERSION, true);
-    wp_add_inline_script('webfor-admin-app', 'window.WFADMIN = ' . wp_json_encode([
-        'root'  => esc_url_raw(rest_url('webfor/v1/admin')),
-        'nonce' => wp_create_nonce('wp_rest'),
-    ]) . ';', 'before');
+    wp_add_inline_script('webfor-admin-app', 'window.WFADMIN = ' . wp_json_encode(webfor_admin_config()) . ';', 'before');
 });
 
 /* ---------- данные ---------- */
