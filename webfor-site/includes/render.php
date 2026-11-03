@@ -45,6 +45,16 @@ add_filter('template_include', function ($tpl) {
     return $tpl;
 }, 99);
 
+/** Склонение: 1 работа, 2 работы, 5 работ. */
+function webfor_plural($n, $one, $few, $many) {
+    $n = abs((int) $n) % 100;
+    $n1 = $n % 10;
+    if ($n > 10 && $n < 20) {
+        return $many;
+    }
+    return $n1 === 1 ? $one : ($n1 >= 2 && $n1 <= 4 ? $few : $many);
+}
+
 /** Маленький знак WebFor: плитка с буквой W, без градиентов. */
 function webfor_mark($size = 32) {
     return '<svg class="wf-mark" width="' . (int) $size . '" height="' . (int) $size . '" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="30" fill="#0f8a76"/><path d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>';

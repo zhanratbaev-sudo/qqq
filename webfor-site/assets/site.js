@@ -17,6 +17,59 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
   }
 
+  // папки: открывается одна, карточки «вылетают» из неё по очереди
+  var folders = root.querySelectorAll('.wf-folder');
+  function openFolder(btn) {
+    var open = btn.getAttribute('aria-expanded') !== 'true';
+    folders.forEach(function (f) {
+      var d = document.getElementById(f.getAttribute('aria-controls'));
+      f.setAttribute('aria-expanded', 'false');
+      d.classList.remove('is-open'); d.hidden = true;
+    });
+    if (!open) return;
+    var drawer = document.getElementById(btn.getAttribute('aria-controls'));
+    btn.setAttribute('aria-expanded', 'true');
+    drawer.hidden = false;
+    void drawer.offsetWidth; // запускаем переход после показа
+    drawer.classList.add('is-open');
+    var top = drawer.getBoundingClientRect().top;
+    if (top > window.innerHeight * 0.75) drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  folders.forEach(function (f) { f.addEventListener('click', function () { openFolder(f); }); });
+
+  // просмотр работы
+  var lb = root.querySelector('.wf-lightbox');
+  var list = [], cur = 0;
+  function show(i) {
+    cur = (i + list.length) % list.length;
+    var d = list[cur].dataset;
+    lb.classList.toggle('is-phone', d.shape === 'phone');
+    var img = lb.querySelector('.wf-lb-shot img'); img.src = d.src; img.alt = d.title;
+    lb.querySelector('.wf-lb-shot').scrollTop = 0;
+    lb.querySelector('.wf-lb-tag').textContent = d.tag || '';
+    lb.querySelector('#wf-lb-title').textContent = d.title;
+    lb.querySelector('.wf-lb-desc').textContent = d.desc || '';
+    var url = lb.querySelector('.wf-lb-url');
+    url.hidden = !d.url; if (d.url) url.href = d.url;
+    url.firstChild.textContent = /petgo|clinic|\.kz/.test(d.url || '') ? 'Открыть сайт ' : 'Открыть ';
+    lb.querySelector('.wf-lb-chat').hidden = d.action !== 'chat' || !window.WFAI;
+    lb.querySelector('.wf-lb-nav').hidden = list.length < 2;
+  }
+  if (lb && lb.showModal) {
+    root.querySelectorAll('.wf-work-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        list = Array.prototype.slice.call(b.closest('.wf-cards').querySelectorAll('.wf-work-btn'));
+        show(list.indexOf(b)); lb.showModal();
+      });
+    });
+    lb.querySelector('.wf-lb-close').addEventListener('click', function () { lb.close(); });
+    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { show(cur - 1); });
+    lb.querySelector('.wf-lb-next').addEventListener('click', function () { show(cur + 1); });
+    lb.querySelector('.wf-lb-chat').addEventListener('click', function () { lb.close(); });
+    lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
+    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') show(cur - 1); if (e.key === 'ArrowRight') show(cur + 1); });
+  }
+
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме
   var select = root.querySelector('#wf-service');
   root.querySelectorAll('[data-service]').forEach(function (a) {

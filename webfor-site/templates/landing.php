@@ -41,7 +41,8 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <p class="wf-lead">Делаем сайты и мобильные приложения, ставим AI-чат-ботов, которые сами отвечают клиентам, и внедряем CRM в работу команды. Берём на себя всё — от идеи до запуска и поддержки.</p>
                 <div class="wf-actions">
                     <a class="wf-btn wf-btn-primary" href="#zayavka">Обсудить проект <?php echo webfor_icon('arrow'); ?></a>
-                    <?php if ($wf_wa) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>Написать в WhatsApp</a><?php endif; ?>
+                    <?php if (function_exists('wfai_opt') && wfai_opt('enabled')) : ?><button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><?php echo webfor_icon('bot'); ?>Спросить AI-ассистента</button>
+                    <?php elseif ($wf_wa) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>Написать в WhatsApp</a><?php endif; ?>
                 </div>
                 <ul class="wf-facts">
                     <li><b>Под ваш дизайн</b><span>без шаблонов</span></li>
@@ -54,60 +55,50 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
         <section class="wf-section" id="uslugi" aria-labelledby="uslugi-h">
             <div class="wf-wrap">
                 <header class="wf-section-head">
-                    <p class="wf-eyebrow">Услуги</p>
+                    <p class="wf-eyebrow">Услуги и работы</p>
                     <h2 id="uslugi-h">Что мы делаем</h2>
-                    <p>Можно взять что-то одно или собрать всё в единую систему.</p>
+                    <p>Откройте папку — внутри примеры наших работ. Нажмите на карточку, чтобы рассмотреть её ближе.</p>
                 </header>
-                <div class="wf-grid-2 wf-services">
-                    <article class="wf-card">
-                        <div class="wf-card-icon"><?php echo webfor_icon('globe'); ?></div>
-                        <h3>Сайты</h3>
-                        <p>Любой сайт под вашу задачу — понятный, быстрый и удобный на телефоне.</p>
-                        <ul class="wf-list">
-                            <li>Лендинг, сайт-визитка, корпоративный сайт</li>
-                            <li>Интернет-магазин и каталог с загрузкой товаров</li>
-                            <li>Сайт с онлайн-записью и личным кабинетом</li>
-                            <li>Заявки, WhatsApp и звонок в один клик</li>
-                        </ul>
-                        <a class="wf-link" href="#zayavka" data-service="site">Заказать сайт <?php echo webfor_icon('arrow'); ?></a>
-                    </article>
-                    <article class="wf-card">
-                        <div class="wf-card-icon"><?php echo webfor_icon('device'); ?></div>
-                        <h3>Мобильные приложения</h3>
-                        <p>Приложение для ваших клиентов или для команды — на iPhone и Android.</p>
-                        <ul class="wf-list">
-                            <li>Приложение для клиентов: запись, заказы, бонусы</li>
-                            <li>Приложение для сотрудников: задачи, заявки, чаты</li>
-                            <li>Установка из браузера или публикация в App Store и Google Play</li>
-                            <li>Push-уведомления</li>
-                        </ul>
-                        <a class="wf-link" href="#zayavka" data-service="app">Обсудить приложение <?php echo webfor_icon('arrow'); ?></a>
-                    </article>
-                    <article class="wf-card">
-                        <div class="wf-card-icon"><?php echo webfor_icon('bot'); ?></div>
-                        <h3>AI-чат-боты для бизнеса</h3>
-                        <p>Искусственный интеллект, который отвечает клиентам вместо вас — днём и ночью.</p>
-                        <ul class="wf-list">
-                            <li>Отвечает в WhatsApp, Instagram, Telegram и на сайте</li>
-                            <li>Знает ваши услуги, цены и частые вопросы</li>
-                            <li>Записывает клиентов и собирает заявки</li>
-                            <li>Сложные вопросы передаёт менеджеру</li>
-                        </ul>
-                        <a class="wf-link" href="#zayavka" data-service="bot">Хочу чат-бота <?php echo webfor_icon('arrow'); ?></a>
-                    </article>
-                    <article class="wf-card wf-card-accent">
-                        <div class="wf-card-icon"><?php echo webfor_icon('layers'); ?></div>
-                        <h3>Izi — всё в одном</h3>
-                        <p>Сайт, CRM и мобильное приложение для сотрудников, связанные в одну систему.</p>
-                        <ul class="wf-list">
-                            <li>Заявки с сайта сразу попадают в CRM</li>
-                            <li>Приложение для команды — без App Store</li>
-                            <li>Чаты, календарь, роли и уведомления</li>
-                            <li>Дизайн под ваш бренд</li>
-                        </ul>
-                        <a class="wf-link" href="#izi">Смотреть варианты Izi <?php echo webfor_icon('arrow'); ?></a>
-                    </article>
+                <div class="wf-folders" role="list">
+                    <?php foreach (webfor_folders() as $fk => $f) : $works = webfor_works($fk); ?>
+                        <div class="wf-folder-wrap" role="listitem">
+                            <button class="wf-folder" type="button" id="wf-f-<?php echo esc_attr($fk); ?>" aria-expanded="false" aria-controls="wf-p-<?php echo esc_attr($fk); ?>">
+                                <span class="wf-folder-peek" aria-hidden="true">
+                                    <?php foreach (array_slice($works, 0, 3) as $i => $w) : ?>
+                                        <img src="<?php echo esc_url($w['src']); ?>" alt="" loading="lazy" class="wf-peek-<?php echo (int) $i; ?>">
+                                    <?php endforeach; ?>
+                                </span>
+                                <span class="wf-folder-body">
+                                    <span class="wf-folder-icon"><?php echo webfor_icon($f['icon']); ?></span>
+                                    <span class="wf-folder-title"><?php echo esc_html($f['title']); ?></span>
+                                    <span class="wf-folder-count"><?php echo count($works); ?> <?php echo esc_html(webfor_plural(count($works), 'работа', 'работы', 'работ')); ?> · открыть</span>
+                                </span>
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
+
+                <?php foreach (webfor_folders() as $fk => $f) : $works = webfor_works($fk); ?>
+                    <div class="wf-drawer" id="wf-p-<?php echo esc_attr($fk); ?>" role="region" aria-labelledby="wf-f-<?php echo esc_attr($fk); ?>" hidden>
+                        <div class="wf-drawer-head">
+                            <div>
+                                <h3><?php echo esc_html($f['title']); ?></h3>
+                                <p><?php echo esc_html($f['text']); ?></p>
+                            </div>
+                            <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="<?php echo esc_attr(['sites' => 'site', 'apps' => 'app', 'bots' => 'bot', 'izi' => 'izi'][$fk]); ?>">Обсудить <?php echo webfor_icon('arrow'); ?></a>
+                        </div>
+                        <ul class="wf-cards">
+                            <?php foreach ($works as $i => $w) : ?>
+                                <li class="wf-work wf-work-<?php echo esc_attr($w['shape']); ?>" style="--i:<?php echo (int) $i; ?>">
+                                    <button type="button" class="wf-work-btn" data-title="<?php echo esc_attr($w['title']); ?>" data-desc="<?php echo esc_attr($w['desc']); ?>" data-tag="<?php echo esc_attr($w['tag']); ?>" data-url="<?php echo esc_url($w['url']); ?>" data-src="<?php echo esc_url($w['src']); ?>" data-shape="<?php echo esc_attr($w['shape']); ?>" data-action="<?php echo esc_attr($w['action']); ?>">
+                                        <span class="wf-work-shot"><img src="<?php echo esc_url($w['src']); ?>" alt="<?php echo esc_attr($w['title']); ?>" loading="lazy"></span>
+                                        <span class="wf-work-meta"><b><?php echo esc_html($w['title']); ?></b><?php if ($w['tag']) : ?><em><?php echo esc_html($w['tag']); ?></em><?php endif; ?></span>
+                                    </button>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endforeach; ?>
             </div>
         </section>
 
@@ -277,6 +268,23 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
             </div>
         </div>
     </footer>
+
+    <dialog class="wf-lightbox" aria-labelledby="wf-lb-title">
+        <div class="wf-lb-in">
+            <button class="wf-lb-close" type="button" aria-label="Закрыть"><?php echo webfor_icon('close'); ?></button>
+            <div class="wf-lb-shot"><img alt=""></div>
+            <div class="wf-lb-info">
+                <em class="wf-lb-tag"></em>
+                <h3 id="wf-lb-title"></h3>
+                <p class="wf-lb-desc"></p>
+                <div class="wf-lb-actions">
+                    <a class="wf-btn wf-btn-primary wf-btn-sm wf-lb-url" target="_blank" rel="noopener">Открыть сайт <?php echo webfor_icon('arrow'); ?></a>
+                    <button class="wf-btn wf-btn-primary wf-btn-sm wf-lb-chat" type="button" data-wfai-open="">Попробовать ассистента</button>
+                    <span class="wf-lb-nav"><button type="button" class="wf-lb-prev" aria-label="Предыдущая работа">‹</button><button type="button" class="wf-lb-next" aria-label="Следующая работа">›</button></span>
+                </div>
+            </div>
+        </div>
+    </dialog>
 
     <div class="wf-mobile-bar" aria-label="Быстрая связь">
         <?php if ($wf_tel) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_tel); ?>"><?php echo webfor_icon('phone'); ?>Позвонить</a><?php endif; ?>
