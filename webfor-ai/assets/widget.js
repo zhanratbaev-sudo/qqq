@@ -15,6 +15,8 @@
 
   var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>';
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var ICON_MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  var ICON_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
   var ICON_SEND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
   var root = el('div', 'wfai');
@@ -42,7 +44,16 @@
   var input = el('textarea', 'wfai-input'); input.rows = 1; input.maxLength = 1500; input.placeholder = 'Ваш вопрос…'; input.setAttribute('aria-label', 'Ваш вопрос');
   input.setAttribute('autocomplete', 'off'); input.setAttribute('enterkeyhint', 'send'); input.setAttribute('data-form-type', 'other'); input.name = 'wfai-q';
   var sendBtn = el('button', 'wfai-send'); sendBtn.type = 'submit'; sendBtn.setAttribute('aria-label', 'Отправить'); sendBtn.innerHTML = ICON_SEND;
-  form.appendChild(input); form.appendChild(sendBtn);
+  // голосовые: кнопка микрофона, если на сервере подключён Gemini и браузер умеет записывать звук
+  var canRec = !!(C.voice && !C.transport && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && (window.AudioContext || window.webkitAudioContext));
+  var micBtn = el('button', 'wfai-mic'); micBtn.type = 'button'; micBtn.setAttribute('aria-label', 'Записать голосовое'); micBtn.innerHTML = ICON_MIC;
+  var recBar = el('div', 'wfai-rec'); recBar.hidden = true;
+  var recDot = el('i'); var recTime = el('span', null, '0:00'); var recHint = el('em', null, 'Говорите…');
+  var recCancel = el('button', 'wfai-rec-x', 'Отмена'); recCancel.type = 'button';
+  recBar.appendChild(recDot); recBar.appendChild(recTime); recBar.appendChild(recHint); recBar.appendChild(recCancel);
+  form.appendChild(input); form.appendChild(recBar);
+  if (canRec) form.appendChild(micBtn);
+  form.appendChild(sendBtn);
   var foot = el('p', 'wfai-foot', 'Ответы даёт AI. Важное уточняйте у менеджера.');
 
   panel.appendChild(head); panel.appendChild(log); panel.appendChild(chips); panel.appendChild(form); panel.appendChild(foot);
@@ -55,9 +66,104 @@
     var b = el('div', 'wfai-msg wfai-' + cls + (err ? ' wfai-error' : ''));
     if (role === 'manager') b.appendChild(el('b', 'wfai-author', author || 'Менеджер'));
     b.appendChild(document.createTextNode(text));
+    if (canSpeak && (role === 'assistant' || role === 'manager') && !err) {
+      var sp = el('button', 'wfai-speak'); sp.type = 'button'; sp.setAttribute('aria-label', 'Прочитать вслух'); sp.innerHTML = ICON_SPEAK;
+      sp.addEventListener('click', function () { speak(text, sp); });
+      b.appendChild(sp);
+    }
     log.appendChild(b); log.scrollTop = log.scrollHeight;
     return b;
   }
+  /* ---------- ответ вслух: голос телефона/компьютера (бесплатно) ---------- */
+  var canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  var speakingBtn = null;
+  function speak(text, btn) {
+    if (!canSpeak) return;
+    var synth = window.speechSynthesis;
+    if (speakingBtn) { speakingBtn.classList.remove('is-on'); }
+    if (speakingBtn === btn && synth.speaking) { synth.cancel(); speakingBtn = null; return; } // повторное нажатие — стоп
+    synth.cancel();
+    var clean = String(text).replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').replace(/[*_#>`]/g, '').trim();
+    if (!clean) return;
+    var lang = /[әғқңөұүһі]/i.test(clean) ? 'kk-KZ' : /[а-яё]/i.test(clean) ? 'ru-RU' : 'en-US';
+    var u = new SpeechSynthesisUtterance(clean);
+    var voices = synth.getVoices(), pick = null;
+    for (var i = 0; i < voices.length; i++) { if (voices[i].lang && voices[i].lang.replace('_', '-').toLowerCase().indexOf(lang.slice(0, 2)) === 0) { pick = voices[i]; if (/premium|enhanced|natural|google/i.test(voices[i].name)) break; } }
+    if (!pick && lang === 'kk-KZ') { lang = 'ru-RU'; for (var j = 0; j < voices.length; j++) { if (/^ru/i.test(voices[j].lang)) { pick = voices[j]; break; } } } // казахского голоса нет — читаем русским
+    u.lang = lang; if (pick) u.voice = pick; u.rate = 1.02;
+    if (btn) { btn.classList.add('is-on'); speakingBtn = btn; }
+    u.onend = u.onerror = function () { if (btn) btn.classList.remove('is-on'); if (speakingBtn === btn) speakingBtn = null; };
+    synth.speak(u);
+  }
+  if (canSpeak && window.speechSynthesis.getVoices) { window.speechSynthesis.getVoices(); } // в Chrome список голосов загружается не сразу
+
+  /* ---------- запись голосового: MediaRecorder → WAV 16 кГц моно (его понимает Gemini) ---------- */
+  var rec = null, recChunks = [], recStream = null, recStart = 0, recTimer = 0, recCancelled = false;
+  var REC_MAX = 60;
+  function recUi(on) {
+    form.classList.toggle('is-rec', on); recBar.hidden = !on; input.hidden = on;
+    micBtn.setAttribute('aria-label', on ? 'Отправить голосовое' : 'Записать голосовое');
+    sendBtn.hidden = on;
+  }
+  function startRec() {
+    if (busy || rec) return;
+    if (canSpeak) window.speechSynthesis.cancel();
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
+      recStream = stream; recChunks = []; recCancelled = false;
+      var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'], type = '';
+      for (var i = 0; i < types.length; i++) { if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) { type = types[i]; break; } }
+      rec = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream);
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) recChunks.push(e.data); };
+      rec.onstop = function () {
+        stream.getTracks().forEach(function (t) { t.stop(); });
+        var secs = (Date.now() - recStart) / 1000, blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/webm' });
+        rec = null; clearInterval(recTimer); recUi(false);
+        if (recCancelled) return;
+        if (secs < 0.8) { bubble('system', 'Слишком коротко — нажмите 🎤 и говорите, потом нажмите ещё раз, чтобы отправить.'); return; }
+        sendVoice(blob);
+      };
+      rec.start();
+      recStart = Date.now(); recTime.textContent = '0:00'; recUi(true);
+      recTimer = setInterval(function () {
+        var s = Math.floor((Date.now() - recStart) / 1000);
+        recTime.textContent = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+        if (s >= REC_MAX) stopRec();
+      }, 250);
+    }).catch(function () {
+      bubble('system', 'Нет доступа к микрофону. Разрешите его в настройках браузера или напишите текстом.');
+    });
+  }
+  function stopRec() { if (rec && rec.state !== 'inactive') rec.stop(); }
+  micBtn.addEventListener('click', function () { if (rec) stopRec(); else startRec(); });
+  recCancel.addEventListener('click', function () { recCancelled = true; stopRec(); });
+  function toWav(blob) {
+    var AC = window.AudioContext || window.webkitAudioContext, OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    return blob.arrayBuffer().then(function (buf) {
+      var ac = new AC();
+      return new Promise(function (res, rej) { ac.decodeAudioData(buf, res, rej); }).then(function (audio) { if (ac.close) ac.close(); return audio; });
+    }).then(function (audio) {
+      var rate = 16000, len = Math.max(1, Math.ceil(audio.duration * rate)), off = new OAC(1, len, rate);
+      var src = off.createBufferSource(); src.buffer = audio; src.connect(off.destination); src.start(0);
+      return off.startRendering();
+    }).then(function (out) {
+      var pcm = out.getChannelData(0), n = pcm.length, wav = new DataView(new ArrayBuffer(44 + n * 2));
+      function str(o, t) { for (var i = 0; i < t.length; i++) wav.setUint8(o + i, t.charCodeAt(i)); }
+      str(0, 'RIFF'); wav.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+      wav.setUint32(16, 16, true); wav.setUint16(20, 1, true); wav.setUint16(22, 1, true); wav.setUint32(24, 16000, true);
+      wav.setUint32(28, 32000, true); wav.setUint16(32, 2, true); wav.setUint16(34, 16, true); str(36, 'data'); wav.setUint32(40, n * 2, true);
+      for (var i = 0; i < n; i++) { var v = Math.max(-1, Math.min(1, pcm[i])); wav.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+      var bytes = new Uint8Array(wav.buffer), bin = '';
+      for (var k = 0; k < bytes.length; k += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(k, k + 0x8000));
+      return btoa(bin);
+    });
+  }
+  function sendVoice(blob) {
+    if (busy) return;
+    var ph = bubble('user', '🎤 Голосовое сообщение…'); ph.classList.add('wfai-voice-wait');
+    toWav(blob).then(function (b64) { send('', { audio: b64, placeholder: ph }); })
+      .catch(function () { ph.remove(); bubble('system', 'Не получилось записать голос. Попробуйте ещё раз или напишите текстом.'); });
+  }
+
   function save() { st.msgs = history.slice(-40); try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
   function render() {
     log.innerHTML = '';
@@ -102,20 +208,25 @@
       .then(function (r) { return r.json(); });
   }
 
-  function send(text) {
+  function send(text, voice) {
     text = (text || '').trim();
-    if (!text || busy) return;
+    if ((!text && !voice) || busy) return;
     busy = true; chips.hidden = true;
-    history.push({ role: 'user', content: text }); save();
-    bubble('user', text);
-    input.value = ''; autosize();
+    if (!voice) { history.push({ role: 'user', content: text }); save(); bubble('user', text); input.value = ''; autosize(); }
     var live = st.status === 'live';
     var typing = null;
     if (!live) { typing = el('div', 'wfai-msg wfai-assistant wfai-typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label', 'Ассистент печатает'); log.appendChild(typing); log.scrollTop = log.scrollHeight; }
-    var body = C.transport ? { messages: history.filter(function (m) { return m.role === 'user' || m.role === 'assistant'; }).map(function (m) { return { role: m.role, content: m.content }; }) } : { chat: st.chat, text: text };
+    var body = C.transport ? { messages: history.filter(function (m) { return m.role === 'user' || m.role === 'assistant'; }).map(function (m) { return { role: m.role, content: m.content }; }) } : voice ? { chat: st.chat, audio: voice.audio } : { chat: st.chat, text: text };
     post(C.chat, body).then(function (r) {
       if (typing) typing.remove();
       r = r || {};
+      if (voice) { // голосовое: показываем, что расслышали; не разобрали — убираем заглушку и объясняем
+        voice.placeholder.classList.remove('wfai-voice-wait');
+        if (r.ok === false || !r.transcript) { voice.placeholder.remove(); bubble('system', r.reply || 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.'); return; }
+        voice.placeholder.textContent = '🎤 ' + r.transcript;
+        history.push({ role: 'user', content: '🎤 ' + r.transcript }); save();
+      }
+      var before = log.childElementCount;
       if (r.chat) st.chat = r.chat;
       if (r.user_i) st.last = Math.max(st.last, r.user_i);
       if (r.status) st.status = r.status;
@@ -124,10 +235,13 @@
       else if (!live) bubble('assistant', 'Не получилось ответить. Напишите нам в WhatsApp.');
       if (r.unsupported && r.msgs) { var lastB = log.querySelector('.wfai-msg:last-of-type'); if (lastB) lastB.classList.add('wfai-error'); history[history.length - 1].err = true; }
       save();
+      // спросили голосом — ответ сразу читаем вслух
+      if (voice && canSpeak) { var nb = log.querySelectorAll('.wfai-assistant:not(.wfai-typing)'); var lastA = nb[nb.length - 1]; if (lastA && log.childElementCount > before) { var spb = lastA.querySelector('.wfai-speak'); if (spb) speak(lastA.firstChild.textContent, spb); } }
       if (r.escalated && r.question_id && !contactAsked && st.status !== 'live') { pendingQuestion = r.question_id; contactAsked = true; contactForm(); }
       schedulePoll();
     }).catch(function () {
       if (typing) typing.remove();
+      if (voice) voice.placeholder.remove();
       bubble('assistant', 'Нет связи с сервером. Попробуйте ещё раз или напишите нам в WhatsApp.');
     }).then(function () { busy = false; });
   }

@@ -13,6 +13,7 @@ add_action('wp_enqueue_scripts', function () {
         'chat'     => esc_url_raw(rest_url('webfor-ai/v1/chat')),
         'contact'  => esc_url_raw(rest_url('webfor-ai/v1/contact')),
         'poll'     => esc_url_raw(rest_url('webfor-ai/v1/poll')),
+        'voice'    => wfai_voice_enabled(),
         'name'     => wfai_opt('name'),
         'greeting' => wfai_opt('greeting'),
         'wa'       => $c['wa_href'],

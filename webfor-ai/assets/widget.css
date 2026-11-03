@@ -119,3 +119,22 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
   .wfai-panel, html.wf-refract .wfai-panel { background: #0a0f0e !important; background-image: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
   .wfai-panel.is-morph { will-change: clip-path; }
 }
+
+/* голосовые: микрофон, полоса записи, «прочитать вслух» */
+.wfai-mic { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 0; border-radius: 14px; background: rgba(255,255,255,.08); color: var(--a-text); transition: background .2s, transform .2s; }
+.wfai-mic:active { transform: scale(.92); }
+.wfai-form.is-rec .wfai-mic { background: #ff5a50; color: #fff; animation: wfai-rec-pulse 1.4s ease-in-out infinite; }
+@keyframes wfai-rec-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,90,80,.45); } 50% { box-shadow: 0 0 0 8px rgba(255,90,80,0); } }
+.wfai-rec { flex: 1; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 6px 0 14px; border-radius: 14px; background: rgba(255,255,255,.07); }
+.wfai-rec[hidden] { display: none; }
+.wfai-rec i { width: 10px; height: 10px; border-radius: 50%; background: #ff5a50; animation: wfai-blink 1s infinite; }
+.wfai-rec span { font-variant-numeric: tabular-nums; font-weight: 600; }
+.wfai-rec em { flex: 1; font-style: normal; color: var(--a-text-3); font-size: 13px; }
+.wfai-rec-x { height: 32px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--a-text-2); font-size: 13px !important; }
+.wfai-send[hidden], .wfai-input[hidden] { display: none; }
+.wfai-msg { position: relative; }
+.wfai-speak { display: inline-grid; place-items: center; width: 26px; height: 26px; margin: 0 -4px -4px 6px; vertical-align: -6px; border: 0; border-radius: 9px; background: transparent; color: var(--a-text-3); }
+.wfai-speak:hover { color: var(--a-text); background: rgba(255,255,255,.08); }
+.wfai-speak.is-on { color: var(--a-accent); animation: wfai-blink 1.2s infinite; }
+.wfai-voice-wait { opacity: .75; }
+@media (prefers-reduced-motion: reduce) { .wfai-form.is-rec .wfai-mic, .wfai-rec i, .wfai-speak.is-on { animation: none; } }

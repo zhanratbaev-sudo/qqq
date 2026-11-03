@@ -201,6 +201,28 @@ add_action('rest_api_init', function () {
         return ['ok' => true, 'status' => 'bot'];
     });
 
+    // проверка ассистента из админки: ответ на пробный вопрос, ничего не сохраняется и менеджеру не уходит
+    $r('/test', 'POST', function (WP_REST_Request $q) {
+        $text = trim(sanitize_textarea_field((string) $q->get_param('text')));
+        if ($text === '') {
+            return new WP_Error('bad', 'Напишите вопрос', ['status' => 400]);
+        }
+        $hist = [];
+        foreach (array_slice((array) $q->get_param('history'), -10) as $m) {
+            $role = ($m['role'] ?? '') === 'user' ? 'user' : 'assistant';
+            $c = mb_substr(sanitize_textarea_field((string) ($m['content'] ?? '')), 0, 1500);
+            if ($c !== '') {
+                $hist[] = ['role' => $role, 'content' => $c];
+            }
+        }
+        while ($hist && $hist[0]['role'] !== 'user') {
+            array_shift($hist);
+        }
+        $hist[] = ['role' => 'user', 'content' => mb_substr($text, 0, 1500)];
+        $a = wfai_model_answer($hist, $text);
+        return ['reply' => $a['text'], 'escalated' => (bool) $a['escalate'], 'reason' => (string) ($a['escalate']['reason'] ?? ''), 'unsupported' => $a['unsupported']];
+    });
+
     $r('/faq', 'GET', function () {
         $log = array_values((array) get_option('wfai_qlog', []));
         usort($log, fn($a, $b) => [$b['n'], $b['at']] <=> [$a['n'], $a['at']]);

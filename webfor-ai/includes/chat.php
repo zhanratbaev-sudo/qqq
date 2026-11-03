@@ -119,6 +119,16 @@ function wfai_rest_chat(WP_REST_Request $req) {
         return new WP_REST_Response(['ok' => false, 'reply' => 'Слишком много сообщений подряд. Напишите нам в WhatsApp — ответим лично.'], 429);
     }
     $text_in = trim(sanitize_textarea_field((string) $req->get_param('text')));
+    $voice = false;
+    $audio = (string) $req->get_param('audio');
+    if ($audio !== '') { // голосовое сообщение: сначала расшифровываем (Gemini понимает речь), дальше — как обычный текст
+        $heard = wfai_transcribe($audio);
+        if (is_wp_error($heard)) {
+            return new WP_REST_Response(['ok' => false, 'reply' => $heard->get_error_message()], 200);
+        }
+        $text_in = $heard;
+        $voice = true;
+    }
     if ($text_in === '') { // старый формат: вся история в запросе — берём последнее сообщение клиента
         $hist = wfai_clean_history($req->get_param('messages'));
         $text_in = $hist && end($hist)['role'] === 'user' ? end($hist)['content'] : '';
@@ -133,9 +143,9 @@ function wfai_rest_chat(WP_REST_Request $req) {
     if (!$id) {
         [$id, $token] = wfai_chat_create();
     }
-    $um = wfai_chat_add($id, 'user', $text_in);
+    $um = wfai_chat_add($id, 'user', ($voice ? '🎤 ' : '') . $text_in);
     wfai_log_question($text_in);
-    $base = ['ok' => true, 'chat' => $token, 'user_i' => $um['i']];
+    $base = ['ok' => true, 'chat' => $token, 'user_i' => $um['i']] + ($voice ? ['transcript' => $text_in] : []);
 
     // менеджер в чате — ассистент молчит, менеджеру уходит уведомление
     if (wfai_chat_status($id) === 'live') {
@@ -143,61 +153,10 @@ function wfai_rest_chat(WP_REST_Request $req) {
         return new WP_REST_Response($base + ['status' => 'live', 'msgs' => []]);
     }
 
-    $history = wfai_chat_history($id);
-    $escalate = null;
-    $text = '';
-    $unsupported = false;
-    $key = wfai_api_key();
-    if ($key === '') {
-        $escalate = ['question' => $text_in, 'reason' => 'Ассистент ещё не подключён (нет ключа API).'];
-    } elseif (wfai_provider() === 'gemini') {
-        [$text, $escalate] = wfai_ask_gemini($key, $history, $text_in);
-    } else {
-        try {
-            $client = new Client(apiKey: $key, requestOptions: ['timeout' => 25.0, 'maxRetries' => 1]);
-            $message = $client->messages->create(
-                model: wfai_opt('model') ?: 'claude-haiku-5-5',
-                maxTokens: 1024,
-                // короткие ответы в чате: низкое усилие, без долгих размышлений
-                outputConfig: ['effort' => 'low'],
-                system: [
-                    ['type' => 'text', 'text' => wfai_system_prompt(), 'cacheControl' => ['type' => 'ephemeral']],
-                    ['type' => 'text', 'text' => wfai_now_note()],
-                ],
-                tools: [wfai_escalate_tool()],
-                messages: $history,
-            );
-            foreach ($message->content as $block) {
-                if ($block instanceof ToolUseBlock && $block->name === 'escalate_to_owner') {
-                    $escalate = $block->input;
-                } elseif ($block->type === 'text') {
-                    $text .= $block->text;
-                }
-            }
-            if ($message->stopReason === 'refusal') {
-                $escalate = ['question' => $text_in, 'reason' => 'Модель отказалась отвечать на это сообщение.'];
-            }
-        } catch (AuthenticationException $e) {
-            error_log('[webfor-ai] неверный ключ API: ' . $e->getMessage());
-            $escalate = ['question' => $text_in, 'reason' => 'Ошибка ключа API — проверьте его в настройках ассистента.'];
-        } catch (RateLimitException $e) {
-            $escalate = ['question' => $text_in, 'reason' => 'Ассистент перегружен (лимит API).'];
-        } catch (APIStatusException | APIConnectionException $e) {
-            error_log('[webfor-ai] ошибка API: ' . $e->getMessage());
-            $escalate = ['question' => $text_in, 'reason' => 'Ассистент временно недоступен.'];
-        }
-    }
-
-    $text = trim($text);
-    if (strpos($text, '[UNSUPPORTED]') === 0) {
-        $unsupported = true;
-        $text = trim(substr($text, strlen('[UNSUPPORTED]'))) ?: 'Sorry, this language is not supported. Please write in Kazakh, Russian or English.';
-        $escalate = null;
-    }
-    if ($text === '') {
-        $text = 'Уточняем у менеджера, сейчас он вам ответит.';
-        $escalate = $escalate ?: ['question' => $text_in, 'reason' => 'Ассистент не смог сформулировать ответ.'];
-    }
+    $ans = wfai_model_answer(wfai_chat_history($id), $text_in);
+    $text = $ans['text'];
+    $escalate = $ans['escalate'];
+    $unsupported = $ans['unsupported'];
     $out = [wfai_chat_add($id, 'bot', $text)];
 
     $resp = $base + ['status' => wfai_chat_status($id), 'reply' => $text, 'unsupported' => $unsupported];
@@ -276,6 +235,124 @@ function wfai_ask_gemini($key, $history, $text_in) {
         $escalate = ['question' => $text_in, 'reason' => 'Gemini отказался отвечать на это сообщение.'];
     }
     return [$text, $escalate];
+}
+
+/**
+ * Ответ ассистента на историю разговора (последнее сообщение — от клиента).
+ * Возвращает ['text' => ответ, 'escalate' => null|['question','reason'], 'unsupported' => язык не поддерживается].
+ * Используется и чатом на сайте, и проверкой ассистента в админке.
+ */
+function wfai_model_answer($history, $text_in) {
+    $escalate = null;
+    $text = '';
+    $unsupported = false;
+    $key = wfai_api_key();
+    if ($key === '') {
+        $escalate = ['question' => $text_in, 'reason' => 'Ассистент ещё не подключён (нет ключа API).'];
+    } elseif (wfai_provider() === 'gemini') {
+        [$text, $escalate] = wfai_ask_gemini($key, $history, $text_in);
+    } else {
+        try {
+            $client = new Client(apiKey: $key, requestOptions: ['timeout' => 25.0, 'maxRetries' => 1]);
+            $message = $client->messages->create(
+                model: wfai_opt('model') ?: 'claude-haiku-5-5',
+                maxTokens: 1024,
+                // короткие ответы в чате: низкое усилие, без долгих размышлений
+                outputConfig: ['effort' => 'low'],
+                system: [
+                    ['type' => 'text', 'text' => wfai_system_prompt(), 'cacheControl' => ['type' => 'ephemeral']],
+                    ['type' => 'text', 'text' => wfai_now_note()],
+                ],
+                tools: [wfai_escalate_tool()],
+                messages: $history,
+            );
+            foreach ($message->content as $block) {
+                if ($block instanceof ToolUseBlock && $block->name === 'escalate_to_owner') {
+                    $escalate = $block->input;
+                } elseif ($block->type === 'text') {
+                    $text .= $block->text;
+                }
+            }
+            if ($message->stopReason === 'refusal') {
+                $escalate = ['question' => $text_in, 'reason' => 'Модель отказалась отвечать на это сообщение.'];
+            }
+        } catch (AuthenticationException $e) {
+            error_log('[webfor-ai] неверный ключ API: ' . $e->getMessage());
+            $escalate = ['question' => $text_in, 'reason' => 'Ошибка ключа API — проверьте его в настройках ассистента.'];
+        } catch (RateLimitException $e) {
+            $escalate = ['question' => $text_in, 'reason' => 'Ассистент перегружен (лимит API).'];
+        } catch (APIStatusException | APIConnectionException $e) {
+            error_log('[webfor-ai] ошибка API: ' . $e->getMessage());
+            $escalate = ['question' => $text_in, 'reason' => 'Ассистент временно недоступен.'];
+        }
+    }
+
+    $text = trim($text);
+    if (strpos($text, '[UNSUPPORTED]') === 0) {
+        $unsupported = true;
+        $text = trim(substr($text, strlen('[UNSUPPORTED]'))) ?: 'Sorry, this language is not supported. Please write in Kazakh, Russian or English.';
+        $escalate = null;
+    }
+    if ($text === '') {
+        $text = 'Уточняем у менеджера, сейчас он вам ответит.';
+        $escalate = $escalate ?: ['question' => $text_in, 'reason' => 'Ассистент не смог сформулировать ответ.'];
+    }
+    return ['text' => $text, 'escalate' => $escalate, 'unsupported' => $unsupported];
+}
+
+/**
+ * Расшифровка голосового сообщения через Gemini (ключ Gemini нужен, даже если отвечает Claude: Claude не принимает звук).
+ * $b64 — WAV в base64 (окно чата пишет 16 кГц моно, до минуты). Возвращает текст или WP_Error с понятной клиенту фразой.
+ */
+function wfai_gemini_key() {
+    return defined('WFAI_GEMINI_KEY') && WFAI_GEMINI_KEY ? WFAI_GEMINI_KEY : (string) wfai_opt('gemini_key');
+}
+function wfai_voice_enabled() {
+    return wfai_gemini_key() !== '';
+}
+function wfai_transcribe($b64) {
+    $sorry = 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.';
+    if (!wfai_voice_enabled()) {
+        return new WP_Error('voice', 'Голосовые сообщения пока не подключены — напишите, пожалуйста, текстом.');
+    }
+    $b64 = preg_replace('/[^A-Za-z0-9+\/=]/', '', $b64);
+    $raw = base64_decode($b64, true);
+    if ($raw === false || strlen($raw) < 2000 || strlen($raw) > 4 * 1024 * 1024 || substr($raw, 0, 4) !== 'RIFF' || substr($raw, 8, 4) !== 'WAVE') {
+        return new WP_Error('voice', $sorry);
+    }
+    $model = wfai_opt('gemini_model') ?: 'gemini-3.1-flash-lite';
+    $res = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent', [
+        'timeout' => 25,
+        'headers' => ['Content-Type' => 'application/json', 'x-goog-api-key' => wfai_gemini_key()],
+        'body' => wp_json_encode([
+            'contents' => [['role' => 'user', 'parts' => [
+                ['text' => 'Это голосовое сообщение клиента на сайте (русский, казахский или английский). Запиши дословно, что он сказал, на том же языке, с пунктуацией. Только текст сказанного, без пояснений. Если речи нет или ничего не разобрать — ответь одним словом: EMPTY'],
+                ['inlineData' => ['mimeType' => 'audio/wav', 'data' => base64_encode($raw)]],
+            ]]],
+            'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0],
+        ]),
+    ]);
+    if (is_wp_error($res)) {
+        error_log('[webfor-ai] расшифровка: нет связи: ' . $res->get_error_message());
+        return new WP_Error('voice', $sorry);
+    }
+    $code = (int) wp_remote_retrieve_response_code($res);
+    $data = json_decode(wp_remote_retrieve_body($res), true) ?: [];
+    if ($code !== 200) {
+        error_log('[webfor-ai] расшифровка Gemini ' . $code . ': ' . ($data['error']['message'] ?? ''));
+        return new WP_Error('voice', $code === 429 ? 'Сейчас много голосовых — напишите, пожалуйста, текстом, ответим сразу.' : $sorry);
+    }
+    $text = '';
+    foreach ((array) ($data['candidates'][0]['content']['parts'] ?? []) as $part) {
+        if (empty($part['thought']) && isset($part['text'])) {
+            $text .= $part['text'];
+        }
+    }
+    $text = trim(sanitize_textarea_field($text));
+    if ($text === '' || strtoupper($text) === 'EMPTY') {
+        return new WP_Error('voice', 'Ничего не слышно 🙂 Попробуйте записать ещё раз или напишите текстом.');
+    }
+    return mb_substr($text, 0, 1500);
 }
 
 function wfai_rest_contact(WP_REST_Request $req) {

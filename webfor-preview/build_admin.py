@@ -77,7 +77,7 @@ adapter = r"""
   function addMsg(c, r, t, a) { var m = { i: c.msgs.length + 1, r: r, a: a || '', t: t, at: Math.floor(Date.now() / 1000) }; c.msgs.push(m); c.updated = m.at; return m; }
   function ok(v) { return new Promise(function (r) { setTimeout(function () { r(JSON.parse(JSON.stringify(v))); }, 150); }); }
   function bad(msg) { return new Promise(function (_, j) { setTimeout(function () { j(new Error(msg)); }, 150); }); }
-  window.WFADMIN = { chats: { manager: 'Нуржан', vapid: '' }, adapter: {
+  window.WFADMIN = { demo: true, chats: { manager: 'Нуржан', vapid: '' }, adapter: {
     chatApi: function (method, path, body) {
       var m, c;
       if (path === '/chats') return ok({ chats: CH.slice().sort(function (a, b) { var r = { waiting: 0, live: 1, bot: 2 }; return (r[a.status] - r[b.status]) || (b.updated - a.updated); }).map(function (c) {
@@ -85,6 +85,12 @@ adapter = r"""
         return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length };
       }) });
       if (path === '/faq') return ok({ items: FAQ });
+      if (path === '/test') { // проверка ассистента в демо: короткие ответы по примерам
+        var t = (body.text || '').toLowerCase();
+        if (/скидк|дешевл/.test(t)) return ok({ reply: 'Для комплекса можно обсудить скидку — уточню у менеджера, он ответит в рабочее время 🙂', escalated: true, reason: 'Скидки решает менеджер' });
+        if (/срок|долго|когда/.test(t)) return ok({ reply: 'Лендинг — 1–3 дня, корпоративный сайт и магазин — 3–7 дней, приложение в App Store — 1–3 недели.' });
+        return ok({ reply: 'Лендинг — 10 000–15 000 ₸, корпоративный сайт — 30 000 ₸, магазин — 30 000 ₸. Хостинг на год включён. Какой сайт нужен вам?' });
+      }
       if ((m = path.match(/^\/chat\/(\d+)(\/\w+)?(?:\?after=(\d+))?$/))) {
         c = CH.find(function (x) { return x.id == m[1]; }); if (!c) return bad('Чат не найден');
         var act = m[2], after = +(m[3] || 0);
@@ -147,17 +153,14 @@ adapter = r"""
 css = (SITE / 'assets' / 'admin-app.css').read_text()
 js = (SITE / 'assets' / 'admin-app.js').read_text()
 page = f"""<title>WebFor Панель</title>
-<meta name="description" content="Демо панели управления WebFor">
+<meta name="description" content="Демо админки WebFor для телефона">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
 :root {{ color-scheme: dark; }}
-html, body {{ background: #000; }}
-body {{ padding: 16px max(12px, env(safe-area-inset-right, 0px)) 16px max(12px, env(safe-area-inset-left, 0px)); }}
-.demo-note {{ max-width: 1200px; margin: 0 auto 12px; padding: 10px 14px; border-radius: 12px; background: #0c100f; border: 1px solid #1b2321; color: #a9b7b2; font: 500 13px/1.45 "Inter", system-ui, sans-serif; }}
-#wfa-app {{ max-width: 1200px; margin: 0 auto; }}
+html, body {{ margin: 0; height: 100%; overflow: hidden; background: #040606; }}
 {css}
 </style>
-<div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, после перезагрузки всё сбросится. Откройте «Чаты» → «Присоединиться» и напишите клиенту. На сайте админка открывается по адресу /webfor-admin/ и ставится на телефон как приложение.</div>
-<div id="wfa-app" class="wfa"><p class="wfa-loading">Загружаем панель…</p></div>
+<div id="wfa-app" class="wfa"></div>
 <script>{adapter}</script>
 <script>{js}</script>
 """

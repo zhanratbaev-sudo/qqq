@@ -1,636 +1,832 @@
-/* Панель WebFor: заявки, работы в папках, AI-ассистент, номера.
-   Данные — через WFADMIN.adapter (по умолчанию REST WordPress), чтобы ту же панель можно было показать в демо. */
+/* Админка WebFor — приложение для телефона (PWA) в стиле Liquid Glass.
+   Четыре раздела внизу: Чаты, Заявки, Обучение, Ещё. Подробности открываются «листами» снизу и экранами справа, как в iOS.
+   Данные — через WFADMIN.adapter (по умолчанию REST WordPress), поэтому та же панель работает и в демо. */
 (function () {
-  var app = document.getElementById('wfa-app');
+  'use strict';
+  const app = document.getElementById('wfa-app');
   if (!app) return;
-  var CFG = window.WFADMIN || {};
-
-  /* ---------- доступ к данным ---------- */
-  var adapter = CFG.adapter || {
-    api: function (method, path, body) {
-      return fetch(CFG.root + path, {
-        method: method, credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
-        body: body ? JSON.stringify(body) : undefined,
-      }).then(function (r) {
-        return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
-      });
-    },
-    chatApi: CFG.chats ? function (method, path, body) {
-      return fetch(CFG.chats.root + path, {
-        method: method, credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
-        body: body ? JSON.stringify(body) : undefined,
-      }).then(function (r) {
-        return r.json().then(function (d) { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; });
-      });
-    } : null,
-    pickImage: function () {
-      if (!(window.wp && wp.media)) return uploadImage(); // приложение-админка: без медиатеки WordPress
-      return new Promise(function (resolve) {
-        var frame = wp.media({ title: 'Скриншот работы', button: { text: 'Выбрать' }, library: { type: 'image' }, multiple: false });
-        frame.on('select', function () {
-          var a = frame.state().get('selection').first().toJSON();
-          resolve({ id: a.id, url: (a.sizes && (a.sizes.large || a.sizes.full) || a).url });
-        });
-        frame.on('close', function () { setTimeout(function () { resolve(null); }, 0); });
-        frame.open();
-      });
-    },
+  const CFG = window.WFADMIN || {};
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(.32,.72,0,1)'; // «пружина» iOS
+  const ls = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
   };
 
-  /* загрузка скриншота напрямую в медиатеку (REST), когда окна медиатеки нет */
+  /* ---------- доступ к данным ---------- */
+  function rest(base) {
+    return (method, path, body) => fetch(base + path, {
+      method, credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
+      body: body ? JSON.stringify(body) : undefined,
+    }).then((r) => r.json().then((d) => { if (!r.ok) throw new Error((d && d.message) || 'Ошибка ' + r.status); return d; }));
+  }
+  const adapter = CFG.adapter || {
+    api: rest(CFG.root),
+    chatApi: CFG.chats ? rest(CFG.chats.root) : null,
+    pickImage: () => (window.wp && wp.media ? pickFromLibrary() : uploadImage()),
+  };
+  const HAS_CHATS = !!adapter.chatApi;
+  function pickFromLibrary() {
+    return new Promise((resolve) => {
+      const frame = wp.media({ title: 'Скриншот работы', button: { text: 'Выбрать' }, library: { type: 'image' }, multiple: false });
+      frame.on('select', () => { const a = frame.state().get('selection').first().toJSON(); resolve({ id: a.id, url: (a.sizes && (a.sizes.large || a.sizes.full) || a).url }); });
+      frame.on('close', () => setTimeout(() => resolve(null), 0));
+      frame.open();
+    });
+  }
   function uploadImage() {
-    return new Promise(function (resolve) {
-      var inp = document.createElement('input');
-      inp.type = 'file'; inp.accept = 'image/*';
-      inp.onchange = function () {
-        var f = inp.files && inp.files[0];
-        if (!f) { resolve(null); return; }
-        toast('Загружаем скриншот…');
-        fetch(CFG.media, { method: 'POST', credentials: 'same-origin', body: f, headers: {
-          'X-WP-Nonce': CFG.nonce, 'Content-Type': f.type || 'image/jpeg',
-          'Content-Disposition': 'attachment; filename="' + encodeURIComponent(f.name.replace(/"/g, '')) + '"' } })
-          .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.message || 'Не загрузилось'); return d; }); })
-          .then(function (d) {
-            var sz = d.media_details && d.media_details.sizes || {};
-            resolve({ id: d.id, url: (sz.large || sz.full || {}).source_url || d.source_url });
-          }).catch(function (e) { fail(e); resolve(null); });
-      };
+    return pickFile('image/*').then((f) => {
+      if (!f) return null;
+      toast('Загружаем скриншот…');
+      return fetch(CFG.media, { method: 'POST', credentials: 'same-origin', body: f, headers: {
+        'X-WP-Nonce': CFG.nonce, 'Content-Type': f.type || 'image/jpeg',
+        'Content-Disposition': 'attachment; filename="' + encodeURIComponent(f.name.replace(/"/g, '')) + '"' } })
+        .then((r) => r.json().then((d) => { if (!r.ok) throw new Error(d.message || 'Не загрузилось'); return d; }))
+        .then((d) => { const sz = (d.media_details && d.media_details.sizes) || {}; return { id: d.id, url: (sz.large || sz.full || {}).source_url || d.source_url }; })
+        .catch((e) => { fail(e); return null; });
+    });
+  }
+  function pickFile(accept) {
+    return new Promise((resolve) => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = accept;
+      inp.onchange = () => resolve((inp.files && inp.files[0]) || null);
       inp.click();
     });
   }
 
   /* ---------- мелочи ---------- */
   function h(tag, attrs, kids) {
-    var el = document.createElement(tag);
-    Object.keys(attrs || {}).forEach(function (k) {
-      var v = attrs[k];
+    const el = document.createElement(tag);
+    Object.keys(attrs || {}).forEach((k) => {
+      const v = attrs[k];
       if (v == null || v === false) return;
       if (k === 'class') el.className = v;
       else if (k === 'text') el.textContent = v;
+      else if (k === 'html') el.innerHTML = v;
       else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
       else el.setAttribute(k, v === true ? '' : v);
     });
-    (Array.isArray(kids) ? kids : kids != null ? [kids] : []).forEach(function (c) {
+    (Array.isArray(kids) ? kids : kids != null ? [kids] : []).forEach((c) => {
       if (c == null || c === false) return;
       el.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c);
     });
     return el;
   }
-  function fmtDate(iso) {
-    var d = new Date(iso);
+  const P = (d) => '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  const I = {
+    chats: P('<path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/>'),
+    leads: P('<path d="M4 13h4l2 3h4l2-3h4"/><path d="M5.5 5h13L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5z"/>'),
+    train: P('<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'),
+    more: P('<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'),
+    back: P('<path d="M15 5l-7 7 7 7"/>'),
+    next: P('<path d="M9 5l7 7-7 7"/>'),
+    close: P('<path d="M6 6l12 12M18 6 6 18"/>'),
+    phone: P('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'),
+    wa: P('<path d="M3.5 20.5l1.3-4A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2.2-1.1-1 1a5 5 0 0 1-2.6-2.6l1-1-1.1-2.2z"/>'),
+    send: P('<path d="M12 19V5M6 11l6-6 6 6"/>'),
+    plus: P('<path d="M12 5v14M5 12h14"/>'),
+    bell: P('<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+    check: P('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+    file: P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'),
+    test: P('<path d="M8 5.5v13l10.5-6.5z"/>'),
+    book: P('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8"/>'),
+    star: P('<path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/>'),
+    globe: P('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+    grid: P('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>'),
+    gear: P('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>'),
+    logout: P('<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l5-5-5-5M15 12H3"/>'),
+    install: P('<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/>'),
+    image: P('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>'),
+  };
+  const ico = (n, cls) => h('span', { class: 'wfa-ico' + (cls ? ' ' + cls : ''), html: I[n] });
+  function timeAgo(v) {
+    const d = typeof v === 'number' ? new Date(v * 1000) : new Date(v);
     if (isNaN(d)) return '';
-    var today = new Date(); var same = d.toDateString() === today.toDateString();
-    return same ? 'сегодня, ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const s = (Date.now() - d) / 1000;
+    if (s < 60) return 'сейчас';
+    if (s < 3600) return Math.floor(s / 60) + ' мин';
+    if (new Date().toDateString() === d.toDateString()) return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
   }
-  var toastBox = h('div', { class: 'wfa-toasts', 'aria-live': 'polite' });
+  const clock = (ts) => new Date(ts * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  const digits = (s) => String(s || '').replace(/\D/g, '');
+  const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return n + ' ' + (a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many); };
+  const phoneUI = () => !window.matchMedia || matchMedia('(max-width: 760px)').matches;
+  function anim(el, frames, opt) { return !reduce && el.animate ? el.animate(frames, Object.assign({ duration: 360, easing: EASE }, opt)) : null; }
+  function done(a, fn) { if (a) a.onfinish = fn; else fn(); }
+
+  /* ---------- уведомления-«пилюли» сверху ---------- */
+  const toastBox = h('div', { class: 'wfa-toasts', 'aria-live': 'polite' });
   function toast(text, bad) {
-    var t = h('div', { class: 'wfa-toast' + (bad ? ' is-bad' : ''), text: text });
+    const t = h('div', { class: 'wfa-toast' + (bad ? ' is-bad' : ''), text });
     toastBox.appendChild(t);
-    setTimeout(function () { t.remove(); }, 3200);
+    anim(t, [{ transform: 'translateY(-24px) scale(.9)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420 });
+    setTimeout(() => done(anim(t, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-12px)' }], { duration: 260 }), () => t.remove()), 2600);
   }
-  function fail(e) { toast(e && e.message ? e.message : 'Не удалось сохранить', true); }
-  /* кнопка удаления с подтверждением прямо в кнопке */
+  const fail = (e) => toast(e && e.message ? e.message : 'Не удалось сохранить', true);
+  // удалить — с подтверждением прямо в кнопке
   function confirmBtn(label, onYes) {
-    var armed = false, timer;
-    var b = h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost wfa-danger', text: label, onclick: function () {
-      if (!armed) { armed = true; b.textContent = 'Точно удалить?'; timer = setTimeout(function () { armed = false; b.textContent = label; }, 3000); return; }
+    let armed = false, timer;
+    const b = h('button', { type: 'button', class: 'wfa-btn is-danger is-wide', text: label, onclick: () => {
+      if (!armed) { armed = true; b.textContent = 'Нажмите ещё раз, чтобы удалить'; timer = setTimeout(() => { armed = false; b.textContent = label; }, 3000); return; }
       clearTimeout(timer); onYes();
     } });
     return b;
   }
 
-  /* ---------- состояние ---------- */
-  var S = null, tab = 'home', leadFilter = 'all', leadQuery = '', worksFolder = 'sites', aiTab = 'questions';
-  try { tab = sessionStorage.getItem('wfa-tab') || 'home'; } catch (e) {}
-  var HAS_CHATS = !!adapter.chatApi;
-  var C = { list: [], open: 0, msgs: [], status: '', contact: '', draft: '', seenWaiting: null, faq: null };
-  readHash();
+  /* ---------- каркас: фон, экраны, нижняя панель, листы ---------- */
+  const embedded = !CFG.sw && !CFG.demo; // внутри админки WordPress, а не отдельным приложением
+  app.className = 'wfa' + (embedded ? ' is-embedded' : ' is-app');
+  app.innerHTML = '';
+  const stage = h('div', { class: 'wfa-stage' });
+  const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
+  const pill = h('span', { class: 'wfa-tabpill', 'aria-hidden': 'true' });
+  const layer = h('div', { class: 'wfa-layer' });
+  app.append(h('div', { class: 'wfa-bg', 'aria-hidden': 'true' }), stage, tabbar, layer, toastBox);
 
-  function load() {
-    return Promise.all([adapter.api('GET', '/state'), HAS_CHATS ? adapter.chatApi('GET', '/chats').catch(function () { return { chats: [] }; }) : null]).then(function (r) {
-      S = r[0]; if (r[1]) setChats(r[1].chats);
-      render(); if (C.open) openChat(C.open, true);
-      if (HAS_CHATS) pollList();
-    }).catch(function (e) {
-      app.innerHTML = ''; app.appendChild(h('p', { class: 'wfa-loading', text: 'Не удалось загрузить панель: ' + e.message }));
-    });
+  const TABS = [['chats', 'Чаты'], ['leads', 'Заявки'], ['train', 'Обучение'], ['more', 'Ещё']].filter((t) => t[0] !== 'chats' || HAS_CHATS);
+  const screens = {};
+  function makeScreen(title) {
+    const nav = h('header', { class: 'wfa-nav' }, [h('span', { class: 'wfa-nav-title', text: title })]);
+    const body = h('div', { class: 'wfa-body' });
+    const scroller = h('div', { class: 'wfa-scroll' }, [h('h1', { class: 'wfa-large', text: title }), body]);
+    // большой заголовок уезжает — появляется маленький в стеклянной полосе сверху (как в iOS)
+    scroller.addEventListener('scroll', () => nav.classList.toggle('is-compact', scroller.scrollTop > 34), { passive: true });
+    const el = h('section', { class: 'wfa-screen' }, [nav, scroller]);
+    return { el, body, scroller, nav };
   }
-  function counts() {
-    return {
-      newLeads: S.leads.filter(function (l) { return l.status === 'new'; }).length,
-      newQs: S.ai ? S.ai.questions.filter(function (q) { return q.state !== 'answered'; }).length : 0,
-      waiting: C.list.filter(function (c) { return c.status === 'waiting'; }).length,
-    };
-  }
-  function go(t) {
-    tab = t; try { sessionStorage.setItem('wfa-tab', t); } catch (e) {}
-    if (t !== 'chats') { C.open = 0; if (/^#chat-/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
-    render(); app.scrollIntoView({ block: 'start' });
-  }
-  function readHash() {
-    var m = /^#chat-(\d+)$/.exec(location.hash);
-    if (m && HAS_CHATS) { tab = 'chats'; C.open = +m[1]; }
-  }
-  window.addEventListener('hashchange', function () { var was = C.open; readHash(); if (S && C.open && C.open !== was) { render(); openChat(C.open); } });
+  TABS.forEach(([k, label]) => {
+    screens[k] = makeScreen(label);
+    screens[k].el.hidden = true;
+    stage.appendChild(screens[k].el);
+    tabbar.appendChild(h('button', { type: 'button', class: 'wfa-tab', 'data-tab': k, 'aria-label': label, onclick: () => setTab(k) },
+      [ico(k), h('span', { class: 'wfa-tab-label', text: label }), h('b', { class: 'wfa-tab-badge', hidden: true })]));
+  });
+  tabbar.appendChild(pill);
 
-  /* ---------- каркас ---------- */
-  function render() {
-    var c = counts();
-    var tabs = [['home', 'Обзор'], ['chats', 'Чаты', c.waiting], ['leads', 'Заявки', c.newLeads], ['works', 'Работы'], ['ai', 'AI-ассистент', c.newQs], ['settings', 'Номера']];
-    if (!S.ai) tabs = tabs.filter(function (t) { return t[0] !== 'ai'; });
-    if (!HAS_CHATS) tabs = tabs.filter(function (t) { return t[0] !== 'chats'; });
-    if ((tab === 'ai' && !S.ai) || (tab === 'chats' && !HAS_CHATS)) tab = 'home';
-    // сохраняем фокус и текст в поле ввода, которое перерисовывается (поиск, ответ в чате)
-    var act = document.activeElement, keep = act && act.id && app.contains(act) ? { id: act.id, s: act.selectionStart, e: act.selectionEnd } : null;
-    var oldLog = app.querySelector('.wfa-chat-log'), stick = !oldLog || oldLog.scrollHeight - oldLog.scrollTop - oldLog.clientHeight < 40;
-    var nav = h('nav', { class: 'wfa-tabs', role: 'tablist' }, tabs.map(function (t) {
-      return h('button', { type: 'button', role: 'tab', class: 'wfa-tab', 'aria-selected': tab === t[0] ? 'true' : 'false', onclick: function () { go(t[0]); } },
-        [t[1], t[2] ? h('span', { class: 'wfa-badge', text: t[2] }) : null]);
-    }));
-    var view = { home: viewHome, chats: viewChats, leads: viewLeads, works: viewWorks, ai: viewAi, settings: viewSettings }[tab]();
-    app.innerHTML = '';
-    app.appendChild(h('header', { class: 'wfa-top' }, [
-      h('div', { class: 'wfa-brand' }, [h('span', { class: 'wfa-mark', text: 'W' }), h('div', null, [h('b', { text: 'WebFor' }), h('span', { text: 'Панель управления' })])]),
-      h('div', { class: 'wfa-row' }, [
-        h('a', { class: 'wfa-btn wfa-btn-ghost', href: S.site_url, target: '_blank', rel: 'noopener', text: 'Открыть сайт ↗' }),
-        CFG.logout ? h('a', { class: 'wfa-btn wfa-btn-ghost wfa-logout', href: CFG.logout, text: 'Выйти' }) : null,
-      ]),
-    ]));
-    app.appendChild(nav);
-    app.appendChild(h('main', { class: 'wfa-view' }, view));
-    app.appendChild(toastBox);
-    if (keep) { var el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
-    var log = app.querySelector('.wfa-chat-log'); if (log && stick) log.scrollTop = log.scrollHeight;
-    document.documentElement.classList.toggle('wfa-chat-full', tab === 'chats' && !!C.open && matchMedia('(max-width: 782px)').matches);
-    if (navigator.setAppBadge) { try { c.waiting ? navigator.setAppBadge(c.waiting) : navigator.clearAppBadge(); } catch (e) {} }
+  let tab = ls.get('wfa-tab2');
+  if (!TABS.some((t) => t[0] === tab)) tab = TABS[0][0];
+  function setTab(k, quiet) {
+    const prev = tab;
+    if (stack.length) popAll();
+    tab = k; ls.set('wfa-tab2', k);
+    TABS.forEach(([key]) => { screens[key].el.hidden = key !== k; });
+    tabbar.querySelectorAll('.wfa-tab').forEach((b) => b.setAttribute('aria-current', b.dataset.tab === k ? 'page' : 'false'));
+    movePill();
+    render(k);
+    if (quiet) return;
+    if (prev !== k) anim(screens[k].el, [{ opacity: 0, transform: 'translateY(10px) scale(.99)' }, { opacity: 1, transform: 'none' }], { duration: 300 });
+    else screens[k].scroller.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); // повторное нажатие — наверх
   }
-  function busy() { return !!app.querySelector('dialog[open]'); }
-
-  /* ---------- обзор ---------- */
-  function viewHome() {
-    var c = counts();
-    var tiles = h('div', { class: 'wfa-tiles' }, [
-      HAS_CHATS ? tile('Чаты', c.waiting ? c.waiting + ' ждут' : C.list.length, c.waiting ? 'клиенту нужен менеджер' : 'разговоров с ассистентом', function () { go('chats'); }, c.waiting > 0) : null,
-      tile('Новые заявки', c.newLeads, 'ждут звонка или сообщения', function () { leadFilter = 'new'; go('leads'); }, c.newLeads > 0),
-      S.ai ? tile('Вопросы к вам', c.newQs, 'AI не смог ответить сам', function () { aiTab = 'questions'; go('ai'); }, c.newQs > 0) : null,
-      tile('Работ на сайте', S.works.length, 'в ' + S.folders.length + ' папках', function () { go('works'); }),
-      S.ai ? tile('AI-ассистент', S.ai.has_key ? 'Работает' : 'Нет ключа', S.ai.has_key ? 'выучено ответов: ' + S.ai.learned.length : 'вопросы сразу идут вам', function () { aiTab = 'learn'; go('ai'); }, !S.ai.has_key) : null,
-    ]);
-    var recent = S.leads.slice(0, 5);
-    return [
-      h('h2', { class: 'wfa-h', text: 'Обзор' }),
-      tiles,
-      h('section', { class: 'wfa-card' }, [
-        h('div', { class: 'wfa-card-head' }, [h('h3', { text: 'Последние заявки' }), h('button', { type: 'button', class: 'wfa-link', text: 'Все заявки →', onclick: function () { leadFilter = 'all'; go('leads'); } })]),
-        recent.length ? h('div', { class: 'wfa-mini' }, recent.map(function (l) {
-          return h('div', { class: 'wfa-mini-row' }, [h('span', { class: 'wfa-dot is-' + l.status }), h('b', { text: l.name }), h('span', { text: l.service_label }), h('time', { text: fmtDate(l.date) })]);
-        })) : h('p', { class: 'wfa-empty', text: 'Заявок пока нет. Они появятся здесь, как только клиент отправит форму на сайте.' }),
-      ]),
-      S.ai ? trainHelp() : null,
-    ];
+  function movePill() {
+    const b = tabbar.querySelector('.wfa-tab[aria-current=page]');
+    if (!b) return;
+    pill.style.width = b.offsetWidth + 'px';
+    pill.style.transform = 'translateX(' + b.offsetLeft + 'px)';
   }
-  function tile(label, value, note, onclick, hot) {
-    return h('button', { type: 'button', class: 'wfa-tile' + (hot ? ' is-hot' : ''), onclick: onclick }, [h('span', { text: label }), h('b', { text: value }), h('small', { text: note })]);
-  }
-  function trainHelp() {
-    return h('section', { class: 'wfa-card wfa-help' }, [
-      h('h3', { text: 'Как обучать AI-ассистента' }),
-      h('ol', null, [
-        h('li', null, [h('b', { text: 'База знаний. ' }), 'Впишите всё, что клиенты должны узнать: услуги, цены «от», сроки, адрес, график. Ассистент отвечает только по ней.']),
-        h('li', null, [h('b', { text: 'Вопросы к вам. ' }), 'На что ассистент не нашёл ответа, приходит сюда. Ответьте и оставьте галочку «Запомнить» — в следующий раз он ответит сам.']),
-        h('li', null, [h('b', { text: 'Обучение. ' }), 'Список выученных ответов: поправьте формулировку или добавьте пример вручную.']),
-      ]),
-      h('button', { type: 'button', class: 'wfa-btn', text: 'Открыть базу знаний', onclick: function () { aiTab = 'kb'; go('ai'); } }),
-    ]);
+  window.addEventListener('resize', movePill);
+  function badge(k, n) {
+    const b = tabbar.querySelector('.wfa-tab[data-tab=' + k + '] .wfa-tab-badge');
+    if (!b) return;
+    b.hidden = !n; b.textContent = n > 99 ? '99+' : n;
   }
 
-  /* ---------- заявки ---------- */
-  function viewLeads() {
-    var st = S.statuses;
-    var list = S.leads.filter(function (l) {
-      if (leadFilter !== 'all' && l.status !== leadFilter) return false;
-      var q = leadQuery.trim().toLowerCase();
-      return !q || (l.name + ' ' + l.phone + ' ' + l.message + ' ' + l.service_label).toLowerCase().indexOf(q) >= 0;
-    });
-    var filters = h('div', { class: 'wfa-filters' }, [
-      h('div', { class: 'wfa-chips' }, [['all', 'Все']].concat(Object.keys(st).map(function (k) { return [k, st[k]]; })).map(function (f) {
-        var n = f[0] === 'all' ? S.leads.length : S.leads.filter(function (l) { return l.status === f[0]; }).length;
-        return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': leadFilter === f[0] ? 'true' : 'false', onclick: function () { leadFilter = f[0]; render(); } }, [f[1] + ' ', h('span', { text: n })]);
-      })),
-      h('input', { class: 'wfa-input wfa-search', id: 'wfa-lead-search', type: 'search', placeholder: 'Поиск: имя, телефон, текст', value: leadQuery, oninput: function (e) { leadQuery = e.target.value; render(); } }),
-    ]);
-    return [
-      h('h2', { class: 'wfa-h', text: 'Заявки' }), filters,
-      list.length ? h('div', { class: 'wfa-leads' }, list.map(leadCard)) : h('p', { class: 'wfa-empty', text: S.leads.length ? 'Под фильтр ничего не подходит.' : 'Заявок пока нет.' }),
-    ];
+  /* экраны «справа» (разговор, список, проверка ассистента) */
+  const stack = [];
+  const below = () => (stack.length ? stack[stack.length - 1].el : screens[tab].el);
+  function push(view) {
+    const under = below();
+    stage.appendChild(view.el);
+    stack.push(view);
+    anim(view.el, [{ transform: 'translateX(100%)' }, { transform: 'none' }], { duration: 460 });
+    anim(under, [{ transform: 'none', opacity: 1 }, { transform: 'translateX(-28%)', opacity: 0.4 }], { duration: 460, fill: 'forwards' });
+    tabbar.classList.add('is-hidden');
   }
-  function leadCard(l) {
-    var seg = h('div', { class: 'wfa-seg', role: 'group', 'aria-label': 'Статус заявки' }, Object.keys(S.statuses).map(function (k) {
-      return h('button', { type: 'button', class: 'is-' + k, 'aria-pressed': l.status === k ? 'true' : 'false', text: S.statuses[k], onclick: function () {
-        var prev = l.status; l.status = k; render();
-        adapter.api('POST', '/lead/' + l.id, { status: k }).then(function () { toast('Статус: ' + S.statuses[k]); }).catch(function (e) { l.status = prev; render(); fail(e); });
-      } });
-    }));
-    return h('article', { class: 'wfa-lead is-' + l.status }, [
-      h('div', { class: 'wfa-lead-main' }, [
-        h('div', { class: 'wfa-lead-title' }, [h('b', { text: l.name }), h('time', { text: fmtDate(l.date) })]),
-        h('div', { class: 'wfa-lead-phone', text: l.phone }),
-        h('div', { class: 'wfa-lead-svc', text: l.service_label + ' · ' + (l.contact === 'whatsapp' ? 'просит написать в WhatsApp' : 'просит позвонить') }),
-        l.message ? h('p', { class: 'wfa-lead-msg', text: l.message }) : null,
-      ]),
-      h('div', { class: 'wfa-lead-side' }, [
-        seg,
-        h('div', { class: 'wfa-row' }, [
-          h('a', { class: 'wfa-btn' + (l.contact === 'whatsapp' ? '' : ' wfa-btn-ghost'), href: l.wa, target: '_blank', rel: 'noopener', text: 'WhatsApp' }),
-          h('a', { class: 'wfa-btn' + (l.contact === 'whatsapp' ? ' wfa-btn-ghost' : ''), href: l.tel, text: 'Позвонить' }),
-          confirmBtn('Удалить', function () {
-            adapter.api('DELETE', '/lead/' + l.id).then(function () { S.leads = S.leads.filter(function (x) { return x !== l; }); render(); toast('Заявка удалена'); }).catch(fail);
-          }),
-        ]),
-      ]),
-    ]);
+  function pop() {
+    const view = stack.pop();
+    if (!view) return;
+    const under = below();
+    if (view.onclose) view.onclose();
+    done(anim(view.el, [{ transform: 'none' }, { transform: 'translateX(100%)' }], { duration: 380 }), () => view.el.remove());
+    under.getAnimations && under.getAnimations().forEach((x) => x.cancel());
+    anim(under, [{ transform: 'translateX(-28%)', opacity: 0.4 }, { transform: 'none', opacity: 1 }], { duration: 380 });
+    if (!stack.length) { tabbar.classList.remove('is-hidden'); render(tab); }
+    if (/^#chat-/.test(location.hash) && !stack.some((v) => v.chat)) history.replaceState(null, '', location.pathname + location.search);
+  }
+  function popAll() {
+    while (stack.length) { const v = stack.pop(); if (v.onclose) v.onclose(); v.el.remove(); }
+    Object.values(screens).forEach((s) => s.el.getAnimations && s.el.getAnimations().forEach((x) => x.cancel()));
+    tabbar.classList.remove('is-hidden');
+  }
+  function pushView(title, opts) {
+    opts = opts || {};
+    const backBtn = h('button', { type: 'button', class: 'wfa-back', 'aria-label': 'Назад', onclick: pop }, [ico('back'), h('span', { text: opts.backLabel || 'Назад' })]);
+    const nav = h('header', { class: 'wfa-nav is-compact is-push' }, [backBtn, h('div', { class: 'wfa-nav-center' }, [h('span', { class: 'wfa-nav-title', text: title }), opts.subtitle || null]), h('div', { class: 'wfa-nav-actions' }, opts.actions || [])]);
+    const body = h('div', { class: 'wfa-body' });
+    const scroller = h('div', { class: 'wfa-scroll' }, [body]);
+    const el = h('section', { class: 'wfa-screen is-pushed' + (opts.cls ? ' ' + opts.cls : '') }, [nav, scroller].concat(opts.footer ? [opts.footer] : []));
+    // свайп от левого края — назад, как в iOS
+    let sx = null;
+    el.addEventListener('touchstart', (e) => { const t = e.touches[0]; sx = t.clientX < 28 ? t.clientX : null; }, { passive: true });
+    el.addEventListener('touchend', (e) => { if (sx != null && e.changedTouches[0].clientX - sx > 80) pop(); sx = null; }, { passive: true });
+    return { el, body, scroller, nav };
   }
 
-  /* ---------- работы ---------- */
-  var dragId = null;
-  function viewWorks() {
-    var works = S.works.filter(function (w) { return w.folder === worksFolder; });
-    var folderTabs = h('div', { class: 'wfa-chips' }, S.folders.map(function (f) {
-      var n = S.works.filter(function (w) { return w.folder === f.key; }).length;
-      return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': worksFolder === f.key ? 'true' : 'false', onclick: function () { worksFolder = f.key; render(); } }, [f.title + ' ', h('span', { text: n })]);
-    }));
-    var grid = h('ul', { class: 'wfa-works' }, works.map(function (w, i) {
-      var li = h('li', { class: 'wfa-work', draggable: 'true', 'data-id': w.id,
-        ondragstart: function (e) { dragId = w.id; li.classList.add('is-drag'); e.dataTransfer.effectAllowed = 'move'; },
-        ondragend: function () { li.classList.remove('is-drag'); },
-        ondragover: function (e) { e.preventDefault(); },
-        ondrop: function (e) { e.preventDefault(); if (dragId && dragId !== w.id) moveWork(dragId, w.id); },
-      }, [
-        h('button', { type: 'button', class: 'wfa-work-open', title: 'Изменить', onclick: function () { editWork(w); } }, [
-          h('span', { class: 'wfa-work-img' + (w.shape === 'phone' ? ' is-phone' : '') }, w.src ? h('img', { src: w.src, alt: '' }) : h('em', { text: 'нет скриншота' })),
-          h('b', { text: w.title }), h('small', { text: w.tag || '—' }),
-        ]),
-        h('div', { class: 'wfa-work-move' }, [
-          h('button', { type: 'button', 'aria-label': 'Выше', disabled: i === 0, text: '↑', onclick: function () { moveWork(w.id, works[i - 1].id); } }),
-          h('button', { type: 'button', 'aria-label': 'Ниже', disabled: i === works.length - 1, text: '↓', onclick: function () { moveWork(w.id, works[i + 1].id, true); } }),
-        ]),
-      ]);
-      return li;
-    }));
-    return [
-      h('div', { class: 'wfa-h-row' }, [h('h2', { class: 'wfa-h', text: 'Работы' }), h('button', { type: 'button', class: 'wfa-btn', text: '+ Добавить работу', onclick: function () { editWork({ id: 0, title: '', folder: worksFolder, tag: 'Наш проект', desc: '', url: '', shape: worksFolder === 'sites' || worksFolder === 'izi' ? 'wide' : 'phone', image_id: 0, src: '' }); } })]),
-      h('p', { class: 'wfa-note', text: 'Это карточки внутри папок на сайте. Перетащите карточку (или стрелками), чтобы поменять порядок. Нажмите, чтобы изменить.' }),
-      folderTabs,
-      works.length ? grid : h('p', { class: 'wfa-empty', text: 'В этой папке пока пусто — добавьте первую работу.' }),
-    ];
-  }
-  function moveWork(id, targetId, after) {
-    var folderWorks = S.works.filter(function (w) { return w.folder === worksFolder; });
-    var moving = folderWorks.find(function (w) { return w.id === id; });
-    folderWorks.splice(folderWorks.indexOf(moving), 1);
-    var t = folderWorks.findIndex(function (w) { return w.id === targetId; });
-    folderWorks.splice(after ? t + 1 : t, 0, moving);
-    S.works = S.works.filter(function (w) { return w.folder !== worksFolder; }).concat(folderWorks);
-    render();
-    adapter.api('POST', '/works/order', { ids: folderWorks.map(function (w) { return w.id; }) }).then(function () { toast('Порядок сохранён'); }).catch(fail);
-  }
-  function editWork(w) {
-    var d = Object.assign({}, w);
-    var dlg = h('dialog', { class: 'wfa-dialog', 'aria-labelledby': 'wfa-dlg-title' });
-    var preview = h('div', { class: 'wfa-img-pick' + (d.shape === 'phone' ? ' is-phone' : '') });
-    function drawPreview() {
-      preview.innerHTML = '';
-      preview.className = 'wfa-img-pick' + (d.shape === 'phone' ? ' is-phone' : '');
-      preview.appendChild(d.src ? h('img', { src: d.src, alt: 'Скриншот' }) : h('span', { text: 'Скриншот не выбран' }));
-    }
-    drawPreview();
-    function field(label, input) { return h('label', { class: 'wfa-field' }, [h('span', { text: label }), input]); }
-    var title = h('input', { class: 'wfa-input', id: 'wfa-w-title', value: d.title, required: true, placeholder: 'Например: Сайт ветклиники «Айболит»' });
-    var folder = h('select', { class: 'wfa-input', id: 'wfa-w-folder' }, S.folders.map(function (f) { return h('option', { value: f.key, selected: f.key === d.folder, text: f.title }); }));
-    var shape = h('select', { class: 'wfa-input', id: 'wfa-w-shape', onchange: function () { d.shape = shape.value; drawPreview(); } }, [
-      h('option', { value: 'wide', selected: d.shape !== 'phone', text: 'Сайт / компьютер' }), h('option', { value: 'phone', selected: d.shape === 'phone', text: 'Телефон' })]);
-    var tag = h('input', { class: 'wfa-input', id: 'wfa-w-tag', value: d.tag, placeholder: 'Наш проект / Концепт', list: 'wfa-tags' });
-    var desc = h('textarea', { class: 'wfa-input', id: 'wfa-w-desc', rows: 3, placeholder: 'Что сделали и чем полезно клиенту' }); desc.value = d.desc || '';
-    var url = h('input', { class: 'wfa-input', id: 'wfa-w-url', type: 'url', value: d.url, placeholder: 'https://' });
-    var form = h('form', { class: 'wfa-form', method: 'dialog' }, [
-      h('h3', { id: 'wfa-dlg-title', text: d.id ? 'Изменить работу' : 'Новая работа' }),
-      h('div', { class: 'wfa-form-grid' }, [
-        h('div', null, [preview, h('div', { class: 'wfa-row' }, [
-          h('button', { type: 'button', class: 'wfa-btn', text: d.src ? 'Заменить скриншот' : 'Загрузить скриншот', onclick: function () {
-            adapter.pickImage().then(function (img) { if (img) { d.image_id = img.id; d.src = img.url; drawPreview(); } });
-          } }),
-          d.image_id ? h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Убрать', onclick: function () { d.image_id = 0; d.src = ''; drawPreview(); } }) : null,
-        ])]),
-        h('div', { class: 'wfa-fields' }, [field('Название', title), field('Папка', folder), field('Вид скриншота', shape), field('Метка', tag), field('Описание', desc), field('Ссылка', url),
-          h('datalist', { id: 'wfa-tags' }, ['Наш проект', 'Концепт', 'Пример: PetGo'].map(function (t) { return h('option', { value: t }); }))]),
-      ]),
-      h('div', { class: 'wfa-row wfa-form-actions' }, [
-        d.id ? confirmBtn('Удалить работу', function () {
-          adapter.api('DELETE', '/work/' + d.id).then(function () { S.works = S.works.filter(function (x) { return x.id !== d.id; }); dlg.close(); render(); toast('Работа удалена'); }).catch(fail);
-        }) : null,
-        h('span', { class: 'wfa-grow' }),
-        h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Отмена', onclick: function () { dlg.close(); } }),
-        h('button', { type: 'submit', class: 'wfa-btn', text: 'Сохранить' }),
-      ]),
-    ]);
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (!title.value.trim()) { title.focus(); toast('Укажите название', true); return; }
-      var body = { id: d.id, title: title.value.trim(), folder: folder.value, shape: shape.value, tag: tag.value, desc: desc.value, url: url.value, image_id: d.image_id || 0, src: d.src };
-      adapter.api('POST', '/work', body).then(function (saved) {
-        if (!saved.src && d.src) saved.src = d.src;
-        var i = S.works.findIndex(function (x) { return x.id === saved.id; });
-        if (i >= 0) S.works[i] = saved; else S.works.push(saved);
-        worksFolder = saved.folder; dlg.close(); render(); toast('Сохранено — уже на сайте');
-      }).catch(fail);
-    });
-    dlg.appendChild(form);
-    dlg.addEventListener('close', function () { dlg.remove(); });
-    app.appendChild(dlg);
-    dlg.showModal();
-    title.focus();
-  }
-
-  /* ---------- AI-ассистент ---------- */
-  function viewAi() {
-    var ai = S.ai;
-    var sub = h('div', { class: 'wfa-chips' }, [['questions', 'Вопросы к вам', counts().newQs]].concat(HAS_CHATS ? [['faq', 'Частые вопросы']] : []).concat([['learn', 'Обучение', ai.learned.length], ['kb', 'База знаний']]).map(function (t) {
-      return h('button', { type: 'button', class: 'wfa-chip', 'aria-pressed': aiTab === t[0] ? 'true' : 'false', onclick: function () { aiTab = t[0]; render(); } }, [t[1] + (t[2] != null ? ' ' : ''), t[2] != null ? h('span', { text: t[2] }) : null]);
-    }));
-    var status = h('div', { class: 'wfa-ai-status' + (ai.has_key ? '' : ' is-off') }, [
-      h('span', { class: 'wfa-dot ' + (ai.has_key ? 'is-done' : 'is-new') }),
-      ai.has_key ? 'Ассистент отвечает сам (' + ai.model + '). Сложное приходит сюда.' : 'Ключ API не добавлен — ассистент сразу передаёт все вопросы вам.',
-      h('a', { href: ai.settings_url, class: 'wfa-link', text: ai.has_key ? 'Настройки' : 'Добавить ключ' }),
-    ]);
-    if (aiTab === 'faq' && !HAS_CHATS) aiTab = 'questions';
-    var body = { questions: aiQuestions, faq: aiFaq, learn: aiLearn, kb: aiKb }[aiTab]();
-    return [h('h2', { class: 'wfa-h', text: 'AI-ассистент' }), status, sub].concat(body);
-  }
-  function aiQuestions() {
-    var qs = S.ai.questions.slice().sort(function (a, b) { return (a.state === 'answered') - (b.state === 'answered'); });
-    if (!qs.length) return [h('p', { class: 'wfa-empty', text: 'Вопросов пока нет — ассистент справляется сам.' })];
-    return [h('div', { class: 'wfa-qs' }, qs.map(function (q) {
-      var ans = h('textarea', { class: 'wfa-input', rows: 3, id: 'wfa-q-' + q.id, placeholder: 'Ваш ответ клиенту' }); ans.value = q.answer || '';
-      var learn = h('input', { type: 'checkbox', checked: !q.learned });
-      var digits = (q.contact || '').replace(/\D/g, '');
-      return h('article', { class: 'wfa-q' + (q.state === 'answered' ? ' is-done' : '') }, [
-        h('div', { class: 'wfa-lead-title' }, [h('b', { text: q.q }), h('time', { text: fmtDate(q.date) })]),
-        h('p', { class: 'wfa-note', text: 'Почему передал: ' + (q.reason || '—') + (q.contact ? ' · Контакт: ' + q.contact : ' · Клиент не оставил контакт') }),
-        q.transcript && q.transcript.length ? h('details', { class: 'wfa-transcript' }, [h('summary', { text: 'Весь диалог' })].concat(q.transcript.map(function (m) {
-          return h('p', null, [h('b', { text: m.role === 'user' ? 'Клиент: ' : 'Ассистент: ' }), m.content]);
-        }))) : null,
-        ans,
-        h('div', { class: 'wfa-row' }, [
-          q.learned ? h('span', { class: 'wfa-note', text: '✓ Уже в обучении' }) : h('label', { class: 'wfa-check' }, [learn, ' Запомнить ответ — в следующий раз ассистент ответит сам']),
-          h('span', { class: 'wfa-grow' }),
-          digits ? h('a', { class: 'wfa-btn wfa-btn-ghost', target: '_blank', rel: 'noopener', href: 'https://wa.me/' + digits + '?text=' + encodeURIComponent(ans.value), onclick: function (e) { e.currentTarget.href = 'https://wa.me/' + digits + '?text=' + encodeURIComponent(ans.value); }, text: 'Ответить в WhatsApp' }) : null,
-          h('button', { type: 'button', class: 'wfa-btn', text: 'Сохранить ответ', onclick: function () {
-            if (!ans.value.trim()) { ans.focus(); toast('Напишите ответ', true); return; }
-            adapter.api('POST', '/ai/question/' + q.id, { answer: ans.value.trim(), learn: learn.checked && !q.learned }).then(function (r) {
-              q.answer = ans.value.trim(); q.state = 'answered'; if (learn.checked) q.learned = true; S.ai.learned = r.learned || S.ai.learned;
-              render(); toast(learn.checked ? 'Ответ сохранён и добавлен в обучение' : 'Ответ сохранён');
-            }).catch(fail);
-          } }),
-          confirmBtn('Удалить', function () {
-            adapter.api('DELETE', '/ai/question/' + q.id).then(function () { S.ai.questions = S.ai.questions.filter(function (x) { return x !== q; }); render(); }).catch(fail);
-          }),
-        ]),
-      ]);
-    }))];
-  }
-  function aiLearn() {
-    var rows = S.ai.learned.map(function (r) { return { q: r.q, a: r.a }; });
-    var box = h('div', { class: 'wfa-learn' });
-    function draw() {
-      box.innerHTML = '';
-      rows.forEach(function (r, i) {
-        var q = h('textarea', { class: 'wfa-input', rows: 2, 'aria-label': 'Вопрос', oninput: function (e) { r.q = e.target.value; } }); q.value = r.q;
-        var a = h('textarea', { class: 'wfa-input', rows: 3, 'aria-label': 'Ответ', oninput: function (e) { r.a = e.target.value; } }); a.value = r.a;
-        box.appendChild(h('div', { class: 'wfa-learn-row' }, [h('label', null, [h('span', { text: 'Вопрос клиента' }), q]), h('label', null, [h('span', { text: 'Правильный ответ' }), a]),
-          h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost wfa-danger', text: 'Убрать', onclick: function () { rows.splice(i, 1); draw(); } })]));
+  /* лист снизу: редактирование, ответы, настройки */
+  function sheet(title, content, opts) {
+    opts = opts || {};
+    const back = h('div', { class: 'wfa-sheet-back' });
+    const closeBtn = h('button', { type: 'button', class: 'wfa-icon-btn', 'aria-label': 'Закрыть', html: I.close });
+    const head = h('div', { class: 'wfa-sheet-head' }, [h('span', { class: 'wfa-grabber' }), h('b', { text: title }), closeBtn]);
+    const scroll = h('div', { class: 'wfa-sheet-body' }, content);
+    const foot = opts.actions ? h('div', { class: 'wfa-sheet-foot' }, opts.actions) : null;
+    const el = h('div', { class: 'wfa-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': title }, [head, scroll, foot]);
+    layer.append(back, el);
+    layer.classList.add('is-on');
+    anim(back, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+    anim(el, [{ transform: 'translateY(100%)' }, { transform: 'none' }], { duration: 440 });
+    let closed = false;
+    function close() {
+      if (closed) return; closed = true;
+      anim(back, [{ opacity: 1 }, { opacity: 0 }], { duration: 260 });
+      const from = el.style.transform || 'none';
+      done(anim(el, [{ transform: from }, { transform: 'translateY(100%)' }], { duration: 300, easing: 'cubic-bezier(.4,0,1,1)' }), () => {
+        back.remove(); el.remove();
+        if (!layer.querySelector('.wfa-sheet')) layer.classList.remove('is-on');
+        if (opts.onclose) opts.onclose();
       });
-      if (!rows.length) box.appendChild(h('p', { class: 'wfa-empty', text: 'Пока ничего не выучено. Ответьте на вопрос во вкладке «Вопросы к вам» с галочкой «Запомнить» или добавьте пример сами.' }));
     }
-    draw();
-    return [
-      h('p', { class: 'wfa-note', text: 'Это ваши ответы, которые ассистент использует как образец. Добавьте пример для частого вопроса — и он будет отвечать так же.' }),
-      box,
-      h('div', { class: 'wfa-row' }, [
-        h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: '+ Добавить пример', onclick: function () { rows.push({ q: '', a: '' }); draw(); } }),
-        h('span', { class: 'wfa-grow' }),
-        h('button', { type: 'button', class: 'wfa-btn', text: 'Сохранить обучение', onclick: function () {
-          adapter.api('POST', '/ai/learned', { rows: rows.filter(function (r) { return r.q.trim() && r.a.trim(); }) }).then(function (r) { S.ai.learned = r.learned; render(); toast('Обучение сохранено'); }).catch(fail);
-        } }),
-      ]),
-    ];
+    back.addEventListener('click', close);
+    closeBtn.addEventListener('click', close);
+    // потянуть вниз за шапку — закрыть
+    let y0 = null, dy = 0;
+    head.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; head.setPointerCapture(e.pointerId); el.style.transition = 'none'; });
+    head.addEventListener('pointermove', (e) => { if (y0 == null) return; dy = Math.max(0, e.clientY - y0); el.style.transform = 'translateY(' + dy + 'px)'; });
+    head.addEventListener('pointerup', () => {
+      if (y0 == null) return; y0 = null;
+      if (dy > 110) close();
+      else { el.style.transition = 'transform .3s ' + EASE; el.style.transform = ''; }
+    });
+    const first = el.querySelector('textarea, input:not([type=checkbox]):not([type=radio])');
+    if (first && opts.focus && !phoneUI()) setTimeout(() => first.focus(), 350);
+    return { close, el };
   }
-  function aiKb() {
-    var t = h('textarea', { class: 'wfa-input wfa-kb', id: 'wfa-kb', rows: 22 }); t.value = S.ai.knowledge;
-    return [
-      h('p', { class: 'wfa-note', text: 'Главный источник знаний ассистента. Пишите обычным текстом: услуги, цены «от», сроки, адрес, график, частые вопросы. Чего здесь нет — ассистент не придумает и передаст вопрос вам.' }),
-      t,
-      h('div', { class: 'wfa-row' }, [h('span', { class: 'wfa-grow' }), h('button', { type: 'button', class: 'wfa-btn', text: 'Сохранить базу знаний', onclick: function () {
-        adapter.api('POST', '/ai/knowledge', { knowledge: t.value }).then(function () { S.ai.knowledge = t.value; toast('База знаний сохранена'); }).catch(fail);
-      } })]),
-    ];
+  const field = (label, input, hint) => h('label', { class: 'wfa-field' }, [h('span', { text: label }), input, hint ? h('small', { text: hint }) : null]);
+  const area = (value, rows, ph) => { const t = h('textarea', { class: 'wfa-input', rows: rows || 4, placeholder: ph || '' }); t.value = value || ''; return t; };
+  const inputEl = (value, type, ph) => h('input', { class: 'wfa-input', type: type || 'text', value: value || '', placeholder: ph || '' });
+  const btn = (text, onclick, cls) => h('button', { type: 'button', class: 'wfa-btn' + (cls ? ' ' + cls : ''), onclick }, text);
+
+  /* общие блоки списков в стиле iOS */
+  const group = (title, rows, foot) => h('section', { class: 'wfa-group' }, [
+    title ? h('h2', { class: 'wfa-group-title', text: title }) : null,
+    h('div', { class: 'wfa-list' }, rows),
+    foot ? h('p', { class: 'wfa-group-foot', text: foot }) : null,
+  ]);
+  function row(o) {
+    const attrs = { class: 'wfa-item' + (o.cls ? ' ' + o.cls : ''), onclick: o.onclick };
+    if (o.href) { attrs.href = o.href; if (o.blank) { attrs.target = '_blank'; attrs.rel = 'noopener'; } } else attrs.type = 'button';
+    return h(o.href ? 'a' : 'button', attrs, [
+      o.icon ? h('span', { class: 'wfa-item-ico' + (o.tint ? ' is-' + o.tint : '') }, ico(o.icon)) : null,
+      h('span', { class: 'wfa-item-main' }, [h('b', { text: o.title }), o.sub ? h('span', { class: 'wfa-item-sub', text: o.sub }) : null]),
+      o.value != null ? h('span', { class: 'wfa-item-value', text: o.value }) : null,
+      o.badge ? h('span', { class: 'wfa-count', text: o.badge }) : null,
+      o.chevron === false ? null : ico('next', 'wfa-chev'),
+    ]);
+  }
+  const staticRow = (text, icon) => h('div', { class: 'wfa-item is-static' }, [icon ? h('span', { class: 'wfa-item-ico is-ok' }, ico(icon)) : null, h('span', { class: 'wfa-item-main' }, [h(icon ? 'b' : 'span', { class: icon ? null : 'wfa-item-sub', text })])]);
+  function segmented(items, current, onpick) {
+    const s = h('div', { class: 'wfa-seg', role: 'tablist' });
+    const thumb = h('span', { class: 'wfa-seg-thumb', 'aria-hidden': 'true' });
+    s.appendChild(thumb);
+    items.forEach(([k, label, n]) => s.appendChild(h('button', { type: 'button', role: 'tab', 'aria-selected': k === current ? 'true' : 'false', onclick: () => onpick(k) },
+      [label, n ? h('span', { class: 'wfa-seg-n', text: n }) : null])));
+    requestAnimationFrame(() => {
+      const b = s.querySelector('[aria-selected=true]');
+      if (b) { thumb.style.width = b.offsetWidth + 'px'; thumb.style.transform = 'translateX(' + b.offsetLeft + 'px)'; }
+    });
+    return s;
+  }
+  const empty = (icon, title, text) => h('div', { class: 'wfa-empty' }, [ico(icon), h('b', { text: title }), text ? h('p', { text }) : null]);
+
+  /* ---------- состояние ---------- */
+  let S = null, faq = null;
+  const C = { list: [], seen: null };
+  let leadFilter = 'new', chatFilter = 'waiting';
+  const counts = () => ({
+    waiting: C.list.filter((c) => c.status === 'waiting').length,
+    newLeads: S ? S.leads.filter((l) => l.status === 'new').length : 0,
+    newQs: S && S.ai ? S.ai.questions.filter((q) => q.state !== 'answered').length : 0,
+  });
+  function updateBadges() {
+    const c = counts();
+    badge('chats', c.waiting); badge('leads', c.newLeads); badge('train', c.newQs);
+    if (navigator.setAppBadge) { try { const n = c.waiting + c.newLeads; n ? navigator.setAppBadge(n) : navigator.clearAppBadge(); } catch (e) {} }
+  }
+  function render(k) {
+    if (!S) return;
+    const scr = screens[k];
+    if (document.activeElement && scr.body.contains(document.activeElement) && document.activeElement.matches('input, textarea')) return; // не мешаем печатать
+    scr.body.innerHTML = '';
+    ({ chats: viewChats, leads: viewLeads, train: viewTrain, more: viewMore })[k](scr.body);
+    updateBadges();
   }
 
-  /* ---------- частые вопросы: что клиенты спрашивают чаще всего ---------- */
-  function normQ(t) { return String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim(); }
-  function aiFaq() {
-    if (!C.faq) {
-      adapter.chatApi('GET', '/faq').then(function (d) { C.faq = d.items || []; if (tab === 'ai' && aiTab === 'faq') render(); }).catch(fail);
-      return [h('p', { class: 'wfa-loading', text: 'Загружаем…' })];
-    }
-    if (!C.faq.length) return [h('p', { class: 'wfa-empty', text: 'Клиенты ещё ничего не спрашивали. Здесь появятся их вопросы — самые частые сверху.' })];
-    var known = {}; S.ai.learned.forEach(function (r) { known[normQ(r.q)] = r.a; });
-    return [
-      h('p', { class: 'wfa-note', text: 'Все вопросы клиентов из чата, самые частые сверху. Впишите ответ и нажмите «В обучение» — ассистент будет отвечать так же.' }),
-      h('div', { class: 'wfa-qs' }, C.faq.map(function (it, i) {
-        var done = known[normQ(it.q)];
-        var ans = h('textarea', { class: 'wfa-input', rows: 2, id: 'wfa-faq-' + i, placeholder: done ? '' : 'Ваш ответ на этот вопрос' }); ans.value = done || '';
-        return h('article', { class: 'wfa-q' + (done ? ' is-done' : '') }, [
-          h('div', { class: 'wfa-lead-title' }, [h('b', { text: it.q }), h('span', { class: 'wfa-count', text: it.n + (it.n % 10 >= 2 && it.n % 10 <= 4 && (it.n % 100 < 12 || it.n % 100 > 14) ? ' раза' : ' раз') })]),
-          ans,
-          h('div', { class: 'wfa-row' }, [h('span', { class: 'wfa-note', text: done ? '✓ Ассистент знает ответ' : 'Спросили последний раз: ' + fmtDate(new Date(it.at * 1000).toISOString()) }), h('span', { class: 'wfa-grow' }),
-            h('button', { type: 'button', class: 'wfa-btn', text: done ? 'Обновить ответ' : 'В обучение', onclick: function () {
-              var a = ans.value.trim();
-              if (!a) { ans.focus(); toast('Напишите ответ', true); return; }
-              var rows = S.ai.learned.filter(function (r) { return normQ(r.q) !== normQ(it.q); }).concat([{ q: it.q, a: a }]);
-              adapter.api('POST', '/ai/learned', { rows: rows }).then(function (r) { S.ai.learned = r.learned; render(); toast('Добавлено в обучение'); }).catch(fail);
-            } }),
-          ]),
-        ]);
-      })),
-    ];
-  }
-
-  /* ---------- чаты: менеджер подключается к разговору ---------- */
-  var STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
-  var listTimer = 0, chatTimer = 0;
+  /* ================= ЧАТЫ ================= */
+  const STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
   function setChats(list) {
-    var waitingIds = list.filter(function (c) { return c.status === 'waiting'; }).map(function (c) { return c.id; });
-    if (C.seenWaiting) {
-      var fresh = waitingIds.filter(function (id) { return C.seenWaiting.indexOf(id) < 0; });
-      if (fresh.length) toast('Клиенту нужен менеджер — откройте «Чаты»');
-    }
-    C.seenWaiting = waitingIds; C.list = list;
+    const waiting = list.filter((c) => c.status === 'waiting').map((c) => c.id);
+    if (C.seen && waiting.some((id) => C.seen.indexOf(id) < 0)) toast('Клиенту нужен менеджер');
+    C.seen = waiting; C.list = list;
   }
-  function pollList() {
-    clearTimeout(listTimer);
-    listTimer = setTimeout(function () {
-      if (document.hidden) { pollList(); return; }
-      adapter.chatApi('GET', '/chats').then(function (d) {
-        var before = JSON.stringify(C.list); setChats(d.chats);
-        if (JSON.stringify(C.list) !== before && !busy() && (tab === 'chats' || tab === 'home')) render();
-      }).catch(function () {}).then(pollList);
-    }, tab === 'chats' ? 4000 : 10000);
+  function viewChats(body) {
+    notifyCards().forEach((c) => body.appendChild(c));
+    const c = counts();
+    if (chatFilter === 'waiting' && !c.waiting) chatFilter = 'all';
+    body.appendChild(segmented([['waiting', 'Ждут вас', c.waiting], ['all', 'Все', C.list.length]], chatFilter, (k) => { chatFilter = k; render('chats'); }));
+    const list = C.list.filter((x) => chatFilter === 'all' || x.status === 'waiting');
+    if (!list.length) { body.appendChild(empty('chats', 'Разговоров пока нет', 'Когда клиент напишет ассистенту на сайте, разговор появится здесь. Если ассистент позовёт вас — придёт уведомление.')); return; }
+    body.appendChild(h('div', { class: 'wfa-list is-chats' }, list.map((x) => h('button', { type: 'button', class: 'wfa-chat-row is-' + x.status, onclick: () => openChat(x.id) }, [
+      h('span', { class: 'wfa-ava', text: x.contact ? '☎' : '#' + String(x.id).slice(-2) }),
+      h('span', { class: 'wfa-chat-main' }, [
+        h('span', { class: 'wfa-chat-top' }, [h('b', { text: x.contact || 'Клиент №' + x.id }), h('time', { text: timeAgo(x.updated) })]),
+        h('span', { class: 'wfa-chat-last', text: x.last || '…' }),
+        h('span', { class: 'wfa-chat-top' }, [h('span', { class: 'wfa-pill is-' + x.status, text: STATUS[x.status] || x.status }), x.unread ? h('span', { class: 'wfa-count', text: x.unread }) : null]),
+      ]),
+    ]))));
   }
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && S && HAS_CHATS) { pollList(); if (C.open) pollChat(0); } });
-  function openChat(id, quiet) {
-    C.open = id; C.msgs = []; C.status = ''; C.contact = '';
+
+  let chatView = null, chatTimer = 0, listTimer = 0;
+  function openChat(id, instant) {
+    if (!HAS_CHATS) return;
+    if (tab !== 'chats') setTab('chats', true);
+    if (chatView) pop();
+    const it = C.list.find((x) => x.id === id) || {};
+    const sub = h('span', { class: 'wfa-nav-sub', text: STATUS[it.status] || '' });
+    const waBtn = h('a', { class: 'wfa-icon-btn', target: '_blank', rel: 'noopener', 'aria-label': 'Написать в WhatsApp', html: I.wa, hidden: true });
+    const log = h('div', { class: 'wfa-msgs', 'aria-live': 'polite' });
+    const join = h('div', { class: 'wfa-join' });
+    const ta = h('textarea', { class: 'wfa-composer-input', rows: 1, placeholder: 'Сообщение клиенту', 'aria-label': 'Сообщение клиенту', enterkeyhint: 'send' });
+    const form = h('form', { class: 'wfa-composer' }, [ta, h('button', { type: 'submit', class: 'wfa-send', 'aria-label': 'Отправить', html: I.send })]);
+    const v = pushView(it.contact || 'Клиент №' + id, { backLabel: 'Чаты', subtitle: sub, actions: [waBtn], footer: h('div', { class: 'wfa-chat-foot' }, [join, form]), cls: 'is-chat' });
+    v.chat = id; v.body.appendChild(log);
+    const st = { msgs: [], status: it.status || '', contact: it.contact || '' };
+    chatView = { v, id, st, log, sub, join, waBtn };
+    v.onclose = () => { clearTimeout(chatTimer); chatView = null; };
+    ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
+    ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && !phoneUI()) { e.preventDefault(); form.requestSubmit(); } });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const t = ta.value.trim(); if (!t) return;
+      ta.value = ''; ta.style.height = '';
+      chatAction('/send', { text: t }).catch((err) => { ta.value = t; fail(err); });
+    });
     if (location.hash !== '#chat-' + id) history.replaceState(null, '', '#chat-' + id);
-    if (!quiet) render();
+    push(v);
+    if (instant) v.el.getAnimations && v.el.getAnimations().forEach((a) => a.finish());
+    drawJoin();
     pollChat(0, true);
   }
-  function closeChat() {
-    C.open = 0; clearTimeout(chatTimer);
-    history.replaceState(null, '', location.pathname + location.search);
-    render();
+  function drawJoin() {
+    if (!chatView) return;
+    const { st, join, sub, waBtn } = chatView;
+    sub.textContent = STATUS[st.status] || '';
+    const d = digits(st.contact);
+    waBtn.hidden = !d; if (d) waBtn.href = 'https://wa.me/' + d;
+    join.innerHTML = '';
+    if (st.status === 'live') {
+      join.appendChild(h('div', { class: 'wfa-join-live' }, [h('span', { text: 'Вы в чате — ассистент молчит' }), btn('Вернуть ассистенту', () => chatAction('/release').then(() => toast('Дальше отвечает ассистент')).catch(fail), 'is-small is-ghost')]));
+    } else {
+      join.appendChild(btn(st.status === 'waiting' ? 'Присоединиться — клиент ждёт' : 'Присоединиться к чату', () => chatAction('/join').then(() => toast('Клиент видит: «Менеджер присоединился»')).catch(fail), 'is-wide is-primary'));
+    }
+  }
+  function drawMsgs(list) {
+    if (!chatView) return;
+    const { log, v } = chatView;
+    const sc = v.scroller, stick = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 80;
+    const me = (CFG.chats && CFG.chats.manager) || 'Менеджер';
+    list.forEach((m) => {
+      const node = m.r === 'system' ? h('p', { class: 'wfa-sys', text: m.t }) : h('div', { class: 'wfa-bubble is-' + m.r }, [
+        h('small', { text: (m.r === 'user' ? 'Клиент' : m.r === 'bot' ? 'Ассистент' : m.a || me) + (m.at ? ' · ' + clock(m.at) : '') }),
+        h('span', { text: m.t }),
+      ]);
+      log.appendChild(node);
+      if (list.length < 4) anim(node, [{ opacity: 0, transform: 'translateY(8px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 320 });
+    });
+    if (stick || list.length > 3) sc.scrollTop = sc.scrollHeight;
   }
   function pollChat(delay, first) {
     clearTimeout(chatTimer);
-    var id = C.open; if (!id) return;
-    chatTimer = setTimeout(function () {
-      if (C.open !== id) return;
-      var after = C.msgs.length ? C.msgs[C.msgs.length - 1].i : 0;
-      adapter.chatApi('GET', '/chat/' + id + '?after=' + after).then(function (d) {
-        if (C.open !== id) return;
-        var changed = first || d.msgs.length || d.status !== C.status || d.contact !== C.contact;
-        C.msgs = C.msgs.concat(d.msgs); C.status = d.status; C.contact = d.contact;
-        var it = C.list.find(function (c) { return c.id === id; }); if (it) { it.unread = 0; it.status = d.status; }
-        if (changed && !busy() && tab === 'chats') render();
-      }).catch(function (e) { if (first) { fail(e); closeChat(); } }).then(function () { if (C.open === id) pollChat(document.hidden ? 15000 : 2500); });
+    if (!chatView) return;
+    const cv = chatView;
+    chatTimer = setTimeout(() => {
+      const after = cv.st.msgs.length ? cv.st.msgs[cv.st.msgs.length - 1].i : 0;
+      adapter.chatApi('GET', '/chat/' + cv.id + '?after=' + after).then((d) => {
+        if (chatView !== cv) return;
+        const fresh = d.msgs.filter((m) => m.i > after);
+        cv.st.msgs = cv.st.msgs.concat(fresh);
+        if (fresh.length) drawMsgs(fresh);
+        if (d.status !== cv.st.status || d.contact !== cv.st.contact) { cv.st.status = d.status; cv.st.contact = d.contact; drawJoin(); }
+        const it = C.list.find((x) => x.id === cv.id); if (it) { it.unread = 0; it.status = d.status; }
+        updateBadges();
+      }).catch((e) => { if (first) { fail(e); pop(); } }).then(() => { if (chatView === cv) pollChat(document.hidden ? 15000 : 2500); });
     }, delay || 0);
   }
   function chatAction(path, body) {
-    var id = C.open;
-    return adapter.chatApi('POST', '/chat/' + id + path, body).then(function (r) {
-      if (r.status) C.status = r.status;
-      var it = C.list.find(function (c) { return c.id === id; }); if (it && r.status) it.status = r.status;
-      pollChat(0); return r;
+    const cv = chatView;
+    return adapter.chatApi('POST', '/chat/' + cv.id + path, body).then((r) => {
+      if (r.status) cv.st.status = r.status;
+      if (path === '/send') cv.st.status = 'live';
+      const it = C.list.find((x) => x.id === cv.id); if (it) it.status = cv.st.status;
+      drawJoin(); pollChat(0); return r;
     });
   }
-  function ago(ts) {
-    var s = Math.max(0, Date.now() / 1000 - ts);
-    if (s < 60) return 'только что'; if (s < 3600) return Math.floor(s / 60) + ' мин'; if (s < 86400) return Math.floor(s / 3600) + ' ч';
-    return fmtDate(new Date(ts * 1000).toISOString());
+  function pollList() {
+    clearTimeout(listTimer);
+    listTimer = setTimeout(() => {
+      if (document.hidden) return pollList();
+      adapter.chatApi('GET', '/chats').then((d) => {
+        const before = JSON.stringify(C.list);
+        setChats(d.chats);
+        if (JSON.stringify(C.list) !== before) { updateBadges(); if (tab === 'chats' && !stack.length) render('chats'); }
+      }).catch(() => {}).then(pollList);
+    }, tab === 'chats' ? 4000 : 9000);
   }
-  function viewChats() {
-    var list = h('div', { class: 'wfa-chat-list' }, C.list.length ? C.list.map(function (c) {
-      return h('button', { type: 'button', class: 'wfa-chat-item is-' + c.status + (c.id === C.open ? ' is-open' : ''), onclick: function () { openChat(c.id); } }, [
-        h('span', { class: 'wfa-chat-item-top' }, [h('b', { text: c.contact || 'Клиент №' + c.id }), h('time', { text: ago(c.updated) })]),
-        h('span', { class: 'wfa-chat-last', text: c.last || '…' }),
-        h('span', { class: 'wfa-chat-item-top' }, [h('span', { class: 'wfa-pill is-' + c.status, text: STATUS[c.status] || c.status }), c.unread && c.id !== C.open ? h('span', { class: 'wfa-badge', text: c.unread }) : null]),
-      ]);
-    }) : [h('p', { class: 'wfa-empty', text: 'Разговоров пока нет. Когда клиент напишет ассистенту на сайте, чат появится здесь.' })]);
-    return [
-      h('div', { class: 'wfa-h-row' }, [h('h2', { class: 'wfa-h', text: 'Чаты' }), pushControl()]),
-      installHint(),
-      h('div', { class: 'wfa-chats' + (C.open ? ' has-open' : '') }, [list, C.open ? chatPane() : h('div', { class: 'wfa-chat-pane wfa-chat-placeholder' }, h('p', { class: 'wfa-note', text: 'Выберите разговор слева. Чаты «Ждёт вас» — ассистент позвал менеджера.' }))]),
-    ];
-  }
-  function chatPane() {
-    var name = (CFG.chats && CFG.chats.manager) || 'Менеджер';
-    var log = h('div', { class: 'wfa-chat-log', 'aria-live': 'polite' }, C.msgs.length ? C.msgs.map(function (m) {
-      if (m.r === 'system') return h('p', { class: 'wfa-chat-sys', text: m.t });
-      var who = m.r === 'user' ? 'Клиент' : m.r === 'bot' ? 'Ассистент' : (m.a || name);
-      return h('div', { class: 'wfa-bubble is-' + m.r }, [h('small', { text: who + (m.at ? ' · ' + new Date(m.at * 1000).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : '') }), h('span', { text: m.t })]);
-    }) : [h('p', { class: 'wfa-loading', text: 'Загружаем разговор…' })]);
-    var live = C.status === 'live';
-    var input = h('textarea', { class: 'wfa-input wfa-chat-input', id: 'wfa-chat-input', rows: 1, placeholder: live ? 'Ответ клиенту от имени «' + name + '»' : 'Напишите — и вы присоединитесь к чату', oninput: function (e) { C.draft = e.target.value; },
-      onkeydown: function (e) { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } } });
-    input.value = C.draft;
-    var form = h('form', { class: 'wfa-chat-form' }, [input, h('button', { type: 'submit', class: 'wfa-btn', text: 'Отправить' })]);
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var t = C.draft.trim(); if (!t) return;
-      C.draft = ''; input.value = '';
-      chatAction('/send', { text: t }).then(function () { C.status = 'live'; }).catch(function (err) { C.draft = t; render(); fail(err); });
-    });
-    var digits = (C.contact || '').replace(/\D/g, '');
-    return h('section', { class: 'wfa-chat-pane' }, [
-      h('div', { class: 'wfa-chat-head' }, [
-        h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost wfa-chat-back', 'aria-label': 'К списку чатов', text: '←', onclick: closeChat }),
-        h('div', { class: 'wfa-grow' }, [h('b', { text: C.contact || 'Клиент №' + C.open }), h('span', { class: 'wfa-pill is-' + C.status, text: STATUS[C.status] || '…' })]),
-        digits ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: 'https://wa.me/' + digits, target: '_blank', rel: 'noopener', text: 'WhatsApp' }) : null,
-        live ? h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Вернуть ассистенту', onclick: function () { chatAction('/release').then(function () { toast('Дальше отвечает ассистент'); }).catch(fail); } })
-          : h('button', { type: 'button', class: 'wfa-btn', text: 'Присоединиться', onclick: function () { chatAction('/join').then(function () { toast('Клиент видит: «Менеджер присоединился»'); var i = document.getElementById('wfa-chat-input'); if (i) i.focus(); }).catch(fail); } }),
-      ]),
-      log,
-      form,
-    ]);
-  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S && HAS_CHATS) { pollList(); if (chatView) pollChat(0); } });
+  window.addEventListener('hashchange', () => { const m = /^#chat-(\d+)$/.exec(location.hash); if (m && S && (!chatView || chatView.id !== +m[1])) openChat(+m[1]); });
 
-  /* ---------- push-уведомления на телефон ---------- */
+  /* уведомления и установка */
   function pushState() {
     if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) return 'unsupported';
-    return Notification.permission; // default | granted | denied
+    return Notification.permission;
   }
-  function pushControl() {
-    if (!CFG.sw) return CFG.app ? h('a', { class: 'wfa-btn wfa-btn-ghost', href: CFG.app, target: '_blank', rel: 'noopener', text: 'Приложение и уведомления ↗' }) : null;
-    var st = pushState();
-    if (st === 'unsupported') return null;
-    if (st === 'denied') return h('span', { class: 'wfa-note', text: 'Уведомления запрещены в настройках браузера' });
-    if (st === 'granted') return h('div', { class: 'wfa-row' }, [
-      h('span', { class: 'wfa-note', text: '🔔 Уведомления включены' }),
-      h('button', { type: 'button', class: 'wfa-btn wfa-btn-ghost', text: 'Проверить', onclick: function () { subscribePush().then(function () { return adapter.chatApi('POST', '/push/test'); }).then(function (r) { toast(r.sent ? 'Уведомление отправлено' : 'Не дошло — включите ещё раз', !r.sent); }).catch(fail); } }),
-    ]);
-    return h('button', { type: 'button', class: 'wfa-btn', text: '🔔 Включить уведомления', onclick: function () { subscribePush().then(function () { toast('Готово: уведомления будут приходить на это устройство'); render(); }).catch(function (e) { fail(e); render(); }); } });
+  const standalone = () => (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  function notifyCards() {
+    const out = [];
+    if (!HAS_CHATS) return out;
+    if (embedded) {
+      if (CFG.app) out.push(h('a', { class: 'wfa-card is-tip', href: CFG.app, target: '_blank', rel: 'noopener' }, [ico('install'), h('div', null, [h('b', { text: 'Админка на телефоне' }), h('p', { text: 'Откройте её на телефоне и установите как приложение — придут уведомления, когда клиенту нужен менеджер.' })])]));
+      return out;
+    }
+    if (!standalone() && ls.get('wfa-install-hide') !== '1') {
+      const card = h('div', { class: 'wfa-card is-tip' }, [ico('install'), h('div', null, [h('b', { text: 'Установите как приложение' }),
+        h('p', { text: isIOS ? 'В Safari нажмите «Поделиться» → «На экран Домой» и откройте админку со значка. Так придут уведомления.' : 'В меню браузера выберите «Установить приложение» или «Добавить на главный экран».' })]),
+        h('button', { type: 'button', class: 'wfa-icon-btn', 'aria-label': 'Скрыть', html: I.close, onclick: () => { ls.set('wfa-install-hide', '1'); card.remove(); } })]);
+      out.push(card);
+    }
+    const p = pushState();
+    if (p === 'default' || (p === 'granted' && ls.get('wfa-push-ok') !== '1')) {
+      out.push(h('div', { class: 'wfa-card is-alert' }, [ico('bell'), h('div', null, [h('b', { text: 'Включите уведомления' }), h('p', { text: 'Чтобы сразу узнавать, когда клиенту нужен менеджер.' })]),
+        btn('Включить', () => enablePush(), 'is-small is-primary')]));
+    }
+    return out;
   }
   function b64ToBytes(s) {
-    var pad = '='.repeat((4 - s.length % 4) % 4), raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
-    var out = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i); return out;
+    const pad = '='.repeat((4 - (s.length % 4)) % 4), raw = atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, (c) => c.charCodeAt(0));
   }
   function subscribePush() {
-    if (pushState() === 'unsupported') return Promise.reject(new Error('Этот браузер не умеет уведомления. На iPhone добавьте админку на экран «Домой» и откройте оттуда.'));
-    if (!CFG.chats.vapid) return Promise.reject(new Error('Ключи уведомлений не созданы на сервере'));
-    return Notification.requestPermission().then(function (p) {
-      if (p !== 'granted') throw new Error('Разрешите уведомления, чтобы они приходили');
+    if (CFG.demo) return Promise.reject(new Error('Это демо — на вашем сайте здесь включаются уведомления на телефон'));
+    if (pushState() === 'unsupported') return Promise.reject(new Error(isIOS ? 'На iPhone уведомления работают, когда админка открыта со значка на экране «Домой».' : 'Этот браузер не умеет уведомления.'));
+    if (!CFG.chats || !CFG.chats.vapid) return Promise.reject(new Error('Ключи уведомлений не созданы на сервере'));
+    return Notification.requestPermission().then((p) => {
+      if (p !== 'granted') throw new Error('Разрешите уведомления в настройках телефона');
       return navigator.serviceWorker.register(CFG.sw);
-    }).then(function () { return navigator.serviceWorker.ready; }).then(function (reg) {
-      return reg.pushManager.getSubscription().then(function (s) { return s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.chats.vapid) }); });
-    }).then(function (sub) { return adapter.chatApi('POST', '/push/subscribe', { subscription: sub.toJSON() }); });
+    }).then(() => navigator.serviceWorker.ready)
+      .then((reg) => reg.pushManager.getSubscription().then((s) => s || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.chats.vapid) })))
+      .then((sub) => adapter.chatApi('POST', '/push/subscribe', { subscription: sub.toJSON() }));
   }
-  function installHint() {
-    if (!CFG.sw) return null;
-    var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
-    if (standalone) return null;
-    var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
-    return h('p', { class: 'wfa-ai-status' }, [h('span', { class: 'wfa-dot is-new' }),
-      ios ? 'Установите админку как приложение: в Safari нажмите «Поделиться» → «На экран Домой», откройте её со значка и включите уведомления.'
-          : 'Установите админку как приложение: в меню браузера «Установить приложение» (или «Добавить на главный экран»), затем включите уведомления.']);
+  function enablePush() {
+    return subscribePush().then(() => { ls.set('wfa-push-ok', '1'); toast('Готово: уведомления будут приходить сюда'); render(tab); })
+      .catch((e) => { fail(e); render(tab); });
   }
-  if ('serviceWorker' in navigator && CFG.sw) { navigator.serviceWorker.register(CFG.sw).catch(function () {}); }
+  if ('serviceWorker' in navigator && CFG.sw) navigator.serviceWorker.register(CFG.sw).catch(() => {});
 
-  /* ---------- номера ---------- */
-  function viewSettings() {
-    var ph = h('input', { class: 'wfa-input', id: 'wfa-phone', type: 'tel', value: S.settings.phone });
-    var wa = h('input', { class: 'wfa-input', id: 'wfa-wa', type: 'tel', value: S.settings.whatsapp });
-    return [
-      h('h2', { class: 'wfa-h', text: 'Номера' }),
-      h('section', { class: 'wfa-card wfa-narrow' }, [
-        h('p', { class: 'wfa-note', text: 'Меняются на всём сайте сразу. Телефон и WhatsApp независимы: поменяли один — второй остался прежним.' }),
-        h('label', { class: 'wfa-field' }, [h('span', { text: 'Телефон для звонков' }), ph]),
-        h('label', { class: 'wfa-field' }, [h('span', { text: 'Номер WhatsApp' }), wa]),
-        h('div', { class: 'wfa-row' }, [h('span', { class: 'wfa-grow' }), h('button', { type: 'button', class: 'wfa-btn', text: 'Сохранить', onclick: function () {
-          adapter.api('POST', '/settings', { phone: ph.value, whatsapp: wa.value }).then(function (r) { S.settings = r; render(); toast('Номера обновлены на сайте'); }).catch(fail);
-        } })]),
+  /* ================= ЗАЯВКИ ================= */
+  function viewLeads(body) {
+    const st = S.statuses;
+    const n = (k) => S.leads.filter((l) => k === 'all' || l.status === k).length;
+    body.appendChild(segmented([['new', st.new || 'Новые', n('new')], ['work', st.work || 'В работе', n('work')], ['done', st.done || 'Готово'], ['all', 'Все']], leadFilter, (k) => { leadFilter = k; render('leads'); }));
+    const list = S.leads.filter((l) => leadFilter === 'all' || l.status === leadFilter);
+    if (!list.length) { body.appendChild(empty('leads', leadFilter === 'new' ? 'Новых заявок нет' : 'Здесь пусто', 'Заявки приходят из формы на сайте. Новые сразу видно здесь.')); return; }
+    body.appendChild(h('div', { class: 'wfa-cards' }, list.map(leadCard)));
+  }
+  function leadCard(l) {
+    const wa = l.contact === 'whatsapp';
+    return h('article', { class: 'wfa-lead is-' + l.status }, [
+      h('button', { type: 'button', class: 'wfa-lead-main', onclick: () => leadSheet(l) }, [
+        h('span', { class: 'wfa-lead-top' }, [h('b', { text: l.name }), h('time', { text: timeAgo(l.date) })]),
+        h('span', { class: 'wfa-lead-svc', text: l.service_label }),
+        h('span', { class: 'wfa-lead-phone', text: l.phone }),
+        l.message ? h('span', { class: 'wfa-lead-msg', text: l.message }) : null,
       ]),
-    ];
+      h('div', { class: 'wfa-row2' }, [
+        h('a', { class: 'wfa-btn ' + (wa ? 'is-ghost' : 'is-primary'), href: l.tel }, [ico('phone'), 'Позвонить']),
+        h('a', { class: 'wfa-btn ' + (wa ? 'is-primary' : 'is-ghost'), href: l.wa, target: '_blank', rel: 'noopener' }, [ico('wa'), 'WhatsApp']),
+      ]),
+    ]);
+  }
+  function leadSheet(l) {
+    const seg = h('div', { class: 'wfa-choice' }, Object.keys(S.statuses).map((k) => h('button', { type: 'button', class: 'is-' + k, 'data-k': k, 'aria-pressed': l.status === k ? 'true' : 'false', text: S.statuses[k], onclick: () => {
+      const prev = l.status; l.status = k;
+      seg.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.k === k ? 'true' : 'false'));
+      adapter.api('POST', '/lead/' + l.id, { status: k }).then(() => { toast('Статус: ' + S.statuses[k]); render('leads'); }).catch((e) => { l.status = prev; fail(e); });
+    } })));
+    const sh = sheet(l.name, [
+      h('div', { class: 'wfa-detail' }, [
+        h('span', { text: l.service_label + ' · ' + (l.contact === 'whatsapp' ? 'просит написать в WhatsApp' : 'просит позвонить') }),
+        h('a', { class: 'wfa-detail-phone', href: l.tel, text: l.phone }),
+        l.message ? h('p', { class: 'wfa-quote', text: l.message }) : null,
+        h('small', { text: 'Пришла: ' + new Date(l.date).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) }),
+      ]),
+      field('Статус', seg),
+      h('div', { class: 'wfa-row2' }, [h('a', { class: 'wfa-btn is-primary', href: l.tel }, [ico('phone'), 'Позвонить']), h('a', { class: 'wfa-btn is-ghost', href: l.wa, target: '_blank', rel: 'noopener' }, [ico('wa'), 'WhatsApp'])]),
+      confirmBtn('Удалить заявку', () => adapter.api('DELETE', '/lead/' + l.id).then(() => { S.leads = S.leads.filter((x) => x !== l); sh.close(); render('leads'); toast('Заявка удалена'); }).catch(fail)),
+    ]);
   }
 
-  load();
+  /* ================= ОБУЧЕНИЕ ================= */
+  // база знаний — обычный текст; темы разделены пустой строкой, первая строка темы — её название
+  function parseKB(text) {
+    return String(text || '').split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean).map((b) => {
+      const lines = b.split('\n');
+      return { title: lines[0].trim(), body: lines.slice(1).join('\n').trim() };
+    });
+  }
+  const joinKB = (items) => items.filter((i) => i.title.trim() || i.body.trim())
+    .map((i) => (i.title.trim() + '\n' + i.body.replace(/\n\s*\n+/g, '\n').trim()).trim()).join('\n\n');
+  function saveKB(items, msg) {
+    const text = joinKB(items);
+    return adapter.api('POST', '/ai/knowledge', { knowledge: text }).then(() => { S.ai.knowledge = text; render('train'); toast(msg || 'Сохранено — ассистент уже знает'); });
+  }
+  function saveLearned(rows, msg) {
+    return adapter.api('POST', '/ai/learned', { rows }).then((r) => { S.ai.learned = r.learned || rows; render('train'); toast(msg || 'Сохранено'); });
+  }
+  const normQ = (t) => String(t || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s+/g, ' ').trim();
+  function viewTrain(body) {
+    const ai = S.ai;
+    if (!ai) { body.appendChild(empty('train', 'AI-ассистент не установлен', 'Установите плагин WebFor AI Assistant — здесь появится его обучение.')); return; }
+    const model = String(ai.model || '');
+    body.appendChild(h('div', { class: 'wfa-card ' + (ai.has_key ? 'is-ok' : 'is-alert') }, [ico(ai.has_key ? 'check' : 'bell'), h('div', null, [
+      h('b', { text: ai.has_key ? 'Ассистент отвечает клиентам' : 'Ассистент не подключён' }),
+      h('p', { text: ai.has_key ? (model.indexOf('gemini') === 0 ? 'Gemini' : 'Claude') + ' · ' + model + '. Чего он не знает — спросит у вас здесь.' : 'Нет ключа API — все вопросы сразу приходят вам. Добавьте ключ в настройках.' }),
+    ])]));
+
+    body.appendChild(h('button', { type: 'button', class: 'wfa-hero', onclick: openTest }, [h('span', { class: 'wfa-hero-ico' }, ico('test')), h('span', { class: 'wfa-hero-text' }, [h('b', { text: 'Проверить ассистента' }), h('span', { text: 'Спросите как клиент и посмотрите ответ' })]), ico('next', 'wfa-chev')]));
+
+    const qs = ai.questions.filter((q) => q.state !== 'answered');
+    const qRow = (q) => row({ icon: 'chats', tint: 'accent', title: q.q, sub: (q.contact ? '☎ ' + q.contact + ' · ' : '') + timeAgo(q.date), onclick: () => questionSheet(q) });
+    const qRows = qs.length ? qs.slice(0, 5).map(qRow) : [staticRow('Все вопросы отвечены', 'check')];
+    if (qs.length > 5) qRows.push(row({ title: 'Все вопросы без ответа', value: String(qs.length), onclick: () => {
+      const v = pushView('Нужен ваш ответ', { backLabel: 'Обучение' });
+      v.body.appendChild(h('div', { class: 'wfa-list' }, qs.map(qRow)));
+      push(v);
+    } }));
+    body.appendChild(group('Нужен ваш ответ', qRows,
+    'Ассистент не знал ответа и спросил вас. Ответьте — и в следующий раз он ответит сам.'));
+
+    const faqBox = h('div');
+    body.appendChild(faqBox);
+    drawFaq(faqBox);
+
+    const kb = parseKB(ai.knowledge);
+    body.appendChild(group('Что знает ассистент', kb.map((it, i) => row({ icon: 'book', tint: 'blue', title: it.title, sub: it.body.split('\n')[0], onclick: () => kbSheet(kb, i) }))
+      .concat([row({ icon: 'plus', tint: 'accent', title: 'Добавить знание', sub: 'Цены, услуги, правила — обычным текстом', onclick: () => kbSheet(kb, -1) }),
+        row({ icon: 'file', tint: 'accent', title: 'Загрузить из файла', sub: 'Текстовый файл .txt', onclick: () => kbFromFile(kb) })]),
+    'Главное, по чему отвечает ассистент. Чего здесь нет, он не придумывает — спросит у вас.'));
+
+    body.appendChild(group('Готовые ответы', ai.learned.map((r, i) => row({ icon: 'star', tint: 'gold', title: r.q, sub: r.a, onclick: () => learnedSheet(i) }))
+      .concat([row({ icon: 'plus', tint: 'accent', title: 'Добавить ответ', sub: 'Вопрос клиента и как на него отвечать', onclick: () => learnedSheet(-1) })]),
+    'Точные ответы на конкретные вопросы — ассистент отвечает так же.'));
+  }
+  function drawFaq(box) {
+    box.innerHTML = '';
+    if (!HAS_CHATS) return;
+    if (!faq) {
+      box.appendChild(group('Частые вопросы', [staticRow('Загружаем…')]));
+      adapter.chatApi('GET', '/faq').then((d) => { faq = d.items || []; if (box.isConnected) drawFaq(box); }).catch(() => {});
+      return;
+    }
+    const known = {}; S.ai.learned.forEach((r) => { known[normQ(r.q)] = true; });
+    const faqRow = (it) => row({ icon: known[normQ(it.q)] ? 'check' : 'chats', tint: known[normQ(it.q)] ? 'ok' : 'blue', title: it.q, sub: known[normQ(it.q)] ? 'Ответ есть' : 'Нет точного ответа — нажмите, чтобы дать', badge: it.n > 1 ? '×' + it.n : null, onclick: () => faqSheet(it) });
+    const rows = faq.length ? faq.slice(0, 5).map(faqRow) : [staticRow('Клиенты ещё ничего не спрашивали')];
+    if (faq.length > 5) rows.push(row({ title: 'Все вопросы клиентов', value: String(faq.length), onclick: () => {
+      const v = pushView('Вопросы клиентов', { backLabel: 'Обучение' });
+      v.body.appendChild(h('div', { class: 'wfa-list' }, faq.map(faqRow)));
+      push(v);
+    } }));
+    box.appendChild(group('Частые вопросы', rows, 'Что клиенты спрашивают чаще всего. Дайте точный ответ — ассистент запомнит.'));
+  }
+  function faqSheet(it) {
+    const old = S.ai.learned.find((r) => normQ(r.q) === normQ(it.q));
+    const a = area(old ? old.a : '', 5, 'Как ассистент должен отвечать на этот вопрос');
+    const sh = sheet('Ответ на частый вопрос', [h('p', { class: 'wfa-quote', text: it.q }), h('small', { class: 'wfa-muted', text: 'Спросили ' + plural(it.n, 'раз', 'раза', 'раз') }), field('Ответ', a)], { focus: true, actions: [
+      btn('Сохранить ответ', () => {
+        if (!a.value.trim()) { a.focus(); toast('Напишите ответ', true); return; }
+        const rows = S.ai.learned.filter((r) => normQ(r.q) !== normQ(it.q)).concat([{ q: it.q, a: a.value.trim() }]);
+        saveLearned(rows, 'Готово — ассистент будет отвечать так').then(() => { sh.close(); if (stack.length) pop(); }).catch(fail);
+      }, 'is-wide is-primary'),
+    ] });
+  }
+  function questionSheet(q) {
+    const a = area(q.answer, 5, 'Ваш ответ клиенту');
+    const learn = h('input', { type: 'checkbox', checked: true });
+    const d = digits(q.contact);
+    const sh = sheet('Вопрос клиента', [
+      h('p', { class: 'wfa-quote', text: q.q }),
+      h('small', { class: 'wfa-muted', text: 'Почему спросил вас: ' + (q.reason || '—') + (q.contact ? ' · Контакт: ' + q.contact : ' · Клиент не оставил номер') }),
+      q.transcript && q.transcript.length ? h('details', { class: 'wfa-transcript' }, [h('summary', { text: 'Весь разговор' })].concat(q.transcript.map((m) => h('p', null, [h('b', { text: m.role === 'user' ? 'Клиент: ' : 'Ассистент: ' }), m.content])))) : null,
+      field('Ответ', a),
+      q.learned ? h('small', { class: 'wfa-muted', text: '✓ Уже в готовых ответах' }) : h('label', { class: 'wfa-switch' }, [learn, h('span', { class: 'wfa-switch-ui' }), h('span', { text: 'Запомнить — в следующий раз ассистент ответит сам' })]),
+    ], { focus: true, actions: [
+      btn('Сохранить ответ', () => {
+        if (!a.value.trim()) { a.focus(); toast('Напишите ответ', true); return; }
+        adapter.api('POST', '/ai/question/' + q.id, { answer: a.value.trim(), learn: learn.checked && !q.learned }).then((r) => {
+          q.answer = a.value.trim(); q.state = 'answered'; if (learn.checked) q.learned = true; S.ai.learned = r.learned || S.ai.learned;
+          sh.close(); if (stack.length) pop(); render('train'); toast(learn.checked ? 'Ответ сохранён и запомнен' : 'Ответ сохранён');
+        }).catch(fail);
+      }, 'is-wide is-primary'),
+      d ? h('a', { class: 'wfa-btn is-wide is-ghost', target: '_blank', rel: 'noopener', href: 'https://wa.me/' + d, onclick: (e) => { e.currentTarget.href = 'https://wa.me/' + d + '?text=' + encodeURIComponent(a.value); } }, [ico('wa'), 'Ответить в WhatsApp']) : null,
+      confirmBtn('Удалить вопрос', () => adapter.api('DELETE', '/ai/question/' + q.id).then(() => { S.ai.questions = S.ai.questions.filter((x) => x !== q); sh.close(); render('train'); }).catch(fail)),
+    ] });
+  }
+  function kbSheet(kb, i, preset) {
+    const it = i >= 0 ? kb[i] : (preset || { title: '', body: '' });
+    const t = inputEl(it.title, 'text', 'Например: Доставка и оплата');
+    const b = area(it.body, 10, 'Пишите как для нового сотрудника: цены, сроки, условия, частые вопросы.');
+    const sh = sheet(i >= 0 ? 'Знание' : 'Новое знание', [field('Тема', t), field('Что должен знать ассистент', b, 'Можно несколько строк.')], { focus: i < 0, actions: [
+      btn('Сохранить', () => {
+        if (!t.value.trim() || !b.value.trim()) { (t.value.trim() ? b : t).focus(); toast('Заполните тему и текст', true); return; }
+        const next = kb.slice(); const item = { title: t.value.trim().replace(/\n/g, ' '), body: b.value.trim() };
+        if (i >= 0) next[i] = item; else next.push(item);
+        saveKB(next).then(() => sh.close()).catch(fail);
+      }, 'is-wide is-primary'),
+      i >= 0 ? confirmBtn('Удалить знание', () => { const next = kb.slice(); next.splice(i, 1); saveKB(next, 'Удалено').then(() => sh.close()).catch(fail); }) : null,
+    ] });
+  }
+  function kbFromFile(kb) {
+    pickFile('.txt,.md,.csv,text/plain').then((f) => {
+      if (!f) return;
+      if (f.size > 300000) { toast('Файл слишком большой — до 300 КБ текста', true); return; }
+      f.text().then((txt) => {
+        txt = txt.replace(/\r/g, '').trim();
+        if (!txt) { toast('Файл пустой', true); return; }
+        kbSheet(kb, -1, { title: f.name.replace(/\.[^.]+$/, ''), body: txt });
+      }).catch(() => toast('Не получилось прочитать файл. Нужен обычный текст (.txt).', true));
+    });
+  }
+  function learnedSheet(i) {
+    const r = i >= 0 ? S.ai.learned[i] : { q: '', a: '' };
+    const q = area(r.q, 2, 'Как спрашивает клиент'); const a = area(r.a, 5, 'Как правильно ответить');
+    const sh = sheet(i >= 0 ? 'Готовый ответ' : 'Новый ответ', [field('Вопрос клиента', q), field('Ответ ассистента', a)], { focus: i < 0, actions: [
+      btn('Сохранить', () => {
+        if (!q.value.trim() || !a.value.trim()) { toast('Заполните вопрос и ответ', true); return; }
+        const rows = S.ai.learned.slice(); const item = { q: q.value.trim(), a: a.value.trim() };
+        if (i >= 0) rows[i] = item; else rows.push(item);
+        saveLearned(rows).then(() => sh.close()).catch(fail);
+      }, 'is-wide is-primary'),
+      i >= 0 ? confirmBtn('Удалить ответ', () => { const rows = S.ai.learned.slice(); rows.splice(i, 1); saveLearned(rows, 'Удалено').then(() => sh.close()).catch(fail); }) : null,
+    ] });
+  }
+  // проверка: разговор с ассистентом от лица клиента, ничего не сохраняется
+  function openTest() {
+    if (!HAS_CHATS) { toast('Нужен плагин WebFor AI Assistant', true); return; }
+    const log = h('div', { class: 'wfa-msgs' });
+    const ta = h('textarea', { class: 'wfa-composer-input', rows: 1, placeholder: 'Спросите как клиент', 'aria-label': 'Вопрос ассистенту', enterkeyhint: 'send' });
+    const form = h('form', { class: 'wfa-composer' }, [ta, h('button', { type: 'submit', class: 'wfa-send', 'aria-label': 'Отправить', html: I.send })]);
+    const chipsBox = h('div', { class: 'wfa-chips' }, ['Сколько стоит сайт?', 'Сделаете скидку?', 'Какие сроки?'].map((t) => h('button', { type: 'button', class: 'wfa-chip', text: t, onclick: () => ask(t) })));
+    const v = pushView('Проверка', { backLabel: 'Обучение', footer: h('div', { class: 'wfa-chat-foot' }, [chipsBox, form]), cls: 'is-chat' });
+    v.body.append(h('p', { class: 'wfa-sys', text: 'Это проверка: клиенты её не видят, вопросы никуда не сохраняются.' }), log);
+    const hist = [];
+    let busy = false;
+    function bubble(r, t, note) {
+      const n = h('div', { class: 'wfa-bubble is-' + (r === 'user' ? 'user' : 'bot') }, [h('small', { text: r === 'user' ? 'Вы как клиент' : 'Ассистент' }), h('span', { text: t })]);
+      log.appendChild(n); if (note) log.appendChild(h('p', { class: 'wfa-sys is-warn', text: note }));
+      anim(n, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 300 });
+      v.scroller.scrollTop = v.scroller.scrollHeight;
+    }
+    function ask(t) {
+      t = t.trim(); if (!t || busy) return;
+      busy = true; chipsBox.hidden = true; bubble('user', t);
+      const typing = h('div', { class: 'wfa-bubble is-bot is-typing' }, [h('i'), h('i'), h('i')]); log.appendChild(typing);
+      v.scroller.scrollTop = v.scroller.scrollHeight;
+      adapter.chatApi('POST', '/test', { text: t, history: hist.slice(-10) }).then((r) => {
+        typing.remove();
+        hist.push({ role: 'user', content: t }, { role: 'assistant', content: r.reply });
+        bubble('bot', r.reply || '—', r.escalated ? 'Здесь ассистент позвал бы вас: ' + (r.reason || 'нужен менеджер') + '. Добавьте ответ в «Готовые ответы» или «Что знает ассистент».' : r.unsupported ? 'Этот язык ассистент не поддерживает.' : null);
+      }).catch((e) => { typing.remove(); fail(e); }).then(() => { busy = false; });
+    }
+    form.addEventListener('submit', (e) => { e.preventDefault(); const t = ta.value; ta.value = ''; ask(t); });
+    push(v);
+  }
+
+  /* ================= ЕЩЁ ================= */
+  function viewMore(body) {
+    const rowsN = [];
+    if (HAS_CHATS && !embedded) {
+      const p = pushState();
+      rowsN.push(row({ icon: 'bell', tint: p === 'granted' ? 'ok' : 'red', title: 'Уведомления', value: p === 'granted' ? 'Включены' : p === 'denied' ? 'Запрещены' : p === 'unsupported' ? 'Недоступны' : 'Выключены',
+        onclick: () => (p === 'granted' ? subscribePush().then(() => adapter.chatApi('POST', '/push/test')).then((r) => toast(r.sent ? 'Тестовое уведомление отправлено' : 'Не дошло — нажмите ещё раз', !r.sent)).catch(fail)
+          : p === 'denied' ? toast('Разрешите уведомления для этого сайта в настройках телефона', true) : enablePush()) }));
+      rowsN.push(row({ icon: 'install', tint: 'blue', title: 'Как установить на телефон', onclick: installSheet }));
+    } else if (HAS_CHATS && CFG.app) {
+      rowsN.push(row({ icon: 'install', tint: 'blue', title: 'Админка на телефоне', sub: 'Установите и получайте уведомления', href: CFG.app, blank: true }));
+    }
+    if (rowsN.length) body.appendChild(group('Телефон', rowsN, 'Уведомление приходит, когда ассистент зовёт менеджера или клиент пишет в чат, где вы уже есть. Нажмите на «Включены», чтобы проверить.'));
+    body.appendChild(group('Контакты на сайте', [
+      row({ icon: 'phone', tint: 'accent', title: 'Телефон', value: S.settings.phone || '—', onclick: numbersSheet }),
+      row({ icon: 'wa', tint: 'ok', title: 'WhatsApp', value: S.settings.whatsapp || '—', onclick: numbersSheet }),
+    ], 'Меняются на всём сайте сразу.'));
+    body.appendChild(group('Сайт', [
+      row({ icon: 'grid', tint: 'blue', title: 'Работы в папках', value: String(S.works.length), onclick: openWorks }),
+      row({ icon: 'globe', tint: 'blue', title: 'Открыть сайт', href: S.site_url, blank: true }),
+      S.ai && S.ai.settings_url ? row({ icon: 'gear', tint: 'gray', title: 'Ключ и модель ассистента', href: S.ai.settings_url, blank: !embedded }) : null,
+    ]));
+    if (CFG.logout) body.appendChild(group(null, [row({ icon: 'logout', tint: 'red', title: 'Выйти', href: CFG.logout, chevron: false, cls: 'is-danger' })]));
+  }
+  function numbersSheet() {
+    const ph = inputEl(S.settings.phone, 'tel'), wa = inputEl(S.settings.whatsapp, 'tel');
+    const sh = sheet('Контакты на сайте', [field('Телефон для звонков', ph), field('Номер WhatsApp', wa, 'Телефон и WhatsApp независимы: поменяли один — второй остался прежним.')], { actions: [
+      btn('Сохранить', () => adapter.api('POST', '/settings', { phone: ph.value, whatsapp: wa.value }).then((r) => { S.settings = r; sh.close(); render('more'); toast('Номера обновлены на сайте'); }).catch(fail), 'is-wide is-primary'),
+    ] });
+  }
+  function installSheet() {
+    sheet('Установить на телефон', [h('ol', { class: 'wfa-steps' }, isIOS ? [
+      h('li', { text: 'Откройте эту страницу в Safari.' }), h('li', { text: 'Нажмите «Поделиться» (квадрат со стрелкой) внизу экрана.' }),
+      h('li', { text: 'Выберите «На экран Домой» → «Добавить».' }), h('li', { text: 'Откройте админку со значка WebFor и включите уведомления.' }),
+    ] : [
+      h('li', { text: 'Откройте эту страницу в Chrome.' }), h('li', { text: 'Меню ⋮ → «Установить приложение» (или «Добавить на главный экран»).' }),
+      h('li', { text: 'Откройте админку со значка WebFor и включите уведомления.' }),
+    ])]);
+  }
+  let worksFolder = null;
+  function openWorks() {
+    let draw = () => {};
+    const v = pushView('Работы', { backLabel: 'Ещё', actions: [h('button', { type: 'button', class: 'wfa-icon-btn', 'aria-label': 'Добавить работу', html: I.plus, onclick: () => workSheet(null, draw) })] });
+    worksFolder = worksFolder || (S.folders[0] && S.folders[0].key);
+    draw = () => {
+      v.body.innerHTML = '';
+      v.body.appendChild(h('div', { class: 'wfa-scroll-x' }, segmented(S.folders.map((f) => [f.key, f.title.replace(/ — .*/, ''), S.works.filter((w) => w.folder === f.key).length]), worksFolder, (k) => { worksFolder = k; draw(); })));
+      const list = S.works.filter((w) => w.folder === worksFolder);
+      if (!list.length) { v.body.appendChild(empty('grid', 'Папка пустая', 'Нажмите «+» вверху, чтобы добавить работу.')); return; }
+      v.body.appendChild(h('div', { class: 'wfa-works' }, list.map((w, i) => h('div', { class: 'wfa-work' }, [
+        h('button', { type: 'button', class: 'wfa-work-open', onclick: () => workSheet(w, draw) }, [
+          h('span', { class: 'wfa-work-img' + (w.shape === 'phone' ? ' is-phone' : '') }, w.src ? h('img', { src: w.src, alt: '', loading: 'lazy' }) : ico('image')),
+          h('b', { text: w.title }), h('small', { text: w.tag || '' }),
+        ]),
+        h('div', { class: 'wfa-work-move' }, [
+          h('button', { type: 'button', 'aria-label': 'Раньше', disabled: i === 0, html: I.back, onclick: () => moveWork(list, i, -1, draw) }),
+          h('button', { type: 'button', 'aria-label': 'Позже', disabled: i === list.length - 1, html: I.next, onclick: () => moveWork(list, i, 1, draw) }),
+        ]),
+      ]))));
+    };
+    draw();
+    push(v);
+  }
+  function moveWork(list, i, dir, draw) {
+    const arr = list.slice(); const [m] = arr.splice(i, 1); arr.splice(i + dir, 0, m);
+    S.works = S.works.filter((w) => w.folder !== worksFolder).concat(arr);
+    draw();
+    adapter.api('POST', '/works/order', { ids: arr.map((w) => w.id) }).then(() => toast('Порядок сохранён')).catch(fail);
+  }
+  function workSheet(w, draw) {
+    const d = Object.assign({ id: 0, title: '', folder: worksFolder, tag: 'Наш проект', desc: '', url: '', shape: worksFolder === 'sites' || worksFolder === 'izi' ? 'wide' : 'phone', image_id: 0, src: '' }, w || {});
+    const prev = h('button', { type: 'button', class: 'wfa-img-pick', onclick: () => adapter.pickImage().then((img) => { if (img) { d.image_id = img.id; d.src = img.url; drawPrev(); } }) });
+    function drawPrev() { prev.innerHTML = ''; prev.classList.toggle('is-phone', d.shape === 'phone'); prev.appendChild(d.src ? h('img', { src: d.src, alt: 'Скриншот' }) : h('span', null, [ico('image'), 'Выбрать скриншот'])); }
+    drawPrev();
+    const title = inputEl(d.title, 'text', 'Например: Сайт ветклиники');
+    const folder = h('select', { class: 'wfa-input' }, S.folders.map((f) => h('option', { value: f.key, selected: f.key === d.folder, text: f.title })));
+    const shape = h('select', { class: 'wfa-input', onchange: () => { d.shape = shape.value; drawPrev(); } }, [h('option', { value: 'wide', selected: d.shape !== 'phone', text: 'Сайт / компьютер' }), h('option', { value: 'phone', selected: d.shape === 'phone', text: 'Телефон' })]);
+    const tag = inputEl(d.tag, 'text', 'Наш проект'); const desc = area(d.desc, 3, 'Что сделали и чем полезно клиенту'); const url = inputEl(d.url, 'url', 'https://');
+    const sh = sheet(d.id ? 'Работа' : 'Новая работа', [prev, field('Название', title), field('Папка', folder), field('Вид скриншота', shape), field('Метка', tag), field('Описание', desc), field('Ссылка', url)], { actions: [
+      btn('Сохранить', () => {
+        if (!title.value.trim()) { title.focus(); toast('Укажите название', true); return; }
+        adapter.api('POST', '/work', { id: d.id, title: title.value.trim(), folder: folder.value, shape: shape.value, tag: tag.value, desc: desc.value, url: url.value, image_id: d.image_id || 0, src: d.src }).then((saved) => {
+          if (!saved.src && d.src) saved.src = d.src;
+          const k = S.works.findIndex((x) => x.id === saved.id);
+          if (k >= 0) S.works[k] = saved; else S.works.push(saved);
+          worksFolder = saved.folder; sh.close(); draw(); toast('Сохранено — уже на сайте');
+        }).catch(fail);
+      }, 'is-wide is-primary'),
+      d.id ? confirmBtn('Удалить работу', () => adapter.api('DELETE', '/work/' + d.id).then(() => { S.works = S.works.filter((x) => x.id !== d.id); sh.close(); draw(); toast('Работа удалена'); }).catch(fail)) : null,
+    ] });
+  }
+
+  /* ---------- запуск ---------- */
+  stage.appendChild(h('div', { class: 'wfa-boot' }, [h('span', { class: 'wfa-spinner' }), 'Загружаем…']));
+  Promise.all([adapter.api('GET', '/state'), HAS_CHATS ? adapter.chatApi('GET', '/chats').catch(() => ({ chats: [] })) : null]).then(([state, chats]) => {
+    S = state; if (chats) setChats(chats.chats || []);
+    const boot = stage.querySelector('.wfa-boot'); if (boot) boot.remove();
+    const m = /^#chat-(\d+)$/.exec(location.hash);
+    if (m && HAS_CHATS) tab = 'chats';
+    setTab(tab, true);
+    requestAnimationFrame(movePill);
+    if (m && HAS_CHATS) openChat(+m[1], true);
+    if (HAS_CHATS) pollList();
+    if (CFG.demo) setTimeout(() => toast('Демо: данные — примеры, ничего не сохраняется'), 600);
+  }).catch((e) => {
+    stage.innerHTML = '';
+    stage.appendChild(empty('close', 'Не удалось загрузить', e.message));
+  });
 })();
