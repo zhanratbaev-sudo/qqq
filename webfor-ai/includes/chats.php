@@ -49,6 +49,18 @@ function wfai_chat_set_status($id, $status) {
     update_post_meta($id, '_status', $status);
 }
 
+/** Менеджер входит в чат. Если клиенту уже сказали «менеджер подключился» (статус waiting) — второй раз не пишем. */
+function wfai_chat_join($id) {
+    $was = wfai_chat_status($id);
+    if ($was === 'live') {
+        return;
+    }
+    wfai_chat_set_status($id, 'live');
+    if ($was !== 'waiting') {
+        wfai_chat_add($id, 'system', 'Менеджер ' . wfai_manager_name() . ' подключился к чату и скоро ответит.');
+    }
+}
+
 /** Добавляет сообщение и возвращает его. */
 function wfai_chat_add($id, $role, $text, $author = '') {
     $msgs = wfai_chat_msgs($id);
@@ -171,10 +183,7 @@ add_action('rest_api_init', function () {
         if (!$id) {
             return new WP_Error('nf', 'Чат не найден', ['status' => 404]);
         }
-        if (wfai_chat_status($id) !== 'live') {
-            wfai_chat_set_status($id, 'live');
-            wfai_chat_add($id, 'system', 'Менеджер присоединился, сейчас ответит вам.');
-        }
+        wfai_chat_join($id);
         return ['ok' => true, 'status' => 'live'];
     });
 
@@ -184,10 +193,7 @@ add_action('rest_api_init', function () {
         if (!$id || $text === '') {
             return new WP_Error('bad', 'Пустое сообщение', ['status' => 400]);
         }
-        if (wfai_chat_status($id) !== 'live') { // писать можно только присоединившись
-            wfai_chat_set_status($id, 'live');
-            wfai_chat_add($id, 'system', 'Менеджер присоединился, сейчас ответит вам.');
-        }
+        wfai_chat_join($id); // писать можно только присоединившись
         return ['ok' => true, 'msg' => wfai_chat_add($id, 'manager', mb_substr($text, 0, 2000), wfai_manager_name())];
     });
 

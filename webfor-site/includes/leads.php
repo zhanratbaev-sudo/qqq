@@ -60,8 +60,10 @@ function webfor_handle_lead() {
         return ['ok' => false, 'message' => $msg, 'field' => $field];
     };
 
-    if (empty($p['_wf_nonce']) || !wp_verify_nonce($p['_wf_nonce'], 'webfor_lead')) {
-        return $err('Страница устарела. Обновите её и отправьте заявку ещё раз.');
+    // Ключ формы (nonce) не обязателен: плагины кэша отдают страницу со старым ключом, и заявки терялись.
+    // От спама защищают поле-ловушка ниже и лимит 5 заявок в час с одного адреса.
+    if (!empty($p['_wf_nonce']) && !wp_verify_nonce($p['_wf_nonce'], 'webfor_lead')) {
+        error_log('[webfor] заявка со старым ключом формы (кэш страницы) — принимаем');
     }
     if (!empty($p['website'])) { // поле-ловушка для ботов
         return ['ok' => true, 'message' => 'Спасибо! Мы скоро свяжемся с вами.'];
@@ -123,6 +125,11 @@ function webfor_handle_lead() {
             . ($message !== '' ? 'Комментарий: ' . $message . "\n" : '')
             . "\n" . admin_url('post.php?post=' . $id . '&action=edit');
         wp_mail($to, 'Новая заявка: ' . $name, $body);
+    }
+    // push на телефон (если установлен WebFor AI Assistant и включены уведомления в админке)
+    if (function_exists('wfai_push_all')) {
+        $services = webfor_services();
+        wfai_push_all('Новая заявка: ' . $name, ($services[$service] ?? 'Заявка') . ' · ' . $phone, function_exists('webfor_admin_app_url') ? webfor_admin_app_url() . '#leads' : admin_url('admin.php?page=webfor'));
     }
 
     return ['ok' => true, 'message' => 'Спасибо, ' . $name . '! Заявка отправлена — мы свяжемся с вами в ближайшее время.'];

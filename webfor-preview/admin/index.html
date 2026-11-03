@@ -287,6 +287,51 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .toplevel_page_webfor #wpcontent { padding-left: 0; }
 .toplevel_page_webfor #wpbody-content > .wrap { margin: 0 0 0 20px; }
 
+/* ===== Единая шкала шрифтов (как в iOS): везде только эти размеры ===== */
+.wfa {
+  --fs-large: 34px;  /* большой заголовок экрана */
+  --fs-title: 22px;  /* заголовок группы, имя в листе */
+  --fs-head: 17px;   /* названия, кнопки, строка меню */
+  --fs-body: 17px;   /* основной текст и сообщения */
+  --fs-sub: 15px;    /* пояснения в строках */
+  --fs-foot: 13px;   /* подписи под группами, время */
+  --fs-cap: 11px;    /* подписи вкладок, метки */
+  font-size: var(--fs-body); line-height: 1.35;
+}
+.wfa .wfa-large { font-size: var(--fs-large); font-weight: 700; line-height: 1.2; letter-spacing: -.02em; }
+.wfa .wfa-group-title { font-size: var(--fs-title); font-weight: 700; letter-spacing: -.01em; }
+.wfa-group-foot, .wfa-chat-top time, .wfa-lead-top time, .wfa-muted, .wfa-field > small, .wfa-detail small, .wfa-nav-sub { font-size: var(--fs-foot); }
+.wfa-item-main b, .wfa-chat-top b, .wfa-lead-top b, .wfa-card b, .wfa-hero-text b, .wfa-empty b, .wfa-quote { font-size: var(--fs-head); font-weight: 600; }
+.wfa-item-sub, .wfa-chat-last, .wfa-lead-svc, .wfa-card p, .wfa-hero-text span, .wfa-empty p, .wfa-lead-msg, .wfa-detail, .wfa-item-value, .wfa-switch, .wfa-transcript { font-size: var(--fs-sub); }
+.wfa-btn, .wfa-back, .wfa-choice button, .wfa-input, .wfa-composer-input, .wfa-bubble, .wfa-steps { font-size: var(--fs-head) !important; }
+.wfa-btn.is-small, .wfa-seg button, .wfa-chip, .wfa-toast, .wfa-sys, .wfa-note { font-size: var(--fs-sub) !important; }
+.wfa-field > span, .wfa-bubble small, .wfa-pill, .wfa-count, .wfa-seg-n { font-size: var(--fs-foot) !important; }
+.wfa-tab-label, .wfa-tab-badge { font-size: var(--fs-cap); }
+.wfa-lead-phone { font-size: var(--fs-title); font-weight: 700; }
+.wfa-detail-phone { font-size: 28px; }
+.wfa-sheet-head b { font-size: var(--fs-head); font-weight: 600; }
+.wfa-nav-title { font-size: var(--fs-head); font-weight: 600; }
+@media (min-width: 900px) { .wfa .wfa-large { font-size: var(--fs-large); } }
+
+/* нижняя панель — ниже, у самого края, как в iOS */
+.wfa-tabbar { bottom: max(8px, calc(var(--safe-b) - 14px)); }
+.wfa-scroll { padding-bottom: calc(var(--tabbar) + var(--safe-b) + 24px); }
+
+/* заголовок при прокрутке — чёткий: плотный фон, без сдвига */
+.wfa-nav.is-compact { background: rgba(6,9,8,.92); -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); }
+.wfa-nav-title { transform: none !important; color: #fff; -webkit-font-smoothing: antialiased; }
+.wfa-screen.is-pushed .wfa-scroll { padding-top: calc(var(--safe-t) + 66px); }
+
+/* подпись на экране проверки — без фона */
+.wfa-note { align-self: center; max-width: 92%; margin: 0 auto 10px; text-align: center; color: var(--text-3); }
+
+/* «потянуть вниз — обновить» */
+.wfa-ptr { position: absolute; z-index: 2; top: calc(var(--safe-t) + 8px); left: 50%; margin-left: -18px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--glass-3); box-shadow: var(--rim); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.wfa-ptr .wfa-spinner { width: 20px; height: 20px; border-width: 2.5px; animation: none; }
+.wfa-ptr.is-busy { opacity: 1 !important; transform: translateY(56px) !important; }
+.wfa-ptr.is-busy .wfa-spinner { animation: wfa-spin .8s linear infinite; }
+
 </style>
 <div id="wfa-app" class="wfa"></div>
 <script>
@@ -392,7 +437,8 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 
   /* ---------- доступ к данным ---------- */
   function rest(base) {
-    return (method, path, body) => fetch(base + path, {
+    const url = (path) => (base.indexOf('?') >= 0 ? base + path.replace('?', '&') : base + path);
+    return (method, path, body) => fetch(url(path), {
       method, credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': CFG.nonce },
       body: body ? JSON.stringify(body) : undefined,
@@ -501,7 +547,13 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     anim(t, [{ transform: 'translateY(-24px) scale(.9)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 420 });
     setTimeout(() => done(anim(t, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-12px)' }], { duration: 260 }), () => t.remove()), 2600);
   }
-  const fail = (e) => toast(e && e.message ? e.message : 'Не удалось сохранить', true);
+  function fail(e) {
+    let m = e && e.message ? e.message : 'Не удалось сохранить';
+    if (/маршрут|route|404/i.test(m)) m = 'Сайт не нашёл этот раздел. Обновите оба плагина WebFor до последней версии.';
+    else if (/Failed to fetch|NetworkError|Load failed/i.test(m)) m = 'Нет интернета — проверьте связь';
+    else if (/nonce|cookie|403|401/i.test(m)) m = 'Сессия устарела — войдите заново';
+    toast(m, true);
+  }
   // удалить — с подтверждением прямо в кнопке
   function confirmBtn(label, onYes) {
     let armed = false, timer;
@@ -530,8 +582,28 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     const scroller = h('div', { class: 'wfa-scroll' }, [h('h1', { class: 'wfa-large', text: title }), body]);
     // большой заголовок уезжает — появляется маленький в стеклянной полосе сверху (как в iOS)
     scroller.addEventListener('scroll', () => nav.classList.toggle('is-compact', scroller.scrollTop > 34), { passive: true });
-    const el = h('section', { class: 'wfa-screen' }, [nav, scroller]);
+    const ptr = h('div', { class: 'wfa-ptr', 'aria-hidden': 'true' }, h('span', { class: 'wfa-spinner' }));
+    const el = h('section', { class: 'wfa-screen' }, [nav, ptr, scroller]);
+    pullToRefresh(scroller, ptr);
     return { el, body, scroller, nav };
+  }
+  function pullToRefresh(sc, ptr) {
+    let y0 = null, dy = 0, busy = false;
+    sc.addEventListener('touchstart', (e) => { if (sc.scrollTop <= 0 && !busy) { y0 = e.touches[0].clientY; dy = 0; } }, { passive: true });
+    sc.addEventListener('touchmove', (e) => {
+      if (y0 == null) return;
+      dy = Math.max(0, e.touches[0].clientY - y0);
+      if (sc.scrollTop > 0) { y0 = null; dy = 0; }
+      const k = Math.min(1, dy / 90);
+      ptr.style.opacity = k; ptr.style.transform = 'translateY(' + Math.min(70, dy * 0.6) + 'px) rotate(' + dy * 3 + 'deg)';
+    }, { passive: true });
+    sc.addEventListener('touchend', () => {
+      if (y0 == null) return; y0 = null;
+      if (dy > 90 && S) {
+        busy = true; ptr.classList.add('is-busy');
+        refreshAll().then(() => { busy = false; ptr.classList.remove('is-busy'); ptr.style.opacity = 0; ptr.style.transform = ''; toast('Обновлено'); });
+      } else { ptr.style.opacity = 0; ptr.style.transform = ''; }
+    }, { passive: true });
   }
   TABS.forEach(([k, label]) => {
     screens[k] = makeScreen(label);
@@ -710,6 +782,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   }
 
   /* ================= ЧАТЫ ================= */
+  const REFRESH = 10000; // обновление панели — каждые 10 секунд (новое сообщение клиента приходит сразу push-уведомлением)
   const STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
   function setChats(list) {
     const waiting = list.filter((c) => c.status === 'waiting').map((c) => c.id);
@@ -774,7 +847,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     if (st.status === 'live') {
       join.appendChild(h('div', { class: 'wfa-join-live' }, [h('span', { text: 'Вы в чате — ассистент молчит' }), btn('Вернуть ассистенту', () => chatAction('/release').then(() => toast('Дальше отвечает ассистент')).catch(fail), 'is-small is-ghost')]));
     } else {
-      join.appendChild(btn(st.status === 'waiting' ? 'Присоединиться — клиент ждёт' : 'Присоединиться к чату', () => chatAction('/join').then(() => toast('Клиент видит: «Менеджер присоединился»')).catch(fail), 'is-wide is-primary'));
+      join.appendChild(btn(st.status === 'waiting' ? 'Присоединиться — клиент ждёт' : 'Присоединиться к чату', () => chatAction('/join').then(() => toast('Вы в чате — пишите клиенту')).catch(fail), 'is-wide is-primary'));
     }
   }
   function drawMsgs(list) {
@@ -806,7 +879,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         if (d.status !== cv.st.status || d.contact !== cv.st.contact) { cv.st.status = d.status; cv.st.contact = d.contact; drawJoin(); }
         const it = C.list.find((x) => x.id === cv.id); if (it) { it.unread = 0; it.status = d.status; }
         updateBadges();
-      }).catch((e) => { if (first) { fail(e); pop(); } }).then(() => { if (chatView === cv) pollChat(document.hidden ? 15000 : 2500); });
+      }).catch((e) => { if (first) { fail(e); pop(); } }).then(() => { if (chatView === cv) pollChat(document.hidden ? 15000 : 3000); });
     }, delay || 0);
   }
   function chatAction(path, body) {
@@ -827,10 +900,39 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         setChats(d.chats);
         if (JSON.stringify(C.list) !== before) { updateBadges(); if (tab === 'chats' && !stack.length) render('chats'); }
       }).catch(() => {}).then(pollList);
-    }, tab === 'chats' ? 4000 : 9000);
+    }, REFRESH);
   }
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && S && HAS_CHATS) { pollList(); if (chatView) pollChat(0); } });
-  window.addEventListener('hashchange', () => { const m = /^#chat-(\d+)$/.exec(location.hash); if (m && S && (!chatView || chatView.id !== +m[1])) openChat(+m[1]); });
+  // заявки, вопросы к вам, номера — тоже обновляются сами
+  let stateTimer = 0;
+  function refreshState() {
+    return adapter.api('GET', '/state').then((d) => {
+      const known = new Set(S.leads.map((l) => l.id));
+      const fresh = d.leads.filter((l) => !known.has(l.id));
+      const before = JSON.stringify([S.leads, S.ai && S.ai.questions, S.settings]);
+      S = Object.assign(S, d);
+      if (fresh.length) toast(fresh.length === 1 ? 'Новая заявка: ' + fresh[0].name : 'Новых заявок: ' + fresh.length);
+      if (JSON.stringify([S.leads, S.ai && S.ai.questions, S.settings]) !== before) { updateBadges(); if (!stack.length && (tab === 'leads' || tab === 'train')) render(tab); }
+    }).catch(() => {});
+  }
+  function pollState() {
+    clearTimeout(stateTimer);
+    stateTimer = setTimeout(() => { (document.hidden ? Promise.resolve() : refreshState()).then(pollState); }, REFRESH);
+  }
+  // всё сразу: при возврате в приложение, после push-уведомления, при «потянуть вниз»
+  function refreshAll() {
+    const jobs = [refreshState()];
+    if (HAS_CHATS) jobs.push(adapter.chatApi('GET', '/chats').then((d) => { setChats(d.chats); updateBadges(); if (tab === 'chats' && !stack.length) render('chats'); }).catch(() => {}));
+    if (chatView) pollChat(0);
+    faq = null;
+    return Promise.all(jobs);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S) refreshAll(); });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.type === 'webfor-refresh' && S) refreshAll(); });
+  window.addEventListener('hashchange', () => {
+    const m = /^#chat-(\d+)$/.exec(location.hash);
+    if (m && S && (!chatView || chatView.id !== +m[1])) openChat(+m[1]);
+    if (location.hash === '#leads' && S) { leadFilter = 'new'; refreshState().then(() => setTab('leads')); }
+  });
 
   /* уведомления и установка */
   function pushState() {
@@ -1074,7 +1176,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     const form = h('form', { class: 'wfa-composer' }, [ta, h('button', { type: 'submit', class: 'wfa-send', 'aria-label': 'Отправить', html: I.send })]);
     const chipsBox = h('div', { class: 'wfa-chips' }, ['Сколько стоит сайт?', 'Сделаете скидку?', 'Какие сроки?'].map((t) => h('button', { type: 'button', class: 'wfa-chip', text: t, onclick: () => ask(t) })));
     const v = pushView('Проверка', { backLabel: 'Обучение', footer: h('div', { class: 'wfa-chat-foot' }, [chipsBox, form]), cls: 'is-chat' });
-    v.body.append(h('p', { class: 'wfa-sys', text: 'Это проверка: клиенты её не видят, вопросы никуда не сохраняются.' }), log);
+    v.body.append(h('p', { class: 'wfa-note', text: 'Это проверка: клиенты её не видят, вопросы никуда не сохраняются.' }), log);
     const hist = [];
     let busy = false;
     function bubble(r, t, note) {
@@ -1197,10 +1299,12 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     const boot = stage.querySelector('.wfa-boot'); if (boot) boot.remove();
     const m = /^#chat-(\d+)$/.exec(location.hash);
     if (m && HAS_CHATS) tab = 'chats';
+    if (location.hash === '#leads') { tab = 'leads'; leadFilter = 'new'; history.replaceState(null, '', location.pathname + location.search); }
     setTab(tab, true);
     requestAnimationFrame(movePill);
     if (m && HAS_CHATS) openChat(+m[1], true);
     if (HAS_CHATS) pollList();
+    pollState();
     if (CFG.demo) setTimeout(() => toast('Демо: данные — примеры, ничего не сохраняется'), 600);
   }).catch((e) => {
     stage.innerHTML = '';

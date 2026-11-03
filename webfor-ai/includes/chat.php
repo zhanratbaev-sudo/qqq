@@ -147,10 +147,10 @@ function wfai_rest_chat(WP_REST_Request $req) {
     wfai_log_question($text_in);
     $base = ['ok' => true, 'chat' => $token, 'user_i' => $um['i']] + ($voice ? ['transcript' => $text_in] : []);
 
-    // менеджер в чате — ассистент молчит, менеджеру уходит уведомление
-    if (wfai_chat_status($id) === 'live') {
+    // менеджер в чате (или уже позван и клиенту сказано «скоро ответит») — ассистент молчит, менеджеру уходит уведомление
+    if (in_array(wfai_chat_status($id), ['live', 'waiting'], true)) {
         wfai_push_all('Клиент пишет', mb_substr($text_in, 0, 120), wfai_admin_url('chat-' . $id));
-        return new WP_REST_Response($base + ['status' => 'live', 'msgs' => []]);
+        return new WP_REST_Response($base + ['status' => wfai_chat_status($id), 'msgs' => []]);
     }
 
     $ans = wfai_model_answer(wfai_chat_history($id), $text_in);
@@ -164,6 +164,8 @@ function wfai_rest_chat(WP_REST_Request $req) {
         $qid = wfai_create_question((string) ($escalate['question'] ?? $text_in), (string) ($escalate['reason'] ?? ''), wfai_chat_history($id));
         update_post_meta($qid, '_chat', $id);
         wfai_chat_set_status($id, 'waiting');
+        // клиенту сразу пишем, что менеджер подключился; дальше ассистент молчит, пока менеджер не вернёт чат ему
+        $out[] = wfai_chat_add($id, 'system', 'Менеджер ' . wfai_manager_name() . ' подключился к чату и скоро ответит.');
         wfai_push_all('Нужно присоединиться к чату', mb_substr((string) ($escalate['question'] ?? $text_in), 0, 140), wfai_admin_url('chat-' . $id));
         $resp = array_merge($resp, ['escalated' => true, 'question_id' => $qid, 'status' => 'waiting']);
     }

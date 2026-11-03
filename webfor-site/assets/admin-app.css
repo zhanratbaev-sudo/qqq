@@ -280,3 +280,48 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 /* WordPress: убираем отступы страницы вокруг панели */
 .toplevel_page_webfor #wpcontent { padding-left: 0; }
 .toplevel_page_webfor #wpbody-content > .wrap { margin: 0 0 0 20px; }
+
+/* ===== Единая шкала шрифтов (как в iOS): везде только эти размеры ===== */
+.wfa {
+  --fs-large: 34px;  /* большой заголовок экрана */
+  --fs-title: 22px;  /* заголовок группы, имя в листе */
+  --fs-head: 17px;   /* названия, кнопки, строка меню */
+  --fs-body: 17px;   /* основной текст и сообщения */
+  --fs-sub: 15px;    /* пояснения в строках */
+  --fs-foot: 13px;   /* подписи под группами, время */
+  --fs-cap: 11px;    /* подписи вкладок, метки */
+  font-size: var(--fs-body); line-height: 1.35;
+}
+.wfa .wfa-large { font-size: var(--fs-large); font-weight: 700; line-height: 1.2; letter-spacing: -.02em; }
+.wfa .wfa-group-title { font-size: var(--fs-title); font-weight: 700; letter-spacing: -.01em; }
+.wfa-group-foot, .wfa-chat-top time, .wfa-lead-top time, .wfa-muted, .wfa-field > small, .wfa-detail small, .wfa-nav-sub { font-size: var(--fs-foot); }
+.wfa-item-main b, .wfa-chat-top b, .wfa-lead-top b, .wfa-card b, .wfa-hero-text b, .wfa-empty b, .wfa-quote { font-size: var(--fs-head); font-weight: 600; }
+.wfa-item-sub, .wfa-chat-last, .wfa-lead-svc, .wfa-card p, .wfa-hero-text span, .wfa-empty p, .wfa-lead-msg, .wfa-detail, .wfa-item-value, .wfa-switch, .wfa-transcript { font-size: var(--fs-sub); }
+.wfa-btn, .wfa-back, .wfa-choice button, .wfa-input, .wfa-composer-input, .wfa-bubble, .wfa-steps { font-size: var(--fs-head) !important; }
+.wfa-btn.is-small, .wfa-seg button, .wfa-chip, .wfa-toast, .wfa-sys, .wfa-note { font-size: var(--fs-sub) !important; }
+.wfa-field > span, .wfa-bubble small, .wfa-pill, .wfa-count, .wfa-seg-n { font-size: var(--fs-foot) !important; }
+.wfa-tab-label, .wfa-tab-badge { font-size: var(--fs-cap); }
+.wfa-lead-phone { font-size: var(--fs-title); font-weight: 700; }
+.wfa-detail-phone { font-size: 28px; }
+.wfa-sheet-head b { font-size: var(--fs-head); font-weight: 600; }
+.wfa-nav-title { font-size: var(--fs-head); font-weight: 600; }
+@media (min-width: 900px) { .wfa .wfa-large { font-size: var(--fs-large); } }
+
+/* нижняя панель — ниже, у самого края, как в iOS */
+.wfa-tabbar { bottom: max(8px, calc(var(--safe-b) - 14px)); }
+.wfa-scroll { padding-bottom: calc(var(--tabbar) + var(--safe-b) + 24px); }
+
+/* заголовок при прокрутке — чёткий: плотный фон, без сдвига */
+.wfa-nav.is-compact { background: rgba(6,9,8,.92); -webkit-backdrop-filter: saturate(160%) blur(20px); backdrop-filter: saturate(160%) blur(20px); }
+.wfa-nav-title { transform: none !important; color: #fff; -webkit-font-smoothing: antialiased; }
+.wfa-screen.is-pushed .wfa-scroll { padding-top: calc(var(--safe-t) + 66px); }
+
+/* подпись на экране проверки — без фона */
+.wfa-note { align-self: center; max-width: 92%; margin: 0 auto 10px; text-align: center; color: var(--text-3); }
+
+/* «потянуть вниз — обновить» */
+.wfa-ptr { position: absolute; z-index: 2; top: calc(var(--safe-t) + 8px); left: 50%; margin-left: -18px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%;
+  background: var(--glass-3); box-shadow: var(--rim); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.wfa-ptr .wfa-spinner { width: 20px; height: 20px; border-width: 2.5px; animation: none; }
+.wfa-ptr.is-busy { opacity: 1 !important; transform: translateY(56px) !important; }
+.wfa-ptr.is-busy .wfa-spinner { animation: wfa-spin .8s linear infinite; }
