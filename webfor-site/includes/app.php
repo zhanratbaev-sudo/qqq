@@ -23,6 +23,27 @@ add_action('init', function () {
         update_option('webfor_rewrite_v', WEBFOR_VERSION);
     }
 });
+/**
+ * Запасной путь: если правила адресов не обновились (кэш, другой плагин, сервер), всё равно узнаём /webfor-admin/
+ * прямо по адресу запроса. Так админка открывается сразу после установки, без «Настройки → Постоянные ссылки → Сохранить».
+ */
+add_action('parse_request', function ($wp) {
+    if (!empty($wp->query_vars['webfor_app'])) {
+        return;
+    }
+    $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    $base = rtrim((string) parse_url(home_url('/'), PHP_URL_PATH), '/');
+    if ($base !== '' && strpos($path, $base) === 0) {
+        $path = substr($path, strlen($base));
+    }
+    $path = trim(rawurldecode($path), '/');
+    $map = ['webfor-admin' => 'page', 'webfor-admin/manifest.webmanifest' => 'manifest', 'webfor-admin/sw.js' => 'sw'];
+    if (isset($map[$path])) {
+        $wp->query_vars = ['webfor_app' => $map[$path]];
+        $wp->matched_rule = 'webfor-admin';
+    }
+}, 1);
+
 add_filter('query_vars', function ($v) {
     $v[] = 'webfor_app';
     return $v;
