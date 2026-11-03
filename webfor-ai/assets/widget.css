@@ -113,3 +113,9 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
   /* зона под окном чата (там, где клавиатура) — тёмная: сайт не мелькает, пока клавиатура выезжает */
   .wfai.is-open::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
 }
+@media (max-width: 760px) {
+  /* на телефоне окно на весь экран: стекло с размытием и преломлением тут не видно, а при каждом сдвиге клавиатуры
+     браузер перерисовывал его заново — отсюда «трескание». Сплошной тёмный фон, без размытия. */
+  .wfai-panel, html.wf-refract .wfai-panel { background: #0a0f0e !important; background-image: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .wfai-panel.is-morph { will-change: clip-path; }
+}

@@ -213,19 +213,27 @@
     var m = document.querySelector('meta[name=viewport]');
     if (m && m.content.indexOf('interactive-widget') < 0) m.content += ', interactive-widget=resizes-content';
   })();
+  // пересчёт не чаще одного раза за кадр и только когда размер правда изменился — иначе окно «дрожит», пока выезжает клавиатура
+  var fitQueued = false, fitLast = '';
   function fitPanel() {
-    if (panel.hidden || !phone.matches || !vv) { panel.style.top = panel.style.height = panel.style.bottom = ''; return; }
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fitNow(); });
+  }
+  function fitNow() {
+    if (panel.hidden || !phone.matches || !vv) { panel.style.top = panel.style.height = panel.style.bottom = ''; fitLast = ''; return; }
+    var top = Math.round(vv.offsetTop), h = Math.round(vv.height), key = top + ':' + h;
+    if (key === fitLast) return;
+    fitLast = key;
     var stick = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
-    panel.style.top = vv.offsetTop + 'px';
+    panel.style.top = top + 'px';
     panel.style.bottom = 'auto';
-    panel.style.height = vv.height + 'px';
-    root.style.setProperty('--wfai-vb', (vv.offsetTop + vv.height) + 'px'); // где начинается клавиатура
+    panel.style.height = h + 'px';
+    root.style.setProperty('--wfai-vb', (top + h) + 'px'); // где начинается клавиатура
     root.classList.toggle('wfai-kb', vv.height < window.innerHeight * .8 || document.activeElement === input);
     if (stick) log.scrollTop = log.scrollHeight; // последнее сообщение остаётся над полем ввода
   }
   if (vv) { vv.addEventListener('resize', fitPanel); vv.addEventListener('scroll', fitPanel); }
-  // iOS при фокусе «подтягивает» страницу вверх — возвращаем её, окно чата и так над клавиатурой
-  window.addEventListener('scroll', function () { if (!panel.hidden && phone.matches && document.body.style.position === 'fixed' && window.scrollY) window.scrollTo(0, 0); });
   var lockY = null;
   function lockPage(on) {
     var b = document.body.style;
@@ -251,7 +259,7 @@
       root.classList.remove('wfai-unread');
       if (st.chat && !C.transport) { clearTimeout(pollTimer); pollTimer = null; poll(); }
       if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
-      setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
+      if (!phone.matches) setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
     } else {
       var finish = function () { panel.hidden = true; root.classList.remove('is-open', 'wfai-kb'); fitPanel(); animating = false; launcher.focus({ preventScroll: true }); };
       if (!reduce && panel.animate) {

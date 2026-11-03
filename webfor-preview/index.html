@@ -827,6 +827,12 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
   /* зона под окном чата (там, где клавиатура) — тёмная: сайт не мелькает, пока клавиатура выезжает */
   .wfai.is-open::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
 }
+@media (max-width: 760px) {
+  /* на телефоне окно на весь экран: стекло с размытием и преломлением тут не видно, а при каждом сдвиге клавиатуры
+     браузер перерисовывал его заново — отсюда «трескание». Сплошной тёмный фон, без размытия. */
+  .wfai-panel, html.wf-refract .wfai-panel { background: #0a0f0e !important; background-image: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  .wfai-panel.is-morph { will-change: clip-path; }
+}
 
 .wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
 </style>
@@ -1766,19 +1772,27 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     var m = document.querySelector('meta[name=viewport]');
     if (m && m.content.indexOf('interactive-widget') < 0) m.content += ', interactive-widget=resizes-content';
   })();
+  // пересчёт не чаще одного раза за кадр и только когда размер правда изменился — иначе окно «дрожит», пока выезжает клавиатура
+  var fitQueued = false, fitLast = '';
   function fitPanel() {
-    if (panel.hidden || !phone.matches || !vv) { panel.style.top = panel.style.height = panel.style.bottom = ''; return; }
+    if (fitQueued) return;
+    fitQueued = true;
+    requestAnimationFrame(function () { fitQueued = false; fitNow(); });
+  }
+  function fitNow() {
+    if (panel.hidden || !phone.matches || !vv) { panel.style.top = panel.style.height = panel.style.bottom = ''; fitLast = ''; return; }
+    var top = Math.round(vv.offsetTop), h = Math.round(vv.height), key = top + ':' + h;
+    if (key === fitLast) return;
+    fitLast = key;
     var stick = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
-    panel.style.top = vv.offsetTop + 'px';
+    panel.style.top = top + 'px';
     panel.style.bottom = 'auto';
-    panel.style.height = vv.height + 'px';
-    root.style.setProperty('--wfai-vb', (vv.offsetTop + vv.height) + 'px'); // где начинается клавиатура
+    panel.style.height = h + 'px';
+    root.style.setProperty('--wfai-vb', (top + h) + 'px'); // где начинается клавиатура
     root.classList.toggle('wfai-kb', vv.height < window.innerHeight * .8 || document.activeElement === input);
     if (stick) log.scrollTop = log.scrollHeight; // последнее сообщение остаётся над полем ввода
   }
   if (vv) { vv.addEventListener('resize', fitPanel); vv.addEventListener('scroll', fitPanel); }
-  // iOS при фокусе «подтягивает» страницу вверх — возвращаем её, окно чата и так над клавиатурой
-  window.addEventListener('scroll', function () { if (!panel.hidden && phone.matches && document.body.style.position === 'fixed' && window.scrollY) window.scrollTo(0, 0); });
   var lockY = null;
   function lockPage(on) {
     var b = document.body.style;
@@ -1804,7 +1818,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       root.classList.remove('wfai-unread');
       if (st.chat && !C.transport) { clearTimeout(pollTimer); pollTimer = null; poll(); }
       if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
-      setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
+      if (!phone.matches) setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
     } else {
       var finish = function () { panel.hidden = true; root.classList.remove('is-open', 'wfai-kb'); fitPanel(); animating = false; launcher.focus({ preventScroll: true }); };
       if (!reduce && panel.animate) {
