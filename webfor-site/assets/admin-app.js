@@ -824,8 +824,13 @@
     const v = pushView('Работы', { backLabel: 'Ещё', actions: [h('button', { type: 'button', class: 'wfa-icon-btn', 'aria-label': 'Добавить работу', html: I.plus, onclick: () => workSheet(null, draw) })] });
     worksFolder = worksFolder || (S.folders[0] && S.folders[0].key);
     draw = () => {
+      // меню папок прокручивается вбок — запоминаем, где оно было, чтобы после выбора папки не прыгало в начало
+      const old = v.body.querySelector('.wfa-scroll-x'), left = old ? old.scrollLeft : 0, pageY = v.scroller.scrollTop;
       v.body.innerHTML = '';
-      v.body.appendChild(h('div', { class: 'wfa-scroll-x' }, segmented(S.folders.map((f) => [f.key, f.title.replace(/ — .*/, ''), S.works.filter((w) => w.folder === f.key).length]), worksFolder, (k) => { worksFolder = k; draw(); })));
+      const bar = h('div', { class: 'wfa-scroll-x' }, segmented(S.folders.map((f) => [f.key, f.title.replace(/ — .*/, ''), S.works.filter((w) => w.folder === f.key).length]), worksFolder, (k) => { worksFolder = k; draw(); }));
+      v.body.appendChild(bar);
+      bar.scrollLeft = left;
+      requestAnimationFrame(() => { bar.scrollLeft = left; v.scroller.scrollTop = pageY; });
       const list = S.works.filter((w) => w.folder === worksFolder);
       if (!list.length) { v.body.appendChild(empty('grid', 'Папка пустая', 'Нажмите «+» вверху, чтобы добавить работу.')); return; }
       v.body.appendChild(h('div', { class: 'wfa-works' }, list.map((w, i) => h('div', { class: 'wfa-work' }, [
