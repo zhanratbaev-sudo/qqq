@@ -642,3 +642,52 @@ html.wf-refract .wf-pick-item span { backdrop-filter: url(#wf-lg) blur(14px) sat
 .wf-hero-art { overflow: visible; }
 @keyframes wf-in-app { from { opacity: 0; transform: translateY(10cqw) rotate(24deg) scale(.86); } to { opacity: 1; transform: rotate(5deg); } }
 @keyframes wf-in-bot { from { opacity: 0; transform: translateY(12cqw) rotate(-16deg) scale(.88); } to { opacity: 1; transform: rotate(-2deg); } }
+
+/* ===== Liquid Glass v4: тёмное стекло цвета фона, без серости ================== */
+.wf {
+  --lg-tint: rgba(8, 12, 11, .30);
+  --lg-tint-hover: rgba(18, 26, 24, .45);
+  --lg-sheen: linear-gradient(160deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .015) 40%, rgba(255, 255, 255, 0) 65%);
+  --lg-glow: inset 0 1px 12px rgba(255, 255, 255, .06);
+  --lg-blur: blur(20px) saturate(160%);
+}
+html.wf-refract .wf-btn-secondary, html.wf-refract .wf-page-back, html.wf-refract .wf-card, html.wf-refract .wf-form, html.wf-refract .wf-faq details,
+html.wf-refract .wf-table-wrap, html.wf-refract .wf-page-foot, html.wf-refract .wf-glass, html.wf-refract .wf-art-chip, html.wf-refract .wf-folder-body,
+html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refract .wf-header, html.wf-refract .wf-page-bar {
+  backdrop-filter: url(#wf-lg) blur(16px) saturate(160%) !important;
+}
+.wf-header, .wf-page-bar, .wf-mobile-bar { background-color: rgba(5, 7, 7, .55) !important; }
+
+/* верхняя панель в папке — той же высоты, что шапка сайта */
+.wf-page-bar-in { height: 72px; }
+@media (max-width: 760px) { .wf-page-bar-in { height: 64px; } }
+
+/* выбор услуги: без теней (не обрываются на краю ряда), при наведении и выборе — как зелёная кнопка */
+.wf-pick-item span { box-shadow: none !important; background-color: rgba(255, 255, 255, .08) !important; }
+.wf-pick-item:hover span, .wf-pick-item input:checked + span { background-color: var(--accent) !important; background-image: none !important; color: var(--on-accent) !important; box-shadow: none !important; }
+.wf-pick-item:hover .wf-i, .wf-pick-item:hover b, .wf-pick-item input:checked + span .wf-i, .wf-pick-item input:checked + span b { color: var(--on-accent) !important; }
+
+/* меню на телефоне: на весь экран поверх всего сайта (и логотипа), пункты появляются как раньше */
+@media (max-width: 1080px) {
+  html.wf-menu-open .wf-header { z-index: 10001; }
+  .wf-nav { width: 100vw !important; max-width: none !important; height: 100dvh; border-radius: 0 !important; z-index: 5 !important;
+    clip-path: none !important; opacity: 0 !important; transform: translateY(-12px) scale(.98) !important; transform-origin: top center;
+    background-color: rgba(5, 7, 7, .72) !important; box-shadow: none !important;
+    -webkit-backdrop-filter: blur(28px) saturate(150%) !important; backdrop-filter: blur(28px) saturate(150%) !important;
+    padding: calc(96px + env(safe-area-inset-top, 0px)) 24px calc(32px + env(safe-area-inset-bottom, 0px)) !important;
+    transition: opacity .25s ease, transform .45s var(--spring), visibility 0s linear .45s !important; }
+  html.wf-refract .wf-nav { backdrop-filter: url(#wf-lg) blur(24px) saturate(150%) !important; }
+  .wf-nav.is-open { opacity: 1 !important; transform: none !important; transition: opacity .25s ease, transform .45s var(--spring), visibility 0s !important; }
+  .wf-nav a { transform: translateY(-8px); }
+  html.wf-menu-open .wf-header::after { display: none; }
+  html.wf-menu-open .wf-logo { position: static; z-index: auto; }
+  html.wf-menu-open .wf-burger { z-index: 6; background: transparent !important; }
+}
+
+/* без надписи о предпросмотре и прочей «серости» */
+.wf-demo-note { display: none !important; }
+@media (max-width: 1080px) {
+  /* шапка не должна «запирать» стекло меню: пока меню открыто, у неё нет своего размытия */
+  html.wf-menu-open .wf-header, html.wf-refract.wf-menu-open .wf-header { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background-color: transparent !important; background-image: none !important; box-shadow: none !important; }
+  .wf-nav { background-color: rgba(5, 7, 7, .82) !important; }
+}

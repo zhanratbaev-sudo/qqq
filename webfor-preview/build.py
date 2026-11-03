@@ -91,7 +91,6 @@ html, body {{ background: #050707; }}
 {widget_css}
 .wf-demo-note {{ position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }}
 </style>
-<div class="wf-demo-note">Предпросмотр сайта: папки, карточки, меню и чат работают. Заявка в предпросмотре никуда не отправляется.</div>
 {body}
 <script>{demo_js}</script>
 <script>{site_js}</script>
