@@ -100,3 +100,16 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
 .wfai-launcher { position: relative; }
 .wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }
+
+/* телефон: окно чата ровно до клавиатуры, без зазора; сайт под ним не прокручивается */
+@media (max-width: 760px) {
+  .wfai-panel { overscroll-behavior: none; touch-action: manipulation; }
+  .wfai-form { padding-bottom: max(12px, env(safe-area-inset-bottom, 0px)); }
+  .wfai.wfai-kb .wfai-foot, .wfai.wfai-kb .wfai-chips { display: none; } /* пока открыта клавиатура — поле ввода вплотную к ней */
+  .wfai.wfai-kb .wfai-form { padding-bottom: 8px; }
+  .wfai.wfai-kb .wfai-head { padding-top: 10px; padding-bottom: 10px; }
+}
+@media (max-width: 760px) {
+  /* зона под окном чата (там, где клавиатура) — тёмная: сайт не мелькает, пока клавиатура выезжает */
+  .wfai.is-open::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
+}

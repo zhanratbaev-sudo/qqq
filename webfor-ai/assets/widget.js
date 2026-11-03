@@ -40,6 +40,7 @@
   });
   var form = el('form', 'wfai-form');
   var input = el('textarea', 'wfai-input'); input.rows = 1; input.maxLength = 1500; input.placeholder = 'Ваш вопрос…'; input.setAttribute('aria-label', 'Ваш вопрос');
+  input.setAttribute('autocomplete', 'off'); input.setAttribute('enterkeyhint', 'send'); input.setAttribute('data-form-type', 'other'); input.name = 'wfai-q';
   var sendBtn = el('button', 'wfai-send'); sendBtn.type = 'submit'; sendBtn.setAttribute('aria-label', 'Отправить'); sendBtn.innerHTML = ICON_SEND;
   form.appendChild(input); form.appendChild(sendBtn);
   var foot = el('p', 'wfai-foot', 'Ответы даёт AI. Важное уточняйте у менеджера.');
@@ -202,24 +203,57 @@
     if (label) label.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, fill: 'backwards', easing: 'ease-out' });
   }
 
+  /* Телефон и клавиатура. Окно чата всегда ровно до клавиатуры: высоту и положение берём из visualViewport
+     (на iPhone клавиатура не уменьшает страницу, и под чатом оставался видимый, прокручиваемый сайт).
+     Сайт под чатом «замораживаем» через position: fixed у body — iOS игнорирует overflow: hidden. */
+  var phone = window.matchMedia ? matchMedia('(max-width: 760px)') : { matches: false };
+  var vv = window.visualViewport;
+  // Android Chrome: клавиатура уменьшает окно страницы, а не перекрывает его
+  (function () {
+    var m = document.querySelector('meta[name=viewport]');
+    if (m && m.content.indexOf('interactive-widget') < 0) m.content += ', interactive-widget=resizes-content';
+  })();
+  function fitPanel() {
+    if (panel.hidden || !phone.matches || !vv) { panel.style.top = panel.style.height = panel.style.bottom = ''; return; }
+    var stick = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+    panel.style.top = vv.offsetTop + 'px';
+    panel.style.bottom = 'auto';
+    panel.style.height = vv.height + 'px';
+    root.style.setProperty('--wfai-vb', (vv.offsetTop + vv.height) + 'px'); // где начинается клавиатура
+    root.classList.toggle('wfai-kb', vv.height < window.innerHeight * .8 || document.activeElement === input);
+    if (stick) log.scrollTop = log.scrollHeight; // последнее сообщение остаётся над полем ввода
+  }
+  if (vv) { vv.addEventListener('resize', fitPanel); vv.addEventListener('scroll', fitPanel); }
+  // iOS при фокусе «подтягивает» страницу вверх — возвращаем её, окно чата и так над клавиатурой
+  window.addEventListener('scroll', function () { if (!panel.hidden && phone.matches && document.body.style.position === 'fixed' && window.scrollY) window.scrollTo(0, 0); });
   var lockY = null;
+  function lockPage(on) {
+    var b = document.body.style;
+    if (on) {
+      lockY = window.scrollY;
+      document.documentElement.classList.add('wfai-lock');
+      if (phone.matches) { b.position = 'fixed'; b.top = -lockY + 'px'; b.left = '0'; b.right = '0'; b.width = '100%'; }
+    } else {
+      document.documentElement.classList.remove('wfai-lock');
+      b.position = b.top = b.left = b.right = b.width = '';
+      if (lockY != null) { window.scrollTo({ top: lockY, behavior: 'instant' }); lockY = null; }
+    }
+  }
   function setOpen(open) {
     if (animating || open === !panel.hidden) return;
     launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
     // сайт под открытым чатом не прокручивается и после закрытия остаётся на том же месте
-    if (open) lockY = window.scrollY;
-    document.documentElement.classList.toggle('wfai-lock', open);
-    if (!open && lockY != null) { window.scrollTo({ top: lockY, behavior: 'instant' }); lockY = null; }
+    lockPage(open);
     if (open) {
       if (!log.childElementCount) render();
       var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
-      panel.hidden = false; root.classList.add('is-open');
+      panel.hidden = false; root.classList.add('is-open'); fitPanel();
       root.classList.remove('wfai-unread');
       if (st.chat && !C.transport) { clearTimeout(pollTimer); pollTimer = null; poll(); }
       if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
       setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
     } else {
-      var finish = function () { panel.hidden = true; root.classList.remove('is-open'); animating = false; launcher.focus({ preventScroll: true }); };
+      var finish = function () { panel.hidden = true; root.classList.remove('is-open', 'wfai-kb'); fitPanel(); animating = false; launcher.focus({ preventScroll: true }); };
       if (!reduce && panel.animate) {
         animating = true; root.classList.add('is-closing'); root.classList.remove('is-open');
         morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); popLauncher(); });
@@ -232,6 +266,8 @@
   close.addEventListener('click', function () { setOpen(false); });
   form.addEventListener('submit', function (e) { e.preventDefault(); send(input.value); });
   input.addEventListener('input', autosize);
+  input.addEventListener('focus', function () { setTimeout(fitPanel, 50); setTimeout(fitPanel, 350); });
+  input.addEventListener('blur', function () { setTimeout(fitPanel, 50); });
   input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input.value); } });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) setOpen(false); });
   // любые ссылки/кнопки с data-wfai-open открывают чат (например, «Спросить AI» на сайте)
