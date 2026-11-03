@@ -127,13 +127,13 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 .wf-peek-0 { transform: translate(-14%, 18px) rotate(-8deg); }
 .wf-peek-1 { transform: translate(14%, 14px) rotate(7deg); }
 .wf-peek-2 { transform: translate(0, 6px) rotate(-1deg); }
-.wf-folder:hover .wf-peek-0 { transform: translate(-22%, -16px) rotate(-12deg); }
-.wf-folder:hover .wf-peek-1 { transform: translate(22%, -20px) rotate(11deg); }
-.wf-folder:hover .wf-peek-2 { transform: translate(0, -30px) rotate(-1deg); }
+@media (hover: hover) { .wf-folder:hover .wf-peek-0 { transform: translate(-22%, -16px) rotate(-12deg); } }
+@media (hover: hover) { .wf-folder:hover .wf-peek-1 { transform: translate(22%, -20px) rotate(11deg); } }
+@media (hover: hover) { .wf-folder:hover .wf-peek-2 { transform: translate(0, -30px) rotate(-1deg); } }
 /* сама папка: корпус с язычком */
 .wf-folder-body { position: absolute; left: 0; right: 0; bottom: 0; height: 150px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 20px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 4px 16px 16px 16px; transition: border-color .2s, background-color .2s; }
 .wf-folder-body::before { content: ""; position: absolute; left: -1px; top: -18px; width: 42%; height: 19px; background: var(--surface); border: 1px solid var(--line-strong); border-bottom: 0; border-radius: 12px 14px 0 0; transition: border-color .2s, background-color .2s; }
-.wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { border-color: var(--text-3); }
+
 .wf-folder-icon { position: absolute; top: 16px; left: 20px; color: var(--accent); }
 .wf-folder-icon .wf-i { width: 24px; height: 24px; }
 .wf-folder-title { font-size: 18px; font-weight: 700; line-height: 1.3; }
@@ -223,8 +223,9 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-faq details { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
 .wf-faq summary { cursor: pointer; list-style: none; padding: 16px 24px; padding-right: 56px; font-weight: 600; font-size: 17px; position: relative; }
 .wf-faq summary::-webkit-details-marker { display: none; }
-.wf-faq summary::after { content: "+"; position: absolute; right: 24px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 22px; font-weight: 400; }
-.wf-faq details[open] summary::after { content: "−"; }
+.wf-faq summary::after { content: "+"; position: absolute; right: 20px; top: 50%; width: 28px; height: 28px; margin-top: -14px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .06); color: var(--text-2); font-size: 20px; font-weight: 400; line-height: 1; transition: transform .4s var(--spring), background-color .2s, color .2s; }
+.wf-faq details[open]:not(.is-closing) summary::after { transform: rotate(45deg); background: var(--accent); color: var(--on-accent); }
+.wf-faq details p { overflow: hidden; }
 .wf-faq details p { padding: 0 24px 24px; color: var(--text-2); max-width: 65ch; }
 
 /* --- заявка --- */
@@ -270,6 +271,39 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-status-ok { color: var(--accent); }
 .wf-status-err { color: var(--danger); }
 
+.wf-form { position: relative; overflow: hidden; gap: 0; }
+.wf-form-body { display: flex; flex-direction: column; gap: 24px; transition: opacity .3s, transform .4s var(--spring); }
+.wf-form.is-done .wf-form-body { opacity: 0; transform: scale(.96); pointer-events: none; visibility: hidden; }
+.wf-pick { border: 0; margin: 0; padding: 0; min-width: 0; }
+.wf-pick legend { padding: 0; margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+.wf-pick-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wf-pick-item { position: relative; cursor: pointer; }
+.wf-pick-item input { position: absolute; opacity: 0; pointer-events: none; }
+.wf-pick-item span { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; height: 100%; padding: 14px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px; background: rgba(255, 255, 255, .03); color: var(--text-2); transition: border-color .2s, background-color .2s, transform .35s var(--spring), color .2s; }
+.wf-pick-item .wf-i { width: 22px; height: 22px; color: var(--text-3); transition: color .2s; }
+.wf-pick-item b { font-size: 15px; font-weight: 600; }
+.wf-pick-item:hover span { border-color: rgba(255, 255, 255, .24); }
+.wf-pick-item:active span { transform: scale(.96); }
+.wf-pick-item input:checked + span { border-color: var(--accent); background: rgba(63, 224, 160, .1); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 3px rgba(63, 224, 160, .12); }
+.wf-pick-item input:checked + span .wf-i { color: var(--accent); animation: wf-pop .45s var(--spring); }
+.wf-pick-item input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+@keyframes wf-pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
+.wf-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.wf-send { min-height: 56px; font-size: 17px; }
+.wf-send .wf-i { transition: transform .35s var(--spring); }
+.wf-send:hover .wf-i { transform: translateX(4px); }
+.wf-consent { margin-top: -12px; font-size: 13px; color: var(--text-3); text-align: center; }
+.wf-done { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 32px; text-align: center; }
+.wf-done[hidden] { display: none; }
+.wf-done-check { width: 84px; height: 84px; margin-bottom: 8px; fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.wf-done-check circle { stroke-dasharray: 176; stroke-dashoffset: 176; animation: wf-draw .6s ease-out forwards; }
+.wf-done-check path { stroke-dasharray: 40; stroke-dashoffset: 40; animation: wf-draw .35s .45s ease-out forwards; }
+@keyframes wf-draw { to { stroke-dashoffset: 0; } }
+.wf-done-title { font-size: 26px; font-weight: 800; animation: wf-rise .5s .2s var(--spring) both; }
+.wf-done-text { color: var(--text-2); animation: wf-rise .5s .3s var(--spring) both; }
+.wf-done-again { margin-top: 12px; animation: wf-rise .5s .4s var(--spring) both; }
+@keyframes wf-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
 /* --- подвал --- */
 .wf-footer { border-top: 1px solid var(--line); padding: 48px 0; }
 .wf-footer-in { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
@@ -309,6 +343,8 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
   .wf-section-head h2, .wf-form-intro h2 { font-size: 30px; }
   .wf-grid-2, .wf-steps, .wf-form-grid { grid-template-columns: 1fr; }
   .wf-form-grid { gap: 32px; }
+  .wf-pick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wf-form-row { grid-template-columns: 1fr; }
   .wf-card, .wf-form { padding: 24px; }
   .wf-table { min-width: 0; }
   .wf-table th, .wf-table td { padding: 12px 6px; }
@@ -382,8 +418,8 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wf-folder:active { transform: scale(.98); }
 .wf-work-btn:active .wf-work-shot { transform: scale(.97); }
 /* папка: стекло поверх торчащих карточек — они просвечивают сквозь корпус */
-.wf-folder-body, .wf-folder-body::before { background: rgba(14, 19, 18, .72); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.85); backdrop-filter: blur(30px) saturate(115%) brightness(.85); }
-.wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(22, 29, 28, .74); border-color: rgba(255, 255, 255, .26); }
+.wf-folder-body, .wf-folder-body::before { background: rgba(16, 21, 20, .88); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.85); backdrop-filter: blur(30px) saturate(115%) brightness(.85); }
+@media (hover: hover) { .wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(22, 29, 28, .9); border-color: rgba(255, 255, 255, .26); } }
 .wf-folder-body::before { border-bottom: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
 .wf-card-accent { border-color: rgba(63, 224, 160, .55); }
 .wf-work-shot { box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset; }
@@ -410,37 +446,37 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 
 /* первый экран: работы под стеклом */
 .wf-hero-in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center; }
-.wf-hero-art { position: relative; height: 520px; margin: 0 8px; }
-.wf-hero-art img { position: absolute; display: block; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 30px 60px rgba(0, 0, 0, .5); object-fit: cover; object-position: top; }
-.wf-art-site { width: 92%; aspect-ratio: 16 / 10; left: 0; top: 30px; transform: rotate(-4deg); }
-.wf-art-app { width: 38%; aspect-ratio: 9 / 19; right: 4%; top: 120px; border-radius: 28px !important; border-width: 5px !important; border-color: #1d2624 !important; transform: rotate(5deg); }
-.wf-art-bot { width: 34%; aspect-ratio: 9 / 16; left: 10%; top: 250px; border-radius: 24px !important; transform: rotate(-2deg); }
-.wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--glass-edge); border-radius: 20px; color: var(--text); font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
-.wf-glass.wf-art-chip { background: rgba(14, 19, 18, .5); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.8); backdrop-filter: blur(30px) saturate(115%) brightness(.8); }
-.wf-art-chip b { display: block; font-size: 15px; }
+.wf-hero-art { position: relative; container-type: inline-size; height: auto; aspect-ratio: 1 / 1.12; margin: 0 8px; }
+.wf-hero-art img { position: absolute; display: block; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 24px 50px rgba(0, 0, 0, .5); object-fit: cover; object-position: top; }
+.wf-art-site { width: 86cqw; height: 54cqw; left: 4cqw; top: 6cqw; transform: rotate(-4deg); }
+.wf-art-app { width: 34cqw; height: 70cqw; right: 6cqw; top: 26cqw; border-radius: 26px !important; border-width: 5px !important; border-color: #1d2624 !important; transform: rotate(5deg); }
+.wf-art-bot { width: 32cqw; height: 50cqw; left: 12cqw; top: 54cqw; border-radius: 22px !important; transform: rotate(-2deg); }
+.wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; max-width: 64cqw; padding: 12px 16px; border: 1px solid var(--glass-edge); border-radius: 18px; color: #fff; font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
+.wf-art-chip b { display: block; font-size: 15px; color: #fff; }
 .wf-art-chip span { color: rgba(255, 255, 255, .9); min-width: 0; }
-.wf-art-chip b { color: #fff; }
-.wf-art-chip .wf-i { width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
-.wf-art-chip-1 { left: 4%; top: 196px; animation: wf-float 6s ease-in-out infinite; }
-.wf-art-chip-2 { right: 4%; bottom: 36px; animation: wf-float 7s ease-in-out -2s infinite; }
+.wf-art-chip .wf-i { flex: none; width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
+.wf-art-chip-1 { left: 3cqw; top: 40cqw; animation: wf-float 6s ease-in-out infinite; }
+.wf-art-chip-2 { right: 3cqw; top: 90cqw; animation: wf-float 7s ease-in-out -2s infinite; }
+.wf-glass.wf-art-chip { background: rgba(14, 19, 18, .5); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.8); backdrop-filter: blur(30px) saturate(115%) brightness(.8); }
 @keyframes wf-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @media (max-width: 1080px) {
-  .wf-hero-in { grid-template-columns: 1fr; }
-  .wf-hero-art { height: 420px; max-width: 560px; }
+  .wf-hero-in { grid-template-columns: minmax(0, 1fr); }
+  .wf-hero-in > * { min-width: 0; }
+  .wf-hero-art { max-width: 520px; width: 100%; }
 }
 @media (max-width: 760px) {
-  .wf-hero-art { height: 360px; margin: 24px 4px 0; }
-  .wf-art-chip { max-width: 72%; }
-  .wf-art-chip { padding: 10px 14px; font-size: 12px; }
+  .wf-hero-art { margin: 32px 0 0; }
+  .wf-art-chip { padding: 10px 12px; font-size: 12px; gap: 10px; }
   .wf-art-chip b { font-size: 13px; }
-  .wf-art-chip-1 { left: 12px; top: 150px; }
-  .wf-art-chip-2 { right: 12px; bottom: 16px; }
+  .wf-art-chip .wf-i { width: 30px; height: 30px; padding: 6px; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .wf-header, .wf-page-bar, .wf-mobile-bar { background: rgba(5, 7, 7, .96); }
   .wf-glass, .wf-folder-body, .wf-folder-body::before, .wf-lightbox, .wf-art-chip { background: #121817; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .wf-done-check circle, .wf-done-check path { animation: none; stroke-dashoffset: 0; }
+  .wf-done-title, .wf-done-text, .wf-done-again, .wf-pick-item input:checked + span .wf-i { animation: none; }
   .wf-art-chip-1, .wf-art-chip-2, .wf-folder-icon .wf-i, .wf-page-icon .wf-i, .wf-card-icon .wf-i, .wf-product-icon .wf-i { animation: none; }
   .wf-btn:active, .wf-folder:active, .wf-page-back:active { transform: none; }
 }
@@ -744,7 +780,7 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 <header class="wf-page-head">
                                     <span class="wf-page-icon wf-anim-layers"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
                                     <h2 id="wf-ph-izi">Izi — всё в одном</h2>
-                                    <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли. Vet.izi — для ветклиник, Izi — для любого бизнеса, с AI-ассистентом.</p>
+                                    <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли. Vet.izi — для ветклиник, Izi — максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей.</p>
                                     <span class="wf-page-count">4 работы</span>
                                 </header>
                                 <ul class="wf-cards">
@@ -810,11 +846,13 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                     <article class="wf-card wf-product">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-anim-spark"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg></span>
-                            <div><h3>Izi</h3><p class="wf-muted">Для любого бизнеса — с AI-ассистентом</p></div>
+                            <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
                         </div>
                         <ul class="wf-list">
                             <li>Сайт, CRM и приложение для команды</li>
+                            <li>Всё, что есть в Vet.izi, — для любого бизнеса</li>
                             <li><b>AI-ассистент</b> отвечает клиентам и помогает разбирать заявки</li>
+                            <li><b>Регистрация пользователей</b> — личные кабинеты для ваших клиентов</li>
                             <li>Чаты, календарь, роли и уведомления</li>
                             <li>Модули под ваши процессы</li>
                         </ul>
@@ -839,8 +877,9 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                             <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                             <tr><th scope="row">Приложение для сотрудников</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                             <tr><th scope="row">Чаты, календарь, роли</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td></tr>
+                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                             <tr><th scope="row">AI-ассистент</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">Регистрация пользователей</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -857,7 +896,7 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                     <details><summary>Сколько это стоит?</summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
                     <details><summary>Можно начать с сайта, а CRM добавить потом?</summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
                     <details><summary>Нужно ли скачивать приложение из App Store?</summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — универсальный вариант для любого бизнеса, и в нём есть AI-ассистент.</p></details>
+                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
                     <details><summary>Как работает AI-чат-бот?</summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
                     <details><summary>Можно поставить чат-бота на мой сайт?</summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
                     <details><summary>Вы поддерживаете сайт после запуска?</summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
@@ -870,51 +909,67 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                 <div class="wf-form-intro">
                     <p class="wf-eyebrow">Заявка</p>
                     <h2 id="form-h">Расскажите о задаче</h2>
-                    <p>Оставьте контакты — свяжемся, уточним детали и предложим решение. Это ни к чему не обязывает.</p>
-                    <ul class="wf-contacts">
-                        <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><div><span>Телефон</span><a href="tel:+77478175712">+7 747 817 57 12</a></div></li>                        <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg><div><span>WhatsApp</span><a href="https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor." target="_blank" rel="noopener">+7 747 817 57 12</a></div></li>                                            </ul>
+                    <p>Выберите, что нужно, и оставьте имя с телефоном. Свяжемся, уточним детали и предложим решение — это ни к чему не обязывает.</p>
                 </div>
 
                 <form class="wf-form" method="post" action="#zayavka" novalidate>
                     <input type="hidden" name="action" value="webfor_lead">
+                    <input type="hidden" name="contact" value="call">
                     <input type="hidden" id="_wf_nonce" name="_wf_nonce" value="d6dfda12aa" />                    <div class="wf-hp" aria-hidden="true"><label>Сайт <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
-                    <div class="wf-field">
-                        <label for="wf-name">Имя</label>
-                        <input id="wf-name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Как к вам обращаться">
-                        <p class="wf-error" id="wf-name-err" hidden></p>
+                    <div class="wf-form-body">
+                        <fieldset class="wf-pick">
+                            <legend>Что вам нужно?</legend>
+                            <div class="wf-pick-grid">
+                                                                    <label class="wf-pick-item wf-anim-globe">
+                                        <input type="radio" name="service" value="site" checked='checked'>
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><b>Сайт</b></span>
+                                    </label>
+                                                                    <label class="wf-pick-item wf-anim-device">
+                                        <input type="radio" name="service" value="app">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><b>Приложение</b></span>
+                                    </label>
+                                                                    <label class="wf-pick-item wf-anim-bot">
+                                        <input type="radio" name="service" value="bot">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg><b>AI-чат-бот</b></span>
+                                    </label>
+                                                                    <label class="wf-pick-item wf-anim-paw">
+                                        <input type="radio" name="service" value="vetizi">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12.5 11c-3 0-5.5 3.5-5.5 6 0 1.7 1.3 2.5 2.8 2.2 1-.2 1.8-.6 2.7-.6s1.7.4 2.7.6c1.5.3 2.8-.5 2.8-2.2 0-2.5-2.5-6-5.5-6z"/></svg><b>Vet.izi</b></span>
+                                    </label>
+                                                                    <label class="wf-pick-item wf-anim-layers">
+                                        <input type="radio" name="service" value="izi">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg><b>Izi</b></span>
+                                    </label>
+                                                                    <label class="wf-pick-item wf-anim-spark">
+                                        <input type="radio" name="service" value="unknown">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg><b>Посоветуйте</b></span>
+                                    </label>
+                                                            </div>
+                        </fieldset>
+                        <div class="wf-form-row">
+                            <div class="wf-field">
+                                <label for="wf-name">Имя</label>
+                                <input id="wf-name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Как к вам обращаться">
+                                <p class="wf-error" id="wf-name-err" hidden></p>
+                            </div>
+                            <div class="wf-field">
+                                <label for="wf-phone">Телефон</label>
+                                <input id="wf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="+7 700 000 00 00">
+                                <p class="wf-error" id="wf-phone-err" hidden></p>
+                            </div>
+                        </div>
+                        <button class="wf-btn wf-btn-primary wf-btn-block wf-send" type="submit"><span>Отправить заявку</span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+                        <p class="wf-consent">Нажимая кнопку, вы соглашаетесь на обработку данных для связи с вами.</p>
+                        <p class="wf-status " role="status" aria-live="polite"></p>
                     </div>
-                    <div class="wf-field">
-                        <label for="wf-phone">Телефон</label>
-                        <input id="wf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="+7 700 000 00 00">
-                        <p class="wf-error" id="wf-phone-err" hidden></p>
+
+                    <div class="wf-done" hidden>
+                        <svg class="wf-done-check" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M20 33l8 8 16-17"/></svg>
+                        <h3 class="wf-done-title">Заявка отправлена</h3>
+                        <p class="wf-done-text">Мы свяжемся с вами в ближайшее время.</p>
+                        <button type="button" class="wf-btn wf-btn-secondary wf-done-again">Отправить ещё одну</button>
                     </div>
-                    <div class="wf-field">
-                        <label for="wf-service">Что интересует</label>
-                        <select id="wf-service" name="service">
-                                                            <option value="site">Сайт</option>
-                                                            <option value="app">Мобильное приложение</option>
-                                                            <option value="bot">AI-чат-бот для бизнеса</option>
-                                                            <option value="vetizi">Vet.izi — для ветклиник и зоо-бизнеса</option>
-                                                            <option value="izi">Izi — всё в одном + AI-ассистент</option>
-                                                            <option value="unknown">Пока не знаю, нужна консультация</option>
-                                                    </select>
-                    </div>
-                    <fieldset class="wf-field wf-seg">
-                        <legend>Как с вами связаться</legend>
-                        <label><input type="radio" name="contact" value="call" checked><span>Позвонить</span></label>
-                        <label><input type="radio" name="contact" value="whatsapp"><span>WhatsApp</span></label>
-                    </fieldset>
-                    <div class="wf-field">
-                        <label for="wf-message">Комментарий <span class="wf-optional">необязательно</span></label>
-                        <textarea id="wf-message" name="message" rows="3" maxlength="2000" placeholder="Например: нужен сайт для клиники и запись онлайн"></textarea>
-                    </div>
-                    <div class="wf-field">
-                        <label class="wf-check"><input type="checkbox" name="consent" value="1" required><span>Согласен на обработку данных для связи со мной</span></label>
-                        <p class="wf-error" id="wf-consent-err" hidden></p>
-                    </div>
-                    <button class="wf-btn wf-btn-primary wf-btn-block" type="submit">Отправить заявку</button>
-                    <p class="wf-status " role="status" aria-live="polite"></p>
                 </form>
             </div>
         </section>
@@ -963,7 +1018,7 @@ window.WEBFOR = { ajax: '#demo-lead' };
     return realFetch.apply(this, arguments);
   };
 })();
-var AI = {"kb": "О компании\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Сайт: web.for.petgo.kz. Работаем по Казахстану.\n\nУслуги\n1. Сайты — любые: лендинг, сайт-визитка, корпоративный сайт, интернет-магазин и каталог с загрузкой товаров, сайт с онлайн-записью и личным кабинетом. Дизайн под бренд клиента, адаптация под телефоны, заявки, WhatsApp и звонок в один клик.\n2. Мобильные приложения — для клиентов (запись, заказы, бонусы) и для сотрудников (задачи, заявки, чаты). iPhone и Android: установка из браузера (PWA) или публикация в App Store и Google Play. Push-уведомления.\n3. AI-чат-боты для бизнеса — отвечают клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, знают услуги и цены компании, записывают клиентов, собирают заявки, сложные вопросы передают менеджеру. Ставятся и на уже существующий сайт.\n4. Izi — всё в одном: сайт + CRM + приложение для сотрудников в одной системе. Заявки с сайта сразу попадают в CRM, есть чаты, календарь, роли и уведомления.\n   - Vet.izi — Izi для ветклиник, груминга, зоомагазинов и всех, кто помогает животным: онлайн-запись, CRM клиентов и питомцев, календарь команды, приложение для сотрудников, чаты и роли. AI-ассистента в Vet.izi нет.\n   - Izi — для любого бизнеса, включает AI-ассистента, который отвечает клиентам и помогает разбирать заявки.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников (заявки, заказы, календарь, чаты, роли).\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\n\nКак работаем\n1) Обсуждаем задачу. 2) Делаем дизайн и согласуем. 3) Разрабатываем, запускаем, обучаем команду. 4) Поддерживаем и добавляем функции.\n\nЦены и сроки\nТочную цену и сроки называем после короткого разговора — они зависят от задачи. Не называй конкретных сумм и сроков, если их нет в этой базе знаний.\n\nЧастые вопросы\n- Можно начать с сайта и потом добавить CRM? Да.\n- Нужно ли скачивать приложение из App Store? Нет, можно установить из браузера за пару минут.\n- Поддерживаете после запуска? Да.", "owner": "Нуржан", "name": "Ассистент WebFor", "greeting": "Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов или Izi — отвечу сразу. Сложный вопрос передам Нуржану.", "wa": "https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor."};
+var AI = {"kb": "О компании\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Сайт: web.for.petgo.kz. Работаем по Казахстану.\n\nУслуги\n1. Сайты — любые: лендинг, сайт-визитка, корпоративный сайт, интернет-магазин и каталог с загрузкой товаров, сайт с онлайн-записью и личным кабинетом. Дизайн под бренд клиента, адаптация под телефоны, заявки, WhatsApp и звонок в один клик.\n2. Мобильные приложения — для клиентов (запись, заказы, бонусы) и для сотрудников (задачи, заявки, чаты). iPhone и Android: установка из браузера (PWA) или публикация в App Store и Google Play. Push-уведомления.\n3. AI-чат-боты для бизнеса — отвечают клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, знают услуги и цены компании, записывают клиентов, собирают заявки, сложные вопросы передают менеджеру. Ставятся и на уже существующий сайт.\n4. Izi — всё в одном: сайт + CRM + приложение для сотрудников в одной системе. Заявки с сайта сразу попадают в CRM, есть чаты, календарь, роли и уведомления.\n   - Vet.izi — Izi для ветклиник, груминга, зоомагазинов и всех, кто помогает животным: онлайн-запись, CRM клиентов и питомцев, календарь команды, приложение для сотрудников, чаты и роли. AI-ассистента в Vet.izi нет.\n   - Izi — максимальный тариф для любого бизнеса: всё, что есть в Vet.izi (включая специфику ветклиник), плюс AI-ассистент, который отвечает клиентам и помогает разбирать заявки, и регистрация пользователей (личные кабинеты для клиентов).\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников (заявки, заказы, календарь, чаты, роли).\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\n\nКак работаем\n1) Обсуждаем задачу. 2) Делаем дизайн и согласуем. 3) Разрабатываем, запускаем, обучаем команду. 4) Поддерживаем и добавляем функции.\n\nЦены и сроки\nТочную цену и сроки называем после короткого разговора — они зависят от задачи. Не называй конкретных сумм и сроков, если их нет в этой базе знаний.\n\nЧастые вопросы\n- Можно начать с сайта и потом добавить CRM? Да.\n- Нужно ли скачивать приложение из App Store? Нет, можно установить из браузера за пару минут.\n- Поддерживаете после запуска? Да.", "owner": "Нуржан", "name": "Ассистент WebFor", "greeting": "Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов или Izi — отвечу сразу. Сложный вопрос передам Нуржану.", "wa": "https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor."};
 window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, wa: AI.wa,
   chips: ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'] };
 (function () {
@@ -1050,8 +1105,8 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     if (!instant && !reduce && btn && page.animate) {
       // страница плавно сжимается к папке и одновременно тает — сайт под ней не «вырезается» прямоугольником
       page.animate([
-        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, filter: 'blur(0px)' },
-        { clipPath: insetFrom(btn), opacity: 0, filter: 'blur(6px)' },
+        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1 },
+        { clipPath: insetFrom(btn), opacity: 0 },
       ], { duration: 460, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
     } else done();
     if (btn) btn.focus({ preventScroll: true });
@@ -1115,9 +1170,32 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме
-  var select = root.querySelector('#wf-service');
   root.querySelectorAll('[data-service]').forEach(function (a) {
-    a.addEventListener('click', function () { if (select) select.value = a.getAttribute('data-service'); });
+    a.addEventListener('click', function () {
+      var r = root.querySelector('.wf-pick input[value="' + a.getAttribute('data-service') + '"]');
+      if (r) r.checked = true;
+    });
+  });
+
+  // вопросы: плавно раскрываются, «+» поворачивается в «×»
+  root.querySelectorAll('.wf-faq details').forEach(function (d) {
+    var sum = d.querySelector('summary'), body = d.querySelector('p');
+    sum.addEventListener('click', function (e) {
+      if (reduce || !body.animate) return;
+      e.preventDefault();
+      if (d.classList.contains('is-anim')) return;
+      d.classList.add('is-anim');
+      if (!d.open) {
+        d.open = true;
+        var h = body.offsetHeight;
+        body.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
+      } else {
+        d.classList.add('is-closing');
+        body.animate([{ height: body.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
+          d.open = false; d.classList.remove('is-anim', 'is-closing');
+        };
+      }
+    });
   });
 
   // форма
@@ -1140,22 +1218,27 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     status.className = 'wf-status' + (kind ? ' wf-status-' + kind : '');
   }
   function validate() {
-    var ok = true;
     var name = form.elements.name.value.trim();
     var digits = form.elements.phone.value.replace(/\D/g, '');
-    fieldError('name', name.length >= 2 ? '' : 'Укажите имя.');
-    fieldError('phone', digits.length >= 10 && digits.length <= 15 ? '' : 'Проверьте номер: нужно 10–15 цифр.');
-    fieldError('consent', form.elements.consent.checked ? '' : 'Нужно согласие на обработку данных.');
-    [['name', name.length >= 2], ['phone', digits.length >= 10 && digits.length <= 15], ['consent', form.elements.consent.checked]].some(function (f) {
-      if (!f[1]) { ok = false; form.elements[f[0]].focus(); return true; }
-      return false;
-    });
-    return ok;
+    var okName = name.length >= 2, okPhone = digits.length >= 10 && digits.length <= 15;
+    fieldError('name', okName ? '' : 'Укажите имя.');
+    fieldError('phone', okPhone ? '' : 'Проверьте номер: нужно 10–15 цифр.');
+    if (!okName) form.elements.name.focus(); else if (!okPhone) form.elements.phone.focus();
+    return okName && okPhone;
   }
   ['name', 'phone'].forEach(function (n) {
     form.elements[n].addEventListener('input', function () { if (form.elements[n].getAttribute('aria-invalid') === 'true') fieldError(n, ''); });
   });
-  form.elements.consent.addEventListener('change', function () { if (form.elements.consent.checked) fieldError('consent', ''); });
+  var done = form.querySelector('.wf-done');
+  function showDone(name) {
+    done.querySelector('.wf-done-title').textContent = name ? 'Спасибо, ' + name + '!' : 'Заявка отправлена';
+    done.hidden = false;
+    form.classList.add('is-done');
+    done.querySelector('.wf-done-again').focus({ preventScroll: true });
+  }
+  done.querySelector('.wf-done-again').addEventListener('click', function () {
+    form.classList.remove('is-done'); done.hidden = true; form.elements.name.focus();
+  });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1163,20 +1246,22 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     if (!validate()) return;
     var data = new FormData(form);
     btn.disabled = true;
-    btn.textContent = 'Отправляем…';
+    btn.firstChild.textContent = 'Отправляем…';
     fetch(window.WEBFOR.ajax, { method: 'POST', body: data, credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res.ok) {
+          var name = form.elements.name.value.trim();
           form.reset();
-          setStatus(res.message, 'ok');
+          setStatus('', '');
+          showDone(name);
         } else {
           if (res.field) fieldError(res.field, res.message);
           setStatus(res.message, 'err');
         }
       })
       .catch(function () { setStatus('Не удалось отправить. Проверьте интернет или напишите нам в WhatsApp.', 'err'); })
-      .then(function () { btn.disabled = false; btn.textContent = 'Отправить заявку'; });
+      .then(function () { btn.disabled = false; btn.firstChild.textContent = 'Отправить заявку'; });
   });
 })();
 </script>

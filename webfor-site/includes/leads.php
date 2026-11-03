@@ -84,9 +84,7 @@ function webfor_handle_lead() {
     if (!isset(webfor_services()[$service])) {
         $service = 'unknown';
     }
-    if (empty($p['consent'])) {
-        return $err('Нужно согласие на обработку данных.', 'consent');
-    }
+    // согласие — текстом под кнопкой: отправляя форму, клиент соглашается на обработку данных
     if ((function_exists('mb_strlen') ? mb_strlen($message) : strlen($message)) > 2000) {
         $message = mb_substr($message, 0, 2000);
     }

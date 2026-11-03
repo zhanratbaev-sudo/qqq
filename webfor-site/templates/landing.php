@@ -149,11 +149,13 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <article class="wf-card wf-product">
                         <div class="wf-product-head">
                             <span class="wf-product-icon wf-anim-spark"><?php echo webfor_icon('spark'); ?></span>
-                            <div><h3>Izi</h3><p class="wf-muted">Для любого бизнеса — с AI-ассистентом</p></div>
+                            <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
                         </div>
                         <ul class="wf-list">
                             <li>Сайт, CRM и приложение для команды</li>
+                            <li>Всё, что есть в Vet.izi, — для любого бизнеса</li>
                             <li><b>AI-ассистент</b> отвечает клиентам и помогает разбирать заявки</li>
+                            <li><b>Регистрация пользователей</b> — личные кабинеты для ваших клиентов</li>
                             <li>Чаты, календарь, роли и уведомления</li>
                             <li>Модули под ваши процессы</li>
                         </ul>
@@ -178,8 +180,9 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                             <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
                             <tr><th scope="row">Приложение для сотрудников</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
                             <tr><th scope="row">Чаты, календарь, роли</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $no; ?></td></tr>
+                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
                             <tr><th scope="row">AI-ассистент</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">Регистрация пользователей</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -196,7 +199,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <details><summary>Сколько это стоит?</summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
                     <details><summary>Можно начать с сайта, а CRM добавить потом?</summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
                     <details><summary>Нужно ли скачивать приложение из App Store?</summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — универсальный вариант для любого бизнеса, и в нём есть AI-ассистент.</p></details>
+                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
                     <details><summary>Как работает AI-чат-бот?</summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
                     <details><summary>Можно поставить чат-бота на мой сайт?</summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
                     <details><summary>Вы поддерживаете сайт после запуска?</summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
@@ -209,54 +212,52 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <div class="wf-form-intro">
                     <p class="wf-eyebrow">Заявка</p>
                     <h2 id="form-h">Расскажите о задаче</h2>
-                    <p>Оставьте контакты — свяжемся, уточним детали и предложим решение. Это ни к чему не обязывает.</p>
-                    <ul class="wf-contacts">
-                        <?php if ($wf_tel) : ?><li><?php echo webfor_icon('phone'); ?><div><span>Телефон</span><a href="<?php echo esc_url($wf_tel); ?>"><?php echo esc_html($wf_phone); ?></a></div></li><?php endif; ?>
-                        <?php if ($wf_wa) : ?><li><?php echo webfor_icon('chat'); ?><div><span>WhatsApp</span><a href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo esc_html(webfor_opt('whatsapp')); ?></a></div></li><?php endif; ?>
-                        <?php if ($wf_email) : ?><li><?php echo webfor_icon('globe'); ?><div><span>E-mail</span><a href="mailto:<?php echo esc_attr($wf_email); ?>"><?php echo esc_html($wf_email); ?></a></div></li><?php endif; ?>
-                    </ul>
+                    <p>Выберите, что нужно, и оставьте имя с телефоном. Свяжемся, уточним детали и предложим решение — это ни к чему не обязывает.</p>
                 </div>
 
-                <form class="wf-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" novalidate>
+                <form class="wf-form<?php echo $wf_sent ? ' is-done' : ''; ?>" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" novalidate>
                     <input type="hidden" name="action" value="webfor_lead">
+                    <input type="hidden" name="contact" value="call">
                     <?php wp_nonce_field('webfor_lead', '_wf_nonce', false); ?>
                     <div class="wf-hp" aria-hidden="true"><label>Сайт <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
-                    <div class="wf-field">
-                        <label for="wf-name">Имя</label>
-                        <input id="wf-name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Как к вам обращаться">
-                        <p class="wf-error" id="wf-name-err" hidden></p>
+                    <div class="wf-form-body">
+                        <fieldset class="wf-pick">
+                            <legend>Что вам нужно?</legend>
+                            <div class="wf-pick-grid">
+                                <?php
+                                $picks = ['site' => ['Сайт', 'globe'], 'app' => ['Приложение', 'device'], 'bot' => ['AI-чат-бот', 'bot'], 'vetizi' => ['Vet.izi', 'paw'], 'izi' => ['Izi', 'layers'], 'unknown' => ['Посоветуйте', 'spark']];
+                                foreach ($picks as $k => $pk) : ?>
+                                    <label class="wf-pick-item wf-anim-<?php echo esc_attr($pk[1]); ?>">
+                                        <input type="radio" name="service" value="<?php echo esc_attr($k); ?>"<?php checked($k, 'site'); ?>>
+                                        <span><?php echo webfor_icon($pk[1]); ?><b><?php echo esc_html($pk[0]); ?></b></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </fieldset>
+                        <div class="wf-form-row">
+                            <div class="wf-field">
+                                <label for="wf-name">Имя</label>
+                                <input id="wf-name" name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Как к вам обращаться">
+                                <p class="wf-error" id="wf-name-err" hidden></p>
+                            </div>
+                            <div class="wf-field">
+                                <label for="wf-phone">Телефон</label>
+                                <input id="wf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="+7 700 000 00 00">
+                                <p class="wf-error" id="wf-phone-err" hidden></p>
+                            </div>
+                        </div>
+                        <button class="wf-btn wf-btn-primary wf-btn-block wf-send" type="submit"><span>Отправить заявку</span><?php echo webfor_icon('arrow'); ?></button>
+                        <p class="wf-consent">Нажимая кнопку, вы соглашаетесь на обработку данных для связи с вами.</p>
+                        <p class="wf-status <?php echo $wf_err ? 'wf-status-err' : ''; ?>" role="status" aria-live="polite"><?php echo esc_html($wf_err); ?></p>
                     </div>
-                    <div class="wf-field">
-                        <label for="wf-phone">Телефон</label>
-                        <input id="wf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="+7 700 000 00 00">
-                        <p class="wf-error" id="wf-phone-err" hidden></p>
+
+                    <div class="wf-done" <?php echo $wf_sent ? '' : 'hidden'; ?>>
+                        <svg class="wf-done-check" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M20 33l8 8 16-17"/></svg>
+                        <h3 class="wf-done-title">Заявка отправлена</h3>
+                        <p class="wf-done-text">Мы свяжемся с вами в ближайшее время.</p>
+                        <button type="button" class="wf-btn wf-btn-secondary wf-done-again">Отправить ещё одну</button>
                     </div>
-                    <div class="wf-field">
-                        <label for="wf-service">Что интересует</label>
-                        <select id="wf-service" name="service">
-                            <?php foreach (webfor_services() as $k => $label) : ?>
-                                <option value="<?php echo esc_attr($k); ?>"><?php echo esc_html($label); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <fieldset class="wf-field wf-seg">
-                        <legend>Как с вами связаться</legend>
-                        <label><input type="radio" name="contact" value="call" checked><span>Позвонить</span></label>
-                        <label><input type="radio" name="contact" value="whatsapp"><span>WhatsApp</span></label>
-                    </fieldset>
-                    <div class="wf-field">
-                        <label for="wf-message">Комментарий <span class="wf-optional">необязательно</span></label>
-                        <textarea id="wf-message" name="message" rows="3" maxlength="2000" placeholder="Например: нужен сайт для клиники и запись онлайн"></textarea>
-                    </div>
-                    <div class="wf-field">
-                        <label class="wf-check"><input type="checkbox" name="consent" value="1" required><span>Согласен на обработку данных для связи со мной</span></label>
-                        <p class="wf-error" id="wf-consent-err" hidden></p>
-                    </div>
-                    <button class="wf-btn wf-btn-primary wf-btn-block" type="submit">Отправить заявку</button>
-                    <p class="wf-status <?php echo $wf_sent ? 'wf-status-ok' : ($wf_err ? 'wf-status-err' : ''); ?>" role="status" aria-live="polite"><?php
-                        echo $wf_sent ? 'Спасибо! Заявка отправлена — мы скоро свяжемся с вами.' : esc_html($wf_err);
-                    ?></p>
                 </form>
             </div>
         </section>

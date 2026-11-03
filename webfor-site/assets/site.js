@@ -53,8 +53,8 @@
     if (!instant && !reduce && btn && page.animate) {
       // страница плавно сжимается к папке и одновременно тает — сайт под ней не «вырезается» прямоугольником
       page.animate([
-        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1, filter: 'blur(0px)' },
-        { clipPath: insetFrom(btn), opacity: 0, filter: 'blur(6px)' },
+        { clipPath: 'inset(0px 0px 0px 0px round 0px)', opacity: 1 },
+        { clipPath: insetFrom(btn), opacity: 0 },
       ], { duration: 460, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = done;
     } else done();
     if (btn) btn.focus({ preventScroll: true });
@@ -118,9 +118,32 @@
   }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме
-  var select = root.querySelector('#wf-service');
   root.querySelectorAll('[data-service]').forEach(function (a) {
-    a.addEventListener('click', function () { if (select) select.value = a.getAttribute('data-service'); });
+    a.addEventListener('click', function () {
+      var r = root.querySelector('.wf-pick input[value="' + a.getAttribute('data-service') + '"]');
+      if (r) r.checked = true;
+    });
+  });
+
+  // вопросы: плавно раскрываются, «+» поворачивается в «×»
+  root.querySelectorAll('.wf-faq details').forEach(function (d) {
+    var sum = d.querySelector('summary'), body = d.querySelector('p');
+    sum.addEventListener('click', function (e) {
+      if (reduce || !body.animate) return;
+      e.preventDefault();
+      if (d.classList.contains('is-anim')) return;
+      d.classList.add('is-anim');
+      if (!d.open) {
+        d.open = true;
+        var h = body.offsetHeight;
+        body.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
+      } else {
+        d.classList.add('is-closing');
+        body.animate([{ height: body.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
+          d.open = false; d.classList.remove('is-anim', 'is-closing');
+        };
+      }
+    });
   });
 
   // форма
@@ -143,22 +166,27 @@
     status.className = 'wf-status' + (kind ? ' wf-status-' + kind : '');
   }
   function validate() {
-    var ok = true;
     var name = form.elements.name.value.trim();
     var digits = form.elements.phone.value.replace(/\D/g, '');
-    fieldError('name', name.length >= 2 ? '' : 'Укажите имя.');
-    fieldError('phone', digits.length >= 10 && digits.length <= 15 ? '' : 'Проверьте номер: нужно 10–15 цифр.');
-    fieldError('consent', form.elements.consent.checked ? '' : 'Нужно согласие на обработку данных.');
-    [['name', name.length >= 2], ['phone', digits.length >= 10 && digits.length <= 15], ['consent', form.elements.consent.checked]].some(function (f) {
-      if (!f[1]) { ok = false; form.elements[f[0]].focus(); return true; }
-      return false;
-    });
-    return ok;
+    var okName = name.length >= 2, okPhone = digits.length >= 10 && digits.length <= 15;
+    fieldError('name', okName ? '' : 'Укажите имя.');
+    fieldError('phone', okPhone ? '' : 'Проверьте номер: нужно 10–15 цифр.');
+    if (!okName) form.elements.name.focus(); else if (!okPhone) form.elements.phone.focus();
+    return okName && okPhone;
   }
   ['name', 'phone'].forEach(function (n) {
     form.elements[n].addEventListener('input', function () { if (form.elements[n].getAttribute('aria-invalid') === 'true') fieldError(n, ''); });
   });
-  form.elements.consent.addEventListener('change', function () { if (form.elements.consent.checked) fieldError('consent', ''); });
+  var done = form.querySelector('.wf-done');
+  function showDone(name) {
+    done.querySelector('.wf-done-title').textContent = name ? 'Спасибо, ' + name + '!' : 'Заявка отправлена';
+    done.hidden = false;
+    form.classList.add('is-done');
+    done.querySelector('.wf-done-again').focus({ preventScroll: true });
+  }
+  done.querySelector('.wf-done-again').addEventListener('click', function () {
+    form.classList.remove('is-done'); done.hidden = true; form.elements.name.focus();
+  });
 
   form.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -166,19 +194,21 @@
     if (!validate()) return;
     var data = new FormData(form);
     btn.disabled = true;
-    btn.textContent = 'Отправляем…';
+    btn.firstChild.textContent = 'Отправляем…';
     fetch(window.WEBFOR.ajax, { method: 'POST', body: data, credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (res) {
         if (res.ok) {
+          var name = form.elements.name.value.trim();
           form.reset();
-          setStatus(res.message, 'ok');
+          setStatus('', '');
+          showDone(name);
         } else {
           if (res.field) fieldError(res.field, res.message);
           setStatus(res.message, 'err');
         }
       })
       .catch(function () { setStatus('Не удалось отправить. Проверьте интернет или напишите нам в WhatsApp.', 'err'); })
-      .then(function () { btn.disabled = false; btn.textContent = 'Отправить заявку'; });
+      .then(function () { btn.disabled = false; btn.firstChild.textContent = 'Отправить заявку'; });
   });
 })();
