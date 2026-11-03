@@ -1790,6 +1790,9 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     text = (text || '').trim();
     if ((!text && !voice) || busy) return;
     busy = true; chips.hidden = true;
+    if (C.transport && /^\/(del|new|reset|clear)(\s|$)/i.test(text)) { // превью без сервера: /del очищает чат прямо здесь
+      busy = false; input.value = ''; history.length = 0; save(); render(); bubble('system', 'Чат очищен — начнём заново 🙂'); return;
+    }
     if (!voice) { history.push({ role: 'user', content: text }); save(); bubble('user', text); input.value = ''; autosize(); }
     var live = st.status === 'live';
     var typing = null;
@@ -1803,6 +1806,11 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
         if (r.ok === false || !r.transcript) { voice.placeholder.remove(); bubble('system', r.reply || 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.'); return; }
         voice.placeholder.textContent = '🎤 ' + r.transcript;
         history.push({ role: 'user', content: '🎤 ' + r.transcript }); save();
+      }
+      if (r.reset) { // /del — чат как новый: забываем разговор и показываем приветствие
+        history.length = 0; st.chat = ''; st.last = 0; st.status = 'bot'; contactAsked = false; pendingQuestion = 0;
+        save(); render(); bubble('system', r.reply || 'Чат очищен — начнём заново');
+        return;
       }
       var before = log.childElementCount;
       if (r.chat) st.chat = r.chat;

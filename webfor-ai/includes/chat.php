@@ -153,6 +153,15 @@ function wfai_rest_chat(WP_REST_Request $req) {
     if (!$id) {
         [$id, $token] = wfai_chat_create();
     }
+    // команды: /del, /help, /manager, /bot, /status и свои из админки
+    if (!$voice && ($cmd = wfai_run_command($id, $text_in))) {
+        $resp = ['ok' => true, 'chat' => $cmd['reset'] ? '' : $token, 'status' => $cmd['status'], 'reply' => $cmd['reply'], 'reset' => $cmd['reset'], 'command' => true];
+        $resp['msgs'] = array_map(fn($m) => ['i' => $m['i'], 'r' => $m['r'], 'a' => $m['a'], 't' => $m['t']], $cmd['out']);
+        if (!empty($cmd['question_id'])) {
+            $resp += ['escalated' => true, 'question_id' => $cmd['question_id']];
+        }
+        return new WP_REST_Response($resp);
+    }
     $r = wfai_process_message($id, $text_in, $voice);
     $resp = ['ok' => true, 'chat' => $token, 'user_i' => $r['user_i'], 'status' => $r['status'], 'unsupported' => $r['unsupported']] + ($voice ? ['transcript' => $text_in] : []);
     if ($r['reply'] !== null) {

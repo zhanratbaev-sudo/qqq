@@ -96,6 +96,9 @@ function wfai_ch_incoming($ch, $ext, $label, $text, $voice = false, array $meta 
     if ($text === '') {
         return;
     }
+    if (!$voice && function_exists('wfai_run_command') && wfai_run_command($id, $text)) {
+        return; // команда (/del, /help…) — ответ уже ушёл в мессенджер
+    }
     wfai_context_note('Клиент пишет в ' . WFAI_CHANNELS[$ch] . '. Не предлагай форму на сайте и не проси номер телефона — контакт уже есть. '
         . 'Если нужен менеджер — он ответит здесь же, в ' . WFAI_CHANNELS[$ch] . '. Пиши обычным текстом, без Markdown.');
     wfai_process_message($id, $text, $voice);
@@ -226,6 +229,7 @@ function wfai_tg_update(array $u) {
         }
         if ($id) {
             wfai_chat_add($id, 'bot', wfai_opt('greeting'));
+            wfai_tg_sync_commands();
         }
         return;
     }

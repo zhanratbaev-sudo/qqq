@@ -360,6 +360,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa-copy code { font: 500 var(--fs-sub)/1.35 ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); overflow-wrap: anywhere; user-select: all; }
 .wfa-copy .wfa-btn { align-self: flex-start; }
 .wfa-steps li { font-size: var(--fs-sub); }
+.wfa-cmd-ico { font: 700 18px/1 ui-monospace, Menlo, monospace; }
 
 </style>
 <div id="wfa-app" class="wfa"></div>
@@ -372,6 +373,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   S.ai.questions.forEach(function (q) { q.date = iso(q.minutes); });
   var nextId = 1000;
   var CH = S.chats; delete S.chats;
+  var CMDS = [{ cmd: '/price', desc: 'Цены', reply: 'Лендинг — 10 000–15 000 ₸, корпоративный сайт — 30 000 ₸, магазин — 30 000 ₸.' }];
   var CHS = { tg: { on: true, name: '@WebForBot' }, wa: { on: false, name: '' }, ig: { on: false, name: '' }, meta_webhook: 'https://ваш-сайт/wp-json/webfor-ai/v1/meta', meta_verify: 'пример-проверочного-ключа', meta_secret_set: false, https: true }; var FAQ = S.faq; delete S.faq;
   CH.forEach(function (c) { c.updated = Math.floor(now / 1000) - c.mins * 60; c.unread = c.status === 'waiting' ? 2 : 0; c.msgs.forEach(function (m) { m.at = c.updated; }); });
   FAQ.forEach(function (f) { f.at = Math.floor(now / 1000) - f.mins * 60; });
@@ -386,6 +388,10 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length, channel: c.channel || 'site' };
       }) });
       if (path === '/faq') return ok({ items: FAQ });
+      if (path === '/commands') { // команды чата в демо
+        if (method === 'POST') CMDS = (body.items || []).map(function (c) { return { cmd: c.cmd, desc: c.desc || '', reply: c.reply }; });
+        return ok({ builtin: { '/del': 'Очистить чат и начать заново', '/help': 'Список команд', '/manager': 'Позвать менеджера', '/bot': 'Вернуть ответы ассистента', '/status': 'Кто сейчас отвечает в чате' }, items: CMDS });
+      }
       if (path === '/channels') { // мессенджеры в демо: подключение «понарошку»
         if (method === 'POST') {
           if (body.off) CHS[body.ch] = { on: false, name: '' };
@@ -1155,6 +1161,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         row({ icon: 'file', tint: 'accent', title: 'Загрузить из файла', sub: 'Текстовый файл .txt', onclick: () => kbFromFile(kb) })]),
     'Главное, по чему отвечает ассистент. Чего здесь нет, он не придумывает — спросит у вас.'));
 
+    if (HAS_CHATS) { const cBox = h('div'); body.appendChild(cBox); drawCommands(cBox); }
     body.appendChild(group('Готовые ответы', ai.learned.map((r, i) => row({ icon: 'star', tint: 'gold', title: r.q, sub: r.a, onclick: () => learnedSheet(i) }))
       .concat([row({ icon: 'plus', tint: 'accent', title: 'Добавить ответ', sub: 'Вопрос клиента и как на него отвечать', onclick: () => learnedSheet(-1) })]),
     'Точные ответы на конкретные вопросы — ассистент отвечает так же.'));
@@ -1177,6 +1184,46 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     } }));
     box.appendChild(group('Частые вопросы', rows, 'Что клиенты спрашивают чаще всего. Дайте точный ответ — ассистент запомнит.'));
   }
+  /* команды в чате: встроенные и свои */
+  let CMD = null;
+  function drawCommands(box) {
+    box.innerHTML = '';
+    if (!CMD) {
+      box.appendChild(group('Команды чата', [staticRow('Загружаем…')]));
+      adapter.chatApi('GET', '/commands').then((d) => { CMD = d; if (box.isConnected) drawCommands(box); }).catch(() => {});
+      return;
+    }
+    const rows = Object.keys(CMD.builtin).map((c) => h('div', { class: 'wfa-item is-static' }, [
+      h('span', { class: 'wfa-item-ico is-gray' }, h('b', { class: 'wfa-cmd-ico', text: '/' })),
+      h('span', { class: 'wfa-item-main' }, [h('b', { text: c }), h('span', { class: 'wfa-item-sub', text: CMD.builtin[c] })]),
+    ]));
+    CMD.items.forEach((c, i) => rows.push(row({ icon: 'star', tint: 'gold', title: c.cmd, sub: c.desc || c.reply, onclick: () => commandSheet(i, box) })));
+    rows.push(row({ icon: 'plus', tint: 'accent', title: 'Добавить команду', sub: 'Например /price — и ассистент пришлёт ваш текст', onclick: () => commandSheet(-1, box) }));
+    box.appendChild(group('Команды чата', rows, 'Работают на сайте, в Telegram, WhatsApp и Instagram. /del удобно для проверки: чат очищается и начинается заново. В Telegram команды на латинице видны в меню «/».'));
+  }
+  function commandSheet(i, box) {
+    const c = i >= 0 ? CMD.items[i] : { cmd: '/', desc: '', reply: '' };
+    const cmd = inputEl(c.cmd, 'text', '/price'), desc = inputEl(c.desc, 'text', 'Например: Цены'), reply = area(c.reply, 6, 'Что ассистент ответит на эту команду');
+    cmd.setAttribute('autocapitalize', 'off'); cmd.setAttribute('autocorrect', 'off');
+    const save = (items, msg) => adapter.chatApi('POST', '/commands', { items }).then((d) => { CMD = d; drawCommands(box); toast(msg); });
+    const sh = sheet(i >= 0 ? 'Команда ' + c.cmd : 'Новая команда', [
+      field('Команда', cmd, 'Начинается с «/», одно слово: латиница, цифры или кириллица. Для меню Telegram — латиницей.'),
+      field('Подпись в списке /help', desc),
+      field('Ответ', reply),
+    ], { focus: i < 0, actions: [
+      btn('Сохранить', () => {
+        const v = '/' + cmd.value.trim().replace(/^\/+/, '').toLowerCase();
+        if (!/^\/[\p{L}0-9_]{1,32}$/u.test(v)) { toast('Команда — одно слово после «/»', true); cmd.focus(); return; }
+        if (CMD.builtin[v]) { toast('Это встроенная команда — выберите другое слово', true); return; }
+        if (!reply.value.trim()) { toast('Напишите ответ', true); reply.focus(); return; }
+        const items = CMD.items.slice(); const it = { cmd: v, desc: desc.value.trim(), reply: reply.value.trim() };
+        if (i >= 0) items[i] = it; else items.push(it);
+        save(items, 'Команда ' + v + ' сохранена').then(() => sh.close()).catch(fail);
+      }, 'is-wide is-primary'),
+      i >= 0 ? confirmBtn('Удалить команду', () => { const items = CMD.items.slice(); items.splice(i, 1); save(items, 'Команда удалена').then(() => sh.close()).catch(fail); }) : null,
+    ] });
+  }
+
   function faqSheet(it) {
     const old = S.ai.learned.find((r) => normQ(r.q) === normQ(it.q));
     const a = area(old ? old.a : '', 5, 'Как ассистент должен отвечать на этот вопрос');

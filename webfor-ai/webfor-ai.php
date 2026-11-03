@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WebFor AI Assistant
  * Description: AI-ассистент на сайте: отвечает клиентам по базе знаний (Gemini или Claude), сложные вопросы передаёт владельцу. Обучение — в разделе «AI-ассистент».
- * Version: 1.9.0
+ * Version: 1.10.0
  * Author: WebFor
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -10,7 +10,7 @@
 
 defined('ABSPATH') || exit;
 
-define('WFAI_VERSION', '1.9.0');
+define('WFAI_VERSION', '1.10.0');
 define('WFAI_DIR', plugin_dir_path(__FILE__));
 define('WFAI_URL', plugin_dir_url(__FILE__));
 
@@ -28,4 +28,5 @@ require_once WFAI_DIR . 'includes/push.php';
 require_once WFAI_DIR . 'includes/chats.php';
 require_once WFAI_DIR . 'includes/chat.php';
 require_once WFAI_DIR . 'includes/channels.php';
+require_once WFAI_DIR . 'includes/commands.php';
 require_once WFAI_DIR . 'includes/widget.php';

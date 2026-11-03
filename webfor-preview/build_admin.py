@@ -72,6 +72,7 @@ adapter = r"""
   S.ai.questions.forEach(function (q) { q.date = iso(q.minutes); });
   var nextId = 1000;
   var CH = S.chats; delete S.chats;
+  var CMDS = [{ cmd: '/price', desc: 'Цены', reply: 'Лендинг — 10 000–15 000 ₸, корпоративный сайт — 30 000 ₸, магазин — 30 000 ₸.' }];
   var CHS = { tg: { on: true, name: '@WebForBot' }, wa: { on: false, name: '' }, ig: { on: false, name: '' }, meta_webhook: 'https://ваш-сайт/wp-json/webfor-ai/v1/meta', meta_verify: 'пример-проверочного-ключа', meta_secret_set: false, https: true }; var FAQ = S.faq; delete S.faq;
   CH.forEach(function (c) { c.updated = Math.floor(now / 1000) - c.mins * 60; c.unread = c.status === 'waiting' ? 2 : 0; c.msgs.forEach(function (m) { m.at = c.updated; }); });
   FAQ.forEach(function (f) { f.at = Math.floor(now / 1000) - f.mins * 60; });
@@ -86,6 +87,10 @@ adapter = r"""
         return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length, channel: c.channel || 'site' };
       }) });
       if (path === '/faq') return ok({ items: FAQ });
+      if (path === '/commands') { // команды чата в демо
+        if (method === 'POST') CMDS = (body.items || []).map(function (c) { return { cmd: c.cmd, desc: c.desc || '', reply: c.reply }; });
+        return ok({ builtin: { '/del': 'Очистить чат и начать заново', '/help': 'Список команд', '/manager': 'Позвать менеджера', '/bot': 'Вернуть ответы ассистента', '/status': 'Кто сейчас отвечает в чате' }, items: CMDS });
+      }
       if (path === '/channels') { // мессенджеры в демо: подключение «понарошку»
         if (method === 'POST') {
           if (body.off) CHS[body.ch] = { on: false, name: '' };

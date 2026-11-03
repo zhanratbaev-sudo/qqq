@@ -354,3 +354,4 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa-copy code { font: 500 var(--fs-sub)/1.35 ui-monospace, "SF Mono", Menlo, monospace; color: var(--text); overflow-wrap: anywhere; user-select: all; }
 .wfa-copy .wfa-btn { align-self: flex-start; }
 .wfa-steps li { font-size: var(--fs-sub); }
+.wfa-cmd-ico { font: 700 18px/1 ui-monospace, Menlo, monospace; }
