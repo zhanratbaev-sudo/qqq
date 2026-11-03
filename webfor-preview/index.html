@@ -339,6 +339,85 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
   .wf * { transition: none !important; }
 }
 
+/* ===== Liquid Glass ==========================================================
+   Стекло как в iOS: полупрозрачная заливка, размытие и насыщение того, что под ним,
+   светлая кромка сверху и мягкое внутреннее свечение. Нажатия «пружинят». */
+.wf {
+  --glass: rgba(255, 255, 255, .055);
+  --glass-strong: rgba(255, 255, 255, .09);
+  --glass-edge: rgba(255, 255, 255, .16);
+  --glass-blur: blur(22px) saturate(180%);
+  --glass-light: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 -1px 0 rgba(255, 255, 255, .05), inset 0 0 0 1px rgba(255, 255, 255, .05), inset 0 0 24px rgba(255, 255, 255, .03);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  --spring: cubic-bezier(.3, 1.4, .5, 1);
+}
+.wf-glass,
+.wf-header, .wf-page-bar, .wf-mobile-bar,
+.wf-btn-secondary, .wf-page-back, .wf-burger, .wf-lb-nav button, .wf-lb-close,
+.wf-folder-body, .wf-folder-body::before,
+.wf-card, .wf-form, .wf-faq details, .wf-table-wrap, .wf-steps li, .wf-page-foot, .wf-lb-info {
+  background: var(--glass);
+  border-color: var(--glass-edge);
+  box-shadow: var(--glass-light);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+}
+.wf-header, .wf-page-bar { background: rgba(5, 7, 7, .55); border-bottom-color: rgba(255, 255, 255, .08); box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .06); }
+.wf-mobile-bar { background: rgba(5, 7, 7, .5); border-top-color: rgba(255, 255, 255, .1); }
+.wf-btn-secondary:hover, .wf-page-back:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .26); }
+/* основная кнопка — «тонированное стекло» с бликом */
+.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 60, 40, .18), 0 6px 20px rgba(63, 224, 160, .22); }
+.wf-btn, .wf-folder, .wf-work-btn, .wf-page-back, .wf-burger { transition: transform .35s var(--spring), background-color .2s, border-color .2s, box-shadow .2s; }
+.wf-btn:active, .wf-page-back:active, .wf-burger:active { transform: scale(.96); }
+.wf-folder:active { transform: scale(.98); }
+.wf-work-btn:active .wf-work-shot { transform: scale(.97); }
+/* папка: стекло поверх торчащих карточек — они просвечивают сквозь корпус */
+.wf-folder-body { background: rgba(255, 255, 255, .06); }
+.wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .28); }
+.wf-folder-body::before { border-bottom: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
+.wf-card-accent { border-color: rgba(63, 224, 160, .55); }
+.wf-work-shot { box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset; }
+.wf-card-icon, .wf-page-icon, .wf-step-n, .wf-contacts .wf-i { background: var(--glass-strong); box-shadow: var(--glass-light); }
+.wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { background: rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .12); }
+.wf-seg span { background: rgba(255, 255, 255, .03); }
+.wf-lightbox { background: rgba(12, 16, 15, .72); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-color: var(--glass-edge); box-shadow: var(--glass-light), 0 30px 80px rgba(0, 0, 0, .6); }
+.wf-lightbox::backdrop { background: rgba(0, 0, 0, .55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+/* первый экран: работы под стеклом */
+.wf-hero-in { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 48px; align-items: center; }
+.wf-hero-art { position: relative; height: 520px; }
+.wf-hero-art img { position: absolute; display: block; border-radius: 18px; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 30px 60px rgba(0, 0, 0, .5); object-fit: cover; object-position: top; }
+.wf-art-site { width: 92%; aspect-ratio: 16 / 10; left: 0; top: 30px; transform: rotate(-4deg); }
+.wf-art-app { width: 38%; aspect-ratio: 9 / 19; right: 4%; top: 120px; border-radius: 28px !important; border-width: 5px !important; border-color: #1d2624 !important; transform: rotate(5deg); }
+.wf-art-bot { width: 34%; aspect-ratio: 9 / 16; left: 10%; top: 250px; border-radius: 24px !important; transform: rotate(-2deg); }
+.wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border: 1px solid var(--glass-edge); border-radius: 20px; color: var(--text); font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
+.wf-glass.wf-art-chip { background: rgba(8, 12, 11, .58); }
+.wf-art-chip b { display: block; font-size: 15px; }
+.wf-art-chip span { color: var(--text-2); }
+.wf-art-chip .wf-i { width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
+.wf-art-chip-1 { left: -6%; top: 190px; animation: wf-float 6s ease-in-out infinite; }
+.wf-art-chip-2 { right: -2%; bottom: 40px; animation: wf-float 7s ease-in-out -2s infinite; }
+@keyframes wf-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@media (max-width: 1080px) {
+  .wf-hero-in { grid-template-columns: 1fr; }
+  .wf-hero-art { height: 420px; max-width: 560px; }
+}
+@media (max-width: 760px) {
+  .wf-hero-art { height: 340px; margin-top: 8px; }
+  .wf-art-chip { padding: 10px 14px; font-size: 12px; }
+  .wf-art-chip b { font-size: 13px; }
+  .wf-art-chip-1 { left: 0; top: 150px; }
+  .wf-art-chip-2 { right: 0; bottom: 10px; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .wf-header, .wf-page-bar, .wf-mobile-bar { background: rgba(5, 7, 7, .96); }
+  .wf-glass, .wf-folder-body, .wf-folder-body::before, .wf-lightbox, .wf-art-chip { background: #121817; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wf-art-chip-1, .wf-art-chip-2 { animation: none; }
+  .wf-btn:active, .wf-folder:active, .wf-page-back:active { transform: none; }
+}
+
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
 .wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #3fe0a0; --a-on: #04170f;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
@@ -389,6 +468,19 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .wfai-typing i { animation: none; opacity: .7; } .wfai-launcher { transition: none; } }
 
+/* Liquid Glass */
+.wfai-launcher { box-shadow: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -2px 6px rgba(0,60,40,.18), 0 10px 28px rgba(0,0,0,.45); transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
+.wfai-launcher:active { transform: scale(.95); }
+.wfai-panel { background: rgba(12,16,15,.72); border-color: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 24px 64px rgba(0,0,0,.6); }
+.wfai-head { background: rgba(255,255,255,.04); border-bottom-color: rgba(255,255,255,.08); }
+.wfai-assistant { background: rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+.wfai-user { box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+.wfai-input, .wfai-contact input { background: rgba(0,0,0,.35); border-color: rgba(255,255,255,.12); }
+.wfai-chip, .wfai-close { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.14); }
+.wfai-contact { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .wfai-panel { background: #0e1312; } }
+@media (prefers-reduced-motion: reduce) { .wfai-launcher:active { transform: none; } }
+
 .wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
 </style>
 <div class="wf-demo-note">Предпросмотр сайта: папки, карточки, меню и чат работают. Заявка в предпросмотре никуда не отправляется.</div>
@@ -414,7 +506,8 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 
     <main id="wf-main">
         <section class="wf-hero">
-            <div class="wf-wrap">
+            <div class="wf-wrap wf-hero-in">
+                <div class="wf-hero-text">
                 <p class="wf-eyebrow">Цифровые продукты для бизнеса</p>
                 <h1>Сайты и системы, с которыми работать проще</h1>
                 <p class="wf-lead">Делаем сайты и мобильные приложения, ставим AI-чат-ботов, которые сами отвечают клиентам, и внедряем CRM в работу команды. Берём на себя всё — от идеи до запуска и поддержки.</p>
@@ -427,7 +520,15 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                     <li><b>Всё в одном</b><span>сайт, приложение, CRM и AI</span></li>
                     <li><b>Поддержка</b><span>после запуска</span></li>
                 </ul>
-            </div>
+                </div>
+                                                    <div class="wf-hero-art" aria-hidden="true">
+                        <img class="wf-art-site" src="works/petgo-site.jpg" alt="">
+                        <img class="wf-art-app" src="works/petgo-app-home.jpg" alt="">
+                        <img class="wf-art-bot" src="works/bot-site.jpg" alt="">
+                        <div class="wf-glass wf-art-chip wf-art-chip-1"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg><span><b>AI ответил клиенту</b>в 23:40, без менеджера</span></div>
+                        <div class="wf-glass wf-art-chip wf-art-chip-2"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span><b>Новая заявка</b>сразу в CRM</span></div>
+                    </div>
+                            </div>
         </section>
 
         <section class="wf-section" id="uslugi" aria-labelledby="uslugi-h">
@@ -448,7 +549,7 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 <span class="wf-folder-body">
                                     <span class="wf-folder-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
                                     <span class="wf-folder-title">Сайты</span>
-                                    <span class="wf-folder-count">10 работ · открыть</span>
+                                    <span class="wf-folder-count">8 работ · открыть</span>
                                 </span>
                             </button>
                         </div>
@@ -510,7 +611,7 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                     <span class="wf-page-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
                                     <h2 id="wf-ph-sites">Сайты</h2>
                                     <p>Лендинги, сайты-визитки, корпоративные сайты, интернет-магазины и сайты с онлайн-записью — под ваш дизайн и удобные на телефоне.</p>
-                                    <span class="wf-page-count">10 работ</span>
+                                    <span class="wf-page-count">8 работ</span>
                                 </header>
                                 <ul class="wf-cards">
                                                                             <li class="wf-work wf-work-wide" style="--i:0">
@@ -559,18 +660,6 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                             <button type="button" class="wf-work-btn" data-title="Кофейня" data-desc="Меню и предзаказ без очереди." data-tag="Концепт" data-url="" data-src="works/concept-cafe.jpg" data-shape="wide" data-action="">
                                                 <span class="wf-work-shot"><img src="works/concept-cafe.jpg" alt="Кофейня" loading="lazy"></span>
                                                 <span class="wf-work-meta"><b>Кофейня</b><em>Концепт</em></span>
-                                            </button>
-                                        </li>
-                                                                            <li class="wf-work wf-work-wide" style="--i:8">
-                                            <button type="button" class="wf-work-btn" data-title="Тестовая работа" data-desc="Проверка" data-tag="Наш проект" data-url="" data-src="" data-shape="wide" data-action="">
-                                                <span class="wf-work-shot"><img src="" alt="Тестовая работа" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Тестовая работа</b><em>Наш проект</em></span>
-                                            </button>
-                                        </li>
-                                                                            <li class="wf-work wf-work-wide" style="--i:9">
-                                            <button type="button" class="wf-work-btn" data-title="Тестовая работа" data-desc="Проверка" data-tag="Наш проект" data-url="" data-src="" data-shape="wide" data-action="">
-                                                <span class="wf-work-shot"><img src="" alt="Тестовая работа" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Тестовая работа</b><em>Наш проект</em></span>
                                             </button>
                                         </li>
                                                                     </ul>

@@ -35,7 +35,8 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
 
     <main id="wf-main">
         <section class="wf-hero">
-            <div class="wf-wrap">
+            <div class="wf-wrap wf-hero-in">
+                <div class="wf-hero-text">
                 <p class="wf-eyebrow">Цифровые продукты для бизнеса</p>
                 <h1>Сайты и системы, с которыми работать проще</h1>
                 <p class="wf-lead">Делаем сайты и мобильные приложения, ставим AI-чат-ботов, которые сами отвечают клиентам, и внедряем CRM в работу команды. Берём на себя всё — от идеи до запуска и поддержки.</p>
@@ -49,6 +50,17 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <li><b>Всё в одном</b><span>сайт, приложение, CRM и AI</span></li>
                     <li><b>Поддержка</b><span>после запуска</span></li>
                 </ul>
+                </div>
+                <?php $art = array_filter([webfor_works('sites')[0] ?? null, webfor_works('apps')[0] ?? null, webfor_works('bots')[0] ?? null]); ?>
+                <?php if (count($art) === 3) : $art = array_values($art); ?>
+                    <div class="wf-hero-art" aria-hidden="true">
+                        <img class="wf-art-site" src="<?php echo esc_url($art[0]['src']); ?>" alt="">
+                        <img class="wf-art-app" src="<?php echo esc_url($art[1]['src']); ?>" alt="">
+                        <img class="wf-art-bot" src="<?php echo esc_url($art[2]['src']); ?>" alt="">
+                        <div class="wf-glass wf-art-chip wf-art-chip-1"><?php echo webfor_icon('bot'); ?><span><b>AI ответил клиенту</b>в 23:40, без менеджера</span></div>
+                        <div class="wf-glass wf-art-chip wf-art-chip-2"><?php echo webfor_icon('check'); ?><span><b>Новая заявка</b>сразу в CRM</span></div>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
 
