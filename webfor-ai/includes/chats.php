@@ -71,6 +71,8 @@ function wfai_chat_add($id, $role, $text, $author = '') {
     if ($role === 'user') {
         update_post_meta($id, '_last', mb_substr($text, 0, 140));
         update_post_meta($id, '_unread', (int) get_post_meta($id, '_unread', true) + 1);
+    } elseif (function_exists('wfai_channel_deliver')) {
+        wfai_channel_deliver($id, $role, $text); // разговор из Telegram / WhatsApp / Instagram — отправляем туда же
     }
     return $m;
 }
@@ -159,7 +161,8 @@ add_action('rest_api_init', function () {
             }
             $out[] = ['id' => $p->ID, 'status' => wfai_chat_status($p->ID), 'last' => (string) get_post_meta($p->ID, '_last', true),
                 'contact' => (string) get_post_meta($p->ID, '_contact', true), 'unread' => (int) get_post_meta($p->ID, '_unread', true),
-                'updated' => (int) get_post_meta($p->ID, '_updated', true), 'count' => count($msgs)];
+                'updated' => (int) get_post_meta($p->ID, '_updated', true), 'count' => count($msgs),
+                'channel' => (string) get_post_meta($p->ID, '_ch', true) ?: 'site'];
         }
         // сначала ждут менеджера, потом живые, потом остальные
         $rank = ['waiting' => 0, 'live' => 1, 'bot' => 2, 'closed' => 3];
@@ -174,7 +177,9 @@ add_action('rest_api_init', function () {
         }
         update_post_meta($id, '_unread', 0);
         $after = (int) $q->get_param('after');
+        $err = get_post_meta($id, '_send_err', true);
         return ['status' => wfai_chat_status($id), 'contact' => (string) get_post_meta($id, '_contact', true),
+            'channel' => (string) get_post_meta($id, '_ch', true) ?: 'site', 'send_err' => is_array($err) ? (string) $err['m'] : '',
             'msgs' => array_values(array_filter(wfai_chat_msgs($id), fn($m) => $m['i'] > $after))];
     });
 

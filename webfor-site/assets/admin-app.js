@@ -362,6 +362,7 @@
   }
 
   /* ================= ЧАТЫ ================= */
+  const CHANNEL = { site: 'Сайт', tg: 'Telegram', wa: 'WhatsApp', ig: 'Instagram' };
   const REFRESH = 10000; // обновление панели — каждые 10 секунд (новое сообщение клиента приходит сразу push-уведомлением)
   const STATUS = { waiting: 'Ждёт вас', live: 'Вы в чате', bot: 'Отвечает ассистент', closed: 'Закрыт' };
   function setChats(list) {
@@ -385,7 +386,7 @@
       h('span', { class: 'wfa-chat-main' }, [
         h('span', { class: 'wfa-chat-top' }, [h('b', { text: x.contact || 'Клиент №' + x.id }), h('time', { text: timeAgo(x.updated) })]),
         h('span', { class: 'wfa-chat-last', text: x.last || '…' }),
-        h('span', { class: 'wfa-chat-top' }, [h('span', { class: 'wfa-pill is-' + x.status, text: STATUS[x.status] || x.status }), x.unread ? h('span', { class: 'wfa-count', text: x.unread }) : null]),
+        h('span', { class: 'wfa-chat-top' }, [h('span', { class: 'wfa-pills' }, [h('span', { class: 'wfa-pill is-' + x.status, text: STATUS[x.status] || x.status }), h('span', { class: 'wfa-pill is-ch', text: CHANNEL[x.channel || 'site'] })]), x.unread ? h('span', { class: 'wfa-count', text: x.unread }) : null]),
       ]),
     ]), () => closeChat(x.id)))));
     body.appendChild(h('p', { class: 'wfa-group-foot wfa-hint', text: 'Смахните чат влево, чтобы закрыть его. Если клиент напишет снова — чат вернётся.' }));
@@ -458,10 +459,11 @@
   function drawJoin() {
     if (!chatView) return;
     const { st, join, sub, waBtn } = chatView;
-    sub.textContent = STATUS[st.status] || '';
+    sub.textContent = (STATUS[st.status] || '') + (st.channel && st.channel !== 'site' ? ' · ' + CHANNEL[st.channel] : '');
     const d = digits(st.contact);
     waBtn.hidden = !d; if (d) waBtn.href = 'https://wa.me/' + d;
     join.innerHTML = '';
+    if (st.err) join.appendChild(h('p', { class: 'wfa-sys is-warn', text: 'Не доставлено в ' + (CHANNEL[st.channel] || 'мессенджер') + ': ' + st.err }));
     if (st.status === 'live') {
       join.appendChild(h('div', { class: 'wfa-join-live' }, [h('span', { text: 'Вы в чате — ассистент молчит' }), btn('Вернуть ассистенту', () => chatAction('/release').then(() => toast('Дальше отвечает ассистент')).catch(fail), 'is-small is-ghost')]));
     } else {
@@ -494,7 +496,7 @@
         const fresh = d.msgs.filter((m) => m.i > after);
         cv.st.msgs = cv.st.msgs.concat(fresh);
         if (fresh.length) drawMsgs(fresh);
-        if (d.status !== cv.st.status || d.contact !== cv.st.contact) { cv.st.status = d.status; cv.st.contact = d.contact; drawJoin(); }
+        if (d.status !== cv.st.status || d.contact !== cv.st.contact || d.channel !== cv.st.channel || d.send_err !== cv.st.err) { cv.st.status = d.status; cv.st.contact = d.contact; cv.st.channel = d.channel; cv.st.err = d.send_err; drawJoin(); }
         const it = C.list.find((x) => x.id === cv.id); if (it) { it.unread = 0; it.status = d.status; }
         updateBadges();
       }).catch((e) => { if (first) { fail(e); pop(); } }).then(() => { if (chatView === cv) pollChat(document.hidden ? 15000 : 3000); });
@@ -831,6 +833,11 @@
       rowsN.push(row({ icon: 'install', tint: 'blue', title: 'Админка на телефоне', sub: 'Установите и получайте уведомления', href: CFG.app, blank: true }));
     }
     if (rowsN.length) body.appendChild(group('Телефон', rowsN, 'Уведомление приходит, когда ассистент зовёт менеджера или клиент пишет в чат, где вы уже есть. Нажмите на «Включены», чтобы проверить.'));
+    if (HAS_CHATS) {
+      const mBox = h('div');
+      body.appendChild(mBox);
+      drawChannels(mBox);
+    }
     body.appendChild(group('Контакты на сайте', [
       row({ icon: 'phone', tint: 'accent', title: 'Телефон', value: S.settings.phone || '—', onclick: numbersSheet }),
       row({ icon: 'wa', tint: 'ok', title: 'WhatsApp', value: S.settings.whatsapp || '—', onclick: numbersSheet }),
@@ -842,6 +849,73 @@
     ]));
     if (CFG.logout) body.appendChild(group(null, [row({ icon: 'logout', tint: 'red', title: 'Выйти', href: CFG.logout, chevron: false, cls: 'is-danger' })]));
   }
+  /* ---------- мессенджеры: Telegram, WhatsApp, Instagram ---------- */
+  let CH = null;
+  function drawChannels(box) {
+    const rows = ['tg', 'wa', 'ig'].map((k) => row({ icon: 'chats', tint: CH && CH[k].on ? 'ok' : 'gray', title: CHANNEL[k],
+      value: !CH ? '…' : CH[k].on ? (CH[k].name || 'Подключён') : 'Не подключён', onclick: () => channelSheet(k) }));
+    box.innerHTML = '';
+    box.appendChild(group('Мессенджеры', rows, 'Тот же ассистент отвечает в мессенджерах. Разговоры приходят сюда, во вкладку «Чаты», ваши ответы уходят клиенту туда же.'));
+    if (!CH) adapter.chatApi('GET', '/channels').then((d) => { CH = d; if (box.isConnected) drawChannels(box); }).catch(() => {});
+  }
+  function copyRow(label, value) {
+    return h('div', { class: 'wfa-copy' }, [h('span', { text: label }), h('code', { text: value }),
+      btn('Копировать', () => { (navigator.clipboard ? navigator.clipboard.writeText(value) : Promise.reject()).then(() => toast('Скопировано')).catch(() => toast('Выделите и скопируйте вручную', true)); }, 'is-small is-ghost')]);
+  }
+  function channelSheet(k) {
+    if (!CH) { toast('Загружаем…'); return; }
+    const st = CH[k];
+    const steps = (list) => h('ol', { class: 'wfa-steps' }, list.map((t) => h('li', { text: t })));
+    const status = h('div', { class: 'wfa-card ' + (st.on ? 'is-ok' : 'is-tip') }, [ico(st.on ? 'check' : 'chats'), h('div', null, [h('b', { text: st.on ? 'Подключён' + (st.name ? ': ' + st.name : '') : 'Не подключён' }), h('p', { text: st.on ? 'Ассистент отвечает клиентам в ' + CHANNEL[k] + '.' : 'Сделайте шаги ниже — это 5–15 минут.' })])]);
+    const httpsWarn = CH.https ? null : h('p', { class: 'wfa-sys is-warn', text: 'Сайт открывается без https — мессенджеры подключаются только к сайтам с https.' });
+    let fields = [], content = [];
+    if (k === 'tg') {
+      const tok = inputEl('', 'password', st.on ? 'Токен сохранён — вставьте новый, чтобы заменить' : '123456789:AA…');
+      fields = [['tg_token', tok]];
+      content = [status, httpsWarn, steps([
+        'Откройте в Telegram @BotFather и отправьте /newbot.',
+        'Придумайте имя (например «WebFor») и адрес бота — он должен заканчиваться на bot.',
+        'BotFather пришлёт токен — длинную строку с двоеточием. Скопируйте её.',
+        'Вставьте токен ниже и нажмите «Подключить». Готово — напишите боту, он ответит.',
+        'Чтобы бот отвечал от вашего личного аккаунта (нужен Telegram Premium): Настройки → Telegram для бизнеса → Чат-боты → выберите этого бота.',
+      ]), field('Токен бота', tok)];
+    } else if (k === 'wa') {
+      const pid = inputEl('', 'text', st.on ? 'Сохранён' : 'Например 1234567890'), tok = inputEl('', 'password', st.on ? 'Сохранён' : 'EAA…'), sec = inputEl('', 'password', CH.meta_secret_set ? 'Сохранён' : 'Ключ приложения (App Secret)');
+      fields = [['wa_phone_id', pid], ['wa_token', tok], ['meta_secret', sec]];
+      content = [status, httpsWarn, steps([
+        'Зайдите на developers.facebook.com → «Мои приложения» → «Создать приложение» → тип «Бизнес», выберите свой бизнес-аккаунт.',
+        'В приложении добавьте продукт WhatsApp и подключите свой номер (WhatsApp → Настройка API → «Добавить номер телефона»).',
+        'Скопируйте «Идентификатор номера телефона» (Phone number ID) — в поле ниже.',
+        'Постоянный токен: business.facebook.com → Настройки компании → Пользователи системы → добавить (админ) → «Создать токен», выбрать приложение и права whatsapp_business_messaging и whatsapp_business_management.',
+        'Ключ приложения: в приложении «Настройки приложения → Основное» → «Секрет приложения» → Показать.',
+        'Вебхук: WhatsApp → Конфигурация → «Изменить» — вставьте адрес и проверочный ключ ниже, затем «Управлять» → подпишитесь на поле messages.',
+      ]), copyRow('Адрес обратного вызова (Callback URL)', CH.meta_webhook), copyRow('Проверочный ключ (Verify token)', CH.meta_verify),
+      field('Phone number ID', pid), field('Постоянный токен', tok), field('Секрет приложения', sec, 'Нужен, чтобы сайт отвечал только на настоящие сообщения от Meta.')];
+    } else {
+      const tok = inputEl('', 'password', st.on ? 'Токен сохранён — вставьте новый, чтобы заменить' : 'IGAA…'), sec = inputEl('', 'password', CH.meta_secret_set ? 'Сохранён' : 'Тот же секрет приложения, что для WhatsApp');
+      fields = [['ig_token', tok], ['meta_secret', sec]];
+      content = [status, httpsWarn, steps([
+        'Аккаунт Instagram должен быть профессиональным (Настройки → Тип аккаунта → Бизнес или Автор).',
+        'В том же приложении на developers.facebook.com добавьте продукт Instagram → «API с входом через Instagram».',
+        'Нажмите «Добавить аккаунт» и войдите в свой Instagram, затем «Создать токен» — скопируйте его в поле ниже.',
+        'Вебхуки: там же «Настроить вебхуки» — вставьте адрес и проверочный ключ ниже, подпишитесь на messages.',
+        'В приложении Instagram: Настройки → Сообщения → разрешите доступ к сообщениям для подключённых сервисов.',
+      ]), copyRow('Адрес обратного вызова (Callback URL)', CH.meta_webhook), copyRow('Проверочный ключ (Verify token)', CH.meta_verify),
+      field('Токен Instagram', tok), field('Секрет приложения', sec)];
+    }
+    const sh = sheet(CHANNEL[k], content, { actions: [
+      btn(st.on ? 'Сохранить и проверить' : 'Подключить', () => {
+        const body = { ch: k };
+        fields.forEach(([key, el]) => { if (el.value.trim()) body[key] = el.value.trim(); });
+        if (!st.on && k === 'wa' && (!body.wa_phone_id || !body.wa_token)) { toast('Заполните Phone number ID и токен', true); return; }
+        if (!st.on && k === 'tg' && !body.tg_token) { toast('Вставьте токен бота', true); return; }
+        if (!st.on && k === 'ig' && !body.ig_token) { toast('Вставьте токен Instagram', true); return; }
+        adapter.chatApi('POST', '/channels', body).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' подключён'); }).catch(fail);
+      }, 'is-wide is-primary'),
+      st.on ? confirmBtn('Отключить ' + CHANNEL[k], () => adapter.chatApi('POST', '/channels', { ch: k, off: 1 }).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' отключён'); }).catch(fail)) : null,
+    ] });
+  }
+
   function numbersSheet() {
     const ph = inputEl(S.settings.phone, 'tel'), wa = inputEl(S.settings.whatsapp, 'tel');
     const sh = sheet('Контакты на сайте', [field('Телефон для звонков', ph), field('Номер WhatsApp', wa, 'Телефон и WhatsApp независимы: поменяли один — второй остался прежним.')], { actions: [

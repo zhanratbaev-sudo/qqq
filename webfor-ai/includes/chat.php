@@ -103,12 +103,22 @@ function wfai_escalation_reply($question_id) {
 }
 
 /** Текущее время в Алматы — отдельным блоком после кэшируемой части. */
+/** Пояснение для ассистента о текущем разговоре (например, «клиент пишет в Telegram»). */
+function wfai_context_note($set = null) {
+    static $note = '';
+    if ($set !== null) {
+        $note = (string) $set;
+    }
+    return $note;
+}
+
 function wfai_now_note() {
     $tz = new DateTimeZone('Asia/Almaty');
     $now = new DateTime('now', $tz);
     $h = (int) $now->format('G');
     $work = $h >= 10 && $h < 18;
-    return 'Сейчас в Алматы ' . $now->format('H:i') . ' — ' . ($work ? 'рабочее время, менеджер на связи.' : 'нерабочее время: менеджер ответит с 10:00 до 18:00.');
+    $note = wfai_context_note();
+    return 'Сейчас в Алматы ' . $now->format('H:i') . ' — ' . ($work ? 'рабочее время, менеджер на связи.' : 'нерабочее время: менеджер ответит с 10:00 до 18:00.') . ($note !== '' ? "\n" . $note : '');
 }
 
 function wfai_rest_chat(WP_REST_Request $req) {
@@ -143,35 +153,15 @@ function wfai_rest_chat(WP_REST_Request $req) {
     if (!$id) {
         [$id, $token] = wfai_chat_create();
     }
-    if (wfai_chat_status($id) === 'closed') { // клиент вернулся в закрытый чат — разговор снова открыт, отвечает ассистент
-        wfai_chat_set_status($id, 'bot');
+    $r = wfai_process_message($id, $text_in, $voice);
+    $resp = ['ok' => true, 'chat' => $token, 'user_i' => $r['user_i'], 'status' => $r['status'], 'unsupported' => $r['unsupported']] + ($voice ? ['transcript' => $text_in] : []);
+    if ($r['reply'] !== null) {
+        $resp['reply'] = $r['reply'];
     }
-    $um = wfai_chat_add($id, 'user', ($voice ? '🎤 ' : '') . $text_in);
-    wfai_log_question($text_in);
-    $base = ['ok' => true, 'chat' => $token, 'user_i' => $um['i']] + ($voice ? ['transcript' => $text_in] : []);
-
-    // менеджер в чате (или уже позван и клиенту сказано «скоро ответит») — ассистент молчит, менеджеру уходит уведомление
-    if (in_array(wfai_chat_status($id), ['live', 'waiting'], true)) {
-        wfai_push_all('Клиент пишет', mb_substr($text_in, 0, 120), wfai_admin_url('chat-' . $id));
-        return new WP_REST_Response($base + ['status' => wfai_chat_status($id), 'msgs' => []]);
+    if ($r['escalated']) {
+        $resp += ['escalated' => true, 'question_id' => $r['question_id']];
     }
-
-    $ans = wfai_model_answer(wfai_chat_history($id), $text_in);
-    $text = $ans['text'];
-    $escalate = $ans['escalate'];
-    $unsupported = $ans['unsupported'];
-    $out = [wfai_chat_add($id, 'bot', $text)];
-
-    $resp = $base + ['status' => wfai_chat_status($id), 'reply' => $text, 'unsupported' => $unsupported];
-    if ($escalate) {
-        $qid = wfai_create_question((string) ($escalate['question'] ?? $text_in), (string) ($escalate['reason'] ?? ''), wfai_chat_history($id));
-        update_post_meta($qid, '_chat', $id);
-        wfai_chat_set_status($id, 'waiting');
-        // клиенту сразу пишем, что менеджер подключился; дальше ассистент молчит, пока менеджер не вернёт чат ему
-        $out[] = wfai_chat_add($id, 'system', 'Менеджер ' . wfai_manager_name() . ' подключился к чату и скоро ответит.');
-        wfai_push_all('Нужно присоединиться к чату', mb_substr((string) ($escalate['question'] ?? $text_in), 0, 140), wfai_admin_url('chat-' . $id));
-        $resp = array_merge($resp, ['escalated' => true, 'question_id' => $qid, 'status' => 'waiting']);
-    }
+    $out = $r['out'];
     $resp['msgs'] = array_map(fn($m) => ['i' => $m['i'], 'r' => $m['r'], 'a' => $m['a'], 't' => $m['t']], $out);
     return new WP_REST_Response($resp);
 }
@@ -180,6 +170,47 @@ function wfai_rest_chat(WP_REST_Request $req) {
  * Ответ через Gemini (Google): REST generateContent, те же правила и база знаний, тот же инструмент escalate_to_owner.
  * Возвращает [текст, escalate|null]. Ошибки ключа и лимита не показываются клиенту — вопрос уходит менеджеру с причиной.
  */
+/**
+ * Одно сообщение клиента — с сайта или из мессенджера (Telegram, WhatsApp, Instagram).
+ * Сохраняет его, отвечает ассистентом (если менеджер ещё не в чате), при необходимости зовёт менеджера.
+ * Ответы ассистента и служебные строки сохраняются через wfai_chat_add — оттуда же уходят в мессенджер.
+ */
+function wfai_process_message($id, $text_in, $voice = false) {
+    if (wfai_chat_status($id) === 'closed') { // клиент вернулся в закрытый чат — разговор снова открыт, отвечает ассистент
+        wfai_chat_set_status($id, 'bot');
+    }
+    $um = wfai_chat_add($id, 'user', ($voice ? '🎤 ' : '') . $text_in);
+    wfai_log_question($text_in);
+    $res = ['user_i' => $um['i'], 'status' => wfai_chat_status($id), 'reply' => null, 'unsupported' => false, 'escalated' => false, 'question_id' => 0, 'out' => []];
+
+    // менеджер в чате (или уже позван и клиенту сказано «скоро ответит») — ассистент молчит, менеджеру уходит уведомление
+    if (in_array($res['status'], ['live', 'waiting'], true)) {
+        wfai_push_all('Клиент пишет', mb_substr($text_in, 0, 120), wfai_admin_url('chat-' . $id));
+        return $res;
+    }
+
+    $ans = wfai_model_answer(wfai_chat_history($id), $text_in);
+    $res['reply'] = $ans['text'];
+    $res['unsupported'] = $ans['unsupported'];
+    $res['out'][] = wfai_chat_add($id, 'bot', $ans['text']);
+    if ($ans['escalate']) {
+        $esc = $ans['escalate'];
+        $qid = wfai_create_question((string) ($esc['question'] ?? $text_in), (string) ($esc['reason'] ?? ''), wfai_chat_history($id));
+        update_post_meta($qid, '_chat', $id);
+        if ($c = get_post_meta($id, '_contact', true)) {
+            update_post_meta($qid, '_contact', $c); // из мессенджера контакт уже известен
+        }
+        wfai_chat_set_status($id, 'waiting');
+        // клиенту сразу пишем, что менеджер подключился; дальше ассистент молчит, пока менеджер не вернёт чат ему
+        $res['out'][] = wfai_chat_add($id, 'system', 'Менеджер ' . wfai_manager_name() . ' подключился к чату и скоро ответит.');
+        wfai_push_all('Нужно присоединиться к чату', mb_substr((string) ($esc['question'] ?? $text_in), 0, 140), wfai_admin_url('chat-' . $id));
+        $res['escalated'] = true;
+        $res['question_id'] = $qid;
+    }
+    $res['status'] = wfai_chat_status($id);
+    return $res;
+}
+
 function wfai_ask_gemini($key, $history, $text_in) {
     $tool = wfai_escalate_tool();
     $contents = array_map(fn($m) => ['role' => $m['role'] === 'user' ? 'user' : 'model', 'parts' => [['text' => $m['content']]]], $history);
@@ -325,6 +356,18 @@ function wfai_transcribe($b64) {
     if ($raw === false || strlen($raw) < 2000 || strlen($raw) > 4 * 1024 * 1024 || substr($raw, 0, 4) !== 'RIFF' || substr($raw, 8, 4) !== 'WAVE') {
         return new WP_Error('voice', $sorry);
     }
+    return wfai_transcribe_audio($raw, 'audio/wav');
+}
+
+/** Расшифровка звука любого поддерживаемого Gemini формата (WAV с сайта, OGG из Telegram и WhatsApp). */
+function wfai_transcribe_audio($raw, $mime) {
+    $sorry = 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.';
+    if (!wfai_voice_enabled()) {
+        return new WP_Error('voice', 'Голосовые сообщения пока не подключены — напишите, пожалуйста, текстом.');
+    }
+    if (strlen($raw) < 500 || strlen($raw) > 15 * 1024 * 1024) {
+        return new WP_Error('voice', $sorry);
+    }
     $model = wfai_opt('gemini_model') ?: 'gemini-3.1-flash-lite';
     $res = wp_remote_post('https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent', [
         'timeout' => 25,
@@ -332,7 +375,7 @@ function wfai_transcribe($b64) {
         'body' => wp_json_encode([
             'contents' => [['role' => 'user', 'parts' => [
                 ['text' => 'Это голосовое сообщение клиента на сайте (русский, казахский или английский). Запиши дословно, что он сказал, на том же языке, с пунктуацией. Только текст сказанного, без пояснений. Если речи нет или ничего не разобрать — ответь одним словом: EMPTY'],
-                ['inlineData' => ['mimeType' => 'audio/wav', 'data' => base64_encode($raw)]],
+                ['inlineData' => ['mimeType' => $mime, 'data' => base64_encode($raw)]],
             ]]],
             'generationConfig' => ['maxOutputTokens' => 1024, 'temperature' => 0],
         ]),

@@ -47,7 +47,7 @@ chats = [
         ('bot', '', 'Здравствуйте! 😊 Сайт с онлайн-записью — 15 000 ₸, срок 3–7 дней. Хостинг на год включён, домен оформляем отдельно.'),
         ('user', '', 'А скидку сделаете, если сразу закажу ещё и чат-бота?'),
         ('bot', '', 'За комплекс можно обсудить скидку — уточняем у менеджера, сейчас он вам ответит.')]},
-    {'id': 502, 'status': 'bot', 'contact': '', 'mins': 25, 'msgs': [
+    {'id': 502, 'channel': 'tg', 'status': 'bot', 'contact': '@aidos · Telegram', 'mins': 25, 'msgs': [
         ('user', '', 'Сколько стоит приложение в App Store?'),
         ('bot', '', 'Приложение в App Store и Google Play — 95 000 ₸, срок 1–3 недели. Если нужен быстрый старт, есть PWA-приложение от 30 000 ₸ — ставится на телефон прямо с сайта.')]},
     {'id': 503, 'status': 'bot', 'contact': '', 'mins': 190, 'msgs': [
@@ -59,7 +59,7 @@ faq = [
     {'q': 'Можно ли оплатить в рассрочку?', 'n': 6, 'mins': 200}, {'q': 'Что такое Vet.izi?', 'n': 5, 'mins': 300},
     {'q': 'Делаете ли вы рекламу в Instagram?', 'n': 3, 'mins': 900},
 ]
-demo['chats'] = [{'id': c['id'], 'status': c['status'], 'contact': c['contact'], 'mins': c['mins'],
+demo['chats'] = [{'id': c['id'], 'channel': c.get('channel', 'site'), 'status': c['status'], 'contact': c['contact'], 'mins': c['mins'],
                   'msgs': [{'i': i + 1, 'r': r, 'a': a, 't': t} for i, (r, a, t) in enumerate(c['msgs'])]} for c in chats]
 demo['faq'] = faq
 
@@ -71,7 +71,8 @@ adapter = r"""
   S.leads.forEach(function (l) { l.date = iso(l.minutes); l.tel = 'tel:' + l.phone.replace(/\s/g, ''); l.wa = 'https://wa.me/' + l.phone.replace(/\D/g, ''); });
   S.ai.questions.forEach(function (q) { q.date = iso(q.minutes); });
   var nextId = 1000;
-  var CH = S.chats; delete S.chats; var FAQ = S.faq; delete S.faq;
+  var CH = S.chats; delete S.chats;
+  var CHS = { tg: { on: true, name: '@WebForBot' }, wa: { on: false, name: '' }, ig: { on: false, name: '' }, meta_webhook: 'https://ваш-сайт/wp-json/webfor-ai/v1/meta', meta_verify: 'пример-проверочного-ключа', meta_secret_set: false, https: true }; var FAQ = S.faq; delete S.faq;
   CH.forEach(function (c) { c.updated = Math.floor(now / 1000) - c.mins * 60; c.unread = c.status === 'waiting' ? 2 : 0; c.msgs.forEach(function (m) { m.at = c.updated; }); });
   FAQ.forEach(function (f) { f.at = Math.floor(now / 1000) - f.mins * 60; });
   function addMsg(c, r, t, a) { var m = { i: c.msgs.length + 1, r: r, a: a || '', t: t, at: Math.floor(Date.now() / 1000) }; c.msgs.push(m); c.updated = m.at; return m; }
@@ -82,9 +83,16 @@ adapter = r"""
       var m, c;
       if (path === '/chats') return ok({ chats: CH.slice().sort(function (a, b) { var r = { waiting: 0, live: 1, bot: 2 }; return (r[a.status] - r[b.status]) || (b.updated - a.updated); }).map(function (c) {
         var last = c.msgs.filter(function (x) { return x.r === 'user'; }).pop();
-        return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length };
+        return { id: c.id, status: c.status, contact: c.contact, unread: c.unread, updated: c.updated, last: last ? last.t : '', count: c.msgs.length, channel: c.channel || 'site' };
       }) });
       if (path === '/faq') return ok({ items: FAQ });
+      if (path === '/channels') { // мессенджеры в демо: подключение «понарошку»
+        if (method === 'POST') {
+          if (body.off) CHS[body.ch] = { on: false, name: '' };
+          else CHS[body.ch] = { on: true, name: { tg: '@WebForBot', wa: '+7 700 000 99 99', ig: '@webfor.kz' }[body.ch] };
+        }
+        return ok(CHS);
+      }
       if (path === '/test') { // проверка ассистента в демо: короткие ответы по примерам
         var t = (body.text || '').toLowerCase();
         if (/скидк|дешевл/.test(t)) return ok({ reply: 'Для комплекса можно обсудить скидку — уточню у менеджера, он ответит в рабочее время 🙂', escalated: true, reason: 'Скидки решает менеджер' });
