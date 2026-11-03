@@ -6,7 +6,7 @@
 .wfai :focus-visible { outline: 2px solid var(--a-accent); outline-offset: 2px; }
 .wfai-launcher { display: inline-flex; align-items: center; gap: 8px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 28px; background: var(--a-accent); color: var(--a-on); font-weight: 700 !important; box-shadow: 0 8px 24px rgba(0,0,0,.45); transition: transform .15s; }
 .wfai-launcher:hover { transform: translateY(-1px); }
-.wfai.is-open .wfai-launcher { display: none; }
+.wfai.is-open .wfai-launcher { visibility: hidden; }
 .wfai-panel { position: absolute; right: 0; bottom: 0; width: 380px; height: min(600px, calc(100vh - 48px)); display: flex; flex-direction: column; background: var(--a-surface); border: 1px solid var(--a-line); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.6); }
 .wfai-panel[hidden] { display: none; }
 .wfai-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--a-line); background: var(--a-bg); }
@@ -60,3 +60,22 @@
 .wfai-contact { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .wfai-panel { background: #0e1312; } }
 @media (prefers-reduced-motion: reduce) { .wfai-launcher:active { transform: none; } }
+
+/* Liquid Glass v2: без рамок, одно скругление; чат «вырастает» из кнопки */
+.wfai { --wr: 14px; }
+.wfai-panel { border: 0 !important; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.6) !important; background: rgba(16,21,20,.78) !important; }
+.wfai-head { border-bottom: 0 !important; background: rgba(255,255,255,.04); }
+.wfai-form { border-top: 0 !important; }
+.wfai-close, .wfai-chip, .wfai-input, .wfai-send, .wfai-contact, .wfai-contact input, .wfai-contact button { border: 0 !important; border-radius: var(--wr) !important; }
+.wfai-close, .wfai-chip { background: rgba(255,255,255,.08) !important; }
+.wfai-chip:hover { background: rgba(63,224,160,.18) !important; color: #fff; }
+.wfai-input, .wfai-contact input { background: rgba(255,255,255,.07) !important; }
+.wfai-input:focus { box-shadow: 0 0 0 2px rgba(63,224,160,.55); }
+.wfai-msg { border-radius: 16px; }
+.wfai-assistant { background: rgba(255,255,255,.09) !important; box-shadow: none !important; }
+/* во время превращения содержимое окна не видно — только «капля» стекла */
+.wfai-panel.is-morph > * { opacity: 0; }
+.wfai-panel > * { transition: opacity .2s .12s; }
+.wfai.is-closing .wfai-panel > * { transition: none; }
+.wfai.is-open .wfai-launcher, .wfai.is-closing .wfai-launcher { visibility: hidden; }
+html.wfai-lock, html.wfai-lock body { overflow: hidden !important; }

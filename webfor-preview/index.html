@@ -481,6 +481,98 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
   .wf-btn:active, .wf-folder:active, .wf-page-back:active { transform: none; }
 }
 
+/* ===== Liquid Glass v2 ========================================================
+   Сплошное стекло без рамок: заливка, размытие и мягкая тень — никаких линий по краю.
+   Одно скругление на всё: кнопки, меню, поля, карточки, вопросы. */
+.wf {
+  --r: 14px;
+  --g-fill: rgba(255, 255, 255, .07);
+  --g-fill-hover: rgba(255, 255, 255, .11);
+  --g-blur: blur(30px) saturate(160%);
+  --g-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  --tint: rgba(63, 224, 160, .30);
+  --tint-soft: rgba(63, 224, 160, .14);
+}
+.wf-btn-secondary, .wf-page-back, .wf-card, .wf-form, .wf-faq details, .wf-table-wrap, .wf-steps li, .wf-page-foot,
+.wf-glass, .wf-art-chip, .wf-card-icon, .wf-page-icon, .wf-step-n, .wf-product-icon {
+  border: 0 !important;
+  background-color: var(--g-fill);
+  box-shadow: var(--g-shadow);
+  -webkit-backdrop-filter: var(--g-blur);
+  backdrop-filter: var(--g-blur);
+}
+.wf-card-icon, .wf-page-icon, .wf-step-n { box-shadow: none; }
+.wf-product-vet { background-color: #f4f1e4; }
+.wf-product-icon:not(.wf-product-vet) { background-color: var(--accent); }
+.wf-card, .wf-form, .wf-table-wrap, .wf-page-foot, .wf-faq details, .wf-steps li { border-radius: var(--r); }
+.wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(63, 224, 160, .45); }
+.wf-btn, .wf-page-back, .wf-burger, .wf-nav, .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { border-radius: var(--r) !important; }
+.wf-btn-secondary, .wf-page-back { border: 0 !important; }
+.wf-btn-secondary:hover, .wf-page-back:hover { background-color: var(--g-fill-hover); }
+.wf-header, .wf-page-bar { border-bottom: 0 !important; box-shadow: 0 1px 0 rgba(255, 255, 255, .04), 0 10px 30px rgba(0, 0, 0, .25); }
+.wf-mobile-bar { border-top: 0 !important; box-shadow: 0 -10px 30px rgba(0, 0, 0, .3); }
+/* бургер — того же цвета, что и панель */
+.wf-burger { background: transparent !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.wf-burger:hover { background: rgba(255, 255, 255, .08) !important; }
+@media (max-width: 1080px) {
+  .wf-nav { border: 0 !important; background: #111716 !important; box-shadow: 0 24px 60px rgba(0, 0, 0, .55) !important; padding: 6px 18px; }
+  .wf-nav a { border-bottom-color: rgba(255, 255, 255, .06); }
+}
+/* поля формы: стекло без рамки, фокус — мягкое кольцо */
+.wf-form input[type=text], .wf-form input[type=tel] { border: 0 !important; background: rgba(255, 255, 255, .06) !important; }
+.wf-form input[type=text]:focus, .wf-form input[type=tel]:focus { background: var(--tint-soft) !important; box-shadow: 0 0 0 2px rgba(63, 224, 160, .55); }
+.wf-form [aria-invalid=true] { box-shadow: 0 0 0 2px rgba(255, 138, 122, .7); }
+
+/* выбор услуги: одна строка, листается влево-вправо */
+.wf-pick-grid { display: flex !important; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -4px; padding: 4px; -webkit-overflow-scrolling: touch; }
+.wf-pick-grid::-webkit-scrollbar { display: none; }
+.wf-pick-item { flex: 0 0 auto; scroll-snap-align: start; }
+.wf-pick-item span { min-width: 124px; border: 0 !important; border-radius: var(--r); background: rgba(255, 255, 255, .06) !important; box-shadow: none !important; color: var(--text-2);
+  -webkit-backdrop-filter: var(--g-blur); backdrop-filter: var(--g-blur); }
+.wf-pick-item:hover span { background: var(--tint-soft) !important; }
+.wf-pick-item input:checked + span { background: var(--tint) !important; color: #fff; }
+.wf-pick-item input:checked + span .wf-i { color: #fff; }
+
+/* вопросы: значок из двух полосок — всегда точно по центру, поворачивается в «×» */
+.wf-faq summary::after { content: none !important; }
+.wf-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-right: 20px; }
+.wf-x { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .08); transition: transform .45s var(--spring), background-color .25s; }
+.wf-x::before, .wf-x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; margin: -1px 0 0 -6px; border-radius: 2px; background: var(--text); transition: background-color .25s; }
+.wf-x::after { transform: rotate(90deg); }
+.wf-faq details[open]:not(.is-closing) .wf-x { transform: rotate(135deg); background: var(--accent); }
+.wf-faq details[open]:not(.is-closing) .wf-x::before, .wf-faq details[open]:not(.is-closing) .wf-x::after { background: var(--on-accent); }
+.wf-faq details { transition: background-color .25s; }
+.wf-faq details[open] { background-color: var(--g-fill-hover); }
+
+/* работы в папках: без рамок, скромное скругление, без эффектов при наведении и нажатии */
+.wf-work-fig { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.wf-work-shot { border: 0 !important; border-radius: 10px !important; box-shadow: 0 16px 36px rgba(0, 0, 0, .4) !important; transform: none !important; }
+.wf-work-phone .wf-work-shot { border-radius: 16px !important; aspect-ratio: 9 / 19.5; }
+.wf-work-meta span { display: block; margin-top: 4px; font-size: 14px; color: var(--text-2); line-height: 1.5; }
+
+/* первый экран: живой телефон и появление по очереди — сайт, телефон, чат, сообщения */
+.wf-hero-art img { border: 0 !important; box-shadow: 0 24px 50px rgba(0, 0, 0, .5); }
+.wf-art-site { border-radius: 2.2cqw !important; }
+.wf-art-app { border-radius: 4.6cqw !important; outline: 1.4cqw solid #0d1110; outline-offset: -1px; }
+.wf-art-bot { border-radius: 4cqw !important; outline: 1.2cqw solid #0d1110; outline-offset: -1px; }
+.wf-art-chip { border-radius: var(--r) !important; background-color: rgba(18, 24, 23, .62) !important; box-shadow: 0 14px 34px rgba(0, 0, 0, .45) !important; }
+.wf-art-chip .wf-i { border-radius: 10px; }
+.wf-art-site { animation: wf-in-site .8s cubic-bezier(.2, .8, .2, 1) .1s both; }
+.wf-art-app { animation: wf-in-app 1s cubic-bezier(.2, .9, .25, 1.1) .55s both; }
+.wf-art-bot { animation: wf-in-bot .9s cubic-bezier(.2, .9, .25, 1.1) .9s both; }
+.wf-art-chip-1 { animation: wf-in-msg .6s var(--spring) 1.5s both, wf-float 6s ease-in-out 2.1s infinite; }
+.wf-art-chip-2 { animation: wf-in-msg .6s var(--spring) 1.95s both, wf-float 7s ease-in-out 2.6s infinite; }
+@keyframes wf-in-site { from { opacity: 0; transform: translateY(24px) rotate(0deg) scale(.94); } to { opacity: 1; transform: rotate(-4deg); } }
+@keyframes wf-in-app { from { opacity: 0; transform: translate(14cqw, 10cqw) rotate(28deg) scale(.85); } to { opacity: 1; transform: rotate(5deg); } }
+@keyframes wf-in-bot { from { opacity: 0; transform: translate(-10cqw, 12cqw) rotate(-18deg) scale(.88); } to { opacity: 1; transform: rotate(-2deg); } }
+@keyframes wf-in-msg { from { opacity: 0; transform: translateY(14px) scale(.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .wf-art-site, .wf-art-app, .wf-art-bot, .wf-art-chip-1, .wf-art-chip-2 { animation: none !important; }
+  .wf-x { transition: none; }
+}
+.wf-folder-body, .wf-folder-body::before { border-color: transparent !important; box-shadow: 0 14px 34px rgba(0, 0, 0, .4) !important; }
+.wf-folder-body::before { box-shadow: none !important; }
+
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
 .wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #3fe0a0; --a-on: #04170f;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
@@ -489,7 +581,7 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wfai :focus-visible { outline: 2px solid var(--a-accent); outline-offset: 2px; }
 .wfai-launcher { display: inline-flex; align-items: center; gap: 8px; height: 56px; padding: 0 20px 0 16px; border: 0; border-radius: 28px; background: var(--a-accent); color: var(--a-on); font-weight: 700 !important; box-shadow: 0 8px 24px rgba(0,0,0,.45); transition: transform .15s; }
 .wfai-launcher:hover { transform: translateY(-1px); }
-.wfai.is-open .wfai-launcher { display: none; }
+.wfai.is-open .wfai-launcher { visibility: hidden; }
 .wfai-panel { position: absolute; right: 0; bottom: 0; width: 380px; height: min(600px, calc(100vh - 48px)); display: flex; flex-direction: column; background: var(--a-surface); border: 1px solid var(--a-line); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.6); }
 .wfai-panel[hidden] { display: none; }
 .wfai-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; border-bottom: 1px solid var(--a-line); background: var(--a-bg); }
@@ -543,6 +635,25 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
 .wfai-contact { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .wfai-panel { background: #0e1312; } }
 @media (prefers-reduced-motion: reduce) { .wfai-launcher:active { transform: none; } }
+
+/* Liquid Glass v2: без рамок, одно скругление; чат «вырастает» из кнопки */
+.wfai { --wr: 14px; }
+.wfai-panel { border: 0 !important; border-radius: 20px; box-shadow: 0 24px 64px rgba(0,0,0,.6) !important; background: rgba(16,21,20,.78) !important; }
+.wfai-head { border-bottom: 0 !important; background: rgba(255,255,255,.04); }
+.wfai-form { border-top: 0 !important; }
+.wfai-close, .wfai-chip, .wfai-input, .wfai-send, .wfai-contact, .wfai-contact input, .wfai-contact button { border: 0 !important; border-radius: var(--wr) !important; }
+.wfai-close, .wfai-chip { background: rgba(255,255,255,.08) !important; }
+.wfai-chip:hover { background: rgba(63,224,160,.18) !important; color: #fff; }
+.wfai-input, .wfai-contact input { background: rgba(255,255,255,.07) !important; }
+.wfai-input:focus { box-shadow: 0 0 0 2px rgba(63,224,160,.55); }
+.wfai-msg { border-radius: 16px; }
+.wfai-assistant { background: rgba(255,255,255,.09) !important; box-shadow: none !important; }
+/* во время превращения содержимое окна не видно — только «капля» стекла */
+.wfai-panel.is-morph > * { opacity: 0; }
+.wfai-panel > * { transition: opacity .2s .12s; }
+.wfai.is-closing .wfai-panel > * { transition: none; }
+.wfai.is-open .wfai-launcher, .wfai.is-closing .wfai-launcher { visibility: hidden; }
+html.wfai-lock, html.wfai-lock body { overflow: hidden !important; }
 
 .wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
 </style>
@@ -668,16 +779,16 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 </header>
                                 <ul class="wf-cards">
                                                                             <li class="wf-work wf-work-wide" style="--i:0">
-                                            <button type="button" class="wf-work-btn" data-title="PetGo" data-desc="Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-site.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/petgo-site.jpg" alt="PetGo" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>PetGo</b><em>Наш проект</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>PetGo</b><em>Наш проект</em><span>Сайт сервиса ухода за питомцами: услуги, цены, онлайн-заявка. Заявки сразу попадают в кабинет команды.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-wide" style="--i:1">
-                                            <button type="button" class="wf-work-btn" data-title="Oscar Clinic" data-desc="Сайт ветеринарной клиники." data-tag="Наш проект" data-url="https://oscarclinic.kz" data-src="works/oscarclinic.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/oscarclinic.jpg" alt="Oscar Clinic" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Oscar Clinic</b><em>Наш проект</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Oscar Clinic</b><em>Наш проект</em><span>Сайт ветеринарной клиники.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                     </ul>
                                 <div class="wf-page-foot">
@@ -707,16 +818,16 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 </header>
                                 <ul class="wf-cards">
                                                                             <li class="wf-work wf-work-phone" style="--i:0">
-                                            <button type="button" class="wf-work-btn" data-title="PetGo — приложение для сотрудников" data-desc="Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-home.jpg" data-shape="phone" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/petgo-app-home.jpg" alt="PetGo — приложение для сотрудников" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>PetGo — приложение для сотрудников</b><em>Наш проект</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>PetGo — приложение для сотрудников</b><em>Наш проект</em><span>Главный экран команды: заказы на сегодня, новые заявки с сайта, питомцы.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-phone" style="--i:1">
-                                            <button type="button" class="wf-work-btn" data-title="PetGo — заказы" data-desc="Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание»." data-tag="Наш проект" data-url="https://petgo.kz" data-src="works/petgo-app-orders.jpg" data-shape="phone" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/petgo-app-orders.jpg" alt="PetGo — заказы" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>PetGo — заказы</b><em>Наш проект</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>PetGo — заказы</b><em>Наш проект</em><span>Заказы со статусами и исполнителями, отметки «вовремя» и «опоздание».</span></figcaption>
+                                            </figure>
                                         </li>
                                                                     </ul>
                                 <div class="wf-page-foot">
@@ -746,16 +857,16 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 </header>
                                 <ul class="wf-cards">
                                                                             <li class="wf-work wf-work-phone" style="--i:0">
-                                            <button type="button" class="wf-work-btn" data-title="AI-ассистент на этом сайте" data-desc="Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI»." data-tag="Работает здесь" data-url="" data-src="works/bot-site.jpg" data-shape="phone" data-action="chat">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/bot-site.jpg" alt="AI-ассистент на этом сайте" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em><span>Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-phone" style="--i:1">
-                                            <button type="button" class="wf-work-btn" data-title="Бот ветклиники в WhatsApp" data-desc="Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу." data-tag="Концепт" data-url="" data-src="works/bot-wa.jpg" data-shape="phone" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/bot-wa.jpg" alt="Бот ветклиники в WhatsApp" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em><span>Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                     </ul>
                                 <div class="wf-page-foot">
@@ -785,28 +896,28 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                                 </header>
                                 <ul class="wf-cards">
                                                                             <li class="wf-work wf-work-wide" style="--i:0">
-                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — заявки" data-desc="Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка." data-tag="Пример: PetGo" data-url="" data-src="works/crm-requests.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/crm-requests.jpg" alt="Vet.izi — заявки" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Vet.izi — заявки</b><em>Пример: PetGo</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Vet.izi — заявки</b><em>Пример: PetGo</em><span>Заявки с сайта сразу в CRM: контакт, питомец, кнопки WhatsApp и звонка.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-wide" style="--i:1">
-                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — главная" data-desc="Заказы на сегодня, новые заявки и питомцы на одном экране." data-tag="Пример: PetGo" data-url="" data-src="works/crm-home.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/crm-home.jpg" alt="Vet.izi — главная" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Vet.izi — главная</b><em>Пример: PetGo</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Vet.izi — главная</b><em>Пример: PetGo</em><span>Заказы на сегодня, новые заявки и питомцы на одном экране.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-wide" style="--i:2">
-                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — календарь" data-desc="Календарь команды: кто, когда и к какому питомцу." data-tag="Пример: PetGo" data-url="" data-src="works/crm-cal.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/crm-cal.jpg" alt="Vet.izi — календарь" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Vet.izi — календарь</b><em>Пример: PetGo</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Vet.izi — календарь</b><em>Пример: PetGo</em><span>Календарь команды: кто, когда и к какому питомцу.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                             <li class="wf-work wf-work-wide" style="--i:3">
-                                            <button type="button" class="wf-work-btn" data-title="Vet.izi — чаты" data-desc="Чаты с командой прямо в системе." data-tag="Пример: PetGo" data-url="" data-src="works/crm-chat.jpg" data-shape="wide" data-action="">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="works/crm-chat.jpg" alt="Vet.izi — чаты" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b>Vet.izi — чаты</b><em>Пример: PetGo</em></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b>Vet.izi — чаты</b><em>Пример: PetGo</em><span>Чаты с командой прямо в системе.</span></figcaption>
+                                            </figure>
                                         </li>
                                                                     </ul>
                                 <div class="wf-page-foot">
@@ -893,13 +1004,13 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
                     <h2 id="faq-h">Частые вопросы</h2>
                 </header>
                 <div class="wf-faq">
-                    <details><summary>Сколько это стоит?</summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
-                    <details><summary>Можно начать с сайта, а CRM добавить потом?</summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
-                    <details><summary>Нужно ли скачивать приложение из App Store?</summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
-                    <details><summary>Как работает AI-чат-бот?</summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
-                    <details><summary>Можно поставить чат-бота на мой сайт?</summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
-                    <details><summary>Вы поддерживаете сайт после запуска?</summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
+                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
+                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
+                    <details><summary>Нужно ли скачивать приложение из App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
+                    <details><summary>Чем Vet.izi отличается от Izi?<span class="wf-x" aria-hidden="true"></span></summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
+                    <details><summary>Как работает AI-чат-бот?<span class="wf-x" aria-hidden="true"></span></summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
+                    <details><summary>Можно поставить чат-бота на мой сайт?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
+                    <details><summary>Вы поддерживаете сайт после запуска?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
                 </div>
             </div>
         </section>
@@ -986,22 +1097,6 @@ html.wf-locked, html.wf-locked body { overflow: hidden; }
             </div>
         </div>
     </footer>
-
-    <dialog class="wf-lightbox" aria-labelledby="wf-lb-title">
-        <div class="wf-lb-in">
-            <button class="wf-lb-close" type="button" aria-label="Закрыть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-            <div class="wf-lb-shot"><img alt=""></div>
-            <div class="wf-lb-info">
-                <em class="wf-lb-tag"></em>
-                <h3 id="wf-lb-title"></h3>
-                <p class="wf-lb-desc"></p>
-                <div class="wf-lb-actions">
-                    <button class="wf-btn wf-btn-primary wf-btn-sm wf-lb-chat" type="button" data-wfai-open="">Попробовать ассистента</button>
-                    <span class="wf-lb-nav"><button type="button" class="wf-lb-prev" aria-label="Предыдущая работа">‹</button><button type="button" class="wf-lb-next" aria-label="Следующая работа">›</button></span>
-                </div>
-            </div>
-        </div>
-    </dialog>
 
     <div class="wf-mobile-bar" aria-label="Быстрая связь">
         <a class="wf-btn wf-btn-secondary" href="tel:+77478175712"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>Позвонить</a>        <a class="wf-btn wf-btn-primary" href="https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor." target="_blank" rel="noopener"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.8 7L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>WhatsApp</a>    </div>
@@ -1135,39 +1230,9 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   root.querySelectorAll('.wf-page [data-wfai-open]').forEach(function (b) { b.addEventListener('click', function () { pushed = false; hide(true); }); });
   window.addEventListener('hashchange', fromHash);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && openPage && !(document.querySelector('.wf-lightbox[open]'))) closePage();
+    if (e.key === 'Escape' && openPage) closePage();
   });
   fromHash();
-
-  // просмотр работы
-  var lb = root.querySelector('.wf-lightbox');
-  var list = [], cur = 0;
-  function showWork(i) {
-    cur = (i + list.length) % list.length;
-    var d = list[cur].dataset;
-    lb.classList.toggle('is-phone', d.shape === 'phone');
-    var img = lb.querySelector('.wf-lb-shot img'); img.src = d.src; img.alt = d.title;
-    lb.querySelector('.wf-lb-shot').scrollTop = 0;
-    lb.querySelector('.wf-lb-tag').textContent = d.tag || '';
-    lb.querySelector('#wf-lb-title').textContent = d.title;
-    lb.querySelector('.wf-lb-desc').textContent = d.desc || '';
-    lb.querySelector('.wf-lb-chat').hidden = d.action !== 'chat' || !window.WFAI;
-    lb.querySelector('.wf-lb-nav').hidden = list.length < 2;
-  }
-  if (lb && lb.showModal) {
-    root.querySelectorAll('.wf-work-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        list = Array.prototype.slice.call(b.closest('.wf-cards').querySelectorAll('.wf-work-btn'));
-        showWork(list.indexOf(b)); lb.showModal();
-      });
-    });
-    lb.querySelector('.wf-lb-close').addEventListener('click', function () { lb.close(); });
-    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { showWork(cur - 1); });
-    lb.querySelector('.wf-lb-next').addEventListener('click', function () { showWork(cur + 1); });
-    lb.querySelector('.wf-lb-chat').addEventListener('click', function () { lb.close(); });
-    lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
-    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') showWork(cur - 1); if (e.key === 'ArrowRight') showWork(cur + 1); });
-  }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме
   root.querySelectorAll('[data-service]').forEach(function (a) {
@@ -1188,10 +1253,10 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       if (!d.open) {
         d.open = true;
         var h = body.offsetHeight;
-        body.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
+        body.animate([{ height: '0px', opacity: 0, transform: 'translateY(-6px)' }, { height: h + 'px', opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.3,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
       } else {
         d.classList.add('is-closing');
-        body.animate([{ height: body.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
+        body.animate([{ height: body.offsetHeight + 'px', opacity: 1, transform: 'none' }, { height: '0px', opacity: 0, transform: 'translateY(-6px)' }], { duration: 260, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
           d.open = false; d.classList.remove('is-anim', 'is-closing');
         };
       }
@@ -1373,11 +1438,41 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   }
 
   function autosize() { input.style.height = 'auto'; input.style.height = Math.min(120, input.scrollHeight) + 'px'; }
+  // открытие: кнопка «вырастает» в окно чата, зелёный цвет растворяется в стекле; закрытие — обратно
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var animating = false;
+  function morph(btnRect, opening, done) {
+    var big = panel.getBoundingClientRect(), small = btnRect;
+    var t = 'translate(' + (small.left - big.left) + 'px,' + (small.top - big.top) + 'px) scale(' + small.width / big.width + ',' + small.height / big.height + ')';
+    var green = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
+    var frames = [
+      { transform: t, borderRadius: '28px', backgroundColor: green },
+      { transform: 'none', borderRadius: getComputedStyle(panel).borderRadius, backgroundColor: glass },
+    ];
+    if (!opening) frames.reverse();
+    panel.style.transformOrigin = '0 0';
+    panel.classList.add('is-morph');
+    var anim = panel.animate(frames, { duration: opening ? 460 : 380, easing: opening ? 'cubic-bezier(.2,.9,.25,1)' : 'cubic-bezier(.4,0,.2,1)' });
+    anim.onfinish = function () { panel.classList.remove('is-morph'); done(); };
+  }
   function setOpen(open) {
-    panel.hidden = !open; root.classList.toggle('is-open', open);
+    if (animating || open === !panel.hidden) return;
     launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) { if (!log.childElementCount) render(); setTimeout(function () { input.focus(); }, 50); }
-    else launcher.focus();
+    document.documentElement.classList.toggle('wfai-lock', open); // сайт под открытым чатом не прокручивается
+    if (open) {
+      if (!log.childElementCount) render();
+      var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
+      panel.hidden = false; root.classList.add('is-open');
+      if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
+      setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
+    } else {
+      var finish = function () { panel.hidden = true; root.classList.remove('is-open'); animating = false; launcher.focus({ preventScroll: true }); };
+      if (!reduce && panel.animate) {
+        animating = true; root.classList.add('is-closing'); root.classList.remove('is-open');
+        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); });
+      }
+      else finish();
+    }
   }
 
   launcher.addEventListener('click', function () { setOpen(panel.hidden); });

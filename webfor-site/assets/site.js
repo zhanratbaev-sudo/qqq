@@ -83,39 +83,9 @@
   root.querySelectorAll('.wf-page [data-wfai-open]').forEach(function (b) { b.addEventListener('click', function () { pushed = false; hide(true); }); });
   window.addEventListener('hashchange', fromHash);
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && openPage && !(document.querySelector('.wf-lightbox[open]'))) closePage();
+    if (e.key === 'Escape' && openPage) closePage();
   });
   fromHash();
-
-  // просмотр работы
-  var lb = root.querySelector('.wf-lightbox');
-  var list = [], cur = 0;
-  function showWork(i) {
-    cur = (i + list.length) % list.length;
-    var d = list[cur].dataset;
-    lb.classList.toggle('is-phone', d.shape === 'phone');
-    var img = lb.querySelector('.wf-lb-shot img'); img.src = d.src; img.alt = d.title;
-    lb.querySelector('.wf-lb-shot').scrollTop = 0;
-    lb.querySelector('.wf-lb-tag').textContent = d.tag || '';
-    lb.querySelector('#wf-lb-title').textContent = d.title;
-    lb.querySelector('.wf-lb-desc').textContent = d.desc || '';
-    lb.querySelector('.wf-lb-chat').hidden = d.action !== 'chat' || !window.WFAI;
-    lb.querySelector('.wf-lb-nav').hidden = list.length < 2;
-  }
-  if (lb && lb.showModal) {
-    root.querySelectorAll('.wf-work-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        list = Array.prototype.slice.call(b.closest('.wf-cards').querySelectorAll('.wf-work-btn'));
-        showWork(list.indexOf(b)); lb.showModal();
-      });
-    });
-    lb.querySelector('.wf-lb-close').addEventListener('click', function () { lb.close(); });
-    lb.querySelector('.wf-lb-prev').addEventListener('click', function () { showWork(cur - 1); });
-    lb.querySelector('.wf-lb-next').addEventListener('click', function () { showWork(cur + 1); });
-    lb.querySelector('.wf-lb-chat').addEventListener('click', function () { lb.close(); });
-    lb.addEventListener('click', function (e) { if (e.target === lb) lb.close(); });
-    lb.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') showWork(cur - 1); if (e.key === 'ArrowRight') showWork(cur + 1); });
-  }
 
   // кнопки «Хочу Vet.izi» и т.п. сразу выбирают услугу в форме
   root.querySelectorAll('[data-service]').forEach(function (a) {
@@ -136,10 +106,10 @@
       if (!d.open) {
         d.open = true;
         var h = body.offsetHeight;
-        body.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
+        body.animate([{ height: '0px', opacity: 0, transform: 'translateY(-6px)' }, { height: h + 'px', opacity: 1, transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.9,.3,1)' }).onfinish = function () { d.classList.remove('is-anim'); };
       } else {
         d.classList.add('is-closing');
-        body.animate([{ height: body.offsetHeight + 'px', opacity: 1 }, { height: '0px', opacity: 0 }], { duration: 240, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
+        body.animate([{ height: body.offsetHeight + 'px', opacity: 1, transform: 'none' }, { height: '0px', opacity: 0, transform: 'translateY(-6px)' }], { duration: 260, easing: 'cubic-bezier(.4,0,.2,1)' }).onfinish = function () {
           d.open = false; d.classList.remove('is-anim', 'is-closing');
         };
       }

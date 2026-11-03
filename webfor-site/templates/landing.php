@@ -103,10 +103,10 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                                 <ul class="wf-cards">
                                     <?php foreach ($works as $i => $w) : ?>
                                         <li class="wf-work wf-work-<?php echo esc_attr($w['shape']); ?>" style="--i:<?php echo (int) $i; ?>">
-                                            <button type="button" class="wf-work-btn" data-title="<?php echo esc_attr($w['title']); ?>" data-desc="<?php echo esc_attr($w['desc']); ?>" data-tag="<?php echo esc_attr($w['tag']); ?>" data-url="<?php echo esc_url($w['url']); ?>" data-src="<?php echo esc_url($w['src']); ?>" data-shape="<?php echo esc_attr($w['shape']); ?>" data-action="<?php echo esc_attr($w['action']); ?>">
+                                            <figure class="wf-work-fig">
                                                 <span class="wf-work-shot"><img src="<?php echo esc_url($w['src']); ?>" alt="<?php echo esc_attr($w['title']); ?>" loading="lazy"></span>
-                                                <span class="wf-work-meta"><b><?php echo esc_html($w['title']); ?></b><?php if ($w['tag']) : ?><em><?php echo esc_html($w['tag']); ?></em><?php endif; ?></span>
-                                            </button>
+                                                <figcaption class="wf-work-meta"><b><?php echo esc_html($w['title']); ?></b><?php if ($w['tag']) : ?><em><?php echo esc_html($w['tag']); ?></em><?php endif; ?><?php if ($w['desc']) : ?><span><?php echo esc_html($w['desc']); ?></span><?php endif; ?></figcaption>
+                                            </figure>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -196,13 +196,13 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <h2 id="faq-h">Частые вопросы</h2>
                 </header>
                 <div class="wf-faq">
-                    <details><summary>Сколько это стоит?</summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
-                    <details><summary>Можно начать с сайта, а CRM добавить потом?</summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
-                    <details><summary>Нужно ли скачивать приложение из App Store?</summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?</summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
-                    <details><summary>Как работает AI-чат-бот?</summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
-                    <details><summary>Можно поставить чат-бота на мой сайт?</summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
-                    <details><summary>Вы поддерживаете сайт после запуска?</summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
+                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
+                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
+                    <details><summary>Нужно ли скачивать приложение из App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
+                    <details><summary>Чем Vet.izi отличается от Izi?<span class="wf-x" aria-hidden="true"></span></summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
+                    <details><summary>Как работает AI-чат-бот?<span class="wf-x" aria-hidden="true"></span></summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
+                    <details><summary>Можно поставить чат-бота на мой сайт?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
+                    <details><summary>Вы поддерживаете сайт после запуска?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
                 </div>
             </div>
         </section>
@@ -276,22 +276,6 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
             </div>
         </div>
     </footer>
-
-    <dialog class="wf-lightbox" aria-labelledby="wf-lb-title">
-        <div class="wf-lb-in">
-            <button class="wf-lb-close" type="button" aria-label="Закрыть"><?php echo webfor_icon('close'); ?></button>
-            <div class="wf-lb-shot"><img alt=""></div>
-            <div class="wf-lb-info">
-                <em class="wf-lb-tag"></em>
-                <h3 id="wf-lb-title"></h3>
-                <p class="wf-lb-desc"></p>
-                <div class="wf-lb-actions">
-                    <button class="wf-btn wf-btn-primary wf-btn-sm wf-lb-chat" type="button" data-wfai-open="">Попробовать ассистента</button>
-                    <span class="wf-lb-nav"><button type="button" class="wf-lb-prev" aria-label="Предыдущая работа">‹</button><button type="button" class="wf-lb-next" aria-label="Следующая работа">›</button></span>
-                </div>
-            </div>
-        </div>
-    </dialog>
 
     <div class="wf-mobile-bar" aria-label="Быстрая связь">
         <?php if ($wf_tel) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_tel); ?>"><?php echo webfor_icon('phone'); ?>Позвонить</a><?php endif; ?>

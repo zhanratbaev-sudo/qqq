@@ -106,11 +106,41 @@
   }
 
   function autosize() { input.style.height = 'auto'; input.style.height = Math.min(120, input.scrollHeight) + 'px'; }
+  // открытие: кнопка «вырастает» в окно чата, зелёный цвет растворяется в стекле; закрытие — обратно
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var animating = false;
+  function morph(btnRect, opening, done) {
+    var big = panel.getBoundingClientRect(), small = btnRect;
+    var t = 'translate(' + (small.left - big.left) + 'px,' + (small.top - big.top) + 'px) scale(' + small.width / big.width + ',' + small.height / big.height + ')';
+    var green = getComputedStyle(launcher).backgroundColor, glass = getComputedStyle(panel).backgroundColor;
+    var frames = [
+      { transform: t, borderRadius: '28px', backgroundColor: green },
+      { transform: 'none', borderRadius: getComputedStyle(panel).borderRadius, backgroundColor: glass },
+    ];
+    if (!opening) frames.reverse();
+    panel.style.transformOrigin = '0 0';
+    panel.classList.add('is-morph');
+    var anim = panel.animate(frames, { duration: opening ? 460 : 380, easing: opening ? 'cubic-bezier(.2,.9,.25,1)' : 'cubic-bezier(.4,0,.2,1)' });
+    anim.onfinish = function () { panel.classList.remove('is-morph'); done(); };
+  }
   function setOpen(open) {
-    panel.hidden = !open; root.classList.toggle('is-open', open);
+    if (animating || open === !panel.hidden) return;
     launcher.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) { if (!log.childElementCount) render(); setTimeout(function () { input.focus(); }, 50); }
-    else launcher.focus();
+    document.documentElement.classList.toggle('wfai-lock', open); // сайт под открытым чатом не прокручивается
+    if (open) {
+      if (!log.childElementCount) render();
+      var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
+      panel.hidden = false; root.classList.add('is-open');
+      if (!reduce && panel.animate) { animating = true; morph(btnRect, true, function () { animating = false; }); }
+      setTimeout(function () { input.focus({ preventScroll: true }); }, 60);
+    } else {
+      var finish = function () { panel.hidden = true; root.classList.remove('is-open'); animating = false; launcher.focus({ preventScroll: true }); };
+      if (!reduce && panel.animate) {
+        animating = true; root.classList.add('is-closing'); root.classList.remove('is-open');
+        morph(launcher.getBoundingClientRect(), false, function () { root.classList.remove('is-closing'); finish(); });
+      }
+      else finish();
+    }
   }
 
   launcher.addEventListener('click', function () { setOpen(panel.hidden); });

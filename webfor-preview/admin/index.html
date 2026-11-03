@@ -151,6 +151,29 @@ textarea.wfa-input { resize: vertical; }
 .wfa-toast { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); background: rgba(236,242,240,.9); }
 @media (prefers-reduced-motion: reduce) { .wfa-btn:active, .wfa-tile:active, .wfa-chip:active, .wfa-seg button:active { transform: none; } }
 
+/* Liquid Glass v2: без рамок, одно скругление */
+.wfa { --r: 14px; }
+.wfa-card, .wfa-tile, .wfa-lead, .wfa-q, .wfa-work, .wfa-ai-status, .wfa-learn-row, .wfa-dialog, .wfa-btn-ghost, .wfa-seg, .wfa-chip, .wfa-input, .wfa-empty, .wfa-img-pick, .wfa-work-move button {
+  border: 0 !important; border-radius: var(--r) !important; box-shadow: 0 10px 28px rgba(0,0,0,.3) !important;
+}
+.wfa-input, .wfa-chip, .wfa-work-move button, .wfa-seg { box-shadow: none !important; }
+.wfa-btn { border-radius: var(--r) !important; }
+.wfa-lead, .wfa-q { border-left: 0 !important; position: relative; }
+.wfa-lead::before, .wfa-q::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 3px; background: var(--text-3); }
+.wfa-lead.is-new::before, .wfa-q:not(.is-done)::before { background: var(--accent); } .wfa-lead.is-work::before { background: var(--warn); }
+.wfa-input { background: rgba(255,255,255,.06) !important; }
+.wfa-input:focus { box-shadow: 0 0 0 2px rgba(63,224,160,.55) !important; }
+.wfa-chip { background: rgba(255,255,255,.06); }
+.wfa-chip[aria-pressed=true] { background: rgba(63,224,160,.3); color: #fff; }
+.wfa-chip[aria-pressed=true] span { color: #fff; }
+.wfa-tile.is-hot { box-shadow: 0 10px 28px rgba(0,0,0,.3), 0 0 0 1.5px rgba(63,224,160,.45) !important; }
+.wfa-empty { background: rgba(255,255,255,.03); }
+.wfa-tabs { border-bottom: 0; }
+.wfa-tab { border-radius: var(--r); border-bottom: 0; }
+.wfa-tab[aria-selected=true] { background: rgba(63,224,160,.18); }
+.wfa-form-actions { border-top: 0; }
+.wfa-mini-row { border-top-color: rgba(255,255,255,.05); }
+
 </style>
 <div class="demo-note">Демо админки с примерами данных: всё можно нажимать и менять, но после перезагрузки страницы изменения сбросятся. На вашем сайте это пункт «WebFor» в админке WordPress.</div>
 <div id="wfa-app" class="wfa"><p class="wfa-loading">Загружаем панель…</p></div>
