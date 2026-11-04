@@ -706,3 +706,18 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
   .wf-izi-dot.is-active { width: 34px; background: var(--accent); }
 }
 @media (prefers-reduced-motion: reduce) { .wf-izi-dot { transition: none; } }
+
+/* Нижняя панель на телефоне: без тёмной подложки — сайт виден под ней целиком, остаются только две кнопки,
+   опущенные к краю экрана. (Сплошной фон у панели iPhone растягивал на всю зону под ней — внизу была чёрная полоса.) */
+@media (max-width: 760px) {
+  .wf-mobile-bar, html.wf-refract .wf-mobile-bar {
+    padding: 0 12px max(8px, calc(env(safe-area-inset-bottom, 0px) - 18px)) !important;
+    background: transparent !important; background-color: transparent !important; background-image: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    box-shadow: none !important; border-top: 0 !important;
+    pointer-events: none; }
+  .wf-mobile-bar .wf-btn { pointer-events: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, .45) !important; }
+  .wf-mobile-bar .wf-btn-secondary { background-color: rgba(20, 26, 25, .72) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important; backdrop-filter: blur(18px) saturate(160%) !important; }
+  .wf-footer { padding-bottom: 88px; }
+}

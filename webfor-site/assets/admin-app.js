@@ -893,8 +893,9 @@
   /* ---------- мессенджеры: Telegram, WhatsApp, Instagram ---------- */
   let CH = null;
   function drawChannels(box) {
-    const rows = ['tg', 'wa', 'ig'].map((k) => row({ icon: 'chats', tint: CH && CH[k].on ? 'ok' : 'gray', title: CHANNEL[k],
-      value: !CH ? '…' : CH[k].on ? (CH[k].name || 'Подключён') : 'Не подключён', onclick: () => channelSheet(k) }));
+    const broken = (k) => CH && CH[k].on && CH[k].health && !CH[k].health.ok; // токен есть, но сообщения не доходят
+    const rows = ['tg', 'wa', 'ig'].map((k) => row({ icon: 'chats', tint: broken(k) ? 'gold' : CH && CH[k].on ? 'ok' : 'gray', title: CHANNEL[k],
+      value: !CH ? '…' : broken(k) ? 'Не отвечает — откройте' : CH[k].on ? (CH[k].name || 'Подключён') : 'Не подключён', onclick: () => channelSheet(k) }));
     box.innerHTML = '';
     box.appendChild(group('Мессенджеры', rows, 'Тот же ассистент отвечает в мессенджерах. Разговоры приходят сюда, во вкладку «Чаты», ваши ответы уходят клиенту туда же.'));
     if (!CH) adapter.chatApi('GET', '/channels').then((d) => { CH = d; if (box.isConnected) drawChannels(box); }).catch(() => {});
@@ -907,7 +908,10 @@
     if (!CH) { toast('Загружаем…'); return; }
     const st = CH[k];
     const steps = (list) => h('ol', { class: 'wfa-steps' }, list.map((t) => h('li', { text: t })));
-    const status = h('div', { class: 'wfa-card ' + (st.on ? 'is-ok' : 'is-tip') }, [ico(st.on ? 'check' : 'chats'), h('div', null, [h('b', { text: st.on ? 'Подключён' + (st.name ? ': ' + st.name : '') : 'Не подключён' }), h('p', { text: st.on ? 'Ассистент отвечает клиентам в ' + CHANNEL[k] + '.' : 'Сделайте шаги ниже — это 5–15 минут.' })])]);
+    const bad = st.on && st.health && !st.health.ok;
+    const status = bad
+      ? h('div', { class: 'wfa-card is-tip' }, [ico('chats'), h('div', null, [h('b', { text: 'Токен принят, но бот не отвечает' + (st.name ? ': ' + st.name : '') }), h('p', { text: st.health.error })])])
+      : h('div', { class: 'wfa-card ' + (st.on ? 'is-ok' : 'is-tip') }, [ico(st.on ? 'check' : 'chats'), h('div', null, [h('b', { text: st.on ? 'Подключён' + (st.name ? ': ' + st.name : '') : 'Не подключён' }), h('p', { text: st.on ? 'Ассистент отвечает клиентам в ' + CHANNEL[k] + '.' + (st.health && st.health.last_in ? ' Последнее сообщение дошло: ' + new Date(st.health.last_in * 1000).toLocaleString('ru-RU') + '.' : '') : 'Сделайте шаги ниже — это 5–15 минут.' })])]);
     const httpsWarn = CH.https ? null : h('p', { class: 'wfa-sys is-warn', text: 'Сайт открывается без https — мессенджеры подключаются только к сайтам с https.' });
     let fields = [], content = [];
     if (k === 'tg') {
@@ -951,7 +955,7 @@
         if (!st.on && k === 'wa' && (!body.wa_phone_id || !body.wa_token)) { toast('Заполните Phone number ID и токен', true); return; }
         if (!st.on && k === 'tg' && !body.tg_token) { toast('Вставьте токен бота', true); return; }
         if (!st.on && k === 'ig' && !body.ig_token) { toast('Вставьте токен Instagram', true); return; }
-        adapter.chatApi('POST', '/channels', body).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' подключён'); }).catch(fail);
+        adapter.chatApi('POST', '/channels', body).then((d) => { CH = d; sh.close(); render('more'); const hl = d[k] && d[k].health; toast(hl && !hl.ok ? hl.error : CHANNEL[k] + ' подключён', !!(hl && !hl.ok)); }).catch(fail);
       }, 'is-wide is-primary'),
       st.on ? confirmBtn('Отключить ' + CHANNEL[k], () => adapter.chatApi('POST', '/channels', { ch: k, off: 1 }).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' отключён'); }).catch(fail)) : null,
     ] });

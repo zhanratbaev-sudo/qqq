@@ -154,6 +154,7 @@ function wfai_ch_send($id, $text) {
     }
     if ($err) {
         error_log('[webfor-ai] не отправлено в ' . (WFAI_CHANNELS[$ch] ?? $ch) . ': ' . $err->get_error_message());
+        set_transient('wfai_' . $ch . '_send_err', ['t' => time(), 'm' => $err->get_error_message()], WEEK_IN_SECONDS);
         update_post_meta($id, '_send_err', ['t' => time(), 'm' => $err->get_error_message()]);
     } else {
         delete_post_meta($id, '_send_err');
@@ -198,6 +199,67 @@ function wfai_tg_connect($token) {
     }
     wfai_ch_save(['tg_token' => $token, 'tg_bot' => (string) ($me['username'] ?? '')]);
     return $me;
+}
+/**
+ * Проверка, что Telegram правда доставляет сообщения на сайт (getWebhookInfo).
+ * «Подключён» в админке раньше значило только «токен сохранён»; если Telegram не может достучаться до сайта
+ * (редирект, 403 от защиты хостинга, другой адрес сайта, ошибка сертификата), бот молча не отвечал.
+ * Если адрес вебхука не совпадает с нынешним или сайт отвечал 401/403 — переподключаем вебхук сами.
+ */
+function wfai_tg_health($repair = true) {
+    $info = wfai_tg_api('getWebhookInfo');
+    if (is_wp_error($info)) {
+        return ['ok' => false, 'error' => 'Telegram не отвечает на проверку: ' . $info->get_error_message()];
+    }
+    $want = wfai_ch_webhook('tg');
+    $url = (string) ($info['url'] ?? '');
+    $err = (string) ($info['last_error_message'] ?? '');
+    $err_at = (int) ($info['last_error_date'] ?? 0);
+    $last_in = (int) get_transient('wfai_tg_last_in');
+    $fresh = $err !== '' && $err_at > $last_in; // ошибка новее последнего удачного сообщения
+    if ($repair && ($url !== $want || ($fresh && preg_match('/\b(401|403)\b/', $err)))) {
+        wfai_tg_api('setWebhook', ['url' => $want, 'secret_token' => wfai_ch_secret('tg_secret'),
+            'allowed_updates' => ['message', 'business_message', 'business_connection']]);
+        return wfai_tg_health(false);
+    }
+    $out = ['ok' => true, 'error' => '', 'pending' => (int) ($info['pending_update_count'] ?? 0), 'last_in' => $last_in, 'url' => $url];
+    if ($url === '') {
+        $out['ok'] = false;
+        $out['error'] = 'Вебхук не установлен — нажмите «Сохранить и проверить».';
+    } elseif ($url !== $want) {
+        $out['ok'] = false;
+        $out['error'] = 'Telegram шлёт сообщения на другой адрес: ' . $url . '. Нажмите «Сохранить и проверить».';
+    } elseif ($fresh) {
+        $out['ok'] = false;
+        $out['error'] = 'Telegram не может доставить сообщения на сайт: ' . $err . '. ' . wfai_tg_hint($err);
+    }
+    if ($out['ok'] && ($se = get_transient('wfai_tg_send_err')) && (int) $se['t'] > $last_in - 60) {
+        $out['ok'] = false;
+        $out['error'] = 'Сообщения доходят, но ответ не отправился: ' . $se['m'];
+    }
+    return $out;
+}
+/** Подсказка по частым ошибкам вебхука — простыми словами. */
+function wfai_tg_hint($err) {
+    if (preg_match('/\b30[1278]\b/', $err)) {
+        return 'Сайт перенаправляет запрос (http→https или www↔без www), а Telegram редиректы не проходит. В WordPress → Настройки → Общие адрес сайта должен совпадать с тем, по которому он реально открывается.';
+    }
+    if (preg_match('/\b(401|403)\b/', $err)) {
+        return 'Запрос блокирует защита: плагин безопасности (Wordfence, iThemes и т.п.), Cloudflare или хостинг. Разрешите адрес /wp-json/webfor-ai/v1/telegram.';
+    }
+    if (preg_match('/\b404\b/', $err)) {
+        return 'Адрес не найден: включите постоянные ссылки (Настройки → Постоянные ссылки → Сохранить) и проверьте, что REST API (/wp-json/) не отключён.';
+    }
+    if (preg_match('/\b5\d\d\b/', $err)) {
+        return 'Ошибка на сервере сайта — посмотрите журнал ошибок PHP на хостинге.';
+    }
+    if (stripos($err, 'certificate') !== false || stripos($err, 'SSL') !== false) {
+        return 'Проблема с SSL-сертификатом сайта — нужен действующий сертификат (например Let\'s Encrypt), с полной цепочкой.';
+    }
+    if (stripos($err, 'timeout') !== false || stripos($err, 'timed out') !== false || stripos($err, 'Connection') !== false) {
+        return 'Сайт не ответил вовремя или недоступен снаружи — проверьте, что он открывается по https с другого устройства.';
+    }
+    return '';
 }
 function wfai_tg_update(array $u) {
     if (!empty($u['business_connection']['user']['id'])) { // владелец подключил бота к своему аккаунту (Telegram для бизнеса)
@@ -355,6 +417,7 @@ add_action('rest_api_init', function () {
         if ($secret === '' || !hash_equals($secret, (string) $q->get_header('x_telegram_bot_api_secret_token'))) {
             return new WP_REST_Response(['ok' => false], 403);
         }
+        set_transient('wfai_tg_last_in', time(), WEEK_IN_SECONDS); // для проверки в админке: сообщения доходят до сайта
         wfai_tg_update((array) json_decode($q->get_body(), true));
         return ['ok' => true];
     }]);
@@ -435,7 +498,7 @@ add_action('rest_api_init', function () {
 function wfai_ch_state() {
     $o = wfai_ch_opts();
     return [
-        'tg' => ['on' => wfai_ch_on('tg'), 'name' => $o['tg_bot'] ? '@' . $o['tg_bot'] : ''],
+        'tg' => ['on' => wfai_ch_on('tg'), 'name' => $o['tg_bot'] ? '@' . $o['tg_bot'] : '', 'health' => wfai_ch_on('tg') ? wfai_tg_health() : null],
         'wa' => ['on' => wfai_ch_on('wa'), 'name' => $o['wa_phone']],
         'ig' => ['on' => wfai_ch_on('ig'), 'name' => $o['ig_user'] ? '@' . $o['ig_user'] : ''],
         'meta_webhook' => wfai_ch_webhook('meta'), 'meta_verify' => wfai_ch_secret('meta_verify'), 'meta_secret_set' => $o['meta_secret'] !== '',

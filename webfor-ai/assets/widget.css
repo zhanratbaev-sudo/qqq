@@ -40,7 +40,7 @@
 .wfai-wa { width: 100%; font-size: 13px; color: var(--a-accent); text-decoration: none; }
 @media (max-width: 760px) {
   .wfai { right: 16px; bottom: 16px; }
-  .wfai.wfai-has-bar { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .wfai.wfai-has-bar { bottom: calc(64px + max(8px, calc(env(safe-area-inset-bottom, 0px) - 18px))); }
   .wfai-launcher span { display: none; }
   .wfai-launcher { width: 56px; padding: 0; justify-content: center; }
   .wfai.is-open, .wfai.wfai-has-bar.is-open { inset: 0; }
@@ -111,7 +111,8 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 }
 @media (max-width: 760px) {
   /* зона под окном чата (там, где клавиатура) — тёмная: сайт не мелькает, пока клавиатура выезжает */
-  .wfai.is-open::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
+  /* только пока открыта клавиатура: в обычном состоянии под чатом ничего не закрашиваем */
+  .wfai.is-open.wfai-kb::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
 }
 @media (max-width: 760px) {
   /* на телефоне окно на весь экран: стекло с размытием и преломлением тут не видно, а при каждом сдвиге клавиатуры
