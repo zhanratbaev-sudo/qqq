@@ -623,18 +623,26 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
      и под окном оставалась чёрная полоса. Окно тянем до низа экрана, а меню держим там, где его видно:
      поднимаем на ту же величину (--wfa-extra), чтобы оно не уехало под полоску. */
   function fitScreen() {
-    if (embedded || CFG.demo || navigator.standalone !== true) return;
+    const standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (embedded || CFG.demo || !standalone) { FIT.on = false; return; }
+    app.style.height = ''; app.style.bottom = ''; app.style.setProperty('--wfa-extra', '0px');
     const land = window.matchMedia('(orientation: landscape)').matches;
     const full = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
-    const extra = full - window.innerHeight;
-    const ok = extra > 0 && extra <= 60; // больше 60 px — это уже не полоска «домой», ничего не трогаем
-    app.style.height = ok ? full + 'px' : '';
-    app.style.bottom = ok ? 'auto' : '';
-    app.style.setProperty('--wfa-extra', (ok ? extra : 0) + 'px');
+    const real = Math.round(app.getBoundingClientRect().height); // сколько окно на самом деле занимает
+    const extra = full - real;
+    FIT = { on: true, full, real, inner: window.innerHeight, extra };
+    if (extra > 0 && extra <= 160) {
+      app.style.height = full + 'px';
+      app.style.bottom = 'auto';
+      app.style.setProperty('--wfa-extra', extra + 'px');
+    }
   }
+  let FIT = { on: false };
   fitScreen();
   window.addEventListener('resize', fitScreen);
   window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
+  window.addEventListener('pageshow', fitScreen);
+  setTimeout(fitScreen, 400); // iOS сообщает окончательный размер не сразу
   app.innerHTML = '';
   const stage = h('div', { class: 'wfa-stage' });
   const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
@@ -1378,7 +1386,8 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
       S.ai && S.ai.settings_url ? row({ icon: 'gear', tint: 'gray', title: 'Ключ и модель ассистента', href: S.ai.settings_url, blank: !embedded }) : null,
     ]));
     if (CFG.logout) body.appendChild(group(null, [row({ icon: 'logout', tint: 'red', title: 'Выйти', href: CFG.logout, chevron: false, cls: 'is-danger' })]));
-    if (CFG.version) body.appendChild(h('p', { class: 'wfa-note wfa-version', text: 'WebFor · Izi · версия сайта ' + CFG.version + (CFG.ai_version ? ' · ассистент ' + CFG.ai_version : '') }));
+    if (CFG.version) body.appendChild(h('p', { class: 'wfa-note wfa-version', text: 'WebFor · Izi · версия сайта ' + CFG.version + (CFG.ai_version ? ' · ассистент ' + CFG.ai_version : '')
+      + (FIT.on ? ' · экран ' + FIT.full + '/' + FIT.real + '/' + FIT.inner : '') }));
   }
   /* ---------- мессенджеры: Telegram, WhatsApp, Instagram ---------- */
   let CH = null;

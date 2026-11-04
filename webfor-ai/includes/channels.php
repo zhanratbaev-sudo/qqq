@@ -34,7 +34,13 @@ function wfai_ch_secret($k) {
     return $v;
 }
 function wfai_ch_webhook($ch) {
-    return rest_url('webfor-ai/v1/' . ($ch === 'tg' ? 'telegram' : 'meta'));
+    $route = '/webfor-ai/v1/' . ($ch === 'tg' ? 'telegram' : 'meta');
+    // без постоянных ссылок rest_url даёт «/index.php?rest_route=…», а многие хостинги перенаправляют /index.php → / —
+    // Telegram и Meta перенаправления не проходят. Адрес без index.php работает так же, но без редиректа.
+    if (!get_option('permalink_structure')) {
+        return add_query_arg('rest_route', $route, home_url('/'));
+    }
+    return rest_url(ltrim($route, '/'));
 }
 function wfai_ch_on($ch) {
     return $ch === 'tg' ? wfai_ch_opt('tg_token') !== '' : ($ch === 'wa' ? wfai_ch_opt('wa_token') !== '' && wfai_ch_opt('wa_phone_id') !== '' : wfai_ch_opt('ig_token') !== '');
