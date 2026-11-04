@@ -67,7 +67,7 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #040606; }
 .wfa-icon-btn svg { width: 20px; height: 20px; }
 
 /* нижняя стеклянная панель */
-.wfa-tabbar { position: absolute; z-index: 20; left: 50%; bottom: calc(var(--safe-b) + 10px); transform: translateX(-50%);
+.wfa-tabbar { position: absolute; z-index: 20; left: 50%; bottom: calc(var(--safe-b) + var(--wfa-extra, 0px) + 6px); transform: translateX(-50%);
   width: min(calc(100% - 28px), 440px); height: var(--tabbar); display: flex; padding: 5px; border-radius: 34px;
   background: rgba(22,30,28,.55); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
   box-shadow: var(--rim), 0 12px 40px rgba(0,0,0,.45); transition: transform .45s cubic-bezier(.32,.72,0,1), opacity .3s; }
@@ -340,7 +340,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa-sheet-body { overflow-wrap: anywhere; }
 
 /* меню — ещё ниже, почти у края (над полоской «домой» на iPhone) */
-.wfa-tabbar { bottom: max(6px, calc(var(--safe-b) - 22px)); }
+.wfa-tabbar { bottom: calc(max(6px, calc(var(--safe-b) - 22px)) + var(--wfa-extra, 0px)); }
 
 /* смахнуть чат влево — «Закрыть» */
 .wfa-swipe { position: relative; overflow: hidden; }
@@ -361,6 +361,14 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
 .wfa-copy .wfa-btn { align-self: flex-start; }
 .wfa-steps li { font-size: var(--fs-sub); }
 .wfa-cmd-ico { font: 700 18px/1 ui-monospace, Menlo, monospace; }
+
+/* окно растянуто под полоску «домой» — прокрутка тоже доходит до низа, а последний пункт не прячется под меню */
+.wfa-scroll { padding-bottom: calc(var(--tabbar) + var(--safe-b) + var(--wfa-extra, 0px) + 40px); }
+.wfa-screen.is-pushed .wfa-scroll { padding-bottom: calc(var(--safe-b) + var(--wfa-extra, 0px) + 28px); }
+.wfa-screen.is-chat .wfa-scroll { padding-bottom: 16px; }
+.wfa-chat-foot { padding-bottom: calc(var(--safe-b) + var(--wfa-extra, 0px) + 10px); }
+.wfa-sheet { padding-bottom: var(--wfa-extra, 0px); } /* фон листа до низа экрана, кнопки — над полоской «домой» */
+.wfa .wfa-version { margin-top: -8px; }
 
 </style>
 <div id="wfa-app" class="wfa"></div>
@@ -611,7 +619,22 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
   /* ---------- каркас: фон, экраны, нижняя панель, листы ---------- */
   const embedded = !CFG.sw && !CFG.demo; // внутри админки WordPress, а не отдельным приложением
   app.className = 'wfa' + (embedded ? ' is-embedded' : ' is-app');
-  // высоту не растягиваем на весь экран: нижнюю полосу iPhone для приложений с экрана «Домой» страница не рисует
+  /* iPhone, приложение с экрана «Домой»: iOS отдаёт странице высоту меньше экрана (без полоски «домой»),
+     и под окном оставалась чёрная полоса. Окно тянем до низа экрана, а меню держим там, где его видно:
+     поднимаем на ту же величину (--wfa-extra), чтобы оно не уехало под полоску. */
+  function fitScreen() {
+    if (embedded || CFG.demo || navigator.standalone !== true) return;
+    const land = window.matchMedia('(orientation: landscape)').matches;
+    const full = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+    const extra = full - window.innerHeight;
+    const ok = extra > 0 && extra <= 60; // больше 60 px — это уже не полоска «домой», ничего не трогаем
+    app.style.height = ok ? full + 'px' : '';
+    app.style.bottom = ok ? 'auto' : '';
+    app.style.setProperty('--wfa-extra', (ok ? extra : 0) + 'px');
+  }
+  fitScreen();
+  window.addEventListener('resize', fitScreen);
+  window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
   app.innerHTML = '';
   const stage = h('div', { class: 'wfa-stage' });
   const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
@@ -1355,12 +1378,14 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
       S.ai && S.ai.settings_url ? row({ icon: 'gear', tint: 'gray', title: 'Ключ и модель ассистента', href: S.ai.settings_url, blank: !embedded }) : null,
     ]));
     if (CFG.logout) body.appendChild(group(null, [row({ icon: 'logout', tint: 'red', title: 'Выйти', href: CFG.logout, chevron: false, cls: 'is-danger' })]));
+    if (CFG.version) body.appendChild(h('p', { class: 'wfa-note wfa-version', text: 'WebFor · Izi · версия сайта ' + CFG.version + (CFG.ai_version ? ' · ассистент ' + CFG.ai_version : '') }));
   }
   /* ---------- мессенджеры: Telegram, WhatsApp, Instagram ---------- */
   let CH = null;
   function drawChannels(box) {
-    const rows = ['tg', 'wa', 'ig'].map((k) => row({ icon: 'chats', tint: CH && CH[k].on ? 'ok' : 'gray', title: CHANNEL[k],
-      value: !CH ? '…' : CH[k].on ? (CH[k].name || 'Подключён') : 'Не подключён', onclick: () => channelSheet(k) }));
+    const broken = (k) => CH && CH[k].on && CH[k].health && !CH[k].health.ok; // токен есть, но сообщения не доходят
+    const rows = ['tg', 'wa', 'ig'].map((k) => row({ icon: 'chats', tint: broken(k) ? 'gold' : CH && CH[k].on ? 'ok' : 'gray', title: CHANNEL[k],
+      value: !CH ? '…' : broken(k) ? 'Не отвечает — откройте' : CH[k].on ? (CH[k].name || 'Подключён') : 'Не подключён', onclick: () => channelSheet(k) }));
     box.innerHTML = '';
     box.appendChild(group('Мессенджеры', rows, 'Тот же ассистент отвечает в мессенджерах. Разговоры приходят сюда, во вкладку «Чаты», ваши ответы уходят клиенту туда же.'));
     if (!CH) adapter.chatApi('GET', '/channels').then((d) => { CH = d; if (box.isConnected) drawChannels(box); }).catch(() => {});
@@ -1373,7 +1398,10 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
     if (!CH) { toast('Загружаем…'); return; }
     const st = CH[k];
     const steps = (list) => h('ol', { class: 'wfa-steps' }, list.map((t) => h('li', { text: t })));
-    const status = h('div', { class: 'wfa-card ' + (st.on ? 'is-ok' : 'is-tip') }, [ico(st.on ? 'check' : 'chats'), h('div', null, [h('b', { text: st.on ? 'Подключён' + (st.name ? ': ' + st.name : '') : 'Не подключён' }), h('p', { text: st.on ? 'Ассистент отвечает клиентам в ' + CHANNEL[k] + '.' : 'Сделайте шаги ниже — это 5–15 минут.' })])]);
+    const bad = st.on && st.health && !st.health.ok;
+    const status = bad
+      ? h('div', { class: 'wfa-card is-tip' }, [ico('chats'), h('div', null, [h('b', { text: 'Токен принят, но бот не отвечает' + (st.name ? ': ' + st.name : '') }), h('p', { text: st.health.error })])])
+      : h('div', { class: 'wfa-card ' + (st.on ? 'is-ok' : 'is-tip') }, [ico(st.on ? 'check' : 'chats'), h('div', null, [h('b', { text: st.on ? 'Подключён' + (st.name ? ': ' + st.name : '') : 'Не подключён' }), h('p', { text: st.on ? 'Ассистент отвечает клиентам в ' + CHANNEL[k] + '.' + (st.health && st.health.last_in ? ' Последнее сообщение дошло: ' + new Date(st.health.last_in * 1000).toLocaleString('ru-RU') + '.' : '') : 'Сделайте шаги ниже — это 5–15 минут.' })])]);
     const httpsWarn = CH.https ? null : h('p', { class: 'wfa-sys is-warn', text: 'Сайт открывается без https — мессенджеры подключаются только к сайтам с https.' });
     let fields = [], content = [];
     if (k === 'tg') {
@@ -1417,7 +1445,7 @@ select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http:
         if (!st.on && k === 'wa' && (!body.wa_phone_id || !body.wa_token)) { toast('Заполните Phone number ID и токен', true); return; }
         if (!st.on && k === 'tg' && !body.tg_token) { toast('Вставьте токен бота', true); return; }
         if (!st.on && k === 'ig' && !body.ig_token) { toast('Вставьте токен Instagram', true); return; }
-        adapter.chatApi('POST', '/channels', body).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' подключён'); }).catch(fail);
+        adapter.chatApi('POST', '/channels', body).then((d) => { CH = d; sh.close(); render('more'); const hl = d[k] && d[k].health; toast(hl && !hl.ok ? hl.error : CHANNEL[k] + ' подключён', !!(hl && !hl.ok)); }).catch(fail);
       }, 'is-wide is-primary'),
       st.on ? confirmBtn('Отключить ' + CHANNEL[k], () => adapter.chatApi('POST', '/channels', { ch: k, off: 1 }).then((d) => { CH = d; sh.close(); render('more'); toast(CHANNEL[k] + ' отключён'); }).catch(fail)) : null,
     ] });

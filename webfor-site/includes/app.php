@@ -108,6 +108,8 @@ function webfor_admin_config() {
         'nonce' => wp_create_nonce('wp_rest'),
         'media' => esc_url_raw(rest_url('wp/v2/media')),
         'app' => webfor_admin_app_url(),
+        'version' => WEBFOR_VERSION,
+        'ai_version' => defined('WFAI_VERSION') ? WFAI_VERSION : '',
     ];
     if (function_exists('wfai_vapid')) {
         $keys = wfai_vapid();

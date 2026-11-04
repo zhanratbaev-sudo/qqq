@@ -285,6 +285,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <?php if ($wf_tel) : ?><a href="<?php echo esc_url($wf_tel); ?>"><?php echo esc_html($wf_phone); ?></a><?php endif; ?>
                 <?php if ($wf_wa) : ?><a href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener">WhatsApp</a><?php endif; ?>
                 <span class="wf-muted">© <?php echo esc_html(gmdate('Y')); ?> WebFor</span>
+                <span class="wf-muted wf-version">Izi · версия <?php echo esc_html(WEBFOR_VERSION); ?></span>
             </div>
         </div>
     </footer>

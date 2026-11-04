@@ -721,3 +721,4 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
     -webkit-backdrop-filter: blur(18px) saturate(160%) !important; backdrop-filter: blur(18px) saturate(160%) !important; }
   .wf-footer { padding-bottom: 88px; }
 }
+.wf-version { opacity: .7; }

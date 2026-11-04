@@ -145,7 +145,22 @@
   /* ---------- каркас: фон, экраны, нижняя панель, листы ---------- */
   const embedded = !CFG.sw && !CFG.demo; // внутри админки WordPress, а не отдельным приложением
   app.className = 'wfa' + (embedded ? ' is-embedded' : ' is-app');
-  // высоту не растягиваем на весь экран: нижнюю полосу iPhone для приложений с экрана «Домой» страница не рисует
+  /* iPhone, приложение с экрана «Домой»: iOS отдаёт странице высоту меньше экрана (без полоски «домой»),
+     и под окном оставалась чёрная полоса. Окно тянем до низа экрана, а меню держим там, где его видно:
+     поднимаем на ту же величину (--wfa-extra), чтобы оно не уехало под полоску. */
+  function fitScreen() {
+    if (embedded || CFG.demo || navigator.standalone !== true) return;
+    const land = window.matchMedia('(orientation: landscape)').matches;
+    const full = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+    const extra = full - window.innerHeight;
+    const ok = extra > 0 && extra <= 60; // больше 60 px — это уже не полоска «домой», ничего не трогаем
+    app.style.height = ok ? full + 'px' : '';
+    app.style.bottom = ok ? 'auto' : '';
+    app.style.setProperty('--wfa-extra', (ok ? extra : 0) + 'px');
+  }
+  fitScreen();
+  window.addEventListener('resize', fitScreen);
+  window.addEventListener('orientationchange', () => setTimeout(fitScreen, 300));
   app.innerHTML = '';
   const stage = h('div', { class: 'wfa-stage' });
   const tabbar = h('nav', { class: 'wfa-tabbar', 'aria-label': 'Разделы' });
@@ -889,6 +904,7 @@
       S.ai && S.ai.settings_url ? row({ icon: 'gear', tint: 'gray', title: 'Ключ и модель ассистента', href: S.ai.settings_url, blank: !embedded }) : null,
     ]));
     if (CFG.logout) body.appendChild(group(null, [row({ icon: 'logout', tint: 'red', title: 'Выйти', href: CFG.logout, chevron: false, cls: 'is-danger' })]));
+    if (CFG.version) body.appendChild(h('p', { class: 'wfa-note wfa-version', text: 'WebFor · Izi · версия сайта ' + CFG.version + (CFG.ai_version ? ' · ассистент ' + CFG.ai_version : '') }));
   }
   /* ---------- мессенджеры: Telegram, WhatsApp, Instagram ---------- */
   let CH = null;
