@@ -21,6 +21,12 @@ $cfg['logout'] = wp_logout_url(webfor_admin_app_url());
     <link rel="stylesheet" href="<?php echo esc_url(WEBFOR_URL . 'assets/admin-app.css?ver=' . WEBFOR_VERSION); ?>">
     <style>
         html, body { margin: 0; height: 100%; overflow: hidden; background: #040606; color-scheme: dark; overscroll-behavior: none; }
+        /* iOS 26, приложение с экрана «Домой»: окно получается короче экрана на высоту строки состояния, и снизу
+           оставалась чёрная полоса. Документ чуть выше окна заставляет iOS отдать странице весь экран. */
+        @media (display-mode: standalone) {
+            html { height: auto; min-height: calc(100% + env(safe-area-inset-top, 0px)); }
+            body { height: auto; min-height: calc(100vh + env(safe-area-inset-top, 0px)); }
+        }
         body { -webkit-text-size-adjust: 100%; }
     </style>
 </head>
