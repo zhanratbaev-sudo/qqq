@@ -1,0 +1,80 @@
+<template>
+  <style>
+    /* 44–51 с: камера отъезжает от сайта — видна вся система: сайт с ассистентом, телефон владельца,
+       мессенджеры и Izi. Потом всё стягивается в знак WebFor; надпись, строка продуктов и адрес стоят до конца. */
+    #root { position: absolute; inset: 0; }
+    #g-cam { position: absolute; inset: 0; transform-origin: 960px 523px; }
+    #g-site { position: absolute; left: 500px; top: 250px; width: 921px; height: 546px; border-radius: 18px; overflow: hidden; background: var(--ground); box-shadow: 0 24px 70px rgba(0,0,0,.6), 0 0 0 2px #1a2120; }
+    #g-site .k-bar { height: 27px; font-size: 12px; }
+    #g-site .k-bar i { left: 12px; top: 10px; width: 8px; height: 8px; box-shadow: 13px 0 0 #2a3331, 26px 0 0 #2a3331; }
+    #g-site img { display: block; width: 921px; height: 519px; }
+    #g-phone { position: absolute; left: 150px; top: 236px; width: 275px; height: 574px; border-radius: 42px; background: #0b0d0d; padding: 9px; box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 0 0 2px #23292a; }
+    #g-phone img { width: 257px; height: 556px; border-radius: 34px; display: block; }
+    .g-ch { position: absolute; left: 1500px; width: 320px; height: 92px; border-radius: 24px; background: var(--surface); display: flex; align-items: center; gap: 16px; padding: 0 20px; box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+    .g-ch b { font-size: 30px; font-weight: 600; }
+    .g-ch .k-ico { width: 52px; height: 52px; }
+    #g-izi { position: absolute; left: 1500px; top: 650px; width: 320px; border-radius: 22px; overflow: hidden; background: var(--surface); box-shadow: 0 18px 50px rgba(0,0,0,.45); }
+    #g-izi img { display: block; width: 320px; height: 200px; }
+    #g-izi b { display: block; padding: 12px 18px; font-size: 26px; font-weight: 600; }
+    #g-lines { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    #g-lines path { fill: none; stroke: #24322e; stroke-width: 3; stroke-linecap: round; }
+    #g-mark { position: absolute; left: 845px; top: 170px; width: 230px; height: 230px; }
+    #g-mark svg { width: 230px; height: 230px; display: block; }
+    .g-c { position: absolute; left: 0; right: 0; text-align: center; }
+    #g-word { top: 440px; font-family: "Inter Display", sans-serif; font-weight: 900; font-size: 170px; letter-spacing: -0.045em; line-height: 1; }
+    #g-word em { font-style: normal; color: var(--accent); }
+    #g-line { top: 660px; font-size: 46px; font-weight: 600; color: var(--ink-2); }
+    #g-url { top: 770px; display: flex; justify-content: center; }
+    #g-url div { height: 100px; padding: 0 48px; border-radius: 24px; background: var(--accent); color: var(--on-accent); display: flex; align-items: center; font-family: "Inter Display", sans-serif; font-weight: 800; font-size: 52px; letter-spacing: -0.01em; }
+  </style>
+  <div id="root" data-composition-id="finale" data-width="1920" data-height="1080">
+    <div id="g-cam">
+      <svg id="g-lines" viewBox="0 0 1920 1080">
+        <path id="g-l0" d="M425 520 C 460 520, 470 520, 500 520" />
+        <path id="g-l1" d="M1421 400 C 1460 400, 1460 346, 1500 346" />
+        <path id="g-l2" d="M1421 470 C 1460 470, 1460 466, 1500 466" />
+        <path id="g-l3" d="M1421 540 C 1460 540, 1460 586, 1500 586" />
+        <path id="g-l4" d="M1421 640 C 1460 640, 1460 760, 1500 760" />
+      </svg>
+      <div id="g-phone"><img src="assets/shots/app-chats.png" alt="" /></div>
+      <div id="g-site"><div class="k-bar"><i></i>web.for.petgo.kz</div><img src="assets/shots/site-hero.png" alt="" /></div>
+      <div class="g-ch" id="g-c0" style="top:300px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><b>WhatsApp</b></div>
+      <div class="g-ch" id="g-c1" style="top:420px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><b>Telegram</b></div>
+      <div class="g-ch" id="g-c2" style="top:540px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><b>Instagram</b></div>
+      <div id="g-izi"><img src="assets/shots/crm-home.jpg" alt="" /><b>Izi — CRM и приложение</b></div>
+    </div>
+    <div class="k-tl k-top" id="g-t1" data-layout-allow-overlap><span>Всё работает <em>вместе</em></span></div>
+
+    <div id="g-mark"><svg viewBox="0 0 120 120"><defs><linearGradient id="g-mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#19b39c"/><stop offset="1" stop-color="#0b6e63"/></linearGradient></defs><rect x="4" y="4" width="112" height="112" rx="30" fill="url(#g-mg)"/><path id="g-w" d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="g-c" id="g-word">Web<em>For</em></div>
+    <div class="g-c" id="g-line">Чат-боты · Сайты · Приложения · Izi</div>
+    <div class="g-c" id="g-url"><div>web.for.petgo.kz</div></div>
+  </div>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 7);
+      var parts = ['#g-phone', '#g-c0', '#g-c1', '#g-c2', '#g-izi'];
+      // отъезд камеры от сайта: становится видна вся система
+      tl.fromTo('#g-cam', { scale: 1.6 }, { scale: 1, duration: 1.5, ease: 'expo.inOut' }, 0.1);
+      tl.fromTo(parts, { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, ease: 'power3.out' }, 0.7);
+      ['#g-l0', '#g-l1', '#g-l2', '#g-l3', '#g-l4'].forEach(function (l, i) {
+        tl.fromTo(l, { strokeDasharray: 200, strokeDashoffset: 200 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.out' }, 1.0 + i * 0.08);
+      });
+      K.title(tl, '#g-t1', 1.0);
+      // всё стягивается в знак
+      K.titleOut(tl, '#g-t1', 2.8);
+      // центр каждой детали → центр знака (960, 285); координаты посчитаны по раскладке выше
+      var to = { '#g-site': [0, -238], '#g-phone': [672, -238], '#g-c0': [-700, -61], '#g-c1': [-700, -181], '#g-c2': [-700, -301], '#g-izi': [-700, -490], '#g-lines': [0, -255] };
+      Object.keys(to).forEach(function (sel, i) {
+        tl.to(sel, { x: to[sel][0], y: to[sel][1], scale: 0.12, opacity: 0, duration: 0.7, ease: 'power3.in' }, 2.9 + i * 0.03);
+      });
+      tl.fromTo('#g-mark', { scale: 0, rotation: -12 }, { scale: 1, rotation: 0, duration: 0.6, ease: 'back.out(1.7)' }, 3.45);
+      tl.fromTo('#g-w', { strokeDasharray: 170, strokeDashoffset: 170 }, { strokeDashoffset: 0, duration: 0.5, ease: 'power2.inOut' }, 3.75);
+      tl.fromTo('#g-word', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 4.0);
+      tl.fromTo('#g-line', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 4.2);
+      tl.fromTo('#g-url', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 4.4);
+      window.__timelines['finale'] = tl;
+    })();
+  </script>
+</template>

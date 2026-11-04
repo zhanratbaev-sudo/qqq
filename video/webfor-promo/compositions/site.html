@@ -1,0 +1,51 @@
+<template>
+  <style>
+    /* 16.5–22 с: окно чата «Сайт» в центре, вокруг него из частей собирается настоящий сайт WebFor (скриншот 2x),
+       чат встаёт в свой угол. Затем разговор улетает в телефон владельца (следующая сцена). */
+    #root { position: absolute; inset: 0; }
+    .s-pc { position: absolute; background-image: url("assets/shots/site-hero.png"); background-size: 1486px 836px; background-repeat: no-repeat; }
+    #s-chat { z-index: 4; transform-origin: 0 0; }
+    #s-win { z-index: 1; }
+  </style>
+  <div id="root" data-composition-id="site" data-width="1920" data-height="1080">
+    <div class="k-win" id="s-win">
+      <div class="k-bar"><i></i>web.for.petgo.kz</div>
+      <div class="k-view" id="s-view">
+        <div class="s-pc" id="s-hd" style="left:0px;top:0px;width:1486px;height:56px;background-position:-0px -0px"></div>
+        <div class="s-pc" id="s-tx" style="left:302px;top:132px;width:503px;height:371px;background-position:-302px -132px"></div>
+        <div class="s-pc" id="s-art" style="left:828px;top:132px;width:348px;height:356px;background-position:-828px -132px"></div>
+        <div class="s-pc" id="s-bt" style="left:0px;top:619px;width:1486px;height:217px;background-position:-0px -619px"></div>
+      </div>
+    </div>
+    <div class="k-pane" id="s-chat" style="left:735px;top:160px">
+      <div class="k-head"><span class="k-ico is-site"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><b>Сайт</b><small>Ассистент WebFor · онлайн</small></div></div>
+      <div class="k-log">
+        <div class="k-b u" id="s-q1">Сколько стоит сайт с записью?</div>
+        <div class="k-b a" id="s-a1">Сайт с онлайн-записью — 15 000 ₸, 3–7 дней. Хостинг на год включён 🙂</div>
+        <div class="k-b u" id="s-q2">А если срочно?</div>
+        <div class="k-b a" id="s-a2">Можно быстрее за доплату — скажите, к какому дню нужно.</div>
+      </div>
+    </div>
+    <div class="k-tl k-top" id="s-t1" data-layout-allow-overlap><span>Сайт, который <em>сам отвечает</em></span></div>
+  </div>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 5.5);
+      // окно сайта появляется за чатом, части сайта собираются вокруг
+      tl.fromTo('#s-win', { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' }, 0.15);
+      tl.fromTo('#s-hd', { y: -60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, 0.45);
+      tl.fromTo('#s-tx', { x: -160, opacity: 0 }, { x: 0, opacity: 1, duration: 0.65, ease: 'power3.out' }, 0.65);
+      tl.fromTo('#s-art', { x: 160, rotation: 4, opacity: 0 }, { x: 0, rotation: 0, opacity: 1, duration: 0.65, ease: 'power3.out' }, 0.85);
+      tl.fromTo('#s-bt', { y: 90, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, 1.05);
+      K.title(tl, '#s-t1', 0.6);
+      // чат встаёт в свой угол сайта
+      tl.to('#s-chat', { x: 680, y: 416, scale: 0.6, duration: 0.85, ease: 'power3.inOut' }, 1.9);
+      // разговор улетает в телефон владельца
+      K.titleOut(tl, '#s-t1', 4.3);
+      tl.to('#s-win', { opacity: 0, scale: 0.95, duration: 0.5, ease: 'power2.in' }, 4.5);
+      tl.to('#s-chat', { x: 640, y: 285, scale: 0.28, opacity: 0, duration: 0.75, ease: 'power3.in' }, 4.55);
+      window.__timelines['site'] = tl;
+    })();
+  </script>
+</template>

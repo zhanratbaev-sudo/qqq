@@ -1,0 +1,91 @@
+<template>
+  <style>
+    /* 6–16.5 с: четыре окна — сайт, WhatsApp, Telegram, Instagram. Один ассистент отвечает во всех сразу.
+       В конце окно «Сайт» уезжает в центр (с него начинается следующая сцена), остальные уходят вниз. */
+    #root { position: absolute; inset: 0; }
+    .k-pane[id^="p"] .k-b, .k-pane[id^="p"] .k-typing { opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="panes" data-width="1920" data-height="1080">
+    <div class="k-pane" id="p0" style="left:40px;top:200px">
+      <div class="k-head"><span class="k-ico is-site"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><b>Сайт</b><small>Ассистент WebFor · онлайн</small></div></div>
+      <div class="k-log">
+        <div class="k-b u" id="p0-q1">Сколько стоит сайт с записью?</div>
+        <div class="k-typing" id="p0-t1"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p0-a1">Сайт с онлайн-записью — 15 000 ₸, 3–7 дней. Хостинг на год включён 🙂</div>
+        <div class="k-b u" id="p0-q2">А если срочно?</div>
+        <div class="k-typing" id="p0-t2"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p0-a2">Можно быстрее за доплату — скажите, к какому дню нужно.</div>
+      </div>
+    </div>
+    <div class="k-pane" id="p1" style="left:510px;top:200px">
+      <div class="k-head"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><b>WhatsApp</b><small>Ассистент WebFor</small></div></div>
+      <div class="k-log">
+        <div class="k-b u" id="p1-q1">Вы делаете чат-ботов?</div>
+        <div class="k-typing" id="p1-t1"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p1-a1">Да! Бот для WhatsApp — 30 000 ₸, для всех платформ сразу — 40 000 ₸.</div>
+        <div class="k-b u" id="p1-q2">Қазақша жауап бере ме?</div>
+        <div class="k-typing" id="p1-t2"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p1-a2">Иә, қазақша, орысша және ағылшынша жауап береді 🙂</div>
+      </div>
+    </div>
+    <div class="k-pane" id="p2" style="left:980px;top:200px">
+      <div class="k-head"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><b>Telegram</b><small>Ассистент WebFor</small></div></div>
+      <div class="k-log">
+        <div class="k-b u" id="p2-q1">Сколько стоит приложение?</div>
+        <div class="k-typing" id="p2-t1"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p2-a1">PWA-приложение — от 30 000 ₸, в App Store и Google Play — 95 000 ₸.</div>
+        <div class="k-b u" id="p2-q2">🎤 Голосовое · 0:06</div>
+        <div class="k-typing" id="p2-t2"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p2-a2">Голосовое понял 🙂 Приложение в магазинах — 1–3 недели.</div>
+      </div>
+    </div>
+    <div class="k-pane" id="p3" style="left:1450px;top:200px">
+      <div class="k-head"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><b>Instagram</b><small>Ассистент WebFor</small></div></div>
+      <div class="k-log">
+        <div class="k-b u" id="p3-q1">Сделаете скидку?</div>
+        <div class="k-typing" id="p3-t1"><i></i><i></i><i></i></div>
+        <div class="k-b a" id="p3-a1">Скидку уточню у менеджера — он ответит здесь же.</div>
+        <div class="k-b s" id="p3-s1">Менеджер Нуржан подключился к чату и скоро ответит.</div>
+      </div>
+    </div>
+    <div class="k-tl k-top" id="w-t1" data-layout-allow-overlap><span>Один ассистент отвечает <em>везде</em></span></div>
+    <div class="k-tl k-top" id="w-t2" data-layout-allow-overlap><span>Сразу — <em>днём и ночью</em></span></div>
+    <div class="k-tl k-top" id="w-t3" data-layout-allow-overlap><span>Казахский, русский, <em>голосовые</em></span></div>
+  </div>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 10.5);
+      tl.fromTo(['#p0 .k-head', '#p1 .k-head', '#p2 .k-head', '#p3 .k-head'], { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.05 }, 0);
+      // вопросы клиентов (те же, что пришли ночью)
+      [0, 1, 2, 3].forEach(function (i) { K.pop(tl, '#p' + i + '-q1', 0.15 + i * 0.1); });
+      K.title(tl, '#w-t1', 0.3);
+      // ассистент печатает и отвечает во всех окнах сразу
+      [0, 1, 2, 3].forEach(function (i) {
+        K.typing(tl, '#p' + i + '-t1', 0.8, 1.8);
+        tl.set('#p' + i + '-a1', { opacity: 1 }, 1.8);
+        K.type(tl, document.querySelector('#p' + i + '-a1'), 1.8, 0.07);
+      });
+      K.titleOut(tl, '#w-t1', 3.4);
+      K.title(tl, '#w-t2', 3.65);
+      // Instagram: скидку решает менеджер — он «подключается»
+      K.pop(tl, '#p3-s1', 4.3);
+      // вторые вопросы: срочно, казахский, голосовое
+      [0, 1, 2].forEach(function (i) {
+        K.pop(tl, '#p' + i + '-q2', 4.6 + i * 0.12);
+        K.typing(tl, '#p' + i + '-t2', 5.1, 5.9);
+        tl.set('#p' + i + '-a2', { opacity: 1 }, 5.9);
+        K.type(tl, document.querySelector('#p' + i + '-a2'), 5.9, 0.07);
+      });
+      K.titleOut(tl, '#w-t2', 6.3);
+      K.title(tl, '#w-t3', 6.55);
+      // переход: «Сайт» — в центр, остальные окна уходят вниз
+      K.titleOut(tl, '#w-t3', 8.9);
+      [1, 2, 3].forEach(function (i) {
+        tl.to('#p' + i, { y: 1100, duration: 0.7, ease: 'power3.in' }, 8.9 + (i - 1) * 0.08);
+      });
+      tl.to('#p0', { x: 695, y: -40, duration: 0.9, ease: 'power3.inOut' }, 9.4);
+      window.__timelines['panes'] = tl;
+    })();
+  </script>
+</template>

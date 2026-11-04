@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="lib/gsap.min.js"></script>
+    <script src="lib/k.js"></script>
+    <style>
+      /* WebFor — промо всех продуктов. Общие стили сцен: шрифты, цвета сайта, телефон, окна чата, заголовки. */
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Regular.otf"); font-weight: 400; }
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Medium.otf"); font-weight: 500; }
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-SemiBold.otf"); font-weight: 600; }
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Bold.otf"); font-weight: 700; }
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-Light.otf"); font-weight: 300; }
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-Bold.otf"); font-weight: 700; }
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-ExtraBold.otf"); font-weight: 800; }
+      @font-face { font-family: "Inter Display"; src: url("assets/fonts/InterDisplay-Black.otf"); font-weight: 900; }
+      :root {
+        --ground: #050707; --surface: #0e1312; --surface-2: #161d1b; --ink: #f2f6f4; --ink-2: #a9b7b2; --ink-3: #74827d;
+        --accent: #3fe0a0; --on-accent: #04170f; --mark: #0f8a76;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
+      #root { width: 100%; height: 100%; background: var(--ground); font-family: "Inter", sans-serif; color: var(--ink); }
+
+      /* заголовок: одна строка встаёт маской снизу и стоит неподвижно */
+      .k-tl { position: absolute; overflow: hidden; font-family: "Inter Display", sans-serif; font-weight: 700; font-size: 84px; line-height: 1.08; letter-spacing: -0.025em; white-space: nowrap; padding-bottom: 0.22em; margin-bottom: -0.22em; }
+      .k-tl > span { display: inline-block; }
+      .k-tl em { font-style: normal; color: var(--accent); }
+      .k-top { left: 120px; top: 52px; font-size: 76px; }
+      .k-sub { position: absolute; font-family: "Inter", sans-serif; font-weight: 500; font-size: 34px; line-height: 1.35; color: var(--ink-2); }
+
+      /* телефон владельца */
+      .k-phone { position: absolute; width: 443px; height: 926px; border-radius: 68px; background: #0b0d0d; padding: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 0 0 2px #23292a; }
+      .k-scr { position: relative; width: 415px; height: 898px; border-radius: 54px; overflow: hidden; background: #040606; }
+      .k-scr > img { position: absolute; left: 0; top: 0; width: 415px; height: 898px; display: block; }
+      .k-island { position: absolute; left: 50%; top: 26px; width: 118px; height: 34px; margin-left: -59px; border-radius: 17px; background: #000; z-index: 5; }
+
+      /* окна чата */
+      .k-pane { position: absolute; width: 450px; height: 760px; border-radius: 30px; background: var(--surface); overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+      .k-head { display: flex; align-items: center; gap: 14px; height: 92px; padding: 0 22px; background: #0a0e0d; }
+      .k-ico { width: 48px; height: 48px; flex: none; border-radius: 14px; background: #1c2523; display: grid; place-items: center; color: #e9f1ee; }
+      .k-ico.is-site { background: var(--accent); color: var(--on-accent); }
+      .k-ico svg { width: 26px; height: 26px; }
+      .k-head b { display: block; font-weight: 600; font-size: 28px; line-height: 1.1; }
+      .k-head small { display: block; font-size: 19px; color: var(--ink-3); margin-top: 2px; }
+      .k-log { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 22px 20px; }
+      .k-b { max-width: 380px; padding: 13px 18px; border-radius: 22px; font-size: 30px; line-height: 1.26; }
+      .k-b.u { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 8px; font-weight: 500; }
+      .k-b.a { align-self: flex-start; background: #1d2624; color: var(--ink); border-bottom-left-radius: 8px; }
+      .k-b.s { align-self: center; max-width: 400px; background: rgba(63,224,160,.13); color: #c4f5df; font-size: 24px; text-align: center; border-radius: 16px; }
+      .k-typing { align-self: flex-start; display: flex; gap: 7px; padding: 18px 20px; border-radius: 22px; background: #1d2624; }
+      .k-typing i { width: 10px; height: 10px; border-radius: 50%; background: var(--ink-3); }
+
+      /* окно сайта */
+      .k-win { position: absolute; left: 217px; top: 170px; width: 1486px; height: 880px; border-radius: 24px; background: var(--ground); overflow: hidden; box-shadow: 0 30px 90px rgba(0,0,0,.6), 0 0 0 2px #1a2120; }
+      .k-bar { position: relative; height: 44px; background: #0c1110; display: flex; align-items: center; justify-content: center; font-size: 19px; color: var(--ink-3); z-index: 3; }
+      .k-bar i { position: absolute; left: 20px; top: 16px; width: 12px; height: 12px; border-radius: 50%; background: #2a3331; box-shadow: 20px 0 0 #2a3331, 40px 0 0 #2a3331; }
+      .k-view { position: relative; width: 1486px; height: 836px; overflow: hidden; }
+      .k-view > img { position: absolute; left: 0; top: 0; width: 1486px; height: 836px; display: block; }
+    </style>
+  </head>
+  <body>
+    <!-- Ролик WebFor: AI-чат-бот на сайте и в мессенджерах + сайты, приложения, Izi. 51 с, 1920x1080, 30 к/с.
+         Сюжет — SPEC.md. Звуки — scripts/sfx.py → assets/sfx-mix.wav. Музыку владелец добавляет сам. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="51" data-width="1920" data-height="1080">
+      <div id="night" data-composition-id="night" data-composition-src="compositions/night.html" data-start="0" data-duration="6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="panes" data-composition-id="panes" data-composition-src="compositions/panes.html" data-start="6" data-duration="10.5" data-track-index="2" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="site" data-composition-id="site" data-composition-src="compositions/site.html" data-start="16.5" data-duration="5.5" data-track-index="3" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="phone" data-composition-id="phone" data-composition-src="compositions/phone.html" data-start="22" data-duration="15" data-track-index="4" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="products" data-composition-id="products" data-composition-src="compositions/products.html" data-start="37" data-duration="7" data-track-index="5" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="finale" data-composition-id="finale" data-composition-src="compositions/finale.html" data-start="44" data-duration="7" data-track-index="6" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <audio id="sfx" class="clip" data-start="0" data-duration="51" data-track-index="20" data-volume="1" src="assets/sfx-mix.wav"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

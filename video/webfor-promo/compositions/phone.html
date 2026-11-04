@@ -1,0 +1,111 @@
+<template>
+  <style>
+    /* 22–37 с: телефон владельца (настоящая админка-приложение, скриншоты 3x).
+       Все чаты в одном списке → push «Нужно присоединиться» → разговор → заявки → обучение → знания → проверка → тестовая неделя. */
+    #root { position: absolute; inset: 0; }
+    #f-phone { left: 1240px; top: 77px; }
+    .f-img { position: absolute; left: 0; top: 0; width: 415px; height: 898px; }
+    .f-push { position: absolute; left: 12px; top: 58px; width: 391px; padding: 14px 16px; border-radius: 26px; background: #2e3836; display: grid; grid-template-columns: 42px 1fr; column-gap: 12px; align-items: center; z-index: 6; box-shadow: 0 14px 40px rgba(0,0,0,.5); }
+    .f-push svg.m { width: 42px; height: 42px; display: block; }
+    .f-push .n-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .f-push .n-top b { font-size: 19px; font-weight: 600; color: #cfdad6; }
+    .f-push .n-top span { font-size: 16px; color: #9fb0aa; }
+    .f-push .p1 { font-size: 21px; font-weight: 600; color: #f2f6f4; margin-top: 2px; }
+    .f-push .p2 { font-size: 20px; color: #d9e3df; }
+    .f-tap { position: absolute; width: 70px; height: 70px; margin: -35px 0 0 -35px; border-radius: 50%; background: rgba(255,255,255,.35); z-index: 7; opacity: 0; }
+    .f-t { left: 140px; font-size: 100px; }
+    #f-sub1, #f-sub2, #f-sub3, #f-sub4 { left: 144px; top: 600px; }
+    #f-i1, #f-i2, #f-i3, #f-i4, #f-i5, #f-i6, #f-push, .k-sub, #f-week { opacity: 0; }
+    #f-week { position: absolute; left: 136px; top: 430px; font-family: "Inter Display", sans-serif; font-weight: 800; font-size: 190px; letter-spacing: -0.04em; color: var(--accent); line-height: 1; }
+  </style>
+  <div id="root" data-composition-id="phone" data-width="1920" data-height="1080">
+    <div class="k-phone" id="f-phone">
+      <div class="k-scr" id="f-scr">
+        <img class="f-img" id="f-i0" src="assets/shots/app-chats.png" alt="" />
+        <img class="f-img" id="f-i1" src="assets/shots/app-chat-wa.png" alt="" />
+        <img class="f-img" id="f-i2" src="assets/shots/app-leads.png" alt="" />
+        <img class="f-img" id="f-i3" src="assets/shots/app-train.png" alt="" />
+        <img class="f-img" id="f-i4" src="assets/shots/app-kb.png" alt="" />
+        <img class="f-img" id="f-i5" src="assets/shots/app-kb-add.png" alt="" />
+        <img class="f-img" id="f-i6" src="assets/shots/app-test.png" alt="" />
+        <div class="f-push" id="f-push">
+          <svg class="m" viewBox="0 0 120 120"><rect x="4" y="4" width="112" height="112" rx="30" fill="#0f8a76"/><path d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><div class="n-top"><b>WebFor</b><span>сейчас</span></div><div class="p1">Нужно присоединиться к чату</div><div class="p2">Сделаете скидку?</div></div>
+        </div>
+        <div class="f-tap" id="f-tap1" style="left:207px;top:110px"></div>
+      </div>
+      <div class="k-island"></div>
+    </div>
+
+    <div class="k-tl f-t" id="f-a1" data-layout-allow-overlap style="top:330px"><span>Все чаты —</span></div>
+    <div class="k-tl f-t" id="f-a2" data-layout-allow-overlap style="top:450px"><span>в вашем <em>телефоне</em></span></div>
+    <div class="k-sub" id="f-sub1">Сайт · WhatsApp · Telegram · Instagram</div>
+
+    <div class="k-tl f-t" id="f-b1" data-layout-allow-overlap style="top:330px"><span>Сложное —</span></div>
+    <div class="k-tl f-t" id="f-b2" data-layout-allow-overlap style="top:450px"><span>передаёт <em>вам</em></span></div>
+    <div class="k-sub" id="f-sub2">Уведомление — и вы уже в чате</div>
+
+    <div class="k-tl f-t" id="f-c1" data-layout-allow-overlap style="top:330px"><span>Заявки —</span></div>
+    <div class="k-tl f-t" id="f-c2" data-layout-allow-overlap style="top:450px"><span>сразу <em>здесь</em></span></div>
+    <div class="k-sub" id="f-sub3">Позвонить или написать — одним нажатием</div>
+
+    <div class="k-tl f-t" id="f-d1" data-layout-allow-overlap style="top:330px"><span>Учится</span></div>
+    <div class="k-tl f-t" id="f-d2" data-layout-allow-overlap style="top:450px"><span>на <em>ваших ответах</em></span></div>
+    <div class="k-sub" id="f-sub4">Добавьте знание — и он ответит так же</div>
+
+    <div class="k-tl f-t" id="f-e1" data-layout-allow-overlap style="top:300px"><span>Тестовая неделя</span></div>
+    <div id="f-week">7 дней</div>
+    <div class="k-sub" id="f-sub5" style="left:144px;top:660px">проверить ассистента на ваших клиентах</div>
+  </div>
+  <script>
+    (function () {
+      var tl = gsap.timeline({ paused: true });
+      tl.set({}, {}, 15);
+      var subs = ['#f-sub1', '#f-sub2', '#f-sub3', '#f-sub4', '#f-sub5'];
+      var sub = function (s, at, out) {
+        tl.fromTo(s, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out', immediateRender: false }, at);
+        if (out) tl.to(s, { opacity: 0, duration: 0.25 }, out);
+      };
+      var pair = function (a, b, at, out) {
+        K.title(tl, a, at); K.title(tl, b, at + 0.12);
+        if (out) { K.titleOut(tl, a, out); K.titleOut(tl, b, out + 0.05); }
+      };
+      var screen = function (id, at, from) {
+        tl.fromTo(id, { opacity: 0, x: from === 'right' ? 140 : 0, y: from === 'up' ? 160 : 0 },
+          { opacity: 1, x: 0, y: 0, duration: 0.5, ease: 'power3.out', immediateRender: false }, at);
+      };
+      // телефон приезжает со списком чатов (разговор с сайта «прилетел» сюда)
+      tl.fromTo('#f-phone', { x: 220, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, ease: 'power3.out' }, 0);
+      pair('#f-a1', '#f-a2', 0.25, 2.35);
+      sub('#f-sub1', 0.75, 2.35);
+      // push: ассистент зовёт менеджера
+      tl.fromTo('#f-push', { y: -150, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: 'back.out(1.4)', immediateRender: false }, 2.3);
+      pair('#f-b1', '#f-b2', 2.6, 5.0);
+      sub('#f-sub2', 3.1, 5.0);
+      // касание по уведомлению → разговор
+      tl.fromTo('#f-tap1', { opacity: 0.9, scale: 0.4 }, { opacity: 0, scale: 1.6, duration: 0.45, ease: 'power2.out', immediateRender: false }, 3.55);
+      tl.to('#f-push', { scale: 0.9, opacity: 0, duration: 0.3, ease: 'power2.in' }, 3.65);
+      screen('#f-i1', 3.75, 'right');
+      // новая заявка
+      screen('#f-i2', 5.3, 'right');
+      pair('#f-c1', '#f-c2', 5.3, 7.0);
+      sub('#f-sub3', 5.45, 7.0);
+      // обучение
+      screen('#f-i3', 7.15, 'right');
+      pair('#f-d1', '#f-d2', 7.3, 10.8);
+      sub('#f-sub4', 7.8, 10.8);
+      screen('#f-i4', 8.6, 'up');
+      screen('#f-i5', 9.7, 'up');
+      // проверка ассистента → тестовая неделя
+      screen('#f-i6', 11.0, 'right');
+      K.title(tl, '#f-e1', 11.1);
+      tl.fromTo('#f-week', { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.6, ease: 'back.out(1.5)', immediateRender: false }, 11.5);
+      sub('#f-sub5', 11.9);
+      // уход
+      K.titleOut(tl, '#f-e1', 14.2);
+      tl.to(['#f-week', '#f-sub5'], { opacity: 0, duration: 0.3 }, 14.2);
+      tl.to('#f-phone', { x: 260, opacity: 0, duration: 0.6, ease: 'power3.in' }, 14.25);
+      window.__timelines['phone'] = tl;
+    })();
+  </script>
+</template>
