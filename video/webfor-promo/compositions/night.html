@@ -4,17 +4,19 @@
        В конце сообщения разворачиваются в четыре окна чата следующей сцены. */
     #root { position: absolute; inset: 0; }
     #n-phone { left: 1240px; top: 77px; }
-    .n-lock { position: absolute; inset: 0; background: #07100e; }
+    .n-lock { position: absolute; inset: 0; background: #0a1311; }
+    .n-dim { position: absolute; inset: 0; background: rgba(4,8,7,.84); }
     .n-date { position: absolute; top: 118px; left: 0; right: 0; text-align: center; font-weight: 600; font-size: 26px; color: #dfe9e5; }
     .n-time { position: absolute; top: 146px; left: 0; right: 0; text-align: center; font-family: "Inter Display", sans-serif; font-weight: 700; font-size: 150px; letter-spacing: -0.03em; color: #eef4f1; line-height: 1; }
-    .n-card { position: absolute; left: 16px; width: 383px; height: 96px; padding: 14px 16px; border-radius: 26px; background: #2b3533; display: grid; grid-template-columns: 44px 1fr; column-gap: 14px; align-items: center; }
+    .n-card { position: absolute; left: 16px; width: 383px; height: 96px; padding: 14px 16px; border-radius: 26px; display: grid; grid-template-columns: 44px 1fr; column-gap: 14px; align-items: center; }
     .n-card .k-ico { width: 44px; height: 44px; border-radius: 12px; background: #0f8a76; color: #f4f1e4; }
     .n-card .k-ico svg { width: 24px; height: 24px; }
-    .n-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .n-card > div { min-width: 0; }
+    .n-top { display: flex; gap: 10px; justify-content: space-between; align-items: baseline; }
     .n-top b { font-size: 22px; font-weight: 600; }
-    .n-top span { font-size: 17px; color: #a6b4af; }
+    .n-top span { flex: none; font-size: 17px; color: #c3cfcb; }
     .n-txt { font-size: 23px; color: #e6eeeb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-    .n-fly { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: #2b3533; opacity: 0; }
+    .n-fly { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; background: #263230; opacity: 0; }
     #n-t1 { left: 140px; top: 330px; font-size: 110px; }
     #n-t2 { left: 140px; top: 455px; font-size: 110px; }
     #n-t3 { left: 140px; top: 330px; font-size: 110px; }
@@ -24,13 +26,14 @@
     <div class="k-phone" id="n-phone">
       <div class="k-scr">
         <div class="n-lock"></div>
+        <div class="n-dim"></div>
         <div class="n-date">Среда, 4 ноября</div>
         <div class="n-time" id="n-clock1">23:40</div>
         <div class="n-time" id="n-clock2" style="opacity:0">01:15</div>
-        <div class="n-card" id="n-c0" style="top:360px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Сайт</b><span>сейчас</span></div><div class="n-txt">Сколько стоит сайт с записью?</div></div></div>
-        <div class="n-card" id="n-c1" style="top:472px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>WhatsApp</b><span>сейчас</span></div><div class="n-txt">Вы делаете чат-ботов?</div></div></div>
-        <div class="n-card" id="n-c2" style="top:584px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Telegram</b><span>сейчас</span></div><div class="n-txt">Сколько стоит приложение?</div></div></div>
-        <div class="n-card" id="n-c3" style="top:696px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Instagram</b><span>сейчас</span></div><div class="n-txt">Сделаете скидку?</div></div></div>
+        <div class="n-card k-glass" id="n-c0" style="top:360px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Сайт</b><span>сейчас</span></div><div class="n-txt">Сколько стоит сайт с записью?</div></div></div>
+        <div class="n-card k-glass" id="n-c1" style="top:472px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>WhatsApp</b><span>сейчас</span></div><div class="n-txt">Вы делаете чат-ботов?</div></div></div>
+        <div class="n-card k-glass" id="n-c2" style="top:584px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Telegram</b><span>сейчас</span></div><div class="n-txt">Сколько стоит приложение?</div></div></div>
+        <div class="n-card k-glass" id="n-c3" style="top:696px"><span class="k-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg></span><div><div class="n-top"><b>Instagram</b><span>сейчас</span></div><div class="n-txt">Сделаете скидку?</div></div></div>
       </div>
       <div class="k-island"></div>
     </div>
@@ -71,7 +74,7 @@
         var top = 91 + 360 + i * 112, px = 40 + i * 470;
         var from = 'inset(' + top + 'px ' + (1920 - 1270 - 383) + 'px ' + (1080 - top - 96) + 'px 1270px round 26px)';
         var to = 'inset(200px ' + (1920 - px - 450) + 'px 120px ' + px + 'px round 30px)';
-        tl.fromTo('#n-f' + i, { clipPath: from }, { clipPath: to, backgroundColor: '#0e1312', duration: 0.7, ease: 'power3.inOut' }, 5.25 + i * 0.04);
+        tl.fromTo('#n-f' + i, { clipPath: from }, { clipPath: to, backgroundColor: '#111917', duration: 0.7, ease: 'power3.inOut' }, 5.25 + i * 0.04);
       });
       window.__timelines['night'] = tl;
     })();
