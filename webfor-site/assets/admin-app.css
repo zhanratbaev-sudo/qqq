@@ -2,7 +2,7 @@
    Всё внутри .wfa, чтобы не задевать остальную админку WordPress. */
 .wfa {
   --bg: #040606; --text: #f2f7f5; --text-2: rgba(235,245,241,.72); --text-3: rgba(235,245,241,.48);
-  --accent: #3fe0a0; --on-accent: #03170e; --blue: #5ab2ff; --gold: #ffd166; --red: #ff6b5e; --warn: #f5c451;
+  --accent: #51c2ab; --on-accent: #03170e; --blue: #5ab2ff; --gold: #ffd166; --red: #ff6b5e; --warn: #f5c451;
   --glass: rgba(255,255,255,.075); --glass-2: rgba(255,255,255,.07); --glass-3: rgba(255,255,255,.12);
   --rim: inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.04), inset 0 0 0 .5px rgba(255,255,255,.08);
   --blur: blur(28px) saturate(190%);
@@ -133,7 +133,7 @@
   background: var(--glass-3); box-shadow: var(--rim); color: var(--text); font-weight: 600; font-size: 16px; white-space: nowrap; transition: transform .2s, filter .2s; }
 .wfa-btn:active { transform: scale(.96); }
 .wfa-btn .wfa-ico svg { width: 20px; height: 20px; }
-.wfa-btn.is-primary { background: var(--accent); color: var(--on-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 8px 22px rgba(63,224,160,.25); }
+.wfa-btn.is-primary { background: var(--accent); color: var(--on-accent); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 8px 22px rgba(81, 194, 171,.25); }
 .wfa-btn.is-ghost { background: rgba(255,255,255,.09); }
 .wfa-btn.is-danger { background: rgba(255,69,58,.14); color: var(--red); box-shadow: none; }
 .wfa-btn.is-wide { width: 100%; }
@@ -153,7 +153,7 @@
 /* чаты */
 .wfa-chat-row { position: relative; display: flex; align-items: flex-start; gap: 12px; width: 100%; padding: 12px 14px; border: 0; background: transparent; text-align: left; }
 .wfa-chat-row:active { background: rgba(255,255,255,.08); }
-.wfa-chat-row.is-waiting { background: rgba(63,224,160,.08); }
+.wfa-chat-row.is-waiting { background: rgba(81, 194, 171,.08); }
 .wfa-ava { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border-radius: 50%; background: rgba(255,255,255,.12); box-shadow: var(--rim); font-weight: 700; font-size: 15px; color: var(--text-2); }
 .wfa-chat-row.is-waiting .wfa-ava { background: var(--accent); color: var(--on-accent); }
 .wfa-chat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -175,7 +175,7 @@
 .wfa-bubble.is-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); animation: wfa-dot 1s infinite; }
 .wfa-bubble.is-typing i:nth-child(2) { animation-delay: .15s; } .wfa-bubble.is-typing i:nth-child(3) { animation-delay: .3s; }
 @keyframes wfa-dot { 0%, 80%, 100% { opacity: .3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
-.wfa-sys { align-self: center; max-width: 90%; margin: 6px 0; padding: 6px 12px; border-radius: 12px; background: rgba(63,224,160,.12); color: #c4f5df; font-size: 13px; text-align: center; }
+.wfa-sys { align-self: center; max-width: 90%; margin: 6px 0; padding: 6px 12px; border-radius: 12px; background: rgba(81, 194, 171,.12); color: #c4f5df; font-size: 13px; text-align: center; }
 .wfa-sys.is-warn { background: rgba(245,196,81,.14); color: #ffe3a3; }
 .wfa-chat-foot { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px; padding: 10px 12px calc(var(--safe-b) + 10px);
   background: rgba(10,14,13,.6); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); box-shadow: 0 -.5px 0 rgba(255,255,255,.1); }
@@ -218,7 +218,7 @@
 .wfa-field > span { font-size: 13px; font-weight: 600; color: var(--text-2); padding-left: 4px; }
 .wfa-field > small { font-size: 12px; color: var(--text-3); padding-left: 4px; }
 .wfa-input { width: 100%; min-height: 48px; padding: 12px 14px; border: 0 !important; border-radius: 14px !important; background: rgba(255,255,255,.08) !important; box-shadow: var(--rim) !important; color: var(--text) !important; font-size: 16px !important; line-height: 1.4; outline: none; -webkit-appearance: none; appearance: none; }
-.wfa-input:focus { box-shadow: var(--rim), 0 0 0 2px rgba(63,224,160,.6) !important; }
+.wfa-input:focus { box-shadow: var(--rim), 0 0 0 2px rgba(81, 194, 171,.6) !important; }
 textarea.wfa-input { resize: vertical; }
 select.wfa-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a9b7b2' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") !important; background-position: right 16px center !important; background-repeat: no-repeat !important; padding-right: 40px; }
 .wfa-input::placeholder { color: var(--text-3); }

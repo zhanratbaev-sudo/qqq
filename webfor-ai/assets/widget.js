@@ -13,7 +13,7 @@
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg>';
+  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>'; // чат + искра AI
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
   var ICON_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -375,6 +375,7 @@
     // сайт под открытым чатом не прокручивается и после закрытия остаётся на том же месте
     lockPage(open);
     if (open) {
+      hideTeaser();
       if (!log.childElementCount) render();
       var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
       panel.hidden = false; root.classList.add('is-open'); fitPanel();
@@ -392,7 +393,36 @@
     }
   }
 
-  launcher.addEventListener('click', function () { setOpen(panel.hidden); });
+  /* Сообщение при входе: через пару секунд над кнопкой всплывает «Я AI-ассистент…» — один раз за визит,
+     пока человек сам не открыл чат. Нажатие открывает чат, крестик прячет. */
+  var teaser = null;
+  function hideTeaser() {
+    if (!teaser) return;
+    var t = teaser; teaser = null;
+    t.classList.remove('is-in');
+    setTimeout(function () { t.remove(); }, reduce ? 0 : 260);
+  }
+  (function () {
+    var seen = false;
+    try { seen = sessionStorage.getItem('wfai-teaser') === '1'; } catch (e) {}
+    if (!C.teaser || seen || history.length) return;
+    setTimeout(function () {
+      if (!panel.hidden) return;
+      teaser = el('div', 'wfai-teaser');
+      var tb = el('button', 'wfai-teaser-msg'); tb.type = 'button';
+      tb.appendChild(el('b', null, C.name || 'AI-ассистент'));
+      tb.appendChild(document.createTextNode(C.teaser));
+      var tx = el('button', 'wfai-teaser-x'); tx.type = 'button'; tx.setAttribute('aria-label', 'Скрыть'); tx.innerHTML = ICON_X;
+      teaser.appendChild(tb); teaser.appendChild(tx);
+      root.appendChild(teaser);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { if (teaser) teaser.classList.add('is-in'); }); });
+      try { sessionStorage.setItem('wfai-teaser', '1'); } catch (e) {}
+      tb.addEventListener('click', function () { hideTeaser(); setOpen(true); });
+      tx.addEventListener('click', hideTeaser);
+    }, 2500);
+  })();
+
+  launcher.addEventListener('click', function () { hideTeaser(); setOpen(panel.hidden); });
   close.addEventListener('click', function () { setOpen(false); });
   form.addEventListener('submit', function (e) { e.preventDefault(); send(input.value); });
   input.addEventListener('input', autosize);

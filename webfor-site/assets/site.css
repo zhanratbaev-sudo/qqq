@@ -9,8 +9,8 @@
   --text: #ecf2f0;
   --text-2: #a9b7b2;
   --text-3: #7b8a85;
-  --accent: #3fe0a0;
-  --accent-hover: #63e8b4;
+  --accent: #51c2ab;
+  --accent-hover: #74d0be;
   --on-accent: #062019;
   --danger: #ff8a7a;
   --radius: 16px;
@@ -202,7 +202,7 @@ html.wf-locked { overflow: hidden; }
 .wf-table tbody th { text-align: left; font-weight: 500; color: var(--text); }
 .wf-table td { width: 15%; }
 .wf-yes, .wf-no { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; }
-.wf-yes { background: rgba(63,224,160,.14); color: var(--accent); }
+.wf-yes { background: rgba(81, 194, 171,.14); color: var(--accent); }
 .wf-no { color: var(--text-3); }
 .wf-yes .wf-i, .wf-no .wf-i { width: 16px; height: 16px; }
 
@@ -256,7 +256,7 @@ html.wf-locked { overflow: hidden; }
 .wf-seg label { flex: 1; min-width: 120px; }
 .wf-seg input { position: absolute; opacity: 0; }
 .wf-seg span { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); color: var(--text-2); font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s; }
-.wf-seg input:checked + span { border-color: var(--accent); color: var(--text); background: rgba(63,224,160,.08); }
+.wf-seg input:checked + span { border-color: var(--accent); color: var(--text); background: rgba(81, 194, 171,.08); }
 .wf-seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .wf-check { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; color: var(--text-2); font-size: 14px; font-weight: 400 !important; }
@@ -279,7 +279,7 @@ html.wf-locked { overflow: hidden; }
 .wf-pick-item b { font-size: 15px; font-weight: 600; }
 .wf-pick-item:hover span { border-color: rgba(255, 255, 255, .24); }
 .wf-pick-item:active span { transform: scale(.96); }
-.wf-pick-item input:checked + span { border-color: var(--accent); background: rgba(63, 224, 160, .1); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 3px rgba(63, 224, 160, .12); }
+.wf-pick-item input:checked + span { border-color: var(--accent); background: rgba(81, 194, 171, .1); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 3px rgba(81, 194, 171, .12); }
 .wf-pick-item input:checked + span .wf-i { color: var(--accent); animation: wf-pop .45s var(--spring); }
 .wf-pick-item input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes wf-pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
@@ -407,7 +407,7 @@ html.wf-locked { overflow: hidden; }
 .wf-mobile-bar { background: rgba(5, 7, 7, .5); border-top-color: rgba(255, 255, 255, .1); }
 .wf-btn-secondary:hover, .wf-page-back:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .26); }
 /* основная кнопка — «тонированное стекло» с бликом */
-.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 60, 40, .18), 0 6px 20px rgba(63, 224, 160, .22); }
+.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 60, 40, .18), 0 6px 20px rgba(81, 194, 171, .22); }
 .wf-btn, .wf-folder, .wf-work-btn, .wf-page-back, .wf-burger { transition: transform .35s var(--spring), background-color .2s, border-color .2s, box-shadow .2s; }
 .wf-btn:active, .wf-page-back:active, .wf-burger:active { transform: scale(.96); }
 .wf-folder:active { transform: scale(.98); }
@@ -416,7 +416,7 @@ html.wf-locked { overflow: hidden; }
 .wf-folder-body, .wf-folder-body::before { background: rgba(16, 21, 20, .88); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.85); backdrop-filter: blur(30px) saturate(115%) brightness(.85); }
 @media (hover: hover) { .wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(22, 29, 28, .9); border-color: rgba(255, 255, 255, .26); } }
 .wf-folder-body::before { border-bottom: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
-.wf-card-accent { border-color: rgba(63, 224, 160, .55); }
+.wf-card-accent { border-color: rgba(81, 194, 171, .55); }
 .wf-work-shot { box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset; }
 .wf-card-icon, .wf-page-icon, .wf-step-n, .wf-contacts .wf-i { background: var(--glass-strong); box-shadow: var(--glass-light); }
 .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { background: rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .12); }
@@ -485,8 +485,8 @@ html.wf-locked { overflow: hidden; }
   --g-fill-hover: rgba(255, 255, 255, .11);
   --g-blur: blur(30px) saturate(160%);
   --g-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-  --tint: rgba(63, 224, 160, .30);
-  --tint-soft: rgba(63, 224, 160, .14);
+  --tint: rgba(81, 194, 171, .30);
+  --tint-soft: rgba(81, 194, 171, .14);
 }
 .wf-btn-secondary, .wf-page-back, .wf-card, .wf-form, .wf-faq details, .wf-table-wrap, .wf-steps li, .wf-page-foot,
 .wf-glass, .wf-art-chip, .wf-card-icon, .wf-page-icon, .wf-step-n, .wf-product-icon {
@@ -500,7 +500,7 @@ html.wf-locked { overflow: hidden; }
 .wf-product-vet { background-color: #f4f1e4; }
 .wf-product-icon:not(.wf-product-vet) { background-color: var(--accent); }
 .wf-card, .wf-form, .wf-table-wrap, .wf-page-foot, .wf-faq details, .wf-steps li { border-radius: var(--r); }
-.wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(63, 224, 160, .45); }
+.wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(81, 194, 171, .45); }
 .wf-btn, .wf-page-back, .wf-burger, .wf-nav, .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { border-radius: var(--r) !important; }
 .wf-btn-secondary, .wf-page-back { border: 0 !important; }
 .wf-btn-secondary:hover, .wf-page-back:hover { background-color: var(--g-fill-hover); }
@@ -515,7 +515,7 @@ html.wf-locked { overflow: hidden; }
 }
 /* поля формы: стекло без рамки, фокус — мягкое кольцо */
 .wf-form input[type=text], .wf-form input[type=tel] { border: 0 !important; background: rgba(255, 255, 255, .06) !important; }
-.wf-form input[type=text]:focus, .wf-form input[type=tel]:focus { background: var(--tint-soft) !important; box-shadow: 0 0 0 2px rgba(63, 224, 160, .55); }
+.wf-form input[type=text]:focus, .wf-form input[type=tel]:focus { background: var(--tint-soft) !important; box-shadow: 0 0 0 2px rgba(81, 194, 171, .55); }
 .wf-form [aria-invalid=true] { box-shadow: 0 0 0 2px rgba(255, 138, 122, .7); }
 
 /* выбор услуги: одна строка, листается влево-вправо */
@@ -604,8 +604,8 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 html.wf-refract .wf-pick-item span { backdrop-filter: url(#wf-lg) blur(14px) saturate(190%) brightness(1.08) !important; }
 .wf-pick-item .wf-i { color: var(--accent) !important; }
 .wf-pick-item b { color: #fff; }
-.wf-pick-item:hover span { background-color: rgba(63, 224, 160, .22) !important; }
-.wf-pick-item input:checked + span { background-color: rgba(63, 224, 160, .62) !important; color: #fff !important; box-shadow: inset 0 1px 14px rgba(255, 255, 255, .18), 0 8px 24px rgba(63, 224, 160, .25) !important; }
+.wf-pick-item:hover span { background-color: rgba(81, 194, 171, .22) !important; }
+.wf-pick-item input:checked + span { background-color: rgba(81, 194, 171, .62) !important; color: #fff !important; box-shadow: inset 0 1px 14px rgba(255, 255, 255, .18), 0 8px 24px rgba(81, 194, 171, .25) !important; }
 .wf-pick-item input:checked + span .wf-i { color: #fff !important; }
 
 /* меню на телефоне: колонка выезжает справа и закрывает 90% экрана */

@@ -153,6 +153,7 @@ function wfai_defaults() {
         'model'       => 'claude-haiku-5-5',
         'name'        => 'Ассистент WebFor',
         'greeting'    => 'Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов, Izi, цены и сроки — отвечу сразу.',
+        'teaser'      => 'Здравствуйте! 👋 Я AI-ассистент WebFor — искусственный интеллект. Отвечу на любой вопрос сразу, днём и ночью.',
         'owner_name'  => 'Нуржан',
         'owner_email' => get_option('admin_email'),
         'knowledge'   => wfai_default_knowledge(),
@@ -250,6 +251,7 @@ function wfai_sanitize($in) {
         'model'       => isset(wfai_models()[$in['model'] ?? '']) ? $in['model'] : 'claude-haiku-5-5',
         'name'        => sanitize_text_field($in['name'] ?? ''),
         'greeting'    => sanitize_textarea_field($in['greeting'] ?? ''),
+        'teaser'      => sanitize_textarea_field($in['teaser'] ?? ''),
         'owner_name'  => sanitize_text_field($in['owner_name'] ?? ''),
         'owner_email' => sanitize_email($in['owner_email'] ?? ''),
         'knowledge'   => sanitize_textarea_field($in['knowledge'] ?? ''),
@@ -316,6 +318,7 @@ function wfai_settings_page() {
                     </select></td></tr>
                 <tr><th scope="row"><label for="wfai-name">Имя ассистента</label></th><td><input id="wfai-name" class="regular-text" name="wfai_settings[name]" value="<?php echo esc_attr($s['name']); ?>"></td></tr>
                 <tr><th scope="row"><label for="wfai-greet">Приветствие</label></th><td><textarea id="wfai-greet" class="large-text" rows="2" name="wfai_settings[greeting]"><?php echo esc_textarea($s['greeting']); ?></textarea></td></tr>
+                <tr><th scope="row"><label for="wfai-teaser">Сообщение при входе</label></th><td><textarea id="wfai-teaser" class="large-text" rows="2" name="wfai_settings[teaser]"><?php echo esc_textarea($s['teaser'] ?? ''); ?></textarea><p class="description">Всплывает над кнопкой чата через пару секунд после входа на сайт (один раз за визит). Пусто — не показывать.</p></td></tr>
                 <tr><th scope="row"><label for="wfai-owner">Менеджер (имя в живом чате) и e-mail для уведомлений</label></th><td>
                     <input id="wfai-owner" class="regular-text" name="wfai_settings[owner_name]" value="<?php echo esc_attr($s['owner_name']); ?>" placeholder="Имя менеджера в живом чате">
                     <input class="regular-text" type="email" name="wfai_settings[owner_email]" value="<?php echo esc_attr($s['owner_email']); ?>" placeholder="E-mail для уведомлений">

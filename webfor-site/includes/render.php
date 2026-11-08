@@ -73,7 +73,7 @@ function webfor_icon($name) {
         'spark'   => '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
         'arrow'   => '<path d="M5 12h14M13 6l6 6-6 6"/>',
         'device'  => '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/>',
-        'bot'     => '<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/>',
+        'bot'     => '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/>', // чат с искрой — значит AI
         'back'    => '<path d="M19 12H5M11 18l-6-6 6-6"/>',
         'menu'    => '<path d="M4 7h16M4 12h16M4 17h16"/>',
         'close'   => '<path d="M6 6l12 12M18 6 6 18"/>',

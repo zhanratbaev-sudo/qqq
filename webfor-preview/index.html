@@ -14,8 +14,8 @@ html, body { background: #050707; }
   --text: #ecf2f0;
   --text-2: #a9b7b2;
   --text-3: #7b8a85;
-  --accent: #3fe0a0;
-  --accent-hover: #63e8b4;
+  --accent: #51c2ab;
+  --accent-hover: #74d0be;
   --on-accent: #062019;
   --danger: #ff8a7a;
   --radius: 16px;
@@ -207,7 +207,7 @@ html.wf-locked { overflow: hidden; }
 .wf-table tbody th { text-align: left; font-weight: 500; color: var(--text); }
 .wf-table td { width: 15%; }
 .wf-yes, .wf-no { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; }
-.wf-yes { background: rgba(63,224,160,.14); color: var(--accent); }
+.wf-yes { background: rgba(81, 194, 171,.14); color: var(--accent); }
 .wf-no { color: var(--text-3); }
 .wf-yes .wf-i, .wf-no .wf-i { width: 16px; height: 16px; }
 
@@ -261,7 +261,7 @@ html.wf-locked { overflow: hidden; }
 .wf-seg label { flex: 1; min-width: 120px; }
 .wf-seg input { position: absolute; opacity: 0; }
 .wf-seg span { display: flex; align-items: center; justify-content: center; min-height: 48px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); color: var(--text-2); font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s; }
-.wf-seg input:checked + span { border-color: var(--accent); color: var(--text); background: rgba(63,224,160,.08); }
+.wf-seg input:checked + span { border-color: var(--accent); color: var(--text); background: rgba(81, 194, 171,.08); }
 .wf-seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .wf-check { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; color: var(--text-2); font-size: 14px; font-weight: 400 !important; }
@@ -284,7 +284,7 @@ html.wf-locked { overflow: hidden; }
 .wf-pick-item b { font-size: 15px; font-weight: 600; }
 .wf-pick-item:hover span { border-color: rgba(255, 255, 255, .24); }
 .wf-pick-item:active span { transform: scale(.96); }
-.wf-pick-item input:checked + span { border-color: var(--accent); background: rgba(63, 224, 160, .1); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 3px rgba(63, 224, 160, .12); }
+.wf-pick-item input:checked + span { border-color: var(--accent); background: rgba(81, 194, 171, .1); color: var(--text); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 0 3px rgba(81, 194, 171, .12); }
 .wf-pick-item input:checked + span .wf-i { color: var(--accent); animation: wf-pop .45s var(--spring); }
 .wf-pick-item input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes wf-pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
@@ -412,7 +412,7 @@ html.wf-locked { overflow: hidden; }
 .wf-mobile-bar { background: rgba(5, 7, 7, .5); border-top-color: rgba(255, 255, 255, .1); }
 .wf-btn-secondary:hover, .wf-page-back:hover { background: var(--glass-strong); border-color: rgba(255, 255, 255, .26); }
 /* основная кнопка — «тонированное стекло» с бликом */
-.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 60, 40, .18), 0 6px 20px rgba(63, 224, 160, .22); }
+.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 6px rgba(0, 60, 40, .18), 0 6px 20px rgba(81, 194, 171, .22); }
 .wf-btn, .wf-folder, .wf-work-btn, .wf-page-back, .wf-burger { transition: transform .35s var(--spring), background-color .2s, border-color .2s, box-shadow .2s; }
 .wf-btn:active, .wf-page-back:active, .wf-burger:active { transform: scale(.96); }
 .wf-folder:active { transform: scale(.98); }
@@ -421,7 +421,7 @@ html.wf-locked { overflow: hidden; }
 .wf-folder-body, .wf-folder-body::before { background: rgba(16, 21, 20, .88); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.85); backdrop-filter: blur(30px) saturate(115%) brightness(.85); }
 @media (hover: hover) { .wf-folder:hover .wf-folder-body, .wf-folder:hover .wf-folder-body::before { background: rgba(22, 29, 28, .9); border-color: rgba(255, 255, 255, .26); } }
 .wf-folder-body::before { border-bottom: 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28); }
-.wf-card-accent { border-color: rgba(63, 224, 160, .55); }
+.wf-card-accent { border-color: rgba(81, 194, 171, .55); }
 .wf-work-shot { box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset; }
 .wf-card-icon, .wf-page-icon, .wf-step-n, .wf-contacts .wf-i { background: var(--glass-strong); box-shadow: var(--glass-light); }
 .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { background: rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .12); }
@@ -490,8 +490,8 @@ html.wf-locked { overflow: hidden; }
   --g-fill-hover: rgba(255, 255, 255, .11);
   --g-blur: blur(30px) saturate(160%);
   --g-shadow: 0 10px 30px rgba(0, 0, 0, .35);
-  --tint: rgba(63, 224, 160, .30);
-  --tint-soft: rgba(63, 224, 160, .14);
+  --tint: rgba(81, 194, 171, .30);
+  --tint-soft: rgba(81, 194, 171, .14);
 }
 .wf-btn-secondary, .wf-page-back, .wf-card, .wf-form, .wf-faq details, .wf-table-wrap, .wf-steps li, .wf-page-foot,
 .wf-glass, .wf-art-chip, .wf-card-icon, .wf-page-icon, .wf-step-n, .wf-product-icon {
@@ -505,7 +505,7 @@ html.wf-locked { overflow: hidden; }
 .wf-product-vet { background-color: #f4f1e4; }
 .wf-product-icon:not(.wf-product-vet) { background-color: var(--accent); }
 .wf-card, .wf-form, .wf-table-wrap, .wf-page-foot, .wf-faq details, .wf-steps li { border-radius: var(--r); }
-.wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(63, 224, 160, .45); }
+.wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(81, 194, 171, .45); }
 .wf-btn, .wf-page-back, .wf-burger, .wf-nav, .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { border-radius: var(--r) !important; }
 .wf-btn-secondary, .wf-page-back { border: 0 !important; }
 .wf-btn-secondary:hover, .wf-page-back:hover { background-color: var(--g-fill-hover); }
@@ -520,7 +520,7 @@ html.wf-locked { overflow: hidden; }
 }
 /* поля формы: стекло без рамки, фокус — мягкое кольцо */
 .wf-form input[type=text], .wf-form input[type=tel] { border: 0 !important; background: rgba(255, 255, 255, .06) !important; }
-.wf-form input[type=text]:focus, .wf-form input[type=tel]:focus { background: var(--tint-soft) !important; box-shadow: 0 0 0 2px rgba(63, 224, 160, .55); }
+.wf-form input[type=text]:focus, .wf-form input[type=tel]:focus { background: var(--tint-soft) !important; box-shadow: 0 0 0 2px rgba(81, 194, 171, .55); }
 .wf-form [aria-invalid=true] { box-shadow: 0 0 0 2px rgba(255, 138, 122, .7); }
 
 /* выбор услуги: одна строка, листается влево-вправо */
@@ -609,8 +609,8 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 html.wf-refract .wf-pick-item span { backdrop-filter: url(#wf-lg) blur(14px) saturate(190%) brightness(1.08) !important; }
 .wf-pick-item .wf-i { color: var(--accent) !important; }
 .wf-pick-item b { color: #fff; }
-.wf-pick-item:hover span { background-color: rgba(63, 224, 160, .22) !important; }
-.wf-pick-item input:checked + span { background-color: rgba(63, 224, 160, .62) !important; color: #fff !important; box-shadow: inset 0 1px 14px rgba(255, 255, 255, .18), 0 8px 24px rgba(63, 224, 160, .25) !important; }
+.wf-pick-item:hover span { background-color: rgba(81, 194, 171, .22) !important; }
+.wf-pick-item input:checked + span { background-color: rgba(81, 194, 171, .62) !important; color: #fff !important; box-shadow: inset 0 1px 14px rgba(255, 255, 255, .18), 0 8px 24px rgba(81, 194, 171, .25) !important; }
 .wf-pick-item input:checked + span .wf-i { color: #fff !important; }
 
 /* меню на телефоне: колонка выезжает справа и закрывает 90% экрана */
@@ -713,7 +713,7 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 @media (prefers-reduced-motion: reduce) { .wf-izi-dot { transition: none; } }
 
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
-.wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #3fe0a0; --a-on: #04170f;
+.wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #51c2ab; --a-on: #04170f;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
 .wfai *, .wfai *::before, .wfai *::after { box-sizing: border-box; }
 .wfai button { font: inherit; cursor: pointer; }
@@ -727,7 +727,7 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 .wfai-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .wfai-who b { display: block; font-size: 15px; }
 .wfai-who span:not(.wfai-dot) { display: block; font-size: 12px; color: var(--a-text-3); }
-.wfai-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--a-accent); flex: none; box-shadow: 0 0 0 4px rgba(63,224,160,.15); }
+.wfai-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--a-accent); flex: none; box-shadow: 0 0 0 4px rgba(81, 194, 171,.15); }
 .wfai-close { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid var(--a-line); border-radius: 10px; background: transparent; color: var(--a-text-2); }
 .wfai-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
 .wfai-msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; word-wrap: break-word; }
@@ -754,7 +754,7 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 .wfai-wa { width: 100%; font-size: 13px; color: var(--a-accent); text-decoration: none; }
 @media (max-width: 760px) {
   .wfai { right: 16px; bottom: 16px; }
-  .wfai.wfai-has-bar { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+  .wfai.wfai-has-bar { bottom: calc(64px + max(8px, calc(env(safe-area-inset-bottom, 0px) - 18px))); }
   .wfai-launcher span { display: none; }
   .wfai-launcher { width: 56px; padding: 0; justify-content: center; }
   .wfai.is-open, .wfai.wfai-has-bar.is-open { inset: 0; }
@@ -782,9 +782,9 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 .wfai-form { border-top: 0 !important; }
 .wfai-close, .wfai-chip, .wfai-input, .wfai-send, .wfai-contact, .wfai-contact input, .wfai-contact button { border: 0 !important; border-radius: var(--wr) !important; }
 .wfai-close, .wfai-chip { background: rgba(255,255,255,.08) !important; }
-.wfai-chip:hover { background: rgba(63,224,160,.18) !important; color: #fff; }
+.wfai-chip:hover { background: rgba(81, 194, 171,.18) !important; color: #fff; }
 .wfai-input, .wfai-contact input { background: rgba(255,255,255,.07) !important; }
-.wfai-input:focus { box-shadow: 0 0 0 2px rgba(63,224,160,.55); }
+.wfai-input:focus { box-shadow: 0 0 0 2px rgba(81, 194, 171,.55); }
 .wfai-msg { border-radius: 16px; }
 .wfai-assistant { background: rgba(255,255,255,.09) !important; box-shadow: none !important; }
 /* во время превращения содержимое окна не видно — только «капля» стекла */
@@ -808,9 +808,9 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-head { background: rgba(0,0,0,.25) !important; }
 
 /* живой чат: сообщения менеджера, служебные строки, ошибка языка, непрочитанное */
-.wfai-manager { background: rgba(63,224,160,.16) !important; }
-.wfai-author { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; color: #3fe0a0; }
-.wfai-system { align-self: center; max-width: 92%; padding: 6px 12px; border-radius: 12px; background: rgba(63,224,160,.12); color: #bff3dc; font-size: 13px; text-align: center; }
+.wfai-manager { background: rgba(81, 194, 171,.16) !important; }
+.wfai-author { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; color: #51c2ab; }
+.wfai-system { align-self: center; max-width: 92%; padding: 6px 12px; border-radius: 12px; background: rgba(81, 194, 171,.12); color: #bff3dc; font-size: 13px; text-align: center; }
 .wfai-error { background: rgba(255,90,80,.18) !important; color: #ffb4ab !important; }
 .wfai-launcher { position: relative; }
 .wfai.wfai-unread .wfai-launcher::after { content: ""; position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #ff5a50; box-shadow: 0 0 0 2px #04170f; }
@@ -825,7 +825,8 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 }
 @media (max-width: 760px) {
   /* зона под окном чата (там, где клавиатура) — тёмная: сайт не мелькает, пока клавиатура выезжает */
-  .wfai.is-open::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
+  /* только пока открыта клавиатура: в обычном состоянии под чатом ничего не закрашиваем */
+  .wfai.is-open.wfai-kb::after { content: ""; position: fixed; left: 0; right: 0; top: var(--wfai-vb, 100%); bottom: -200px; background: #050707; z-index: -1; }
 }
 @media (max-width: 760px) {
   /* на телефоне окно на весь экран: стекло с размытием и преломлением тут не видно, а при каждом сдвиге клавиатуры
@@ -853,7 +854,17 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-voice-wait { opacity: .75; }
 @media (prefers-reduced-motion: reduce) { .wfai-form.is-rec .wfai-mic, .wfai-rec i, .wfai-speak.is-on { animation: none; } }
 
-.wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
+/* Сообщение при входе «Я AI-ассистент…» над кнопкой чата */
+.wfai-teaser { position: absolute; right: 0; bottom: 68px; width: 300px; max-width: calc(100vw - 32px); opacity: 0; transform: translateY(8px) scale(.96); transform-origin: 100% 100%; transition: opacity .25s ease-out, transform .35s cubic-bezier(.3,1.3,.5,1); pointer-events: none; }
+.wfai-teaser.is-in { opacity: 1; transform: none; pointer-events: auto; }
+.wfai-teaser-msg { display: block; width: 100%; text-align: left; padding: 14px 40px 14px 16px; border: 0; border-radius: 18px 18px 6px 18px; background: var(--a-surface-2); color: var(--a-text); font-size: 15px !important; line-height: 1.45; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 32px rgba(0,0,0,.5); }
+.wfai-teaser-msg b { display: block; margin-bottom: 2px; font-size: 13px; font-weight: 600; color: var(--a-accent); }
+.wfai-teaser-x { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--a-text-3); }
+.wfai-teaser-x svg { width: 16px; height: 16px; }
+.wfai-teaser-x:hover { color: var(--a-text); background: rgba(255,255,255,.06); }
+.wfai.is-open .wfai-teaser { display: none; }
+@media (max-width: 760px) { .wfai-teaser { right: -8px; } }
+@media (prefers-reduced-motion: reduce) { .wfai-teaser { transition: none; transform: none; } }
 </style>
 <div class="wf" id="wf-top">
     <a class="wf-skip" href="#wf-main">Перейти к содержимому</a>
@@ -890,14 +901,14 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                 <p class="wf-lead">Делаем сайты и мобильные приложения, ставим AI-чат-ботов, которые сами отвечают клиентам, и внедряем CRM в работу команды. Берём на себя всё — от идеи до запуска и поддержки.</p>
                 <div class="wf-actions">
                     <a class="wf-btn wf-btn-primary" href="#zayavka">Обсудить проект <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                    <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI-ассистента</button>
+                    <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI-ассистента</button>
                                     </div>
                 </div>
                                                     <div class="wf-hero-art" aria-hidden="true">
                         <img class="wf-art-site" src="works/petgo-site.jpg" alt="">
                         <img class="wf-art-app" src="works/petgo-app-home.jpg" alt="">
                         <img class="wf-art-bot" src="works/bot-site.jpg" alt="">
-                        <div class="wf-glass wf-art-chip wf-art-chip-1"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg><span><b>AI ответил клиенту</b>в 23:40, без менеджера</span></div>
+                        <div class="wf-glass wf-art-chip wf-art-chip-1"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg><span><b>AI ответил клиенту</b>в 23:40, без менеджера</span></div>
                         <div class="wf-glass wf-art-chip wf-art-chip-2"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg><span><b>Новая заявка</b>сразу в CRM</span></div>
                     </div>
                             </div>
@@ -944,7 +955,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                                                             <img src="works/bot-wa.jpg" alt="" loading="lazy" class="wf-peek-1">
                                                                     </span>
                                 <span class="wf-folder-body">
-                                    <span class="wf-folder-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg></span>
+                                    <span class="wf-folder-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
                                     <span class="wf-folder-title">AI-чат-боты</span>
                                     <span class="wf-folder-count">2 работы · открыть</span>
                                 </span>
@@ -1000,7 +1011,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                     <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
                                     <div class="wf-actions">
                                         <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="site">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1039,7 +1050,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                     <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
                                     <div class="wf-actions">
                                         <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="app">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1055,7 +1066,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                         <div class="wf-page-scroll">
                             <div class="wf-wrap">
                                 <header class="wf-page-head">
-                                    <span class="wf-page-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg></span>
+                                    <span class="wf-page-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
                                     <h2 id="wf-ph-bots">AI-чат-боты</h2>
                                     <p>Искусственный интеллект отвечает клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, записывает и собирает заявки, сложное передаёт вам.</p>
                                     <span class="wf-page-count">2 работы</span>
@@ -1078,7 +1089,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                     <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
                                     <div class="wf-actions">
                                         <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1129,7 +1140,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                     <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
                                     <div class="wf-actions">
                                         <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="izi">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg>Спросить AI</button>                                    </div>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1251,7 +1262,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                     </label>
                                                                     <label class="wf-pick-item wf-anim-bot">
                                         <input type="radio" name="service" value="bot">
-                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M9.5 16h5"/><circle cx="12" cy="3.5" r="1"/></svg><b>AI-чат-бот</b></span>
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg><b>AI-чат-бот</b></span>
                                     </label>
                                                                     <label class="wf-pick-item wf-anim-paw">
                                         <input type="radio" name="service" value="vetizi">
@@ -1323,7 +1334,7 @@ window.WEBFOR = { ajax: '#demo-lead' };
   };
 })();
 var AI = {"kb": "О нас\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, онлайн, с клиентами по всему миру; находимся в Алматы, офиса нет. Работаем и с крупными компаниями, и с госкомпаниями.\nКоротко о нас: «Делаем сайты, приложения и AI-ботов, которые приносят бизнесу клиентов и экономят время».\nОтвечаем с 10:00 до 18:00 (время Алматы). Связь — WhatsApp. Портфолио — на нашем сайте web.for.petgo.kz, в разделе «Что мы делаем».\nНе называй имён и не говори, сколько человек в команде, — просто «команда WebFor».\n\nПочему мы (наши преимущества)\n- Быстро: большинство проектов — за 3–7 дней.\n- Доступно: лендинг от 10 000 ₸, корпоративный сайт с AI-ассистентом — от 30 000 ₸.\n- Тестовая неделя после запуска: мелкие правки и ошибки — бесплатно.\n- Гарантия 1 год, бесплатное обучение сотрудников, договор по желанию клиента.\n- Всё в одном месте: сайт, приложение, CRM и AI-бот, которые работают вместе.\n\nЦены (все цены «от», точную сумму называем после обсуждения задачи)\nСайты\n- Сайт-визитка (одна страница) — 10 000 ₸, домен клиента.\n- Лендинг — 10 000–15 000 ₸.\n- Сайт с онлайн-записью — от 15 000 ₸.\n- Корпоративный сайт — от 30 000 ₸: все нужные страницы и AI-ассистент на сайте.\n- Сайт с личным кабинетом клиента — от 30 000 ₸.\n- Интернет-магазин — от 30 000 ₸. Если товары даёт клиент в Excel в нужном формате (с фото по требованиям) — загружаем сразу, без доплаты. Если товары нужно вносить вручную — каждый дополнительный рабочий день добавления товаров 30 000 ₸. Также можем обучить сотрудника добавлять товары самому.\n- Многоязычный сайт: автоматический перевод (Google) — бесплатно; отдельные страницы с ручным переводом — дороже, зависит от числа страниц.\n- Редизайн готового сайта — около 3 дней, цену называем после просмотра сайта.\n- Доработка сайта (добавить форму, страницу, раздел) и правки — от 10 000 ₸, зависит от объёма.\n- Логотип — 10 000 ₸.\n- Фотосессия для сайта — 20 000 ₸ (полная съёмка).\nПриложения\n- Приложение, которое ставится через браузер (PWA, мы поможем установить), — от 30 000 ₸; работает и на iPhone, и на Android, есть push-уведомления.\n- Приложение в App Store и Google Play — от 95 000 ₸ (с учётом публикации в магазинах).\n- Приложение для клиентов (запись, бонусы) — от 50 000 ₸.\nAI-чат-боты\n- AI-ассистент на сайт — 30 000 ₸.\n- Бот в WhatsApp или Telegram — 30 000 ₸.\n- Бот сразу на все площадки (сайт, WhatsApp, Telegram, Instagram) — 40 000 ₸.\n- Ежемесячно за работу бота — 10 000 ₸.\nIzi\n- Vet.izi — от 30 000 ₸, оплата разовая.\n- Izi — от 50 000 ₸, оплата разовая.\n- CRM отдельно, без сайта, не делаем — она входит в Vet.izi / Izi.\nХостинг и домен\n- Хостинг входит в стоимость на 1 год, дальше — продление раз в год.\n- Домен не входит: покупается на hoster.kz по их цене. Если у клиента есть домен — перенесём на наш хостинг бесплатно. Можем работать и на хостинге клиента.\n- SSL (https), безопасность и резервные копии — бесплатно.\nВалюта\n- Для клиентов не из Казахстана можно назвать цену в долларах по текущему курсу, предупредив, что к моменту оплаты курс может измениться.\n\nСрочные заказы\nЕсли клиенту нужно срочно (быстрее обычного срока или начать в тот же день) — цена выше. Называй сразу итоговую срочную цену: обычная цена × 1,3, округлённая вверх до красивого числа (например, лендинг 15 000 ₸ → срочно 20 000 ₸, сайт 30 000 ₸ → срочно 40 000 ₸). Не объясняй, из чего она сложилась.\n\nСроки\n- Лендинг — 1–3 дня. Корпоративный сайт — 3–7 дней. Магазин — 3–7 дней (если товары вносятся вручную — дольше).\n- Приложение через браузер — от 3 дней; в App Store и Google Play — от 1 до 3 недель.\n- Бот — 3–7 дней, обучение бота под бизнес — 1–2 недели. Vet.izi и Izi — 3–7 дней.\n- Можем начать в день обращения, если позволяет загрузка (это срочный заказ).\n\nОплата\n- 50% — предоплата, остальные 50% — после завершения, тестовой недели и проверки.\n- Способы: счёт в Kaspi или перевод на карту Freedom Bank. Работаем с ТОО и ИП; с НДС — тоже возможно.\n- Оплата частями — до 3 месяцев. На это время материалы, хостинг и домен остаются у нас и передаются после полной оплаты.\n- Возврат: если работа ещё не начата — возвращаем полностью; если клиент отказался в процессе — возвращаем 50%.\n- Бесплатной пробной версии нет: 50% предоплата, тестовая неделя, затем остальные 50%.\n\nСкидки\n- Сейчас акций нет, но предложение можем подобрать под клиента.\n- Скидку до 30% можно обсудить при большом заказе, для студентов и новых бизнесов. Скидка действует при условии, что данные правдивы, — если окажется иначе, скидка отменяется.\n- Решение о скидке принимает менеджер: всегда передавай просьбу о скидке менеджеру (escalate_to_owner) с объяснением ситуации клиента, а клиенту скажи, что скидку возможно обсудить и менеджер ответит.\n\nКак работаем\n1) Бесплатная консультация. Всё можно обсудить в WhatsApp, без созвонов.\n2) Клиент даёт техническое задание и материалы: тексты, фото, логотип (если нет — сделаем логотип за 10 000 ₸; фото без своих — подберём бесплатные или сделаем фотосессию). Без ТЗ сайт и приложение не делаем, тексты пишет клиент.\n3) Дизайн и разработка; по просьбе показываем промежуточные результаты.\n4) Запуск, бесплатное обучение и тестовая неделя: небольшие правки и ошибки — бесплатно (без кардинальных переделок). После — правки от 10 000 ₸.\n5) Гарантия — 1 год. Договор подписываем при большой сумме или по желанию клиента.\n6) Возможна ежемесячная поддержка «под ключ» — условия и цену обсуждает менеджер.\n\nТехнически\n- Сайты делаем на коде и нужных платформах и плагинах; быстрые и удобные на телефоне.\n- Менять сайт сам клиент не может: правки делаем мы. Если клиент сам что-то сломает — ответственность на нём.\n- Подключаем онлайн-оплату, интеграции (1С, учётные системы и др. — по задаче), кнопки WhatsApp, Instagram, карты 2ГИС и Google.\n- Рекламу и продвижение (SEO, таргет) не делаем.\n- Собственность: после полной оплаты сайт принадлежит клиенту — передаём логины и пароли. Если сайт на нашем хостинге, он размещён у нас, но у клиента есть доступ. Клиент может перейти к другому разработчику.\n\nAI-чат-боты подробно\n- Отвечают 24/7 на казахском, русском и английском; понимают текст (голосовые — нет).\n- Могут записывать клиентов в календарь и принимать оплату — подключаем по задаче.\n- Владелец может дообучать бота сам в админке. Если бот ошибся из-за наших настроек — исправляем мы; если после правок владельца — отвечает владелец.\n- При большом потоке клиентов может понадобиться более мощная AI-модель (дороже).\n\nVet.izi / Izi подробно\n- Любое число сотрудников, несколько филиалов, работает на компьютере и телефоне.\n- Медкарты и история приёмов питомцев, склад и лекарства, онлайн-оплата и чеки, отчёты для владельца, напоминания клиентам по почте.\n- Можно перенести базу клиентов из Excel или старой системы, если она подходит под требования системы.\n- Izi подходит любому бизнесу: салоны, автосервисы, кафе, стоматологии и др. — клиент сам выбирает нужные модули.\n\nЧего не делаем\nИгры и рекламу/продвижение не делаем. Сложные маркетплейсы — делаем, цену называет менеджер.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников.\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\nМожно давать ссылки на эти сайты. Отзывов пока не приводи.", "owner": "Нуржан", "name": "Ассистент WebFor", "greeting": "Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов, Izi, цены и сроки — отвечу сразу.", "wa": "https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor."};
-window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, wa: AI.wa,
+window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, teaser: 'Здравствуйте! 👋 Я AI-ассистент WebFor — искусственный интеллект. Отвечу на любой вопрос сразу, днём и ночью.', wa: AI.wa,
   chips: ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'] };
 (function () {
   var samplePromise = window.claude && window.claude.use ? window.claude.use('sample') : Promise.resolve(null);
@@ -1591,7 +1602,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg>';
+  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>'; // чат + искра AI
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
   var ICON_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
@@ -1953,6 +1964,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     // сайт под открытым чатом не прокручивается и после закрытия остаётся на том же месте
     lockPage(open);
     if (open) {
+      hideTeaser();
       if (!log.childElementCount) render();
       var btnRect = launcher.getBoundingClientRect(); // до раскрытия: на телефоне контейнер чата потом растягивается на весь экран
       panel.hidden = false; root.classList.add('is-open'); fitPanel();
@@ -1970,7 +1982,36 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     }
   }
 
-  launcher.addEventListener('click', function () { setOpen(panel.hidden); });
+  /* Сообщение при входе: через пару секунд над кнопкой всплывает «Я AI-ассистент…» — один раз за визит,
+     пока человек сам не открыл чат. Нажатие открывает чат, крестик прячет. */
+  var teaser = null;
+  function hideTeaser() {
+    if (!teaser) return;
+    var t = teaser; teaser = null;
+    t.classList.remove('is-in');
+    setTimeout(function () { t.remove(); }, reduce ? 0 : 260);
+  }
+  (function () {
+    var seen = false;
+    try { seen = sessionStorage.getItem('wfai-teaser') === '1'; } catch (e) {}
+    if (!C.teaser || seen || history.length) return;
+    setTimeout(function () {
+      if (!panel.hidden) return;
+      teaser = el('div', 'wfai-teaser');
+      var tb = el('button', 'wfai-teaser-msg'); tb.type = 'button';
+      tb.appendChild(el('b', null, C.name || 'AI-ассистент'));
+      tb.appendChild(document.createTextNode(C.teaser));
+      var tx = el('button', 'wfai-teaser-x'); tx.type = 'button'; tx.setAttribute('aria-label', 'Скрыть'); tx.innerHTML = ICON_X;
+      teaser.appendChild(tb); teaser.appendChild(tx);
+      root.appendChild(teaser);
+      requestAnimationFrame(function () { requestAnimationFrame(function () { if (teaser) teaser.classList.add('is-in'); }); });
+      try { sessionStorage.setItem('wfai-teaser', '1'); } catch (e) {}
+      tb.addEventListener('click', function () { hideTeaser(); setOpen(true); });
+      tx.addEventListener('click', hideTeaser);
+    }, 2500);
+  })();
+
+  launcher.addEventListener('click', function () { hideTeaser(); setOpen(panel.hidden); });
   close.addEventListener('click', function () { setOpen(false); });
   form.addEventListener('submit', function (e) { e.preventDefault(); send(input.value); });
   input.addEventListener('input', autosize);

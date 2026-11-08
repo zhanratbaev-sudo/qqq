@@ -50,7 +50,7 @@ window.WEBFOR = { ajax: '#demo-lead' };
   };
 })();
 var AI = __AI__;
-window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, wa: AI.wa,
+window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, teaser: AI.teaser, wa: AI.wa,
   chips: ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'] };
 (function () {
   var samplePromise = window.claude && window.claude.use ? window.claude.use('sample') : Promise.resolve(null);
