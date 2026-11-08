@@ -712,6 +712,51 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 }
 @media (prefers-reduced-motion: reduce) { .wf-izi-dot { transition: none; } }
 
+/* Нижняя панель на телефоне: без тёмной подложки — сайт виден под ней целиком, остаются только две кнопки,
+   опущенные к краю экрана. (Сплошной фон у панели iPhone растягивал на всю зону под ней — внизу была чёрная полоса.) */
+@media (max-width: 760px) {
+  .wf-mobile-bar, html.wf-refract .wf-mobile-bar {
+    padding: 0 12px max(8px, calc(env(safe-area-inset-bottom, 0px) - 18px)) !important;
+    background: transparent !important; background-color: transparent !important; background-image: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    box-shadow: none !important; border-top: 0 !important;
+    pointer-events: none; }
+  .wf-mobile-bar .wf-btn { pointer-events: auto; box-shadow: 0 8px 24px rgba(0, 0, 0, .45) !important; }
+  .wf-mobile-bar .wf-btn-secondary { background-color: rgba(20, 26, 25, .72) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%) !important; backdrop-filter: blur(18px) saturate(160%) !important; }
+  .wf-footer { padding-bottom: 88px; }
+}
+.wf-version { opacity: .7; }
+
+/* Услуги и цены: AI — главная широкая карточка, ниже сайты, приложения и Izi */
+.wf-svc-ai { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; border-color: rgba(81, 194, 171, .5); }
+.wf-svc-ai h3 { font-size: 28px; }
+.wf-svc-ai-main { display: flex; flex-direction: column; gap: 24px; }
+.wf-svc-ai-side { display: flex; flex-direction: column; gap: 20px; }
+.wf-svc-ai-side .wf-actions { margin-top: auto; }
+.wf-svc-channels { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.wf-svc-channels li { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--surface-2); font-size: 15px; font-weight: 600; }
+.wf-svc-channels .wf-i { width: 18px; height: 18px; color: var(--accent); }
+.wf-prices { list-style: none; margin: 0; padding: 0; }
+.wf-prices li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.wf-prices li:last-child { border-bottom: 0; }
+.wf-prices span { color: rgba(255, 255, 255, .82); }
+.wf-prices small { display: block; margin-top: 2px; font-size: 13px; color: var(--text-3, #74827d); }
+.wf-prices b { flex: none; font-weight: 700; white-space: nowrap; }
+.wf-svc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 24px; }
+.wf-svc .wf-product-head { align-items: center; }
+.wf-svc .wf-card-icon { flex: none; }
+.wf-svc-quiet { background: transparent; }
+.wf-svc-quiet h3 { font-size: 20px; }
+.wf-svc-note { font-size: 13px; color: var(--text-3, #74827d) !important; }
+@media (max-width: 960px) { .wf-svc-grid { grid-template-columns: 1fr 1fr; } .wf-svc-quiet { grid-column: 1 / -1; } }
+@media (max-width: 760px) {
+  .wf-svc-ai { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+  .wf-svc-ai h3 { font-size: 24px; }
+  .wf-svc-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+  .wf-svc { padding: 24px; }
+}
+
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
 .wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #51c2ab; --a-on: #04170f;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
@@ -848,11 +893,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-rec-x { height: 32px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--a-text-2); font-size: 13px !important; }
 .wfai-send[hidden], .wfai-input[hidden] { display: none; }
 .wfai-msg { position: relative; }
-.wfai-speak { display: inline-grid; place-items: center; width: 26px; height: 26px; margin: 0 -4px -4px 6px; vertical-align: -6px; border: 0; border-radius: 9px; background: transparent; color: var(--a-text-3); }
-.wfai-speak:hover { color: var(--a-text); background: rgba(255,255,255,.08); }
-.wfai-speak.is-on { color: var(--a-accent); animation: wfai-blink 1.2s infinite; }
-.wfai-voice-wait { opacity: .75; }
-@media (prefers-reduced-motion: reduce) { .wfai-form.is-rec .wfai-mic, .wfai-rec i, .wfai-speak.is-on { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .wfai-form.is-rec .wfai-mic, .wfai-rec i { animation: none; } }
 
 /* Сообщение при входе «Я AI-ассистент…» над кнопкой чата */
 .wfai-teaser { position: absolute; right: 0; bottom: 68px; width: 300px; max-width: calc(100vw - 32px); opacity: 0; transform: translateY(8px) scale(.96); transform-origin: 100% 100%; transition: opacity .25s ease-out, transform .35s cubic-bezier(.3,1.3,.5,1); pointer-events: none; }
@@ -865,6 +906,54 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai.is-open .wfai-teaser { display: none; }
 @media (max-width: 760px) { .wfai-teaser { right: -8px; } }
 @media (prefers-reduced-motion: reduce) { .wfai-teaser { transition: none; transform: none; } }
+
+/* ---------- v5: хрустальный шарик с тремя мигающими искрами ---------- */
+.wfai-launcher, .wfai-has-bar .wfai-launcher { width: 62px; height: 62px; padding: 0; justify-content: center; border-radius: 50%; color: #fff;
+  background-color: #2a9a84; background-image: radial-gradient(120% 120% at 32% 22%, #8debd8 0%, #3cb39b 38%, #13675a 78%, #0a3f37 100%);
+  box-shadow: inset 0 2px 5px rgba(255,255,255,.65), inset 0 -10px 18px rgba(0,25,20,.55), 0 0 0 1px rgba(255,255,255,.12), 0 0 26px rgba(81,194,171,.5), 0 12px 30px rgba(0,0,0,.5); }
+.wfai-launcher > span:not(.wfai-orb) { display: none; }
+.wfai-orb { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; pointer-events: none; }
+.wfai-orb::before { content: ""; position: absolute; left: 14%; top: 7%; width: 52%; height: 34%; border-radius: 50%; background: radial-gradient(closest-side, rgba(255,255,255,.85), rgba(255,255,255,0)); transform: rotate(-24deg); }
+.wfai-orb i { position: absolute; top: -20%; bottom: -20%; left: -60%; width: 40%; background: linear-gradient(100deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0)); transform: skewX(-18deg); animation: wfai-shine 4.2s ease-in-out infinite 1s; }
+@keyframes wfai-shine { 0%, 62% { left: -60%; } 100% { left: 130%; } }
+.wfai-stars { position: relative; width: 30px; height: 30px; filter: drop-shadow(0 0 4px rgba(255,255,255,.75)); }
+.wfai-stars path { transform-box: fill-box; transform-origin: center; animation: wfai-twinkle 2.4s ease-in-out infinite; }
+.wfai-stars .wfai-s2 { animation-delay: .5s; }
+.wfai-stars .wfai-s3 { animation-delay: 1s; }
+@keyframes wfai-twinkle { 0%, 100% { opacity: .45; transform: scale(.62) rotate(0deg); } 40% { opacity: 1; transform: scale(1.08) rotate(12deg); } 60% { opacity: 1; transform: scale(1) rotate(0deg); } }
+.wfai-launcher:hover { transform: translateY(-1px) scale(1.03); }
+.wfai-teaser { bottom: 74px; }
+@media (prefers-reduced-motion: reduce) { .wfai-stars path, .wfai-orb i { animation: none; opacity: 1; } }
+
+/* голосовое распознаётся: только текст, по нему бежит светлая волна */
+.wfai-msg.wfai-voice-wait { padding-left: 0; padding-right: 2px; box-shadow: none !important; color: transparent !important;
+  background: linear-gradient(90deg, #5f7a74 0%, #5f7a74 38%, #eafff9 50%, #5f7a74 62%, #5f7a74 100%) !important; background-size: 250% 100% !important;
+  -webkit-background-clip: text !important; background-clip: text !important; animation: wfai-wave 1.6s linear infinite; }
+@keyframes wfai-wave { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .wfai-voice-wait { animation: none; } }
+
+/* своя клавиатура (телефон) */
+.wfai-kbd { flex: none; padding: 6px 4px calc(8px + env(safe-area-inset-bottom, 0px)); background: #0d1312; user-select: none; -webkit-user-select: none; touch-action: none; -webkit-touch-callout: none; }
+.wfai-kbd[hidden] { display: none; }
+.wfai-kr { display: flex; gap: 5px; padding: 0 2px; margin-top: 8px; }
+.wfai-kr:first-child { margin-top: 2px; }
+.wfai-key { position: relative; flex: 1 1 0; min-width: 0; height: 44px; padding: 0; border: 0; border-radius: 9px; background: #222b29; color: #eef4f2; font-size: 20px !important; line-height: 1; display: grid; place-items: center; box-shadow: 0 1px 0 rgba(0,0,0,.6); -webkit-tap-highlight-color: transparent; }
+.wfai-key.wfai-kalt::before { content: attr(data-alt); position: absolute; top: 3px; right: 4px; font-size: 9px; color: #74827d; }
+.wfai-key.is-down { background: #33403d; }
+.wfai-key.is-down:not(.wfai-kfn):not(.wfai-kspace):not(.wfai-ksend)::after { content: attr(data-c); position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px; min-width: 46px; height: 54px; padding: 0 6px; transform: translateX(-50%); border-radius: 12px; background: #3a4845; color: #fff; font-size: 30px; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(0,0,0,.5); pointer-events: none; z-index: 2; }
+.wfai-key.is-down.is-alt::after { content: attr(data-alt) !important; background: var(--a-accent) !important; color: var(--a-on) !important; }
+.wfai-kfn { flex: 1.4 1 0; background: #161d1b; color: #a3b1ac; font-size: 15px !important; font-weight: 600 !important; }
+.wfai-kshift.is-on { background: #eef4f2; color: #0a0f0e; }
+.wfai-kshift.is-lock { box-shadow: inset 0 -3px 0 var(--a-accent); }
+.wfai-kmode { flex: 1.3 1 0; }
+.wfai-kspace { flex: 4.2 1 0; font-size: 14px !important; color: #a3b1ac; }
+.wfai-ksend { flex: 1.5 1 0; background: var(--a-accent); color: var(--a-on); }
+.wfai-ksend.is-down { background: #74d0be; }
+.wfai.wfai-kbd-on .wfai-foot, .wfai.wfai-kbd-on .wfai-chips { display: none; }
+.wfai.wfai-kbd-on .wfai-form { padding-bottom: 8px; }
+.wfai.wfai-kbd-on .wfai-input { caret-color: var(--a-accent); }
+
+.wf-demo-note { position: relative; z-index: 51; background: #0c100f; color: #a9b7b2; border-bottom: 1px solid #1b2321; font: 500 13px/1.4 "Inter", system-ui, sans-serif; text-align: center; padding: 8px max(16px, env(safe-area-inset-left, 0px)); }
 </style>
 <div class="wf" id="wf-top">
     <a class="wf-skip" href="#wf-main">Перейти к содержимому</a>
@@ -882,7 +971,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
             <a class="wf-logo" href="#wf-top" aria-label="WebFor — наверх"><svg class="wf-mark" width="32" height="32" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="30" fill="#0f8a76"/><path d="M26 40 L42 84 L60 52 L78 84 L94 40" fill="none" stroke="#f4f1e4" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Web<b>For</b></span></a>
             <nav class="wf-nav" id="wf-nav" aria-label="Разделы">
                 <a href="#uslugi">Услуги</a>
-                <a href="#izi">Izi</a>
+                <a href="#ceny">Цены</a>
                 <a href="#sravnenie">Сравнение</a>
                 <a href="#faq">Вопросы</a>
             </nav>
@@ -923,6 +1012,19 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                 </header>
                 <div class="wf-folders" role="list">
                                             <div class="wf-folder-wrap" role="listitem">
+                            <button class="wf-folder" type="button" id="wf-f-bots" aria-haspopup="dialog" aria-controls="wf-p-bots" data-folder="bots">
+                                <span class="wf-folder-peek" aria-hidden="true">
+                                                                            <img src="works/bot-site.jpg" alt="" loading="lazy" class="wf-peek-0">
+                                                                            <img src="works/bot-wa.jpg" alt="" loading="lazy" class="wf-peek-1">
+                                                                    </span>
+                                <span class="wf-folder-body">
+                                    <span class="wf-folder-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
+                                    <span class="wf-folder-title">AI-ассистенты</span>
+                                    <span class="wf-folder-count">2 работы · открыть</span>
+                                </span>
+                            </button>
+                        </div>
+                                            <div class="wf-folder-wrap" role="listitem">
                             <button class="wf-folder" type="button" id="wf-f-sites" aria-haspopup="dialog" aria-controls="wf-p-sites" data-folder="sites">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/petgo-site.jpg" alt="" loading="lazy" class="wf-peek-0">
@@ -949,19 +1051,6 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                             </button>
                         </div>
                                             <div class="wf-folder-wrap" role="listitem">
-                            <button class="wf-folder" type="button" id="wf-f-bots" aria-haspopup="dialog" aria-controls="wf-p-bots" data-folder="bots">
-                                <span class="wf-folder-peek" aria-hidden="true">
-                                                                            <img src="works/bot-site.jpg" alt="" loading="lazy" class="wf-peek-0">
-                                                                            <img src="works/bot-wa.jpg" alt="" loading="lazy" class="wf-peek-1">
-                                                                    </span>
-                                <span class="wf-folder-body">
-                                    <span class="wf-folder-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
-                                    <span class="wf-folder-title">AI-чат-боты</span>
-                                    <span class="wf-folder-count">2 работы · открыть</span>
-                                </span>
-                            </button>
-                        </div>
-                                            <div class="wf-folder-wrap" role="listitem">
                             <button class="wf-folder" type="button" id="wf-f-izi" aria-haspopup="dialog" aria-controls="wf-p-izi" data-folder="izi">
                                 <span class="wf-folder-peek" aria-hidden="true">
                                                                             <img src="works/crm-requests.jpg" alt="" loading="lazy" class="wf-peek-0">
@@ -977,6 +1066,45 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                         </div>
                                     </div>
 
+                                    <div class="wf-page" id="wf-p-bots" data-folder="bots" role="dialog" aria-modal="true" aria-labelledby="wf-ph-bots" hidden>
+                        <div class="wf-page-bar">
+                            <div class="wf-wrap wf-page-bar-in">
+                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
+                                <span class="wf-page-crumb">WebFor <i>/</i> AI-ассистенты</span>
+                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="bot">Обсудить</a>
+                            </div>
+                        </div>
+                        <div class="wf-page-scroll">
+                            <div class="wf-wrap">
+                                <header class="wf-page-head">
+                                    <span class="wf-page-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
+                                    <h2 id="wf-ph-bots">AI-ассистенты</h2>
+                                    <p>Искусственный интеллект отвечает клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, записывает и собирает заявки, сложное передаёт вам.</p>
+                                    <span class="wf-page-count">2 работы</span>
+                                </header>
+                                <ul class="wf-cards">
+                                                                            <li class="wf-work wf-work-phone" style="--i:0">
+                                            <figure class="wf-work-fig">
+                                                <span class="wf-work-shot"><img src="works/bot-site.jpg" alt="AI-ассистент на этом сайте" loading="lazy"></span>
+                                                <figcaption class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em><span>Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».</span></figcaption>
+                                            </figure>
+                                        </li>
+                                                                            <li class="wf-work wf-work-phone" style="--i:1">
+                                            <figure class="wf-work-fig">
+                                                <span class="wf-work-shot"><img src="works/bot-wa.jpg" alt="Бот ветклиники в WhatsApp" loading="lazy"></span>
+                                                <figcaption class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em><span>Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.</span></figcaption>
+                                            </figure>
+                                        </li>
+                                                                    </ul>
+                                <div class="wf-page-foot">
+                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
+                                    <div class="wf-actions">
+                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                                     <div class="wf-page" id="wf-p-sites" data-folder="sites" role="dialog" aria-modal="true" aria-labelledby="wf-ph-sites" hidden>
                         <div class="wf-page-bar">
                             <div class="wf-wrap wf-page-bar-in">
@@ -1029,7 +1157,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                 <header class="wf-page-head">
                                     <span class="wf-page-icon wf-anim-device"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span>
                                     <h2 id="wf-ph-apps">Мобильные приложения</h2>
-                                    <p>Приложения для клиентов и для сотрудников на iPhone и Android: запись, заказы, бонусы, задачи и чаты. Установка из браузера или App Store и Google Play.</p>
+                                    <p>Приложения для клиентов и сотрудников на iPhone и Android. Через браузер (PWA) — быстрее и дешевле; в App Store и Google Play — дороже, с публикацией в магазинах.</p>
                                     <span class="wf-page-count">2 работы</span>
                                 </header>
                                 <ul class="wf-cards">
@@ -1055,45 +1183,6 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                             </div>
                         </div>
                     </div>
-                                    <div class="wf-page" id="wf-p-bots" data-folder="bots" role="dialog" aria-modal="true" aria-labelledby="wf-ph-bots" hidden>
-                        <div class="wf-page-bar">
-                            <div class="wf-wrap wf-page-bar-in">
-                                <button class="wf-page-back" type="button"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg><span>Все услуги</span></button>
-                                <span class="wf-page-crumb">WebFor <i>/</i> AI-чат-боты</span>
-                                <a class="wf-btn wf-btn-primary wf-btn-sm" href="#zayavka" data-service="bot">Обсудить</a>
-                            </div>
-                        </div>
-                        <div class="wf-page-scroll">
-                            <div class="wf-wrap">
-                                <header class="wf-page-head">
-                                    <span class="wf-page-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
-                                    <h2 id="wf-ph-bots">AI-чат-боты</h2>
-                                    <p>Искусственный интеллект отвечает клиентам днём и ночью в WhatsApp, Instagram, Telegram и на сайте, записывает и собирает заявки, сложное передаёт вам.</p>
-                                    <span class="wf-page-count">2 работы</span>
-                                </header>
-                                <ul class="wf-cards">
-                                                                            <li class="wf-work wf-work-phone" style="--i:0">
-                                            <figure class="wf-work-fig">
-                                                <span class="wf-work-shot"><img src="works/bot-site.jpg" alt="AI-ассистент на этом сайте" loading="lazy"></span>
-                                                <figcaption class="wf-work-meta"><b>AI-ассистент на этом сайте</b><em>Работает здесь</em><span>Отвечает на вопросы о наших услугах, а сложные передаёт нам. Попробуйте — кнопка «Спросить AI».</span></figcaption>
-                                            </figure>
-                                        </li>
-                                                                            <li class="wf-work wf-work-phone" style="--i:1">
-                                            <figure class="wf-work-fig">
-                                                <span class="wf-work-shot"><img src="works/bot-wa.jpg" alt="Бот ветклиники в WhatsApp" loading="lazy"></span>
-                                                <figcaption class="wf-work-meta"><b>Бот ветклиники в WhatsApp</b><em>Концепт</em><span>Записывает на приём, называет цены, подсказывает, когда срочно звонить врачу.</span></figcaption>
-                                            </figure>
-                                        </li>
-                                                                    </ul>
-                                <div class="wf-page-foot">
-                                    <p><b>Нужно что-то похожее?</b> Расскажите о задаче — предложим решение и назовём цену.</p>
-                                    <div class="wf-actions">
-                                        <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Оставить заявку <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-                                        <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Спросить AI</button>                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                                     <div class="wf-page" id="wf-p-izi" data-folder="izi" role="dialog" aria-modal="true" aria-labelledby="wf-ph-izi" hidden>
                         <div class="wf-page-bar">
                             <div class="wf-wrap wf-page-bar-in">
@@ -1107,7 +1196,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                 <header class="wf-page-head">
                                     <span class="wf-page-icon wf-anim-layers"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
                                     <h2 id="wf-ph-izi">Izi — всё в одном</h2>
-                                    <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли. Vet.izi — для ветклиник, Izi — максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей.</p>
+                                    <p>Сайт, CRM и приложение для команды в одной системе: заявки с сайта сразу в CRM, календарь, чаты, роли и AI-ассистент. Для ветклиник есть готовая версия — Vet.izi.</p>
                                     <span class="wf-page-count">4 работы</span>
                                 </header>
                                 <ul class="wf-cards">
@@ -1148,47 +1237,65 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                             </div>
         </section>
 
-        <section class="wf-section" id="izi" aria-labelledby="izi-h">
+        <section class="wf-section" id="ceny" aria-labelledby="ceny-h">
             <div class="wf-wrap">
                 <header class="wf-section-head">
-                    <p class="wf-eyebrow">Izi</p>
-                    <h2 id="izi-h">Два варианта Izi</h2>
-                    <p>Одна основа — сайт, CRM и приложение. Разница в том, под какой бизнес она настроена.</p>
+                    <p class="wf-eyebrow">Услуги и цены</p>
+                    <h2 id="ceny-h">Главное — AI-ассистент</h2>
+                    <p>Он отвечает вашим клиентам сам, днём и ночью. А ещё делаем сайты, приложения и систему Izi. Все цены — «от», точную назовём после короткого разговора.</p>
                 </header>
-                <div class="wf-grid-2 wf-izi-track" id="wf-izi-track">
-                    <article class="wf-card wf-product" id="wf-izi-vet" aria-label="Vet.izi">
+                <article class="wf-card wf-svc-ai" aria-labelledby="svc-ai-h">
+                    <div class="wf-svc-ai-main">
                         <div class="wf-product-head">
-                            <span class="wf-product-icon wf-product-vet wf-anim-paw"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12.5 11c-3 0-5.5 3.5-5.5 6 0 1.7 1.3 2.5 2.8 2.2 1-.2 1.8-.6 2.7-.6s1.7.4 2.7.6c1.5.3 2.8-.5 2.8-2.2 0-2.5-2.5-6-5.5-6z"/></svg></span>
-                            <div><h3>Vet.izi</h3><p class="wf-muted">Для ветклиник, груминга, зоомагазинов и всех, кто помогает животным</p></div>
+                            <span class="wf-product-icon wf-anim-bot"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg></span>
+                            <div><h3 id="svc-ai-h">AI-ассистент для бизнеса</h3><p class="wf-muted">Обучаем на ваших услугах и ценах. Отвечает за секунды, записывает клиентов и собирает заявки, сложное передаёт вам.</p></div>
                         </div>
-                        <ul class="wf-list">
-                            <li>Сайт с онлайн-записью и заявками</li>
-                            <li>CRM: клиенты, питомцы, заказы и статусы</li>
-                            <li>Календарь команды и смены</li>
-                            <li>Приложение для сотрудников, чаты и роли</li>
-                            <li>Уведомления о новых заявках</li>
+                        <ul class="wf-svc-channels" aria-label="Где работает">
+                            <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Сайт</li>
+                            <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg>WhatsApp</li>
+                            <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg>Instagram</li>
+                            <li><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M8 9h8M8 12.5h5"/></svg>Telegram</li>
                         </ul>
-                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="vetizi">Хочу Vet.izi</a>
+                    </div>
+                    <div class="wf-svc-ai-side">
+                        <ul class="wf-prices">
+                            <li><span>На сайт или в один мессенджер</span><b>30 000 ₸</b></li>
+                            <li><span>Сразу везде: сайт, WhatsApp, Instagram, Telegram</span><b>40 000 ₸</b></li>
+                            <li><span>Работа ассистента</span><b>10 000 ₸/мес</b></li>
+                            <li><span>Тестовая неделя после запуска</span><b>бесплатно</b></li>
+                        </ul>
+                        <div class="wf-actions">
+                            <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Хочу AI-ассистента <svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+                            <button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>Попробовать</button>                        </div>
+                    </div>
+                </article>
+                <div class="wf-svc-grid">
+                    <article class="wf-card wf-svc" aria-labelledby="svc-site-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span><h3 id="svc-site-h">Сайты</h3></div>
+                        <ul class="wf-prices">
+                            <li><span>Лендинг</span><b>от 10 000 ₸</b></li>
+                            <li><span>Сайт с онлайн-записью</span><b>от 15 000 ₸</b></li>
+                            <li><span>Корпоративный сайт с AI-ассистентом</span><b>от 30 000 ₸</b></li>
+                            <li><span>Интернет-магазин</span><b>от 30 000 ₸</b></li>
+                        </ul>
+                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="site">Хочу сайт</a>
                     </article>
-                    <article class="wf-card wf-product" id="wf-izi-max" aria-label="Izi">
-                        <div class="wf-product-head">
-                            <span class="wf-product-icon wf-anim-spark"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg></span>
-                            <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
-                        </div>
-                        <ul class="wf-list">
-                            <li>Сайт, CRM и приложение для команды</li>
-                            <li>Всё, что есть в Vet.izi, — для любого бизнеса</li>
-                            <li><b>AI-ассистент</b> отвечает клиентам и помогает разбирать заявки</li>
-                            <li><b>Регистрация пользователей</b> — личные кабинеты для ваших клиентов</li>
-                            <li>Чаты, календарь, роли и уведомления</li>
-                            <li>Модули под ваши процессы</li>
+                    <article class="wf-card wf-svc" aria-labelledby="svc-app-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg></span><h3 id="svc-app-h">Приложения</h3></div>
+                        <ul class="wf-prices">
+                            <li><span>Через браузер (PWA)<small>Ставится с сайта за минуту, на iPhone и Android, с уведомлениями</small></span><b>от 30 000 ₸</b></li>
+                            <li><span>В Google Play<small>+ аккаунт разработчика Google: $25 один раз</small></span><b>от 95 000 ₸</b></li>
+                            <li><span>В App Store<small>+ аккаунт разработчика Apple: $99 в год</small></span><b>от 95 000 ₸</b></li>
                         </ul>
+                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="app">Хочу приложение</a>
+                    </article>
+                    <article class="wf-card wf-svc wf-svc-quiet" aria-labelledby="svc-izi-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></span><h3 id="svc-izi-h">Izi — всё в одном</h3></div>
+                        <p>Сайт, CRM и приложение для команды в одной системе: заявки сразу в CRM, календарь, чаты, роли и AI-ассистент.</p>
+                        <ul class="wf-prices"><li><span>Izi</span><b>от 50 000 ₸</b></li></ul>
+                        <p class="wf-svc-note">Для ветклиник есть готовая версия — Vet.izi, от 30 000 ₸.</p>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="izi">Хочу Izi</a>
                     </article>
-                </div>
-                <div class="wf-izi-dots" aria-label="Варианты Izi">
-                    <button type="button" class="wf-izi-dot is-active" aria-controls="wf-izi-vet" aria-current="true" aria-label="Vet.izi"></button>
-                    <button type="button" class="wf-izi-dot" aria-controls="wf-izi-max" aria-label="Izi"></button>
                 </div>
             </div>
         </section>
@@ -1201,15 +1308,15 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                 </header>
                 <div class="wf-table-wrap" tabindex="0" role="region" aria-label="Сравнение услуг">
                     <table class="wf-table">
-                        <thead><tr><th scope="col"><span class="wf-sr">Возможность</span></th><th scope="col">Сайт</th><th scope="col">Vet.izi</th><th scope="col">Izi</th></tr></thead>
+                        <thead><tr><th scope="col"><span class="wf-sr">Возможность</span></th><th scope="col">Сайт</th><th scope="col">Сайт + AI</th><th scope="col">Izi</th></tr></thead>
                         <tbody>
                             <tr><th scope="row">Сайт под ваш дизайн</th><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                             <tr><th scope="row">Онлайн-заявки, WhatsApp, звонок</th><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">Приложение для сотрудников</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">Чаты, календарь, роли</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
-                            <tr><th scope="row">AI-ассистент</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">AI-ассистент на сайте</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">AI в WhatsApp, Instagram, Telegram</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">Приложение для сотрудников</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
+                            <tr><th scope="row">Чаты, календарь, роли</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                             <tr><th scope="row">Регистрация пользователей</th><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-no" aria-label="нет"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12h10"/></svg></span></td><td><span class="wf-yes" aria-label="есть"><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span></td></tr>
                         </tbody>
                     </table>
@@ -1224,11 +1331,11 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                     <h2 id="faq-h">Частые вопросы</h2>
                 </header>
                 <div class="wf-faq">
-                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
-                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
-                    <details><summary>Нужно ли скачивать приложение из App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?<span class="wf-x" aria-hidden="true"></span></summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
                     <details><summary>Как работает AI-чат-бот?<span class="wf-x" aria-hidden="true"></span></summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
+                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Цены «от» — в разделе «Услуги и цены»: AI-ассистент от 30 000 ₸, лендинг от 10 000 ₸, приложение через браузер от 30 000 ₸. Точную сумму и сроки назовём после короткого разговора.</p></details>
+                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
+                    <details><summary>Приложение через браузер или в App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Приложение через браузер (PWA) ставится прямо с сайта за минуту, работает на iPhone и Android, присылает уведомления — и стоит дешевле, от 30 000 ₸. Если нужно именно в App Store или Google Play — от 95 000 ₸, плюс аккаунт разработчика: Google — $25 один раз, Apple — $99 в год.</p></details>
+                    
                     <details><summary>Можно поставить чат-бота на мой сайт?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
                     <details><summary>Вы поддерживаете сайт после запуска?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
                 </div>
@@ -1246,12 +1353,16 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                 <form class="wf-form" method="post" action="#zayavka" novalidate>
                     <input type="hidden" name="action" value="webfor_lead">
                     <input type="hidden" name="contact" value="call">
-                    <input type="hidden" id="_wf_nonce" name="_wf_nonce" value="d643c49989" />                    <div class="wf-hp" aria-hidden="true"><label>Сайт <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+                    <input type="hidden" id="_wf_nonce" name="_wf_nonce" value="cd5b31cf6a" />                    <div class="wf-hp" aria-hidden="true"><label>Сайт <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
 
                     <div class="wf-form-body">
                         <fieldset class="wf-pick">
                             <legend>Что вам нужно?</legend>
                             <div class="wf-pick-grid">
+                                                                    <label class="wf-pick-item wf-anim-bot">
+                                        <input type="radio" name="service" value="bot">
+                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg><b>AI-ассистент</b></span>
+                                    </label>
                                                                     <label class="wf-pick-item wf-anim-globe">
                                         <input type="radio" name="service" value="site" checked='checked'>
                                         <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg><b>Сайт</b></span>
@@ -1259,14 +1370,6 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
                                                                     <label class="wf-pick-item wf-anim-device">
                                         <input type="radio" name="service" value="app">
                                         <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg><b>Приложение</b></span>
-                                    </label>
-                                                                    <label class="wf-pick-item wf-anim-bot">
-                                        <input type="radio" name="service" value="bot">
-                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg><b>AI-чат-бот</b></span>
-                                    </label>
-                                                                    <label class="wf-pick-item wf-anim-paw">
-                                        <input type="radio" name="service" value="vetizi">
-                                        <span><svg class="wf-i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="10" r="1.6"/><circle cx="10.5" cy="6.5" r="1.6"/><circle cx="14.5" cy="6.5" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12.5 11c-3 0-5.5 3.5-5.5 6 0 1.7 1.3 2.5 2.8 2.2 1-.2 1.8-.6 2.7-.6s1.7.4 2.7.6c1.5.3 2.8-.5 2.8-2.2 0-2.5-2.5-6-5.5-6z"/></svg><b>Vet.izi</b></span>
                                     </label>
                                                                     <label class="wf-pick-item wf-anim-layers">
                                         <input type="radio" name="service" value="izi">
@@ -1314,6 +1417,7 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
             </div>
             <div class="wf-footer-links">
                 <a href="tel:+77478175712">+7 747 817 57 12</a>                <a href="https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor." target="_blank" rel="noopener">WhatsApp</a>                <span class="wf-muted">© 2026 WebFor</span>
+                <span class="wf-muted wf-version">Izi · версия 2.14.0</span>
             </div>
         </div>
     </footer>
@@ -1333,8 +1437,8 @@ window.WEBFOR = { ajax: '#demo-lead' };
     return realFetch.apply(this, arguments);
   };
 })();
-var AI = {"kb": "О нас\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, онлайн, с клиентами по всему миру; находимся в Алматы, офиса нет. Работаем и с крупными компаниями, и с госкомпаниями.\nКоротко о нас: «Делаем сайты, приложения и AI-ботов, которые приносят бизнесу клиентов и экономят время».\nОтвечаем с 10:00 до 18:00 (время Алматы). Связь — WhatsApp. Портфолио — на нашем сайте web.for.petgo.kz, в разделе «Что мы делаем».\nНе называй имён и не говори, сколько человек в команде, — просто «команда WebFor».\n\nПочему мы (наши преимущества)\n- Быстро: большинство проектов — за 3–7 дней.\n- Доступно: лендинг от 10 000 ₸, корпоративный сайт с AI-ассистентом — от 30 000 ₸.\n- Тестовая неделя после запуска: мелкие правки и ошибки — бесплатно.\n- Гарантия 1 год, бесплатное обучение сотрудников, договор по желанию клиента.\n- Всё в одном месте: сайт, приложение, CRM и AI-бот, которые работают вместе.\n\nЦены (все цены «от», точную сумму называем после обсуждения задачи)\nСайты\n- Сайт-визитка (одна страница) — 10 000 ₸, домен клиента.\n- Лендинг — 10 000–15 000 ₸.\n- Сайт с онлайн-записью — от 15 000 ₸.\n- Корпоративный сайт — от 30 000 ₸: все нужные страницы и AI-ассистент на сайте.\n- Сайт с личным кабинетом клиента — от 30 000 ₸.\n- Интернет-магазин — от 30 000 ₸. Если товары даёт клиент в Excel в нужном формате (с фото по требованиям) — загружаем сразу, без доплаты. Если товары нужно вносить вручную — каждый дополнительный рабочий день добавления товаров 30 000 ₸. Также можем обучить сотрудника добавлять товары самому.\n- Многоязычный сайт: автоматический перевод (Google) — бесплатно; отдельные страницы с ручным переводом — дороже, зависит от числа страниц.\n- Редизайн готового сайта — около 3 дней, цену называем после просмотра сайта.\n- Доработка сайта (добавить форму, страницу, раздел) и правки — от 10 000 ₸, зависит от объёма.\n- Логотип — 10 000 ₸.\n- Фотосессия для сайта — 20 000 ₸ (полная съёмка).\nПриложения\n- Приложение, которое ставится через браузер (PWA, мы поможем установить), — от 30 000 ₸; работает и на iPhone, и на Android, есть push-уведомления.\n- Приложение в App Store и Google Play — от 95 000 ₸ (с учётом публикации в магазинах).\n- Приложение для клиентов (запись, бонусы) — от 50 000 ₸.\nAI-чат-боты\n- AI-ассистент на сайт — 30 000 ₸.\n- Бот в WhatsApp или Telegram — 30 000 ₸.\n- Бот сразу на все площадки (сайт, WhatsApp, Telegram, Instagram) — 40 000 ₸.\n- Ежемесячно за работу бота — 10 000 ₸.\nIzi\n- Vet.izi — от 30 000 ₸, оплата разовая.\n- Izi — от 50 000 ₸, оплата разовая.\n- CRM отдельно, без сайта, не делаем — она входит в Vet.izi / Izi.\nХостинг и домен\n- Хостинг входит в стоимость на 1 год, дальше — продление раз в год.\n- Домен не входит: покупается на hoster.kz по их цене. Если у клиента есть домен — перенесём на наш хостинг бесплатно. Можем работать и на хостинге клиента.\n- SSL (https), безопасность и резервные копии — бесплатно.\nВалюта\n- Для клиентов не из Казахстана можно назвать цену в долларах по текущему курсу, предупредив, что к моменту оплаты курс может измениться.\n\nСрочные заказы\nЕсли клиенту нужно срочно (быстрее обычного срока или начать в тот же день) — цена выше. Называй сразу итоговую срочную цену: обычная цена × 1,3, округлённая вверх до красивого числа (например, лендинг 15 000 ₸ → срочно 20 000 ₸, сайт 30 000 ₸ → срочно 40 000 ₸). Не объясняй, из чего она сложилась.\n\nСроки\n- Лендинг — 1–3 дня. Корпоративный сайт — 3–7 дней. Магазин — 3–7 дней (если товары вносятся вручную — дольше).\n- Приложение через браузер — от 3 дней; в App Store и Google Play — от 1 до 3 недель.\n- Бот — 3–7 дней, обучение бота под бизнес — 1–2 недели. Vet.izi и Izi — 3–7 дней.\n- Можем начать в день обращения, если позволяет загрузка (это срочный заказ).\n\nОплата\n- 50% — предоплата, остальные 50% — после завершения, тестовой недели и проверки.\n- Способы: счёт в Kaspi или перевод на карту Freedom Bank. Работаем с ТОО и ИП; с НДС — тоже возможно.\n- Оплата частями — до 3 месяцев. На это время материалы, хостинг и домен остаются у нас и передаются после полной оплаты.\n- Возврат: если работа ещё не начата — возвращаем полностью; если клиент отказался в процессе — возвращаем 50%.\n- Бесплатной пробной версии нет: 50% предоплата, тестовая неделя, затем остальные 50%.\n\nСкидки\n- Сейчас акций нет, но предложение можем подобрать под клиента.\n- Скидку до 30% можно обсудить при большом заказе, для студентов и новых бизнесов. Скидка действует при условии, что данные правдивы, — если окажется иначе, скидка отменяется.\n- Решение о скидке принимает менеджер: всегда передавай просьбу о скидке менеджеру (escalate_to_owner) с объяснением ситуации клиента, а клиенту скажи, что скидку возможно обсудить и менеджер ответит.\n\nКак работаем\n1) Бесплатная консультация. Всё можно обсудить в WhatsApp, без созвонов.\n2) Клиент даёт техническое задание и материалы: тексты, фото, логотип (если нет — сделаем логотип за 10 000 ₸; фото без своих — подберём бесплатные или сделаем фотосессию). Без ТЗ сайт и приложение не делаем, тексты пишет клиент.\n3) Дизайн и разработка; по просьбе показываем промежуточные результаты.\n4) Запуск, бесплатное обучение и тестовая неделя: небольшие правки и ошибки — бесплатно (без кардинальных переделок). После — правки от 10 000 ₸.\n5) Гарантия — 1 год. Договор подписываем при большой сумме или по желанию клиента.\n6) Возможна ежемесячная поддержка «под ключ» — условия и цену обсуждает менеджер.\n\nТехнически\n- Сайты делаем на коде и нужных платформах и плагинах; быстрые и удобные на телефоне.\n- Менять сайт сам клиент не может: правки делаем мы. Если клиент сам что-то сломает — ответственность на нём.\n- Подключаем онлайн-оплату, интеграции (1С, учётные системы и др. — по задаче), кнопки WhatsApp, Instagram, карты 2ГИС и Google.\n- Рекламу и продвижение (SEO, таргет) не делаем.\n- Собственность: после полной оплаты сайт принадлежит клиенту — передаём логины и пароли. Если сайт на нашем хостинге, он размещён у нас, но у клиента есть доступ. Клиент может перейти к другому разработчику.\n\nAI-чат-боты подробно\n- Отвечают 24/7 на казахском, русском и английском; понимают текст (голосовые — нет).\n- Могут записывать клиентов в календарь и принимать оплату — подключаем по задаче.\n- Владелец может дообучать бота сам в админке. Если бот ошибся из-за наших настроек — исправляем мы; если после правок владельца — отвечает владелец.\n- При большом потоке клиентов может понадобиться более мощная AI-модель (дороже).\n\nVet.izi / Izi подробно\n- Любое число сотрудников, несколько филиалов, работает на компьютере и телефоне.\n- Медкарты и история приёмов питомцев, склад и лекарства, онлайн-оплата и чеки, отчёты для владельца, напоминания клиентам по почте.\n- Можно перенести базу клиентов из Excel или старой системы, если она подходит под требования системы.\n- Izi подходит любому бизнесу: салоны, автосервисы, кафе, стоматологии и др. — клиент сам выбирает нужные модули.\n\nЧего не делаем\nИгры и рекламу/продвижение не делаем. Сложные маркетплейсы — делаем, цену называет менеджер.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников.\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\nМожно давать ссылки на эти сайты. Отзывов пока не приводи.", "owner": "Нуржан", "name": "Ассистент WebFor", "greeting": "Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов, Izi, цены и сроки — отвечу сразу.", "wa": "https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor."};
-window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, teaser: 'Здравствуйте! 👋 Я AI-ассистент WebFor — искусственный интеллект. Отвечу на любой вопрос сразу, днём и ночью.', wa: AI.wa,
+var AI = {"kb": "О нас\nWebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, онлайн, с клиентами по всему миру; находимся в Алматы, офиса нет. Работаем и с крупными компаниями, и с госкомпаниями.\r\nКоротко о нас: «Делаем сайты, приложения и AI-ботов, которые приносят бизнесу клиентов и экономят время».\r\nГлавное, что мы предлагаем, — AI-ассистент: подключаем его к сайту, WhatsApp, Instagram и Telegram. Если клиент не знает, с чего начать, — советуй начать с AI-ассистента.\nОтвечаем с 10:00 до 18:00 (время Алматы). Связь — WhatsApp. Портфолио — на нашем сайте web.for.petgo.kz, в разделе «Что мы делаем».\r\nНе называй имён и не говори, сколько человек в команде, — просто «команда WebFor».\n\nПочему мы (наши преимущества)\n- Быстро: большинство проектов — за 3–7 дней.\r\n- Доступно: лендинг от 10 000 ₸, корпоративный сайт с AI-ассистентом — от 30 000 ₸.\r\n- Тестовая неделя после запуска: мелкие правки и ошибки — бесплатно.\r\n- Гарантия 1 год, бесплатное обучение сотрудников, договор по желанию клиента.\r\n- Всё в одном месте: сайт, приложение, CRM и AI-бот, которые работают вместе.\n\nЦены (все цены «от», точную сумму называем после обсуждения задачи)\nСайты\r\n- Сайт-визитка (одна страница) — 10 000 ₸, домен клиента.\r\n- Лендинг — 10 000–15 000 ₸.\r\n- Сайт с онлайн-записью — от 15 000 ₸.\r\n- Корпоративный сайт — от 30 000 ₸: все нужные страницы и AI-ассистент на сайте.\r\n- Сайт с личным кабинетом клиента — от 30 000 ₸.\r\n- Интернет-магазин — от 30 000 ₸. Если товары даёт клиент в Excel в нужном формате (с фото по требованиям) — загружаем сразу, без доплаты. Если товары нужно вносить вручную — каждый дополнительный рабочий день добавления товаров 30 000 ₸. Также можем обучить сотрудника добавлять товары самому.\r\n- Многоязычный сайт: автоматический перевод (Google) — бесплатно; отдельные страницы с ручным переводом — дороже, зависит от числа страниц.\r\n- Редизайн готового сайта — около 3 дней, цену называем после просмотра сайта.\r\n- Доработка сайта (добавить форму, страницу, раздел) и правки — от 10 000 ₸, зависит от объёма.\r\n- Логотип — 10 000 ₸.\r\n- Фотосессия для сайта — 20 000 ₸ (полная съёмка).\r\nПриложения\r\n- Приложение, которое ставится через браузер (PWA, мы поможем установить), — от 30 000 ₸; работает и на iPhone, и на Android, есть push-уведомления. Это самый быстрый и недорогой вариант.\n- Приложение в Google Play или App Store — от 95 000 ₸, публикацию в магазинах делаем мы. Отдельно магазины берут плату за аккаунт разработчика: Google Play — $25 один раз, Apple (App Store) — $99 в год. Поэтому Google Play выходит немного дешевле.\n- Приложение для клиентов (запись, бонусы) — от 50 000 ₸.\r\nAI-чат-боты\r\n- AI-ассистент на сайт — 30 000 ₸.\r\n- Бот в WhatsApp или Telegram — 30 000 ₸.\r\n- Бот сразу на все площадки (сайт, WhatsApp, Telegram, Instagram) — 40 000 ₸.\r\n- Ежемесячно за работу бота — 10 000 ₸.\r\nIzi\r\n- Vet.izi — от 30 000 ₸, оплата разовая.\r\n- Izi — от 50 000 ₸, оплата разовая.\r\n- CRM отдельно, без сайта, не делаем — она входит в Vet.izi / Izi.\r\nХостинг и домен\r\n- Хостинг входит в стоимость на 1 год, дальше — продление раз в год.\r\n- Домен не входит: покупается на hoster.kz по их цене. Если у клиента есть домен — перенесём на наш хостинг бесплатно. Можем работать и на хостинге клиента.\r\n- SSL (https), безопасность и резервные копии — бесплатно.\r\nВалюта\r\n- Для клиентов не из Казахстана можно назвать цену в долларах по текущему курсу, предупредив, что к моменту оплаты курс может измениться.\n\nСрочные заказы\nЕсли клиенту нужно срочно (быстрее обычного срока или начать в тот же день) — цена выше. Называй сразу итоговую срочную цену: обычная цена × 1,3, округлённая вверх до красивого числа (например, лендинг 15 000 ₸ → срочно 20 000 ₸, сайт 30 000 ₸ → срочно 40 000 ₸). Не объясняй, из чего она сложилась.\n\nСроки\n- Лендинг — 1–3 дня. Корпоративный сайт — 3–7 дней. Магазин — 3–7 дней (если товары вносятся вручную — дольше).\r\n- Приложение через браузер — от 3 дней; в App Store и Google Play — от 1 до 3 недель.\r\n- Бот — 3–7 дней, обучение бота под бизнес — 1–2 недели. Vet.izi и Izi — 3–7 дней.\r\n- Можем начать в день обращения, если позволяет загрузка (это срочный заказ).\n\nОплата\n- 50% — предоплата, остальные 50% — после завершения, тестовой недели и проверки.\r\n- Способы: счёт в Kaspi или перевод на карту Freedom Bank. Работаем с ТОО и ИП; с НДС — тоже возможно.\r\n- Оплата частями — до 3 месяцев. На это время материалы, хостинг и домен остаются у нас и передаются после полной оплаты.\r\n- Возврат: если работа ещё не начата — возвращаем полностью; если клиент отказался в процессе — возвращаем 50%.\r\n- Бесплатной пробной версии нет: 50% предоплата, тестовая неделя, затем остальные 50%.\n\nСкидки\n- Сейчас акций нет, но предложение можем подобрать под клиента.\r\n- Скидку до 30% можно обсудить при большом заказе, для студентов и новых бизнесов. Скидка действует при условии, что данные правдивы, — если окажется иначе, скидка отменяется.\r\n- Решение о скидке принимает менеджер: всегда передавай просьбу о скидке менеджеру (escalate_to_owner) с объяснением ситуации клиента, а клиенту скажи, что скидку возможно обсудить и менеджер ответит.\n\nКак работаем\n1) Бесплатная консультация. Всё можно обсудить в WhatsApp, без созвонов.\r\n2) Клиент даёт техническое задание и материалы: тексты, фото, логотип (если нет — сделаем логотип за 10 000 ₸; фото без своих — подберём бесплатные или сделаем фотосессию). Без ТЗ сайт и приложение не делаем, тексты пишет клиент.\r\n3) Дизайн и разработка; по просьбе показываем промежуточные результаты.\r\n4) Запуск, бесплатное обучение и тестовая неделя: небольшие правки и ошибки — бесплатно (без кардинальных переделок). После — правки от 10 000 ₸.\r\n5) Гарантия — 1 год. Договор подписываем при большой сумме или по желанию клиента.\r\n6) Возможна ежемесячная поддержка «под ключ» — условия и цену обсуждает менеджер.\n\nТехнически\n- Сайты делаем на коде и нужных платформах и плагинах; быстрые и удобные на телефоне.\r\n- Менять сайт сам клиент не может: правки делаем мы. Если клиент сам что-то сломает — ответственность на нём.\r\n- Подключаем онлайн-оплату, интеграции (1С, учётные системы и др. — по задаче), кнопки WhatsApp, Instagram, карты 2ГИС и Google.\r\n- Рекламу и продвижение (SEO, таргет) не делаем.\r\n- Собственность: после полной оплаты сайт принадлежит клиенту — передаём логины и пароли. Если сайт на нашем хостинге, он размещён у нас, но у клиента есть доступ. Клиент может перейти к другому разработчику.\n\nAI-чат-боты подробно\n- Отвечают 24/7 на казахском, русском и английском; понимают текст (голосовые — нет).\r\n- Могут записывать клиентов в календарь и принимать оплату — подключаем по задаче.\r\n- Владелец может дообучать бота сам в админке. Если бот ошибся из-за наших настроек — исправляем мы; если после правок владельца — отвечает владелец.\r\n- При большом потоке клиентов может понадобиться более мощная AI-модель (дороже).\n\nVet.izi / Izi подробно\n- Любое число сотрудников, несколько филиалов, работает на компьютере и телефоне.\r\n- Медкарты и история приёмов питомцев, склад и лекарства, онлайн-оплата и чеки, отчёты для владельца, напоминания клиентам по почте.\r\n- Можно перенести базу клиентов из Excel или старой системы, если она подходит под требования системы.\r\n- Izi подходит любому бизнесу: салоны, автосервисы, кафе, стоматологии и др. — клиент сам выбирает нужные модули.\n\nЧего не делаем\nИгры и рекламу/продвижение не делаем. Сложные маркетплейсы — делаем, цену называет менеджер.\n\nПримеры работ\n- PetGo (petgo.kz) — сайт с заявками и приложение для сотрудников.\r\n- Oscar Clinic (oscarclinic.kz) — сайт ветклиники.\r\nМожно давать ссылки на эти сайты. Отзывов пока не приводи.\n\nДоставка (тест)\nДоставку не делаем — всё онлайн.\nПередаём доступы по WhatsApp.", "owner": "Нуржан", "name": "Ассистент WebFor", "greeting": "Здравствуйте! Я AI-ассистент WebFor. Спросите про сайты, приложения, чат-ботов, Izi, цены и сроки — отвечу сразу.", "wa": "https://wa.me/77478175712?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D1%81%D1%82%D0%B2%D1%83%D0%B9%D1%82%D0%B5%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D1%83%D0%B7%D0%BD%D0%B0%D1%82%D1%8C%20%D0%BF%D0%BE%D0%B4%D1%80%D0%BE%D0%B1%D0%BD%D0%B5%D0%B5%20%D0%BE%D0%B1%20%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B0%D1%85%20WebFor.", "teaser": "Здравствуйте! 👋 Я AI-ассистент WebFor — искусственный интеллект. Отвечу на любой вопрос сразу, днём и ночью."};
+window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, teaser: AI.teaser, wa: AI.wa,
   chips: ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'] };
 (function () {
   var samplePromise = window.claude && window.claude.use ? window.claude.use('sample') : Promise.resolve(null);
@@ -1602,16 +1706,16 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>'; // чат + искра AI
+  // три искры AI: большая и две маленькие, мигают по очереди
+  var ICON_STARS = '<svg class="wfai-ico wfai-stars" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path class="wfai-s1" d="M10 6.0Q10 13.5 17.5 13.5Q10 13.5 10 21.0Q10 13.5 2.5 13.5Q10 13.5 10 6.0Z"/><path class="wfai-s2" d="M18.5 2.0Q18.5 5.5 22.0 5.5Q18.5 5.5 18.5 9.0Q18.5 5.5 15.0 5.5Q18.5 5.5 18.5 2.0Z"/><path class="wfai-s3" d="M19 15.0Q19 17.5 21.5 17.5Q19 17.5 19 20.0Q19 17.5 16.5 17.5Q19 17.5 19 15.0Z"/></svg>';
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
-  var ICON_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
   var ICON_SEND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
   var root = el('div', 'wfai');
   var launcher = el('button', 'wfai-launcher');
   launcher.type = 'button'; launcher.setAttribute('aria-label', 'Открыть чат с ассистентом'); launcher.setAttribute('aria-expanded', 'false');
-  launcher.innerHTML = ICON_CHAT + '<span>Спросить AI</span>';
+  launcher.innerHTML = '<span class="wfai-orb" aria-hidden="true"><i></i></span>' + ICON_STARS; // хрустальный шарик
 
   var panel = el('section', 'wfai-panel'); panel.setAttribute('aria-label', C.name || 'Ассистент'); panel.hidden = true;
   var head = el('header', 'wfai-head');
@@ -1655,36 +1759,9 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     var b = el('div', 'wfai-msg wfai-' + cls + (err ? ' wfai-error' : ''));
     if (role === 'manager') b.appendChild(el('b', 'wfai-author', author || 'Менеджер'));
     b.appendChild(document.createTextNode(text));
-    if (canSpeak && (role === 'assistant' || role === 'manager') && !err) {
-      var sp = el('button', 'wfai-speak'); sp.type = 'button'; sp.setAttribute('aria-label', 'Прочитать вслух'); sp.innerHTML = ICON_SPEAK;
-      sp.addEventListener('click', function () { speak(text, sp); });
-      b.appendChild(sp);
-    }
     log.appendChild(b); log.scrollTop = log.scrollHeight;
     return b;
   }
-  /* ---------- ответ вслух: голос телефона/компьютера (бесплатно) ---------- */
-  var canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-  var speakingBtn = null;
-  function speak(text, btn) {
-    if (!canSpeak) return;
-    var synth = window.speechSynthesis;
-    if (speakingBtn) { speakingBtn.classList.remove('is-on'); }
-    if (speakingBtn === btn && synth.speaking) { synth.cancel(); speakingBtn = null; return; } // повторное нажатие — стоп
-    synth.cancel();
-    var clean = String(text).replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').replace(/[*_#>`]/g, '').trim();
-    if (!clean) return;
-    var lang = /[әғқңөұүһі]/i.test(clean) ? 'kk-KZ' : /[а-яё]/i.test(clean) ? 'ru-RU' : 'en-US';
-    var u = new SpeechSynthesisUtterance(clean);
-    var voices = synth.getVoices(), pick = null;
-    for (var i = 0; i < voices.length; i++) { if (voices[i].lang && voices[i].lang.replace('_', '-').toLowerCase().indexOf(lang.slice(0, 2)) === 0) { pick = voices[i]; if (/premium|enhanced|natural|google/i.test(voices[i].name)) break; } }
-    if (!pick && lang === 'kk-KZ') { lang = 'ru-RU'; for (var j = 0; j < voices.length; j++) { if (/^ru/i.test(voices[j].lang)) { pick = voices[j]; break; } } } // казахского голоса нет — читаем русским
-    u.lang = lang; if (pick) u.voice = pick; u.rate = 1.02;
-    if (btn) { btn.classList.add('is-on'); speakingBtn = btn; }
-    u.onend = u.onerror = function () { if (btn) btn.classList.remove('is-on'); if (speakingBtn === btn) speakingBtn = null; };
-    synth.speak(u);
-  }
-  if (canSpeak && window.speechSynthesis.getVoices) { window.speechSynthesis.getVoices(); } // в Chrome список голосов загружается не сразу
 
   /* ---------- запись голосового: MediaRecorder → WAV 16 кГц моно (его понимает Gemini) ---------- */
   var rec = null, recChunks = [], recStream = null, recStart = 0, recTimer = 0, recCancelled = false;
@@ -1696,7 +1773,6 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   }
   function startRec() {
     if (busy || rec) return;
-    if (canSpeak) window.speechSynthesis.cancel();
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
       recStream = stream; recChunks = []; recCancelled = false;
       var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'], type = '';
@@ -1708,7 +1784,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
         var secs = (Date.now() - recStart) / 1000, blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/webm' });
         rec = null; clearInterval(recTimer); recUi(false);
         if (recCancelled) return;
-        if (secs < 0.8) { bubble('system', 'Слишком коротко — нажмите 🎤 и говорите, потом нажмите ещё раз, чтобы отправить.'); return; }
+        if (secs < 0.8) { bubble('system', 'Слишком коротко — нажмите на микрофон, говорите, потом нажмите ещё раз, чтобы отправить.'); return; }
         sendVoice(blob);
       };
       rec.start();
@@ -1748,7 +1824,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   }
   function sendVoice(blob) {
     if (busy) return;
-    var ph = bubble('user', '🎤 Голосовое сообщение…'); ph.classList.add('wfai-voice-wait');
+    var ph = bubble('user', 'Распознаю голосовое…'); ph.classList.add('wfai-voice-wait');
     toWav(blob).then(function (b64) { send('', { audio: b64, placeholder: ph }); })
       .catch(function () { ph.remove(); bubble('system', 'Не получилось записать голос. Попробуйте ещё раз или напишите текстом.'); });
   }
@@ -1815,8 +1891,8 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       if (voice) { // голосовое: показываем, что расслышали; не разобрали — убираем заглушку и объясняем
         voice.placeholder.classList.remove('wfai-voice-wait');
         if (r.ok === false || !r.transcript) { voice.placeholder.remove(); bubble('system', r.reply || 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.'); return; }
-        voice.placeholder.textContent = '🎤 ' + r.transcript;
-        history.push({ role: 'user', content: '🎤 ' + r.transcript }); save();
+        voice.placeholder.textContent = r.transcript; voice.placeholder.classList.remove('wfai-voice-wait');
+        history.push({ role: 'user', content: r.transcript }); save();
       }
       if (r.reset) { // /del — чат как новый: забываем разговор и показываем приветствие
         history.length = 0; st.chat = ''; st.last = 0; st.status = 'bot'; contactAsked = false; pendingQuestion = 0;
@@ -1833,7 +1909,6 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       if (r.unsupported && r.msgs) { var lastB = log.querySelector('.wfai-msg:last-of-type'); if (lastB) lastB.classList.add('wfai-error'); history[history.length - 1].err = true; }
       save();
       // спросили голосом — ответ сразу читаем вслух
-      if (voice && canSpeak) { var nb = log.querySelectorAll('.wfai-assistant:not(.wfai-typing)'); var lastA = nb[nb.length - 1]; if (lastA && log.childElementCount > before) { var spb = lastA.querySelector('.wfai-speak'); if (spb) speak(lastA.firstChild.textContent, spb); } }
       if (r.escalated && r.question_id && !contactAsked && st.status !== 'live') { pendingQuestion = r.question_id; contactAsked = true; contactForm(); }
       schedulePoll();
     }).catch(function () {
@@ -1910,8 +1985,6 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
       { transform: 'scale(1.18) rotate(6deg)', opacity: 1, offset: .6 },
       { transform: 'scale(1) rotate(0)', opacity: 1 },
     ], { duration: 520, easing: 'cubic-bezier(.3,1.4,.5,1)' });
-    var label = launcher.querySelector('span');
-    if (label) label.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, fill: 'backwards', easing: 'ease-out' });
   }
 
   /* Телефон и клавиатура. Окно чата всегда ровно до клавиатуры: высоту и положение берём из visualViewport
@@ -1982,6 +2055,99 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
     }
   }
 
+  /* ---------- своя клавиатура на телефоне: казахская → русская → английская ----------
+     Системная клавиатура не открывается (inputmode="none"), поэтому нет и полоски браузера над ней. */
+  var touchKb = !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches);
+  var kb = null;
+  if (touchKb) (function () {
+    var LANGS = ['kk', 'ru', 'en'], NAMES = { kk: 'Қазақша', ru: 'Русский', en: 'English' };
+    var ROWS = {
+      kk: ['әіңғүұқөһ', 'йцукенгшщзх', 'фывапролджэ', '⇧ячсмитьбю⌫'],
+      ru: ['йцукенгшщзх', 'фывапролджэ', '⇧ячсмитьбю⌫'],
+      en: ['qwertyuiop', 'asdfghjkl', '⇧zxcvbnm⌫'],
+      sym: ['1234567890', '-/:;()₸@&%', '.,?!\'"+*⌫'],
+    };
+    var ALT = { 'е': 'ё', 'ь': 'ъ', '.': '…', '-': '—' }; // удержание клавиши
+    var lang = 'kk', sym = false, shift = 0; // shift: 0 — нет, 1 — одна буква, 2 — все заглавные
+    try { var sl = localStorage.getItem('wfai-kb-lang'); if (LANGS.indexOf(sl) >= 0) lang = sl; } catch (e) {}
+    input.setAttribute('inputmode', 'none');
+    kb = el('div', 'wfai-kbd'); kb.hidden = true; kb.setAttribute('aria-hidden', 'true');
+    form.after(kb);
+    var ICON_GLOBE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>';
+    var ICON_SHIFT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 4 12h4.5v7h7v-7H20z"/></svg>';
+    var ICON_BS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h11v14H9l-6-7z"/><path d="m12.5 9.5 5 5M17.5 9.5l-5 5"/></svg>';
+    function autoShift() { var v = input.value.slice(0, input.selectionStart); return !v.trim() || /[.!?]\s+$/.test(v) || /\n$/.test(v); }
+    function key(label, cls, k) { var b = el('button', 'wfai-key' + (cls ? ' ' + cls : '')); b.type = 'button'; b.tabIndex = -1; b.dataset.k = k; if (label.charAt(0) === '<') b.innerHTML = label; else b.textContent = label; return b; }
+    function draw() {
+      kb.innerHTML = '';
+      var up = shift > 0;
+      (sym ? ROWS.sym : ROWS[lang]).forEach(function (row) {
+        var r = el('div', 'wfai-kr');
+        Array.from(row).forEach(function (ch) {
+          if (ch === '⇧') r.appendChild(key(ICON_SHIFT, 'wfai-kfn wfai-kshift' + (shift ? ' is-on' : '') + (shift === 2 ? ' is-lock' : ''), 'shift'));
+          else if (ch === '⌫') r.appendChild(key(ICON_BS, 'wfai-kfn', 'bs'));
+          else { var b = key(up ? ch.toUpperCase() : ch, ALT[ch] ? 'wfai-kalt' : '', 'c'); b.dataset.c = ch; if (ALT[ch]) b.dataset.alt = ALT[ch]; r.appendChild(b); }
+        });
+        kb.appendChild(r);
+      });
+      var last = el('div', 'wfai-kr');
+      last.appendChild(key(sym ? (lang === 'en' ? 'ABC' : 'АБВ') : '123', 'wfai-kfn wfai-kmode', 'mode'));
+      last.appendChild(key(ICON_GLOBE, 'wfai-kfn', 'lang'));
+      var c1 = key(',', '', 'c'); c1.dataset.c = ','; last.appendChild(c1);
+      last.appendChild(key(NAMES[lang], 'wfai-kspace', 'space'));
+      var c2 = key('.', 'wfai-kalt', 'c'); c2.dataset.c = '.'; c2.dataset.alt = '…'; last.appendChild(c2);
+      last.appendChild(key(ICON_SEND, 'wfai-ksend', 'send'));
+      kb.appendChild(last);
+    }
+    function insert(t) {
+      var a = input.selectionStart, b = input.selectionEnd, v = input.value;
+      if (v.length - (b - a) + t.length > input.maxLength) return;
+      input.value = v.slice(0, a) + t + v.slice(b);
+      input.selectionStart = input.selectionEnd = a + t.length;
+      autosize();
+    }
+    function backspace() {
+      var a = input.selectionStart, b = input.selectionEnd, v = input.value;
+      if (a === b) { if (!a) return; a -= /[\uDC00-\uDFFF]/.test(v.charAt(a - 1)) ? 2 : 1; }
+      input.value = v.slice(0, a) + v.slice(b); input.selectionStart = input.selectionEnd = a; autosize();
+    }
+    function afterChar() { if (shift === 1) shift = 0; if (!shift && autoShift() && !sym) shift = 1; draw(); }
+    var hold = 0, repeat = 0, held = false, lastShiftTap = 0;
+    function stopHold() { clearTimeout(hold); clearInterval(repeat); hold = repeat = 0; }
+    kb.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); // поле ввода не теряет фокус
+      var b = e.target.closest('.wfai-key'); if (!b) return;
+      b.classList.add('is-down'); held = false; stopHold();
+      if (b.dataset.k === 'bs') { backspace(); hold = setTimeout(function () { held = true; repeat = setInterval(backspace, 60); }, 400); }
+      else if (b.dataset.alt) hold = setTimeout(function () { held = true; insert(shift ? b.dataset.alt.toUpperCase() : b.dataset.alt); b.classList.add('is-alt'); afterChar(); }, 420);
+      if (navigator.vibrate) try { navigator.vibrate(4); } catch (er) {}
+    });
+    function release(e) {
+      var b = e.target.closest && e.target.closest('.wfai-key');
+      kb.querySelectorAll('.is-down').forEach(function (k) { k.classList.remove('is-down', 'is-alt'); });
+      stopHold();
+      if (!b || e.type === 'pointercancel' || held) { held = false; return; }
+      var k = b.dataset.k;
+      if (k === 'c') { insert(shift ? b.dataset.c.toUpperCase() : b.dataset.c); afterChar(); }
+      else if (k === 'space') { insert(' '); afterChar(); }
+      else if (k === 'shift') { var now = Date.now(); shift = shift === 0 ? (now - lastShiftTap < 300 ? 2 : 1) : (now - lastShiftTap < 300 ? 2 : 0); lastShiftTap = now; draw(); }
+      else if (k === 'mode') { sym = !sym; shift = 0; draw(); }
+      else if (k === 'lang') { lang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]; sym = false; try { localStorage.setItem('wfai-kb-lang', lang); } catch (er) {} if (!shift && autoShift()) shift = 1; draw(); }
+      else if (k === 'send') { send(input.value); shift = 1; draw(); }
+    }
+    kb.addEventListener('pointerup', release);
+    kb.addEventListener('pointercancel', release);
+    kb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    function showKb(on) {
+      if (on === !kb.hidden) return;
+      if (on) { shift = autoShift() ? 1 : 0; sym = false; draw(); }
+      kb.hidden = !on; root.classList.toggle('wfai-kbd-on', on);
+      if (on) log.scrollTop = log.scrollHeight;
+    }
+    input.addEventListener('focus', function () { showKb(true); });
+    input.addEventListener('blur', function () { showKb(false); });
+  })();
+
   /* Сообщение при входе: через пару секунд над кнопкой всплывает «Я AI-ассистент…» — один раз за визит,
      пока человек сам не открыл чат. Нажатие открывает чат, крестик прячет. */
   var teaser = null;
@@ -1994,7 +2160,7 @@ window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.gr
   (function () {
     var seen = false;
     try { seen = sessionStorage.getItem('wfai-teaser') === '1'; } catch (e) {}
-    if (!C.teaser || seen || history.length) return;
+    if (!C.teaser || seen) return;
     setTimeout(function () {
       if (!panel.hidden) return;
       teaser = el('div', 'wfai-teaser');

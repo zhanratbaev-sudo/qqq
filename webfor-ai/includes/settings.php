@@ -37,6 +37,7 @@ function wfai_default_knowledge() {
 О нас
 WebFor — команда, которая делает цифровые продукты для бизнеса и внедряет их в работу. Работаем больше 3 лет, онлайн, с клиентами по всему миру; находимся в Алматы, офиса нет. Работаем и с крупными компаниями, и с госкомпаниями.
 Коротко о нас: «Делаем сайты, приложения и AI-ботов, которые приносят бизнесу клиентов и экономят время».
+Главное, что мы предлагаем, — AI-ассистент: подключаем его к сайту, WhatsApp, Instagram и Telegram. Если клиент не знает, с чего начать, — советуй начать с AI-ассистента.
 Отвечаем с 10:00 до 18:00 (время Алматы). Связь — WhatsApp. Портфолио — на нашем сайте web.for.petgo.kz, в разделе «Что мы делаем».
 Не называй имён и не говори, сколько человек в команде, — просто «команда WebFor».
 
@@ -61,8 +62,8 @@ WebFor — команда, которая делает цифровые прод
 - Логотип — 10 000 ₸.
 - Фотосессия для сайта — 20 000 ₸ (полная съёмка).
 Приложения
-- Приложение, которое ставится через браузер (PWA, мы поможем установить), — от 30 000 ₸; работает и на iPhone, и на Android, есть push-уведомления.
-- Приложение в App Store и Google Play — от 95 000 ₸ (с учётом публикации в магазинах).
+- Приложение, которое ставится через браузер (PWA, мы поможем установить), — от 30 000 ₸; работает и на iPhone, и на Android, есть push-уведомления. Это самый быстрый и недорогой вариант.
+- Приложение в Google Play или App Store — от 95 000 ₸, публикацию в магазинах делаем мы. Отдельно магазины берут плату за аккаунт разработчика: Google Play — $25 один раз, Apple (App Store) — $99 в год. Поэтому Google Play выходит немного дешевле.
 - Приложение для клиентов (запись, бонусы) — от 50 000 ₸.
 AI-чат-боты
 - AI-ассистент на сайт — 30 000 ₸.
@@ -203,6 +204,33 @@ function wfai_contacts() {
     $wa = function_exists('webfor_opt') ? webfor_opt('whatsapp') : '';
     return ['phone' => $phone, 'whatsapp' => $wa, 'wa_href' => function_exists('webfor_wa_href') ? webfor_wa_href() : ''];
 }
+
+/** v4: в сохранённой базе знаний точечно обновляем строки про приложения и главный продукт (остальные правки владельца не трогаем). */
+add_action('init', function () {
+    if ((int) get_option('wfai_kb_v') !== 3) {
+        return;
+    }
+    $s = get_option('wfai_settings');
+    if (is_array($s) && !empty($s['knowledge'])) {
+        $kb  = (string) $s['knowledge'];
+        $new = wfai_default_knowledge();
+        $pick = function ($text, $start) { $i = strpos($text, $start); if ($i === false) { return ''; } $j = strpos($text, "\n", $i); return $j === false ? substr($text, $i) : substr($text, $i, $j - $i); };
+        foreach (['- Приложение, которое ставится через браузер', '- Приложение в App Store и Google Play'] as $start) {
+            $old = $pick($kb, $start);
+            if ($old === '') { continue; }
+            $repl = $start === '- Приложение в App Store и Google Play' ? $pick($new, '- Приложение в Google Play или App Store') : $pick($new, $start);
+            $kb = str_replace($old, $repl, $kb);
+        }
+        $about = $pick($new, 'Главное, что мы предлагаем');
+        if ($about !== '' && strpos($kb, 'Главное, что мы предлагаем') === false) {
+            $line = $pick($kb, 'Коротко о нас:');
+            $kb = $line !== '' ? str_replace($line, $line . "\n" . $about, $kb) : $kb;
+        }
+        $s['knowledge'] = $kb;
+        update_option('wfai_settings', $s);
+    }
+    update_option('wfai_kb_v', 4);
+}, 11);
 
 /** Заменяет встроенную базу знаний прошлой версии на новую, если владелец её не правил. */
 add_action('init', function () {

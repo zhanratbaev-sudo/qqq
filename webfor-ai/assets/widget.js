@@ -13,16 +13,16 @@
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var ICON_CHAT = '<svg class="wfai-ico" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/></svg>'; // чат + искра AI
+  // три искры AI: большая и две маленькие, мигают по очереди
+  var ICON_STARS = '<svg class="wfai-ico wfai-stars" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path class="wfai-s1" d="M10 6.0Q10 13.5 17.5 13.5Q10 13.5 10 21.0Q10 13.5 2.5 13.5Q10 13.5 10 6.0Z"/><path class="wfai-s2" d="M18.5 2.0Q18.5 5.5 22.0 5.5Q18.5 5.5 18.5 9.0Q18.5 5.5 15.0 5.5Q18.5 5.5 18.5 2.0Z"/><path class="wfai-s3" d="M19 15.0Q19 17.5 21.5 17.5Q19 17.5 19 20.0Q19 17.5 16.5 17.5Q19 17.5 19 15.0Z"/></svg>';
   var ICON_X = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
   var ICON_MIC = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
-  var ICON_SPEAK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
   var ICON_SEND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
   var root = el('div', 'wfai');
   var launcher = el('button', 'wfai-launcher');
   launcher.type = 'button'; launcher.setAttribute('aria-label', 'Открыть чат с ассистентом'); launcher.setAttribute('aria-expanded', 'false');
-  launcher.innerHTML = ICON_CHAT + '<span>Спросить AI</span>';
+  launcher.innerHTML = '<span class="wfai-orb" aria-hidden="true"><i></i></span>' + ICON_STARS; // хрустальный шарик
 
   var panel = el('section', 'wfai-panel'); panel.setAttribute('aria-label', C.name || 'Ассистент'); panel.hidden = true;
   var head = el('header', 'wfai-head');
@@ -66,36 +66,9 @@
     var b = el('div', 'wfai-msg wfai-' + cls + (err ? ' wfai-error' : ''));
     if (role === 'manager') b.appendChild(el('b', 'wfai-author', author || 'Менеджер'));
     b.appendChild(document.createTextNode(text));
-    if (canSpeak && (role === 'assistant' || role === 'manager') && !err) {
-      var sp = el('button', 'wfai-speak'); sp.type = 'button'; sp.setAttribute('aria-label', 'Прочитать вслух'); sp.innerHTML = ICON_SPEAK;
-      sp.addEventListener('click', function () { speak(text, sp); });
-      b.appendChild(sp);
-    }
     log.appendChild(b); log.scrollTop = log.scrollHeight;
     return b;
   }
-  /* ---------- ответ вслух: голос телефона/компьютера (бесплатно) ---------- */
-  var canSpeak = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
-  var speakingBtn = null;
-  function speak(text, btn) {
-    if (!canSpeak) return;
-    var synth = window.speechSynthesis;
-    if (speakingBtn) { speakingBtn.classList.remove('is-on'); }
-    if (speakingBtn === btn && synth.speaking) { synth.cancel(); speakingBtn = null; return; } // повторное нажатие — стоп
-    synth.cancel();
-    var clean = String(text).replace(/\p{Extended_Pictographic}|\uFE0F/gu, '').replace(/[*_#>`]/g, '').trim();
-    if (!clean) return;
-    var lang = /[әғқңөұүһі]/i.test(clean) ? 'kk-KZ' : /[а-яё]/i.test(clean) ? 'ru-RU' : 'en-US';
-    var u = new SpeechSynthesisUtterance(clean);
-    var voices = synth.getVoices(), pick = null;
-    for (var i = 0; i < voices.length; i++) { if (voices[i].lang && voices[i].lang.replace('_', '-').toLowerCase().indexOf(lang.slice(0, 2)) === 0) { pick = voices[i]; if (/premium|enhanced|natural|google/i.test(voices[i].name)) break; } }
-    if (!pick && lang === 'kk-KZ') { lang = 'ru-RU'; for (var j = 0; j < voices.length; j++) { if (/^ru/i.test(voices[j].lang)) { pick = voices[j]; break; } } } // казахского голоса нет — читаем русским
-    u.lang = lang; if (pick) u.voice = pick; u.rate = 1.02;
-    if (btn) { btn.classList.add('is-on'); speakingBtn = btn; }
-    u.onend = u.onerror = function () { if (btn) btn.classList.remove('is-on'); if (speakingBtn === btn) speakingBtn = null; };
-    synth.speak(u);
-  }
-  if (canSpeak && window.speechSynthesis.getVoices) { window.speechSynthesis.getVoices(); } // в Chrome список голосов загружается не сразу
 
   /* ---------- запись голосового: MediaRecorder → WAV 16 кГц моно (его понимает Gemini) ---------- */
   var rec = null, recChunks = [], recStream = null, recStart = 0, recTimer = 0, recCancelled = false;
@@ -107,7 +80,6 @@
   }
   function startRec() {
     if (busy || rec) return;
-    if (canSpeak) window.speechSynthesis.cancel();
     navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }).then(function (stream) {
       recStream = stream; recChunks = []; recCancelled = false;
       var types = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus'], type = '';
@@ -119,7 +91,7 @@
         var secs = (Date.now() - recStart) / 1000, blob = new Blob(recChunks, { type: rec.mimeType || type || 'audio/webm' });
         rec = null; clearInterval(recTimer); recUi(false);
         if (recCancelled) return;
-        if (secs < 0.8) { bubble('system', 'Слишком коротко — нажмите 🎤 и говорите, потом нажмите ещё раз, чтобы отправить.'); return; }
+        if (secs < 0.8) { bubble('system', 'Слишком коротко — нажмите на микрофон, говорите, потом нажмите ещё раз, чтобы отправить.'); return; }
         sendVoice(blob);
       };
       rec.start();
@@ -159,7 +131,7 @@
   }
   function sendVoice(blob) {
     if (busy) return;
-    var ph = bubble('user', '🎤 Голосовое сообщение…'); ph.classList.add('wfai-voice-wait');
+    var ph = bubble('user', 'Распознаю голосовое…'); ph.classList.add('wfai-voice-wait');
     toWav(blob).then(function (b64) { send('', { audio: b64, placeholder: ph }); })
       .catch(function () { ph.remove(); bubble('system', 'Не получилось записать голос. Попробуйте ещё раз или напишите текстом.'); });
   }
@@ -226,8 +198,8 @@
       if (voice) { // голосовое: показываем, что расслышали; не разобрали — убираем заглушку и объясняем
         voice.placeholder.classList.remove('wfai-voice-wait');
         if (r.ok === false || !r.transcript) { voice.placeholder.remove(); bubble('system', r.reply || 'Не получилось разобрать голосовое — напишите, пожалуйста, текстом.'); return; }
-        voice.placeholder.textContent = '🎤 ' + r.transcript;
-        history.push({ role: 'user', content: '🎤 ' + r.transcript }); save();
+        voice.placeholder.textContent = r.transcript; voice.placeholder.classList.remove('wfai-voice-wait');
+        history.push({ role: 'user', content: r.transcript }); save();
       }
       if (r.reset) { // /del — чат как новый: забываем разговор и показываем приветствие
         history.length = 0; st.chat = ''; st.last = 0; st.status = 'bot'; contactAsked = false; pendingQuestion = 0;
@@ -244,7 +216,6 @@
       if (r.unsupported && r.msgs) { var lastB = log.querySelector('.wfai-msg:last-of-type'); if (lastB) lastB.classList.add('wfai-error'); history[history.length - 1].err = true; }
       save();
       // спросили голосом — ответ сразу читаем вслух
-      if (voice && canSpeak) { var nb = log.querySelectorAll('.wfai-assistant:not(.wfai-typing)'); var lastA = nb[nb.length - 1]; if (lastA && log.childElementCount > before) { var spb = lastA.querySelector('.wfai-speak'); if (spb) speak(lastA.firstChild.textContent, spb); } }
       if (r.escalated && r.question_id && !contactAsked && st.status !== 'live') { pendingQuestion = r.question_id; contactAsked = true; contactForm(); }
       schedulePoll();
     }).catch(function () {
@@ -321,8 +292,6 @@
       { transform: 'scale(1.18) rotate(6deg)', opacity: 1, offset: .6 },
       { transform: 'scale(1) rotate(0)', opacity: 1 },
     ], { duration: 520, easing: 'cubic-bezier(.3,1.4,.5,1)' });
-    var label = launcher.querySelector('span');
-    if (label) label.animate([{ opacity: 0, transform: 'translateX(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: 160, fill: 'backwards', easing: 'ease-out' });
   }
 
   /* Телефон и клавиатура. Окно чата всегда ровно до клавиатуры: высоту и положение берём из visualViewport
@@ -393,6 +362,99 @@
     }
   }
 
+  /* ---------- своя клавиатура на телефоне: казахская → русская → английская ----------
+     Системная клавиатура не открывается (inputmode="none"), поэтому нет и полоски браузера над ней. */
+  var touchKb = !!(window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches);
+  var kb = null;
+  if (touchKb) (function () {
+    var LANGS = ['kk', 'ru', 'en'], NAMES = { kk: 'Қазақша', ru: 'Русский', en: 'English' };
+    var ROWS = {
+      kk: ['әіңғүұқөһ', 'йцукенгшщзх', 'фывапролджэ', '⇧ячсмитьбю⌫'],
+      ru: ['йцукенгшщзх', 'фывапролджэ', '⇧ячсмитьбю⌫'],
+      en: ['qwertyuiop', 'asdfghjkl', '⇧zxcvbnm⌫'],
+      sym: ['1234567890', '-/:;()₸@&%', '.,?!\'"+*⌫'],
+    };
+    var ALT = { 'е': 'ё', 'ь': 'ъ', '.': '…', '-': '—' }; // удержание клавиши
+    var lang = 'kk', sym = false, shift = 0; // shift: 0 — нет, 1 — одна буква, 2 — все заглавные
+    try { var sl = localStorage.getItem('wfai-kb-lang'); if (LANGS.indexOf(sl) >= 0) lang = sl; } catch (e) {}
+    input.setAttribute('inputmode', 'none');
+    kb = el('div', 'wfai-kbd'); kb.hidden = true; kb.setAttribute('aria-hidden', 'true');
+    form.after(kb);
+    var ICON_GLOBE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>';
+    var ICON_SHIFT = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4 4 12h4.5v7h7v-7H20z"/></svg>';
+    var ICON_BS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h11v14H9l-6-7z"/><path d="m12.5 9.5 5 5M17.5 9.5l-5 5"/></svg>';
+    function autoShift() { var v = input.value.slice(0, input.selectionStart); return !v.trim() || /[.!?]\s+$/.test(v) || /\n$/.test(v); }
+    function key(label, cls, k) { var b = el('button', 'wfai-key' + (cls ? ' ' + cls : '')); b.type = 'button'; b.tabIndex = -1; b.dataset.k = k; if (label.charAt(0) === '<') b.innerHTML = label; else b.textContent = label; return b; }
+    function draw() {
+      kb.innerHTML = '';
+      var up = shift > 0;
+      (sym ? ROWS.sym : ROWS[lang]).forEach(function (row) {
+        var r = el('div', 'wfai-kr');
+        Array.from(row).forEach(function (ch) {
+          if (ch === '⇧') r.appendChild(key(ICON_SHIFT, 'wfai-kfn wfai-kshift' + (shift ? ' is-on' : '') + (shift === 2 ? ' is-lock' : ''), 'shift'));
+          else if (ch === '⌫') r.appendChild(key(ICON_BS, 'wfai-kfn', 'bs'));
+          else { var b = key(up ? ch.toUpperCase() : ch, ALT[ch] ? 'wfai-kalt' : '', 'c'); b.dataset.c = ch; if (ALT[ch]) b.dataset.alt = ALT[ch]; r.appendChild(b); }
+        });
+        kb.appendChild(r);
+      });
+      var last = el('div', 'wfai-kr');
+      last.appendChild(key(sym ? (lang === 'en' ? 'ABC' : 'АБВ') : '123', 'wfai-kfn wfai-kmode', 'mode'));
+      last.appendChild(key(ICON_GLOBE, 'wfai-kfn', 'lang'));
+      var c1 = key(',', '', 'c'); c1.dataset.c = ','; last.appendChild(c1);
+      last.appendChild(key(NAMES[lang], 'wfai-kspace', 'space'));
+      var c2 = key('.', 'wfai-kalt', 'c'); c2.dataset.c = '.'; c2.dataset.alt = '…'; last.appendChild(c2);
+      last.appendChild(key(ICON_SEND, 'wfai-ksend', 'send'));
+      kb.appendChild(last);
+    }
+    function insert(t) {
+      var a = input.selectionStart, b = input.selectionEnd, v = input.value;
+      if (v.length - (b - a) + t.length > input.maxLength) return;
+      input.value = v.slice(0, a) + t + v.slice(b);
+      input.selectionStart = input.selectionEnd = a + t.length;
+      autosize();
+    }
+    function backspace() {
+      var a = input.selectionStart, b = input.selectionEnd, v = input.value;
+      if (a === b) { if (!a) return; a -= /[\uDC00-\uDFFF]/.test(v.charAt(a - 1)) ? 2 : 1; }
+      input.value = v.slice(0, a) + v.slice(b); input.selectionStart = input.selectionEnd = a; autosize();
+    }
+    function afterChar() { if (shift === 1) shift = 0; if (!shift && autoShift() && !sym) shift = 1; draw(); }
+    var hold = 0, repeat = 0, held = false, lastShiftTap = 0;
+    function stopHold() { clearTimeout(hold); clearInterval(repeat); hold = repeat = 0; }
+    kb.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); // поле ввода не теряет фокус
+      var b = e.target.closest('.wfai-key'); if (!b) return;
+      b.classList.add('is-down'); held = false; stopHold();
+      if (b.dataset.k === 'bs') { backspace(); hold = setTimeout(function () { held = true; repeat = setInterval(backspace, 60); }, 400); }
+      else if (b.dataset.alt) hold = setTimeout(function () { held = true; insert(shift ? b.dataset.alt.toUpperCase() : b.dataset.alt); b.classList.add('is-alt'); afterChar(); }, 420);
+      if (navigator.vibrate) try { navigator.vibrate(4); } catch (er) {}
+    });
+    function release(e) {
+      var b = e.target.closest && e.target.closest('.wfai-key');
+      kb.querySelectorAll('.is-down').forEach(function (k) { k.classList.remove('is-down', 'is-alt'); });
+      stopHold();
+      if (!b || e.type === 'pointercancel' || held) { held = false; return; }
+      var k = b.dataset.k;
+      if (k === 'c') { insert(shift ? b.dataset.c.toUpperCase() : b.dataset.c); afterChar(); }
+      else if (k === 'space') { insert(' '); afterChar(); }
+      else if (k === 'shift') { var now = Date.now(); shift = shift === 0 ? (now - lastShiftTap < 300 ? 2 : 1) : (now - lastShiftTap < 300 ? 2 : 0); lastShiftTap = now; draw(); }
+      else if (k === 'mode') { sym = !sym; shift = 0; draw(); }
+      else if (k === 'lang') { lang = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]; sym = false; try { localStorage.setItem('wfai-kb-lang', lang); } catch (er) {} if (!shift && autoShift()) shift = 1; draw(); }
+      else if (k === 'send') { send(input.value); shift = 1; draw(); }
+    }
+    kb.addEventListener('pointerup', release);
+    kb.addEventListener('pointercancel', release);
+    kb.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    function showKb(on) {
+      if (on === !kb.hidden) return;
+      if (on) { shift = autoShift() ? 1 : 0; sym = false; draw(); }
+      kb.hidden = !on; root.classList.toggle('wfai-kbd-on', on);
+      if (on) log.scrollTop = log.scrollHeight;
+    }
+    input.addEventListener('focus', function () { showKb(true); });
+    input.addEventListener('blur', function () { showKb(false); });
+  })();
+
   /* Сообщение при входе: через пару секунд над кнопкой всплывает «Я AI-ассистент…» — один раз за визит,
      пока человек сам не открыл чат. Нажатие открывает чат, крестик прячет. */
   var teaser = null;
@@ -405,7 +467,7 @@
   (function () {
     var seen = false;
     try { seen = sessionStorage.getItem('wfai-teaser') === '1'; } catch (e) {}
-    if (!C.teaser || seen || history.length) return;
+    if (!C.teaser || seen) return;
     setTimeout(function () {
       if (!panel.hidden) return;
       teaser = el('div', 'wfai-teaser');

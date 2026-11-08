@@ -722,3 +722,32 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
   .wf-footer { padding-bottom: 88px; }
 }
 .wf-version { opacity: .7; }
+
+/* Услуги и цены: AI — главная широкая карточка, ниже сайты, приложения и Izi */
+.wf-svc-ai { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; border-color: rgba(81, 194, 171, .5); }
+.wf-svc-ai h3 { font-size: 28px; }
+.wf-svc-ai-main { display: flex; flex-direction: column; gap: 24px; }
+.wf-svc-ai-side { display: flex; flex-direction: column; gap: 20px; }
+.wf-svc-ai-side .wf-actions { margin-top: auto; }
+.wf-svc-channels { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.wf-svc-channels li { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 12px; background: var(--surface-2); font-size: 15px; font-weight: 600; }
+.wf-svc-channels .wf-i { width: 18px; height: 18px; color: var(--accent); }
+.wf-prices { list-style: none; margin: 0; padding: 0; }
+.wf-prices li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.wf-prices li:last-child { border-bottom: 0; }
+.wf-prices span { color: rgba(255, 255, 255, .82); }
+.wf-prices small { display: block; margin-top: 2px; font-size: 13px; color: var(--text-3, #74827d); }
+.wf-prices b { flex: none; font-weight: 700; white-space: nowrap; }
+.wf-svc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 24px; }
+.wf-svc .wf-product-head { align-items: center; }
+.wf-svc .wf-card-icon { flex: none; }
+.wf-svc-quiet { background: transparent; }
+.wf-svc-quiet h3 { font-size: 20px; }
+.wf-svc-note { font-size: 13px; color: var(--text-3, #74827d) !important; }
+@media (max-width: 960px) { .wf-svc-grid { grid-template-columns: 1fr 1fr; } .wf-svc-quiet { grid-column: 1 / -1; } }
+@media (max-width: 760px) {
+  .wf-svc-ai { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+  .wf-svc-ai h3 { font-size: 24px; }
+  .wf-svc-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+  .wf-svc { padding: 24px; }
+}

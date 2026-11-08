@@ -27,7 +27,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
             <a class="wf-logo" href="#wf-top" aria-label="WebFor — наверх"><?php echo webfor_mark(32); ?><span>Web<b>For</b></span></a>
             <nav class="wf-nav" id="wf-nav" aria-label="Разделы">
                 <a href="#uslugi">Услуги</a>
-                <a href="#izi">Izi</a>
+                <a href="#ceny">Цены</a>
                 <a href="#sravnenie">Сравнение</a>
                 <a href="#faq">Вопросы</a>
             </nav>
@@ -132,47 +132,66 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
             </div>
         </section>
 
-        <section class="wf-section" id="izi" aria-labelledby="izi-h">
+        <section class="wf-section" id="ceny" aria-labelledby="ceny-h">
             <div class="wf-wrap">
                 <header class="wf-section-head">
-                    <p class="wf-eyebrow">Izi</p>
-                    <h2 id="izi-h">Два варианта Izi</h2>
-                    <p>Одна основа — сайт, CRM и приложение. Разница в том, под какой бизнес она настроена.</p>
+                    <p class="wf-eyebrow">Услуги и цены</p>
+                    <h2 id="ceny-h">Главное — AI-ассистент</h2>
+                    <p>Он отвечает вашим клиентам сам, днём и ночью. А ещё делаем сайты, приложения и систему Izi. Все цены — «от», точную назовём после короткого разговора.</p>
                 </header>
-                <div class="wf-grid-2 wf-izi-track" id="wf-izi-track">
-                    <article class="wf-card wf-product" id="wf-izi-vet" aria-label="Vet.izi">
+                <article class="wf-card wf-svc-ai" aria-labelledby="svc-ai-h">
+                    <div class="wf-svc-ai-main">
                         <div class="wf-product-head">
-                            <span class="wf-product-icon wf-product-vet wf-anim-paw"><?php echo webfor_icon('paw'); ?></span>
-                            <div><h3>Vet.izi</h3><p class="wf-muted">Для ветклиник, груминга, зоомагазинов и всех, кто помогает животным</p></div>
+                            <span class="wf-product-icon wf-anim-bot"><?php echo webfor_icon('bot'); ?></span>
+                            <div><h3 id="svc-ai-h">AI-ассистент для бизнеса</h3><p class="wf-muted">Обучаем на ваших услугах и ценах. Отвечает за секунды, записывает клиентов и собирает заявки, сложное передаёт вам.</p></div>
                         </div>
-                        <ul class="wf-list">
-                            <li>Сайт с онлайн-записью и заявками</li>
-                            <li>CRM: клиенты, питомцы, заказы и статусы</li>
-                            <li>Календарь команды и смены</li>
-                            <li>Приложение для сотрудников, чаты и роли</li>
-                            <li>Уведомления о новых заявках</li>
+                        <ul class="wf-svc-channels" aria-label="Где работает">
+                            <li><?php echo webfor_icon('globe'); ?>Сайт</li>
+                            <li><?php echo webfor_icon('chat'); ?>WhatsApp</li>
+                            <li><?php echo webfor_icon('chat'); ?>Instagram</li>
+                            <li><?php echo webfor_icon('chat'); ?>Telegram</li>
                         </ul>
-                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="vetizi">Хочу Vet.izi</a>
+                    </div>
+                    <div class="wf-svc-ai-side">
+                        <ul class="wf-prices">
+                            <li><span>На сайт или в один мессенджер</span><b>30 000 ₸</b></li>
+                            <li><span>Сразу везде: сайт, WhatsApp, Instagram, Telegram</span><b>40 000 ₸</b></li>
+                            <li><span>Работа ассистента</span><b>10 000 ₸/мес</b></li>
+                            <li><span>Тестовая неделя после запуска</span><b>бесплатно</b></li>
+                        </ul>
+                        <div class="wf-actions">
+                            <a class="wf-btn wf-btn-primary" href="#zayavka" data-service="bot">Хочу AI-ассистента <?php echo webfor_icon('arrow'); ?></a>
+                            <?php if (function_exists('wfai_opt') && wfai_opt('enabled')) : ?><button class="wf-btn wf-btn-secondary" type="button" data-wfai-open=""><?php echo webfor_icon('bot'); ?>Попробовать</button><?php endif; ?>
+                        </div>
+                    </div>
+                </article>
+                <div class="wf-svc-grid">
+                    <article class="wf-card wf-svc" aria-labelledby="svc-site-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><?php echo webfor_icon('globe'); ?></span><h3 id="svc-site-h">Сайты</h3></div>
+                        <ul class="wf-prices">
+                            <li><span>Лендинг</span><b>от 10 000 ₸</b></li>
+                            <li><span>Сайт с онлайн-записью</span><b>от 15 000 ₸</b></li>
+                            <li><span>Корпоративный сайт с AI-ассистентом</span><b>от 30 000 ₸</b></li>
+                            <li><span>Интернет-магазин</span><b>от 30 000 ₸</b></li>
+                        </ul>
+                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="site">Хочу сайт</a>
                     </article>
-                    <article class="wf-card wf-product" id="wf-izi-max" aria-label="Izi">
-                        <div class="wf-product-head">
-                            <span class="wf-product-icon wf-anim-spark"><?php echo webfor_icon('spark'); ?></span>
-                            <div><h3>Izi</h3><p class="wf-muted">Максимальный тариф: всё включено, плюс AI-ассистент и регистрация пользователей</p></div>
-                        </div>
-                        <ul class="wf-list">
-                            <li>Сайт, CRM и приложение для команды</li>
-                            <li>Всё, что есть в Vet.izi, — для любого бизнеса</li>
-                            <li><b>AI-ассистент</b> отвечает клиентам и помогает разбирать заявки</li>
-                            <li><b>Регистрация пользователей</b> — личные кабинеты для ваших клиентов</li>
-                            <li>Чаты, календарь, роли и уведомления</li>
-                            <li>Модули под ваши процессы</li>
+                    <article class="wf-card wf-svc" aria-labelledby="svc-app-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><?php echo webfor_icon('device'); ?></span><h3 id="svc-app-h">Приложения</h3></div>
+                        <ul class="wf-prices">
+                            <li><span>Через браузер (PWA)<small>Ставится с сайта за минуту, на iPhone и Android, с уведомлениями</small></span><b>от 30 000 ₸</b></li>
+                            <li><span>В Google Play<small>+ аккаунт разработчика Google: $25 один раз</small></span><b>от 95 000 ₸</b></li>
+                            <li><span>В App Store<small>+ аккаунт разработчика Apple: $99 в год</small></span><b>от 95 000 ₸</b></li>
                         </ul>
+                        <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="app">Хочу приложение</a>
+                    </article>
+                    <article class="wf-card wf-svc wf-svc-quiet" aria-labelledby="svc-izi-h">
+                        <div class="wf-product-head"><span class="wf-card-icon"><?php echo webfor_icon('layers'); ?></span><h3 id="svc-izi-h">Izi — всё в одном</h3></div>
+                        <p>Сайт, CRM и приложение для команды в одной системе: заявки сразу в CRM, календарь, чаты, роли и AI-ассистент.</p>
+                        <ul class="wf-prices"><li><span>Izi</span><b>от 50 000 ₸</b></li></ul>
+                        <p class="wf-svc-note">Для ветклиник есть готовая версия — Vet.izi, от 30 000 ₸.</p>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="izi">Хочу Izi</a>
                     </article>
-                </div>
-                <div class="wf-izi-dots" aria-label="Варианты Izi">
-                    <button type="button" class="wf-izi-dot is-active" aria-controls="wf-izi-vet" aria-current="true" aria-label="Vet.izi"></button>
-                    <button type="button" class="wf-izi-dot" aria-controls="wf-izi-max" aria-label="Izi"></button>
                 </div>
             </div>
         </section>
@@ -185,15 +204,15 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 </header>
                 <div class="wf-table-wrap" tabindex="0" role="region" aria-label="Сравнение услуг">
                     <table class="wf-table">
-                        <thead><tr><th scope="col"><span class="wf-sr">Возможность</span></th><th scope="col">Сайт</th><th scope="col">Vet.izi</th><th scope="col">Izi</th></tr></thead>
+                        <thead><tr><th scope="col"><span class="wf-sr">Возможность</span></th><th scope="col">Сайт</th><th scope="col">Сайт + AI</th><th scope="col">Izi</th></tr></thead>
                         <tbody>
                             <tr><th scope="row">Сайт под ваш дизайн</th><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
                             <tr><th scope="row">Онлайн-заявки, WhatsApp, звонок</th><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">Приложение для сотрудников</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">Чаты, календарь, роли</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">Карточки питомцев и ветеринарная специфика</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
-                            <tr><th scope="row">AI-ассистент</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">AI-ассистент на сайте</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">AI в WhatsApp, Instagram, Telegram</th><td><?php echo $no; ?></td><td><?php echo $yes; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">CRM: клиенты, заказы, статусы</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">Приложение для сотрудников</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
+                            <tr><th scope="row">Чаты, календарь, роли</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
                             <tr><th scope="row">Регистрация пользователей</th><td><?php echo $no; ?></td><td><?php echo $no; ?></td><td><?php echo $yes; ?></td></tr>
                         </tbody>
                     </table>
@@ -208,11 +227,11 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                     <h2 id="faq-h">Частые вопросы</h2>
                 </header>
                 <div class="wf-faq">
-                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Зависит от задачи: обычный сайт и система Izi — это разный объём работ. После короткого разговора назовём точную цену и сроки.</p></details>
-                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
-                    <details><summary>Нужно ли скачивать приложение из App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Нет. Приложение для сотрудников устанавливается прямо из браузера на iPhone и Android за пару минут.</p></details>
-                    <details><summary>Чем Vet.izi отличается от Izi?<span class="wf-x" aria-hidden="true"></span></summary><p>Vet.izi настроен под ветклиники и зоо-бизнес: карточки питомцев, запись, специфика работы с животными. Izi — максимальный тариф: в нём есть всё из Vet.izi, а ещё AI-ассистент и регистрация пользователей.</p></details>
                     <details><summary>Как работает AI-чат-бот?<span class="wf-x" aria-hidden="true"></span></summary><p>Мы обучаем его на ваших данных: услуги, цены, адреса, ответы на частые вопросы. Он отвечает клиентам в WhatsApp, Instagram, Telegram или на сайте, записывает и собирает заявки, а если вопрос сложный — передаёт его менеджеру.</p></details>
+                    <details><summary>Сколько это стоит?<span class="wf-x" aria-hidden="true"></span></summary><p>Цены «от» — в разделе «Услуги и цены»: AI-ассистент от 30 000 ₸, лендинг от 10 000 ₸, приложение через браузер от 30 000 ₸. Точную сумму и сроки назовём после короткого разговора.</p></details>
+                    <details><summary>Можно начать с сайта, а CRM добавить потом?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Сайт можно позже подключить к Izi — заявки начнут попадать в CRM, а команда получит приложение.</p></details>
+                    <details><summary>Приложение через браузер или в App Store?<span class="wf-x" aria-hidden="true"></span></summary><p>Приложение через браузер (PWA) ставится прямо с сайта за минуту, работает на iPhone и Android, присылает уведомления — и стоит дешевле, от 30 000 ₸. Если нужно именно в App Store или Google Play — от 95 000 ₸, плюс аккаунт разработчика: Google — $25 один раз, Apple — $99 в год.</p></details>
+                    
                     <details><summary>Можно поставить чат-бота на мой сайт?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Бот встраивается окном чата на любой сайт — и на тот, который делаем мы, и на уже существующий.</p></details>
                     <details><summary>Вы поддерживаете сайт после запуска?<span class="wf-x" aria-hidden="true"></span></summary><p>Да. Помогаем с изменениями, следим за работой и добавляем функции по мере роста.</p></details>
                 </div>
@@ -238,7 +257,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                             <legend>Что вам нужно?</legend>
                             <div class="wf-pick-grid">
                                 <?php
-                                $picks = ['site' => ['Сайт', 'globe'], 'app' => ['Приложение', 'device'], 'bot' => ['AI-чат-бот', 'bot'], 'vetizi' => ['Vet.izi', 'paw'], 'izi' => ['Izi', 'layers'], 'unknown' => ['Посоветуйте', 'spark']];
+                                $picks = ['bot' => ['AI-ассистент', 'bot'], 'site' => ['Сайт', 'globe'], 'app' => ['Приложение', 'device'], 'izi' => ['Izi', 'layers'], 'unknown' => ['Посоветуйте', 'spark']];
                                 foreach ($picks as $k => $pk) : ?>
                                     <label class="wf-pick-item wf-anim-<?php echo esc_attr($pk[1]); ?>">
                                         <input type="radio" name="service" value="<?php echo esc_attr($k); ?>"<?php checked($k, 'site'); ?>>
