@@ -1,5 +1,5 @@
 /* Окно AI-ассистента: тёмное, без градиентов, в стиле сайта WebFor. */
-.wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #51c2ab; --a-on: #04170f;
+.wfai { --a-bg: #050707; --a-surface: #0e1312; --a-surface-2: #161d1b; --a-line: #222b29; --a-text: #edf3f1; --a-text-2: #a3b1ac; --a-text-3: #74827d; --a-accent: #51c2ab; --a-on: #ffffff; --a-fill: #13907b;
   position: fixed; right: 24px; bottom: 24px; z-index: 9999; font: 400 15px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--a-text); }
 .wfai *, .wfai *::before, .wfai *::after { box-sizing: border-box; }
 .wfai button { font: inherit; cursor: pointer; }
@@ -18,7 +18,7 @@
 .wfai-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
 .wfai-msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; word-wrap: break-word; }
 .wfai-assistant { align-self: flex-start; background: var(--a-surface-2); border-bottom-left-radius: 6px; }
-.wfai-user { align-self: flex-end; background: var(--a-accent); color: var(--a-on); border-bottom-right-radius: 6px; }
+.wfai-user { align-self: flex-end; background: var(--a-fill); color: var(--a-on); border-bottom-right-radius: 6px; }
 .wfai-typing { display: flex; gap: 4px; padding: 14px; }
 .wfai-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--a-text-3); animation: wfai-blink 1s infinite; }
 .wfai-typing i:nth-child(2) { animation-delay: .15s; } .wfai-typing i:nth-child(3) { animation-delay: .3s; }
@@ -31,12 +31,12 @@
 .wfai-input { flex: 1; min-height: 44px; max-height: 120px; resize: none; padding: 11px 14px; border: 1px solid var(--a-line); border-radius: 12px; background: var(--a-bg); color: var(--a-text); font: inherit; font-size: 16px; }
 .wfai-input:focus { outline: none; border-color: var(--a-accent); }
 .wfai-input::placeholder { color: var(--a-text-3); }
-.wfai-send { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px; background: var(--a-accent); color: var(--a-on); }
+.wfai-send { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px; background: var(--a-fill); color: var(--a-on); }
 .wfai-foot { margin: 0; padding: 0 16px 12px; font-size: 11px; color: var(--a-text-3); }
 .wfai-contact { align-self: stretch; display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border: 1px solid var(--a-line); border-radius: 14px; background: var(--a-bg); }
 .wfai-contact input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid var(--a-line); border-radius: 10px; background: var(--a-surface); color: var(--a-text); font: inherit; font-size: 16px; }
 .wfai-contact input[aria-invalid=true] { border-color: #ff8a7a; }
-.wfai-contact button { height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--a-accent); color: var(--a-on); font-weight: 700 !important; }
+.wfai-contact button { height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--a-fill); color: var(--a-on); font-weight: 700 !important; }
 .wfai-wa { width: 100%; font-size: 13px; color: var(--a-accent); text-decoration: none; }
 @media (max-width: 760px) {
   .wfai { right: 16px; bottom: 16px; }
@@ -136,16 +136,21 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-msg { position: relative; }
 @media (prefers-reduced-motion: reduce) { .wfai-form.is-rec .wfai-mic, .wfai-rec i { animation: none; } }
 
-/* Сообщение при входе «Я AI-ассистент…» над кнопкой чата */
-.wfai-teaser { position: absolute; right: 0; bottom: 68px; width: 300px; max-width: calc(100vw - 32px); opacity: 0; transform: translateY(8px) scale(.96); transform-origin: 100% 100%; transition: opacity .25s ease-out, transform .35s cubic-bezier(.3,1.3,.5,1); pointer-events: none; }
+/* Сообщение при входе: того же цвета, что хрустальный шарик, и огибает его — нижний правый край идёт по дуге вокруг кнопки */
+.wfai-teaser { --tx: calc(100% - 31px); --ty: calc(100% + 13px); position: absolute; right: 0; bottom: 44px; width: 300px; max-width: calc(100vw - 32px);
+  filter: drop-shadow(0 12px 26px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(81,194,171,.25));
+  opacity: 0; transform: translateY(8px) scale(.94); transform-origin: var(--tx) 100%; transition: opacity .25s ease-out, transform .4s cubic-bezier(.3,1.3,.5,1); pointer-events: none; }
 .wfai-teaser.is-in { opacity: 1; transform: none; pointer-events: auto; }
-.wfai-teaser-msg { display: block; width: 100%; text-align: left; padding: 14px 40px 14px 16px; border: 0; border-radius: 18px 18px 6px 18px; background: var(--a-surface-2); color: var(--a-text); font-size: 15px !important; line-height: 1.45; box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 12px 32px rgba(0,0,0,.5); }
-.wfai-teaser-msg b { display: block; margin-bottom: 2px; font-size: 13px; font-weight: 600; color: var(--a-accent); }
-.wfai-teaser-x { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--a-text-3); }
+.wfai-teaser-msg { display: block; width: 100%; text-align: left; padding: 14px 40px 30px 16px; border: 0; border-radius: 22px; color: #fff; font-size: 15px !important; line-height: 1.45;
+  background-color: #1d8a76; background-image: radial-gradient(140% 120% at 18% 0%, #6fdcc6 0%, #2ba58e 34%, #15705f 75%, #0e5248 100%);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,.45), inset 0 -10px 20px rgba(0,25,20,.35);
+  -webkit-mask: radial-gradient(circle 38px at var(--tx) var(--ty), transparent 37.5px, #000 38px); mask: radial-gradient(circle 38px at var(--tx) var(--ty), transparent 37.5px, #000 38px); }
+.wfai-teaser-msg b { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; font-size: 13px; font-weight: 700; color: #fff; }
+.wfai-teaser-msg b svg { width: 16px; height: 16px; }
+.wfai-teaser-x { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: rgba(255,255,255,.75); }
 .wfai-teaser-x svg { width: 16px; height: 16px; }
-.wfai-teaser-x:hover { color: var(--a-text); background: rgba(255,255,255,.06); }
+.wfai-teaser-x:hover { color: #fff; background: rgba(255,255,255,.14); }
 .wfai.is-open .wfai-teaser { display: none; }
-@media (max-width: 760px) { .wfai-teaser { right: -8px; } }
 @media (prefers-reduced-motion: reduce) { .wfai-teaser { transition: none; transform: none; } }
 
 /* ---------- v5: хрустальный шарик с тремя мигающими искрами ---------- */
@@ -163,7 +168,6 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-stars .wfai-s3 { animation-delay: 1s; }
 @keyframes wfai-twinkle { 0%, 100% { opacity: .45; transform: scale(.62) rotate(0deg); } 40% { opacity: 1; transform: scale(1.08) rotate(12deg); } 60% { opacity: 1; transform: scale(1) rotate(0deg); } }
 .wfai-launcher:hover { transform: translateY(-1px) scale(1.03); }
-.wfai-teaser { bottom: 74px; }
 @media (prefers-reduced-motion: reduce) { .wfai-stars path, .wfai-orb i { animation: none; opacity: 1; } }
 
 /* голосовое распознаётся: только текст, по нему бежит светлая волна */
@@ -182,14 +186,22 @@ html.wf-refract .wfai-panel { backdrop-filter: url(#wf-lg) blur(20px) saturate(1
 .wfai-key.wfai-kalt::before { content: attr(data-alt); position: absolute; top: 3px; right: 4px; font-size: 9px; color: #74827d; }
 .wfai-key.is-down { background: #33403d; }
 .wfai-key.is-down:not(.wfai-kfn):not(.wfai-kspace):not(.wfai-ksend)::after { content: attr(data-c); position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px; min-width: 46px; height: 54px; padding: 0 6px; transform: translateX(-50%); border-radius: 12px; background: #3a4845; color: #fff; font-size: 30px; display: grid; place-items: center; box-shadow: 0 8px 20px rgba(0,0,0,.5); pointer-events: none; z-index: 2; }
-.wfai-key.is-down.is-alt::after { content: attr(data-alt) !important; background: var(--a-accent) !important; color: var(--a-on) !important; }
+.wfai-key.is-down.is-alt::after { content: attr(data-alt) !important; background: var(--a-fill) !important; color: var(--a-on) !important; }
 .wfai-kfn { flex: 1.4 1 0; background: #161d1b; color: #a3b1ac; font-size: 15px !important; font-weight: 600 !important; }
 .wfai-kshift.is-on { background: #eef4f2; color: #0a0f0e; }
 .wfai-kshift.is-lock { box-shadow: inset 0 -3px 0 var(--a-accent); }
 .wfai-kmode { flex: 1.3 1 0; }
 .wfai-kspace { flex: 4.2 1 0; font-size: 14px !important; color: #a3b1ac; }
-.wfai-ksend { flex: 1.5 1 0; background: var(--a-accent); color: var(--a-on); }
-.wfai-ksend.is-down { background: #74d0be; }
+.wfai-ksend { flex: 1.5 1 0; background: var(--a-fill); color: var(--a-on); }
+.wfai-ksend.is-down { background: #18a28b; }
 .wfai.wfai-kbd-on .wfai-foot, .wfai.wfai-kbd-on .wfai-chips { display: none; }
 .wfai.wfai-kbd-on .wfai-form { padding-bottom: 8px; }
 .wfai.wfai-kbd-on .wfai-input { caret-color: var(--a-accent); }
+
+/* телефон с нижней панелью сайта: шарик стоит в центре панели, чат раскрывается из него снизу вверх */
+@media (max-width: 760px) {
+  .wfai.wfai-has-bar { right: auto; left: calc(50% - 31px); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px); z-index: 10000; }
+  .wfai.wfai-has-bar.is-open { left: 0; bottom: 0; }
+  .wfai.wfai-has-bar .wfai-teaser { --tx: 50%; right: auto; left: calc(31px - min(150px, 50vw - 16px)); width: min(300px, 100vw - 32px); bottom: 46px; padding: 0; }
+  .wfai.wfai-has-bar .wfai-teaser-msg { padding: 14px 40px 34px 16px; }
+}

@@ -19,8 +19,8 @@ AI = ROOT / 'webfor-ai'
 
 html = Path(sys.argv[1]).read_text()
 start = html.index('<div class="wf" id="wf-top">')
-end = html.index('<div class="wf-mobile-bar"', start)
-end = html.index('</div>\n</div>', end) + len('</div>\n</div>')
+end = html.index('class="wf-mobile-bar', start)
+end = html.index('</nav>\n</div>', end) + len('</nav>\n</div>')
 body = html[start:end]
 
 # картинки работ → works/<файл>
@@ -51,7 +51,7 @@ window.WEBFOR = { ajax: '#demo-lead' };
 })();
 var AI = __AI__;
 window.WFAI = { chat: 'chat', contact: 'contact', name: AI.name, greeting: AI.greeting, teaser: AI.teaser, wa: AI.wa,
-  chips: ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'] };
+  chips: ['Сколько стоит AI-ассистент?', 'Сколько стоит сайт?', 'Хочу приложение'] };
 (function () {
   var samplePromise = window.claude && window.claude.use ? window.claude.use('sample') : Promise.resolve(null);
   var RULES = 'Ты — ' + AI.name + ', ассистент на сайте компании WebFor, общаешься с потенциальными клиентами. '

@@ -73,7 +73,11 @@ function webfor_icon($name) {
         'spark'   => '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
         'arrow'   => '<path d="M5 12h14M13 6l6 6-6 6"/>',
         'device'  => '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/>',
-        'bot'     => '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17h0A2.5 2.5 0 0 1 4 14.5z"/><path d="M12 5.8c.45 2.4 1.6 3.55 4 4-2.4.45-3.55 1.6-4 4-.45-2.4-1.6-3.55-4-4 2.4-.45 3.55-1.6 4-4z" fill="currentColor" stroke-width="1.2"/>', // чат с искрой — значит AI
+        'bot'     => '<path class="wf-s1" d="M10 6.0Q10 13.5 17.5 13.5Q10 13.5 10 21.0Q10 13.5 2.5 13.5Q10 13.5 10 6.0Z" fill="currentColor" stroke="none"/><path class="wf-s2" d="M18.5 2.0Q18.5 5.5 22.0 5.5Q18.5 5.5 18.5 9.0Q18.5 5.5 15.0 5.5Q18.5 5.5 18.5 2.0Z" fill="currentColor" stroke="none"/><path class="wf-s3" d="M19 15.0Q19 17.5 21.5 17.5Q19 17.5 19 20.0Q19 17.5 16.5 17.5Q19 17.5 19 15.0Z" fill="currentColor" stroke="none"/>', // три искры AI, как у кнопки чата
+        'tag'     => '<path d="M3 12V4.5A1.5 1.5 0 0 1 4.5 3H12l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>',
+        'columns' => '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M15 4v16"/>',
+        'help'    => '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5v.4M12 17h.01"/>',
+        'grid'    => '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',
         'back'    => '<path d="M19 12H5M11 18l-6-6 6-6"/>',
         'menu'    => '<path d="M4 7h16M4 12h16M4 17h16"/>',
         'close'   => '<path d="M6 6l12 12M18 6 6 18"/>',

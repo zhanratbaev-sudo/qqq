@@ -472,7 +472,7 @@
       if (!panel.hidden) return;
       teaser = el('div', 'wfai-teaser');
       var tb = el('button', 'wfai-teaser-msg'); tb.type = 'button';
-      tb.appendChild(el('b', null, C.name || 'AI-ассистент'));
+      var tt = el('b'); tt.innerHTML = ICON_STARS.replace('wfai-ico wfai-stars', 'wfai-stars') + ''; tt.appendChild(document.createTextNode(C.name || 'AI-ассистент')); tb.appendChild(tt);
       tb.appendChild(document.createTextNode(C.teaser));
       var tx = el('button', 'wfai-teaser-x'); tx.type = 'button'; tx.setAttribute('aria-label', 'Скрыть'); tx.innerHTML = ICON_X;
       teaser.appendChild(tb); teaser.appendChild(tx);

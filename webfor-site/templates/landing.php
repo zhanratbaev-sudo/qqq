@@ -30,6 +30,11 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                 <a href="#ceny">Цены</a>
                 <a href="#sravnenie">Сравнение</a>
                 <a href="#faq">Вопросы</a>
+                <div class="wf-nav-cta">
+                    <a class="wf-btn wf-btn-primary" href="#zayavka">Оставить заявку <?php echo webfor_icon('arrow'); ?></a>
+                    <?php if ($wf_tel) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_tel); ?>"><?php echo webfor_icon('phone'); ?>Позвонить</a><?php endif; ?>
+                    <?php if ($wf_wa) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>WhatsApp</a><?php endif; ?>
+                </div>
             </nav>
             <div class="wf-header-actions">
                 <?php if ($wf_tel) : ?><a class="wf-header-phone" href="<?php echo esc_url($wf_tel); ?>"><?php echo esc_html($wf_phone); ?></a><?php endif; ?>
@@ -165,7 +170,7 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         </div>
                     </div>
                 </article>
-                <div class="wf-svc-grid">
+                <div class="wf-svc-grid wf-izi-track" id="wf-izi-track">
                     <article class="wf-card wf-svc" aria-labelledby="svc-site-h">
                         <div class="wf-product-head"><span class="wf-card-icon"><?php echo webfor_icon('globe'); ?></span><h3 id="svc-site-h">Сайты</h3></div>
                         <ul class="wf-prices">
@@ -192,6 +197,11 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
                         <p class="wf-svc-note">Для ветклиник есть готовая версия — Vet.izi, от 30 000 ₸.</p>
                         <a class="wf-btn wf-btn-secondary wf-btn-block" href="#zayavka" data-service="izi">Хочу Izi</a>
                     </article>
+                </div>
+                <div class="wf-izi-dots" aria-label="Услуги">
+                    <button type="button" class="wf-izi-dot is-active" aria-label="Сайты" aria-current="true"></button>
+                    <button type="button" class="wf-izi-dot" aria-label="Приложения"></button>
+                    <button type="button" class="wf-izi-dot" aria-label="Izi"></button>
                 </div>
             </div>
         </section>
@@ -309,8 +319,12 @@ $no = '<span class="wf-no" aria-label="нет">' . webfor_icon('dash') . '</span
         </div>
     </footer>
 
-    <div class="wf-mobile-bar" aria-label="Быстрая связь">
-        <?php if ($wf_tel) : ?><a class="wf-btn wf-btn-secondary" href="<?php echo esc_url($wf_tel); ?>"><?php echo webfor_icon('phone'); ?>Позвонить</a><?php endif; ?>
-        <?php if ($wf_wa) : ?><a class="wf-btn wf-btn-primary" href="<?php echo esc_url($wf_wa); ?>" target="_blank" rel="noopener"><?php echo webfor_icon('chat'); ?>WhatsApp</a><?php endif; ?>
-    </div>
+    <nav class="wf-mobile-bar wf-tabbar" aria-label="Разделы">
+        <a href="#uslugi"><?php echo webfor_icon('grid'); ?><span>Услуги</span></a>
+        <a href="#ceny"><?php echo webfor_icon('tag'); ?><span>Цены</span></a>
+        <?php if (function_exists('wfai_opt') && wfai_opt('enabled')) : ?><span class="wf-tab-ai" aria-hidden="true"></span><?php /* сюда встаёт хрустальная кнопка AI */ ?>
+        <?php else : ?><a class="wf-tab-main" href="#zayavka"><?php echo webfor_icon('arrow'); ?><span>Заявка</span></a><?php endif; ?>
+        <a href="#sravnenie"><?php echo webfor_icon('columns'); ?><span>Сравнение</span></a>
+        <a href="#faq"><?php echo webfor_icon('help'); ?><span>Вопросы</span></a>
+    </nav>
 </div>

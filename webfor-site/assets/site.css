@@ -11,7 +11,9 @@
   --text-3: #7b8a85;
   --accent: #51c2ab;
   --accent-hover: #74d0be;
-  --on-accent: #062019;
+  --on-accent: #ffffff;
+  --fill: #13907b; /* заливка кнопок и плашек: белый текст на ней читается */
+  --fill-hover: #18a28b;
   --danger: #ff8a7a;
   --radius: 16px;
   --radius-sm: 10px;
@@ -39,7 +41,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
 .wf-wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 24px; }
 .wf-narrow { max-width: 800px; }
-.wf-skip { position: absolute; left: -9999px; top: 8px; z-index: 100; padding: 8px 16px; background: var(--accent); color: var(--on-accent); border-radius: 8px; }
+.wf-skip { position: absolute; left: -9999px; top: 8px; z-index: 100; padding: 8px 16px; background: var(--fill); color: var(--on-accent); border-radius: 8px; }
 .wf-skip:focus { left: 16px; }
 .wf [hidden] { display: none !important; }
 .wf-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -48,8 +50,8 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
 /* --- кнопки --- */
 .wf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 24px; border-radius: 12px; border: 1px solid transparent; font: 600 16px/1 var(--font); cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; white-space: nowrap; }
-.wf-btn-primary { background: var(--accent); color: var(--on-accent); }
-.wf-btn-primary:hover { background: var(--accent-hover); }
+.wf-btn-primary { background: var(--fill); color: var(--on-accent); }
+.wf-btn-primary:hover { background: var(--fill-hover); }
 .wf-btn-secondary { background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
 .wf-btn-secondary:hover { border-color: var(--text-3); }
 .wf-btn-sm { min-height: 40px; padding: 0 16px; font-size: 14px; }
@@ -109,7 +111,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
 .wf-product-head { display: flex; gap: 16px; align-items: flex-start; }
 .wf-product-head h3 { margin-bottom: 4px; }
-.wf-product-icon { width: 56px; height: 56px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--accent); color: var(--on-accent); }
+.wf-product-icon { width: 56px; height: 56px; flex: none; display: grid; place-items: center; border-radius: 14px; background: var(--fill); color: var(--on-accent); }
 .wf-product-vet { background: #f4f1e4; color: #0e7c6b; }
 .wf-product-icon .wf-i { width: 28px; height: 28px; }
 
@@ -219,7 +221,7 @@ html.wf-locked { overflow: hidden; }
 .wf-faq summary { cursor: pointer; list-style: none; padding: 16px 24px; padding-right: 56px; font-weight: 600; font-size: 17px; position: relative; }
 .wf-faq summary::-webkit-details-marker { display: none; }
 .wf-faq summary::after { content: "+"; position: absolute; right: 20px; top: 50%; width: 28px; height: 28px; margin-top: -14px; display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .06); color: var(--text-2); font-size: 20px; font-weight: 400; line-height: 1; transition: transform .4s var(--spring), background-color .2s, color .2s; }
-.wf-faq details[open]:not(.is-closing) summary::after { transform: rotate(45deg); background: var(--accent); color: var(--on-accent); }
+.wf-faq details[open]:not(.is-closing) summary::after { transform: rotate(45deg); background: var(--fill); color: var(--on-accent); }
 .wf-faq details p { overflow: hidden; }
 .wf-faq details p { padding: 0 24px 24px; color: var(--text-2); max-width: 65ch; }
 
@@ -449,7 +451,7 @@ html.wf-locked { overflow: hidden; }
 .wf-art-chip { position: absolute; display: flex; align-items: center; gap: 12px; max-width: 64cqw; padding: 12px 16px; border: 1px solid var(--glass-edge); border-radius: 18px; color: #fff; font-size: 13px; line-height: 1.35; box-shadow: var(--glass-light), var(--glass-shadow); }
 .wf-art-chip b { display: block; font-size: 15px; color: #fff; }
 .wf-art-chip span { color: rgba(255, 255, 255, .9); min-width: 0; }
-.wf-art-chip .wf-i { flex: none; width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--accent); color: var(--on-accent); }
+.wf-art-chip .wf-i { flex: none; width: 36px; height: 36px; padding: 8px; border-radius: 12px; background: var(--fill); color: var(--on-accent); }
 .wf-art-chip-1 { left: 3cqw; top: 40cqw; animation: wf-float 6s ease-in-out infinite; }
 .wf-art-chip-2 { right: 3cqw; top: 90cqw; animation: wf-float 7s ease-in-out -2s infinite; }
 .wf-glass.wf-art-chip { background: rgba(14, 19, 18, .5); -webkit-backdrop-filter: blur(30px) saturate(115%) brightness(.8); backdrop-filter: blur(30px) saturate(115%) brightness(.8); }
@@ -498,7 +500,7 @@ html.wf-locked { overflow: hidden; }
 }
 .wf-card-icon, .wf-page-icon, .wf-step-n { box-shadow: none; }
 .wf-product-vet { background-color: #f4f1e4; }
-.wf-product-icon:not(.wf-product-vet) { background-color: var(--accent); }
+.wf-product-icon:not(.wf-product-vet) { background-color: var(--fill); }
 .wf-card, .wf-form, .wf-table-wrap, .wf-page-foot, .wf-faq details, .wf-steps li { border-radius: var(--r); }
 .wf-card-accent { box-shadow: var(--g-shadow), 0 0 0 1.5px rgba(81, 194, 171, .45); }
 .wf-btn, .wf-page-back, .wf-burger, .wf-nav, .wf-form input[type=text], .wf-form input[type=tel], .wf-form select, .wf-form textarea { border-radius: var(--r) !important; }
@@ -534,7 +536,7 @@ html.wf-locked { overflow: hidden; }
 .wf-x { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, .08); transition: transform .45s var(--spring), background-color .25s; }
 .wf-x::before, .wf-x::after { content: ""; position: absolute; left: 50%; top: 50%; width: 12px; height: 2px; margin: -1px 0 0 -6px; border-radius: 2px; background: var(--text); transition: background-color .25s; }
 .wf-x::after { transform: rotate(90deg); }
-.wf-faq details[open]:not(.is-closing) .wf-x { transform: rotate(135deg); background: var(--accent); }
+.wf-faq details[open]:not(.is-closing) .wf-x { transform: rotate(135deg); background: var(--fill); }
 .wf-faq details[open]:not(.is-closing) .wf-x::before, .wf-faq details[open]:not(.is-closing) .wf-x::after { background: var(--on-accent); }
 .wf-faq details { transition: background-color .25s; }
 .wf-faq details[open] { background-color: var(--g-fill-hover); }
@@ -664,7 +666,7 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
 
 /* выбор услуги: без теней (не обрываются на краю ряда), при наведении и выборе — как зелёная кнопка */
 .wf-pick-item span { box-shadow: none !important; background-color: rgba(255, 255, 255, .08) !important; }
-.wf-pick-item:hover span, .wf-pick-item input:checked + span { background-color: var(--accent) !important; background-image: none !important; color: var(--on-accent) !important; box-shadow: none !important; }
+.wf-pick-item:hover span, .wf-pick-item input:checked + span { background-color: var(--fill) !important; background-image: none !important; color: var(--on-accent) !important; box-shadow: none !important; }
 .wf-pick-item:hover .wf-i, .wf-pick-item:hover b, .wf-pick-item input:checked + span .wf-i, .wf-pick-item input:checked + span b { color: var(--on-accent) !important; }
 
 /* меню на телефоне: на весь экран поверх всего сайта (и логотипа), пункты появляются как раньше */
@@ -750,4 +752,42 @@ html.wf-refract .wf-pick-item span, html.wf-refract .wf-mobile-bar, html.wf-refr
   .wf-svc-ai h3 { font-size: 24px; }
   .wf-svc-grid { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
   .wf-svc { padding: 24px; }
+}
+
+/* v2.16: белый текст и иконки на заливке, искры AI мигают */
+.wf-btn-primary, .wf-btn-primary .wf-i, .wf-art-chip .wf-i, .wf-product-icon .wf-i { color: #fff !important; }
+.wf-btn-primary { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 20px rgba(19, 144, 123, .3); }
+.wf-i path.wf-s1, .wf-i path.wf-s2, .wf-i path.wf-s3 { transform-box: fill-box; transform-origin: center; animation: wf-twinkle 2.4s ease-in-out infinite; }
+.wf-i path.wf-s2 { animation-delay: .5s; } .wf-i path.wf-s3 { animation-delay: 1s; }
+@keyframes wf-twinkle { 0%, 100% { opacity: .5; transform: scale(.65); } 40% { opacity: 1; transform: scale(1.08); } 60% { opacity: 1; transform: scale(1); } }
+.wf-anim-bot .wf-i { animation-name: none !important; }
+@media (prefers-reduced-motion: reduce) { .wf-i path.wf-s1, .wf-i path.wf-s2, .wf-i path.wf-s3 { animation: none; opacity: 1; } }
+
+/* меню-бургер: внизу заявка, звонок, WhatsApp */
+.wf-nav-cta { display: none; }
+@media (max-width: 760px) {
+  .wf-nav .wf-nav-cta { display: flex; flex-direction: column; gap: 8px; padding: 12px 0 8px; }
+  .wf-nav .wf-nav-cta a { padding: 0 16px; min-height: 48px; border-bottom: 0; justify-content: center; font-size: 16px; }
+  .wf-nav .wf-nav-cta .wf-btn-primary { color: #fff; }
+  .wf-nav.is-open .wf-nav-cta a { opacity: 1; transform: none; }
+}
+
+/* нижняя панель на телефоне: разделы, в центре — хрустальная кнопка AI */
+@media (max-width: 760px) {
+  .wf-mobile-bar.wf-tabbar, html.wf-refract .wf-mobile-bar.wf-tabbar { display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; height: auto;
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)) !important; pointer-events: auto;
+    background-color: rgba(8, 12, 11, .78) !important; -webkit-backdrop-filter: blur(20px) saturate(160%) !important; backdrop-filter: blur(20px) saturate(160%) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -10px 30px rgba(0, 0, 0, .35) !important; }
+  .wf-tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 52px; border-radius: 14px; color: var(--text-2); font-size: 11px; font-weight: 600; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+  .wf-tabbar a .wf-i { width: 22px; height: 22px; }
+  .wf-tabbar a:active { background: rgba(255, 255, 255, .06); color: var(--text); }
+  .wf-tabbar a.wf-tab-main { color: var(--accent); }
+  .wf-tab-ai { display: block; height: 52px; }
+  .wf-footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* услуги на телефоне — в один ряд, листаются пальцем */
+@media (max-width: 860px) {
+  .wf-svc-grid.wf-izi-track { display: flex; margin-top: 16px; }
+  .wf-izi-track > .wf-svc { flex: 0 0 86%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; grid-column: auto; }
 }

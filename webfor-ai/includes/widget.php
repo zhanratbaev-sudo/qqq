@@ -18,6 +18,6 @@ add_action('wp_enqueue_scripts', function () {
         'greeting' => wfai_opt('greeting'),
         'teaser'   => wfai_opt('teaser'),
         'wa'       => $c['wa_href'],
-        'chips'    => ['Сколько стоит сайт?', 'Что такое Vet.izi?', 'Хочу чат-бота для бизнеса'],
+        'chips'    => ['Сколько стоит AI-ассистент?', 'Сколько стоит сайт?', 'Хочу приложение'],
     ]);
 });
