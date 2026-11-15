@@ -219,16 +219,14 @@
   //  OSCAR — 3D-персонаж (растровые слои + анимированные SVG-накладки)
   //  Координаты ниже — в пикселях исходного рендера (viewBox 40 190 816 860)
   // =====================================================================
+  const OSCAR_EMBED = null;      // single-file build: { body: 'data:…', star: 'data:…' }
+  const DEFAULT_VARIANT = 'bota';
   const SCRIPT_BASE = (document.currentScript && document.currentScript.src)
     ? new URL('.', document.currentScript.src).href : './';
   const VB = { x: 40, y: 190, w: 816, h: 860 };
   const OS = { x: 447, y: 706 };                       // центр звезды
   const STAR_BOX = { x: 330, y: 583, w: 237, h: 239 };  // слой звезды
   const pct = (v, o, s) => `${f(((v - o) / s) * 100)}%`;
-  const EYES3D = [
-    { cx: 346, cy: 421, rx: 71, ry: 92, sx: 347, sy: 425 },
-    { cx: 548, cy: 421, rx: 73, ry: 92, sx: 542, sy: 427 },
-  ];
   // золотые звёздочки вокруг звезды: [x, y, радиус, появляются только когда думает?]
   const SPARKS3D = [
     [525, 605, 20, 0], [595, 740, 18, 0], [355, 822, 16, 0], [382, 627, 12, 0], [334, 752, 13, 0],
@@ -247,7 +245,6 @@
     --bota-accent: #FFC861;
     --bota-accent-think: #FF4D5E;
     --bota-think-hue: -42deg;
-    --bota-lid: #9DB3E2;
     --bota-think-time: 1.6s;
     --bota-star: var(--bota-accent);
     transition: --bota-star var(--bota-think-time) ease;
@@ -305,21 +302,9 @@
   .sp2 { stop-color: color-mix(in srgb, var(--bota-star), #b8782a 30%); }
   @keyframes otw { 0%,100% { transform: scale(.7) rotate(0deg); opacity: .75 } 50% { transform: scale(1.12) rotate(20deg); opacity: 1 } }
 
-  .eglint { fill: #DCE7FF; mix-blend-mode: screen; opacity: .55; filter: url(#OSOFT2);
-            transform-box: fill-box; transform-origin: center; animation: eglint 3.4s ease-in-out infinite; }
-  .eglint.e2 { animation-delay: -1.7s; }
-  @keyframes eglint { 0%,100% { transform: scale(.85) rotate(0deg); opacity: .35 } 50% { transform: scale(1.08) rotate(12deg); opacity: .75 } }
-  .look { transition: transform .3s ease-out; }
 
-  .lid { transform-box: view-box; transition: transform .5s cubic-bezier(.3,1.3,.5,1); }
-  .lid-fill { fill: url(#OLID); }
-  .lid-fill { filter: url(#OSOFT2); }
-  .lid-edge { fill: none; stroke: color-mix(in srgb, var(--bota-lid), #1d2a5a 40%); stroke-width: 5; stroke-linecap: round; filter: url(#OSOFT2); }
-  .lid-hl { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: 3; stroke-linecap: round; filter: url(#OSOFT2); }
-  .l0 { stop-color: color-mix(in srgb, var(--bota-lid), #fff 30%); } .l1 { stop-color: var(--bota-lid); }
-  .l2 { stop-color: color-mix(in srgb, var(--bota-lid), #3a4f9a 22%); }
 
-  /* думает: звезда краснеет, вращается, свет ярче, глаза щурятся, звёздочек больше */
+  /* думает: звезда краснеет, вращается, свет ярче, звёздочек больше */
   :host([state="thinking"]) .star { filter: hue-rotate(var(--bota-think-hue)) saturate(1.7) brightness(1.18)
                                      drop-shadow(0 0 10px color-mix(in srgb, var(--bota-accent-think) 70%, transparent)); }
   :host([state="thinking"]) .star { animation: sspin 2.4s cubic-bezier(.45,0,.55,1) infinite; }
@@ -328,19 +313,16 @@
   :host([state="thinking"]) .comet { animation-duration: 1.8s; }
   :host([state="thinking"]) .spark-wrap.extra { opacity: 1; }
   :host([state="thinking"]) .spark { animation-duration: 1.1s !important; }
-  :host([state="thinking"]) .lid { transform: translateY(var(--squint)); }
-  :host([state="thinking"]) .eglint { fill: color-mix(in srgb, var(--bota-accent-think), #fff 40%); opacity: .7; }
   @keyframes sspin { 0% { transform: rotateY(0deg) scale(1.08) } 100% { transform: rotateY(360deg) scale(1.08) } }
 
-  /* отвечает: звезда пульсирует в такт «голосу», блики в глазах мерцают */
+  /* отвечает: звезда пульсирует в такт «голосу» */
   :host([state="talking"]) .star-move { animation: stalk .36s ease-in-out infinite alternate; }
-  :host([state="talking"]) .eglint { animation-duration: .7s; }
   @keyframes stalk { from { transform: translateY(0) scale(.97) } to { transform: translateY(-2%) scale(1.06) } }
 
   .burst path { fill: url(#OSPARK); }
 
   @media (prefers-reduced-motion: reduce) {
-    .float, .stage, .star, .star-move, .glow, .comet, .spark, .eglint { animation: none !important; }
+    .float, .stage, .star, .star-move, .glow, .comet, .spark { animation: none !important; }
   }`;
 
   function oscarMarkup(base, name) {
@@ -351,25 +333,12 @@
       <g class="spark-wrap${extra ? ' extra' : ''}" transform="translate(${x} ${y})">
         <path class="spark" style="--t:${(2 + (i % 5) * 0.35).toFixed(2)}s;--d:${(-(i * 0.47) % 3).toFixed(2)}s" d="${puffy(r)}"/>
       </g>`).join('');
-    const lids = EYES3D.map((e, i) => `
-      <clipPath id="OEYE${i}"><ellipse cx="${e.cx}" cy="${e.cy}" rx="${e.rx}" ry="${e.ry}"/></clipPath>`).join('');
-    const lidGroups = EYES3D.map((e, i) => {
-      const x0 = e.cx - e.rx - 4, x1 = e.cx + e.rx + 4, top = e.cy - e.ry - 230, bot = e.cy - e.ry - 14;
-      return `
-      <g clip-path="url(#OEYE${i})">
-        <g class="lid" style="--squint:${Math.round(e.ry * 0.62)}px">
-          <path class="lid-fill" d="M${x0},${top} L${x1},${top} L${x1},${bot} Q${e.cx},${bot + 44} ${x0},${bot}Z"/>
-          <path class="lid-edge" d="M${x0},${bot} Q${e.cx},${bot + 44} ${x1},${bot}"/>
-          <path class="lid-hl" d="M${e.cx - e.rx * 0.6},${bot - 4} Q${e.cx},${bot + 22} ${e.cx + e.rx * 0.6},${bot - 4}"/>
-        </g>
-      </g>`;
-    }).join('');
     const vb = `${VB.x} ${VB.y} ${VB.w} ${VB.h}`;
     return `
       <style>${CSS_IMG}</style>
       <button type="button" part="button" aria-label="${name}">
         <div class="float"><div class="squash"><div class="stage">
-          <img class="body" src="${base}body.webp" alt="" draggable="false">
+          <img class="body" src="${base.body}" alt="" draggable="false">
           <svg class="back" viewBox="${vb}" aria-hidden="true">
             <defs>
               <radialGradient id="OGLOW"><stop offset="0" class="g0"/><stop offset=".45" class="g1"/><stop offset="1" class="g2"/></radialGradient>
@@ -381,18 +350,14 @@
             <circle class="glow" cx="${OS.x}" cy="${OS.y}" r="185"/>
             <g transform="${rot}"><g clip-path="url(#OBACK)">${ringSet()}</g></g>
           </svg>
-          <div class="star-wrap"><div class="star-move"><img class="star" src="${base}star.webp" alt="" draggable="false"></div></div>
+          <div class="star-wrap"><div class="star-move"><img class="star" src="${base.star}" alt="" draggable="false"></div></div>
           <svg class="front" viewBox="${vb}" aria-hidden="true">
             <defs>
               <radialGradient id="OSPARK" cx=".4" cy=".35" r=".7"><stop offset="0" class="sp0"/><stop offset=".5" class="sp1"/><stop offset="1" class="sp2"/></radialGradient>
-              <linearGradient id="OLID" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" class="l0"/><stop offset=".85" class="l1"/><stop offset="1" class="l2"/></linearGradient>
               <filter id="OSOFT2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter>
-              ${lids}
             </defs>
             <g transform="${rot}"><g clip-path="url(#OFRONT)">${ringSet()}</g></g>
             ${sparks(false)}${sparks(true)}
-            ${EYES3D.map((e, i) => `<g class="look"><path class="eglint${i ? ' e2' : ''}" transform="translate(${e.sx} ${e.sy})" d="${puffy(30)}"/></g>`).join('')}
-            ${lidGroups}
             <g class="burst"></g>
           </svg>
         </div></div></div>
@@ -619,21 +584,23 @@
       };
     }
 
-    _isOscar() { return /^oscar/.test(this.getAttribute('variant') || ''); }
+    _isOscar() { return /^oscar/.test(this.getAttribute('variant') || DEFAULT_VARIANT); }
 
     _render() {
       if (this._isOscar()) {
-        const base = this.getAttribute('assets') || (SCRIPT_BASE + 'oscar/');
+        const dir = this.getAttribute('assets');
+        const base = (!dir && OSCAR_EMBED) ? OSCAR_EMBED : (() => {
+          const d = (dir || SCRIPT_BASE + 'oscar/').replace(/"/g, '');
+          return { body: d + 'body.webp', star: d + 'star.webp' };
+        })();
         const name = (this.getAttribute('label') || 'Oscar').replace(/[<>&"]/g, '');
-        this._root.innerHTML = oscarMarkup(base.replace(/"/g, ''), name);
+        this._root.innerHTML = oscarMarkup(base, name);
         this._svg = this._root.querySelector('svg.front');
         this._eyes = null;
-        this._looks = [...this._root.querySelectorAll('.look')];
-        this._lids = [...this._root.querySelectorAll('.lid')];
+        this._looks = [];
         this._root.querySelector('button').addEventListener('click', () => this._click());
         return;
       }
-      this._lids = null;
       const cfg = this._cfg();
       const name = cfg.name.replace(/[<>&"]/g, '');
       this._root.innerHTML = `
@@ -745,13 +712,6 @@
     }
 
     blink() {
-      if (this._lids) {
-        if (this._reduced()) return;
-        this._lids.forEach((l) => l.animate(
-          [{ transform: 'translateY(0)' }, { transform: 'translateY(200px)' }, { transform: 'translateY(0)' }],
-          { duration: 220, easing: 'ease-in-out' }));
-        return;
-      }
       if (!this._eyes) return;
       this._eyes.classList.add('blink');
       setTimeout(() => this._eyes && this._eyes.classList.remove('blink'), 140);
