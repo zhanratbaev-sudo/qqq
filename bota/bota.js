@@ -12,143 +12,190 @@
  *   floating                                             (плавает в правом нижнем углу)
  *   label    = текст для скринридера (по умолчанию имя персонажа)
  *
- * JS API:
- *   el.setState('thinking' | 'talking' | 'idle')
- *   el.burst()      — вспышка искорок (как при клике)
- *   el.blink()      — моргнуть
- *
- * События:
- *   'bota-click'    — по персонажу кликнули (откройте здесь чат)
- *
+ * JS API:  el.setState('thinking' | 'talking' | 'idle'), el.burst(), el.blink()
+ * Событие: 'bota-click' — по персонажу кликнули (откройте здесь чат)
  * Цвета — CSS-переменные (см. README.md).
  */
 (() => {
   if (customElements.get('bota-assistant')) return;
 
-  // ---------- Геометрия (viewBox 0 0 200 230) ----------
-  const C = { x: 100, y: 150 };            // центр звезды
-  const TIP = {
-    top: { x: 100, y: 92 },
-    right: { x: 148, y: 150 },
-    bottom: { x: 100, y: 216 },
-    left: { x: 52, y: 150 },
-  };
-  const CONCAVE = 0.3;   // насколько вогнуты грани звезды
-  const GAP = 7;         // одинаковый зазор между звездой и руками
-  const FLICK = 9;       // хвостик линии руки за кончиком звезды
+  // Плавный переход цвета звезды (синий → красный) через зарегистрированное свойство
+  try {
+    CSS.registerProperty({ name: '--bota-star', syntax: '<color>', inherits: true, initialValue: '#3B6CFF' });
+  } catch (e) { /* уже зарегистрировано или не поддерживается — цвет сменится без плавности */ }
+
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const f = (n) => Math.round(n * 100) / 100;
+  const nz = (v) => { const l = Math.hypot(v.x, v.y) || 1; return { x: v.x / l, y: v.y / l }; };
+
+  // ---------- Звезда (viewBox 0 -12 200 252) ----------
+  const C = { x: 100, y: 152 };
+  const TIP = { top: { x: 100, y: 96 }, right: { x: 146, y: 152 }, bottom: { x: 100, y: 214 }, left: { x: 54, y: 152 } };
+  const ORDER = [TIP.top, TIP.right, TIP.bottom, TIP.left];
+  const CONCAVE = 0.3;
+  const GAP = 8; // одинаковый зазор между звездой и руками
 
   const ctrl = (a, b) => {
-    // контрольная точка грани: от центра к углу габаритного прямоугольника
-    const corner = { x: Math.abs(a.x - C.x) > Math.abs(b.x - C.x) ? a.x : b.x,
-                     y: Math.abs(a.y - C.y) > Math.abs(b.y - C.y) ? a.y : b.y };
-    return { x: C.x + (corner.x - C.x) * CONCAVE, y: C.y + (corner.y - C.y) * CONCAVE };
+    const cx = Math.abs(a.x - C.x) > Math.abs(b.x - C.x) ? a.x : b.x;
+    const cy = Math.abs(a.y - C.y) > Math.abs(b.y - C.y) ? a.y : b.y;
+    return { x: C.x + (cx - C.x) * CONCAVE, y: C.y + (cy - C.y) * CONCAVE };
   };
-  const q = (p0, p1, p2, t) => ({
-    x: (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x,
-    y: (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y,
-  });
-  const qd = (p0, p1, p2, t) => ({
-    x: 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x),
-    y: 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y),
-  });
-  const norm = (v) => { const l = Math.hypot(v.x, v.y) || 1; return { x: v.x / l, y: v.y / l }; };
-  const f = (n) => Math.round(n * 100) / 100;
+  const q = (a, c, b, t) => ({ x: (1 - t) ** 2 * a.x + 2 * (1 - t) * t * c.x + t * t * b.x,
+                               y: (1 - t) ** 2 * a.y + 2 * (1 - t) * t * c.y + t * t * b.y });
+  const qd = (a, c, b, t) => ({ x: 2 * (1 - t) * (c.x - a.x) + 2 * t * (b.x - c.x),
+                                y: 2 * (1 - t) * (c.y - a.y) + 2 * t * (b.y - c.y) });
 
-  const order = [TIP.top, TIP.right, TIP.bottom, TIP.left];
   const starPath = (() => {
     let d = `M${TIP.top.x},${TIP.top.y}`;
     for (let i = 0; i < 4; i++) {
-      const a = order[i], b = order[(i + 1) % 4], c = ctrl(a, b);
+      const a = ORDER[i], b = ORDER[(i + 1) % 4], c = ctrl(a, b);
       d += ` Q${f(c.x)},${f(c.y)} ${b.x},${b.y}`;
     }
     return d + 'Z';
   })();
 
-  // Внутренняя линия рук: точное смещение нижних граней звезды на GAP
-  function offsetEdge(a, b, n = 28) {
-    const c = ctrl(a, b), pts = [];
-    for (let i = 0; i <= n; i++) {
-      const t = i / n, p = q(a, c, b, t), d = norm(qd(a, c, b, t));
-      let nx = d.y, ny = -d.x;
-      if (nx * (p.x - C.x) + ny * (p.y - C.y) < 0) { nx = -nx; ny = -ny; }
-      pts.push({ x: p.x + nx * GAP, y: p.y + ny * GAP, nx, ny, tx: d.x, ty: d.y });
+  // 8 граней «кристалла»: каждый луч делится пополам на светлую и тёмную сторону
+  const facets = (() => {
+    const out = [];
+    for (let i = 0; i < 4; i++) {
+      const a = ORDER[i], b = ORDER[(i + 1) % 4], c = ctrl(a, b);
+      const half1 = [], half2 = [];
+      for (let k = 0; k <= 8; k++) half1.push(q(a, c, b, (k / 8) * 0.5));
+      for (let k = 0; k <= 8; k++) half2.push(q(a, c, b, 0.5 + (k / 8) * 0.5));
+      const poly = (pts) => `M${C.x},${C.y} L` + pts.map((p) => `${f(p.x)},${f(p.y)}`).join(' L') + 'Z';
+      out.push(poly(half1), poly(half2));
     }
-    return pts;
-  }
-  const L = offsetEdge(TIP.left, TIP.bottom);
-  const R = offsetEdge(TIP.bottom, TIP.right);
-  // скругление вокруг нижнего кончика
-  const a0 = Math.atan2(L[L.length - 1].ny, L[L.length - 1].nx);
-  let a1 = Math.atan2(R[0].ny, R[0].nx);
-  while (a1 > a0) a1 -= Math.PI * 2;
-  const arc = [];
-  for (let i = 1; i < 10; i++) {
-    const a = a0 + (a1 - a0) * (i / 10);
-    arc.push({ x: TIP.bottom.x + Math.cos(a) * GAP, y: TIP.bottom.y + Math.sin(a) * GAP });
-  }
-  const flickL = { x: L[0].x - L[0].tx * FLICK, y: L[0].y - L[0].ty * FLICK };
-  const lastR = R[R.length - 1];
-  const flickR = { x: lastR.x + lastR.tx * FLICK, y: lastR.y + lastR.ty * FLICK };
-  const ringPts = [flickL, ...L, ...arc, ...R, flickR];
-  const ringPath = 'M' + ringPts.map((p) => `${f(p.x)},${f(p.y)}`).join(' L');
-  const notchPath = ringPath + ` L${TIP.right.x},${TIP.right.y} L${C.x},${C.y - 10} L${TIP.left.x},${TIP.left.y} Z`;
+    // порядок: top→right(2), right→bottom(2), bottom→left(2), left→top(2)
+    // свет сверху-слева
+    const shade = ['f2', 'f3', 'f3', 'f4', 'f4', 'f3', 'f2', 'f1'];
+    return out.map((d, i) => `<path class="facet ${shade[i]}" d="${d}"/>`).join('');
+  })();
 
-  // Тело-капля: голова сверху, снизу две доли — это и есть руки
-  const bodyPath =
-    'M100,24 C130,24 147,44 151,72 C155,100 166,121 177,140 C188,159 191,180 182,196 ' +
-    'C171,214 138,213 122,196 L100,172 L78,196 C62,213 29,214 18,196 ' +
-    'C9,180 12,159 23,140 C34,121 45,100 49,72 C53,44 70,24 100,24 Z';
+  // ---------- Сглаженный контур через Catmull-Rom ----------
+  function smooth(pts, closed = true) {
+    const n = pts.length, P = (i) => pts[closed ? (i + n) % n : Math.max(0, Math.min(n - 1, i))];
+    let d = `M${f(pts[0].x)},${f(pts[0].y)}`;
+    const last = closed ? n : n - 1;
+    for (let i = 0; i < last; i++) {
+      const p0 = P(i - 1), p1 = P(i), p2 = P(i + 1), p3 = P(i + 2);
+      d += ` C${f(p1.x + (p2.x - p0.x) / 6)},${f(p1.y + (p2.y - p0.y) / 6)} ` +
+           `${f(p2.x - (p3.x - p1.x) / 6)},${f(p2.y - (p3.y - p1.y) / 6)} ${f(p2.x)},${f(p2.y)}`;
+    }
+    return d + (closed ? 'Z' : '');
+  }
+
+  // ---------- Руки: внутренний край строго параллелен звезде, концы круглые ----------
+  function armPoints() {
+    const a = TIP.left, b = TIP.bottom, c = ctrl(a, b);
+    const at = (t, g) => {
+      const p = q(a, c, b, t), d = nz(qd(a, c, b, t));
+      let n = { x: d.y, y: -d.x };
+      if (n.x * (p.x - C.x) + n.y * (p.y - C.y) < 0) n = { x: -n.x, y: -n.y };
+      return { x: p.x + n.x * g, y: p.y + n.y * g, n, d };
+    };
+    // внутренний край: ровно на GAP от нижней грани звезды
+    const T0 = 0.06, T1 = 0.9, inner = [];
+    for (let i = 0; i <= 10; i++) inner.push(at(T0 + (T1 - T0) * (i / 10), GAP));
+    // круглый «кулачок» внизу
+    const e = inner[inner.length - 1], R = 12;
+    const cc = { x: e.x + e.n.x * R, y: e.y + e.n.y * R }, fist = [];
+    for (let i = 1; i <= 4; i++) {
+      const th = Math.PI * (i / 6);
+      fist.push({ x: cc.x + R * (-e.n.x * Math.cos(th) + e.d.x * Math.sin(th)),
+                  y: cc.y + R * (-e.n.y * Math.cos(th) + e.d.y * Math.sin(th)) });
+    }
+    // наружная долька руки и плечо
+    const outer = [{ x: 54, y: 228 }, { x: 30, y: 223 }, { x: 15, y: 205 }, { x: 10, y: 181 }, { x: 16, y: 158 }];
+    // круглая ладошка у кончика звезды
+    const s = inner[0];
+    const hand = [{ x: 29, y: 152 }, { x: s.x - s.d.x * 7 - s.n.x * 1, y: s.y - s.d.y * 7 - s.n.y * 1 }];
+    return [...inner, ...fist, ...outer, ...hand];
+  }
+  const armL = armPoints();
+  const armR = armL.map((p) => ({ x: 200 - p.x, y: p.y })).reverse();
+  const armLPath = smooth(armL), armRPath = smooth(armR);
+
+  // Тело-капля (как у пушистого робота): узкая голова, широкий низ
+  const bodyPath = smooth([
+    { x: 100, y: 22 }, { x: 132, y: 28 }, { x: 150, y: 56 }, { x: 156, y: 92 }, { x: 172, y: 124 },
+    { x: 184, y: 160 }, { x: 178, y: 196 }, { x: 150, y: 214 }, { x: 120, y: 222 }, { x: 100, y: 224 },
+    { x: 80, y: 222 }, { x: 50, y: 214 }, { x: 22, y: 196 }, { x: 16, y: 160 }, { x: 28, y: 124 },
+    { x: 44, y: 92 }, { x: 50, y: 56 }, { x: 68, y: 28 },
+  ]);
 
   const sparkle = (s) => {
-    // маленькая четырёхконечная звёздочка радиуса s с центром в 0,0
-    const k = s * 0.22;
+    const k = s * 0.2;
     return `M0,${-s} Q${k},${-k} ${s},0 Q${k},${k} 0,${s} Q${-k},${k} ${-s},0 Q${-k},${-k} 0,${-s}Z`;
   };
 
-  // глаза-радиоволны: высоты полосок
-  const BARS = [5, 11, 18, 24, 17, 9];
-  const eye = (cx, cy, side) => {
-    const bars = BARS.map((h, i) => {
-      const x = -6.25 + i * 2.5;
-      return `<rect class="bar" style="--i:${i}" x="${f(x - 0.85)}" y="${f(-h / 2)}" width="1.7" height="${h}" rx="0.85"/>`;
-    }).join('');
+  // ---------- Глаза: тёмный зрачок из очень тонких полосок-«радиоволн» ----------
+  const EYE = { l: { x: 77, y: 70 }, r: { x: 123, y: 70 } };
+  const eye = (side) => {
+    const { x, y } = EYE[side];
+    const N = 22, W = 11.6, bars = [];
+    for (let i = 0; i < N; i++) {
+      const bx = -W / 2 + (W * i) / (N - 1);
+      const env = Math.sqrt(Math.max(0, 1 - (bx / (W / 2 + 0.4)) ** 2));
+      const h = 21 * env * (0.9 + 0.1 * Math.sin(i * 2.3));
+      const dur = (0.9 + ((i * 37) % 10) / 12).toFixed(2), del = (-((i * 53) % 17) / 10).toFixed(2);
+      bars.push(`<rect class="bar" style="--dur:${dur}s;--del:${del}s;--i:${i}" x="${f(bx - 0.5)}" y="${f(-h / 2)}" width="1.3" height="${f(h)}" rx="0.65"/>`);
+    }
     return `
-      <g class="eye eye-${side}" transform="translate(${cx} ${cy})">
-        <g class="eye-lid">
-          <ellipse class="eye-white" rx="10" ry="16"/>
-          <g class="eye-wave">${bars}</g>
+      <g class="eye" transform="translate(${x} ${y})">
+        <g class="lid">
+          <ellipse class="sclera" rx="10.5" ry="15"/>
+          <g class="look">
+            <g class="pupil"><ellipse class="pcore" rx="4.9" ry="9.2"/>${bars.join('')}</g>
+            <circle class="hl" cx="-2.4" cy="-5.2" r="2.7"/>
+            <circle class="hl hl2" cx="2.4" cy="4.4" r="1.25"/>
+          </g>
         </g>
-        <path class="squint" d="${side === 'l' ? 'M-17,-10 l-6,-3 M-18,-3 l-7,0' : 'M17,-10 l6,-3 M18,-3 l7,0'}"/>
       </g>`;
   };
 
+  // ---------- Головные уборы ----------
+  const diamonds = (() => {
+    let s = '';
+    for (let x = -28; x <= 28; x += 8) {
+      const yy = -3.6 + 4.2 * (1 - (x / 37) ** 2);
+      s += `<path class="tb-dot" d="M${x},${f(yy - 2.2)} l2,2.2 l-2,2.2 l-2,-2.2Z"/>`;
+    }
+    return s;
+  })();
   const HATS = {
     tubeteika: `
-      <g class="hat hat-tubeteika" transform="translate(70 38) rotate(-20)">
-        <path class="hat-fill" d="M-25,4 C-26,-26 26,-26 25,4 Q0,9 -25,4Z"/>
-        <path class="hat-band" d="M-25,4 Q0,9 25,4 L25.6,-1.5 Q0,3.6 -25.6,-1.5Z"/>
-        <g class="ornament">
-          <path d="M0,-4 C-2,-10 -9,-12 -11,-7 C-12.5,-3.5 -8,-2 -7.5,-5.5"/>
-          <path d="M0,-4 C2,-10 9,-12 11,-7 C12.5,-3.5 8,-2 7.5,-5.5"/>
-          <path d="M0,-4 L0,-14"/>
-          <path d="M-18,-6 q-2,-6 2,-9 M18,-6 q2,-6 -2,-9"/>
+      <g class="hat" transform="translate(88 36) rotate(-13)">
+        <path class="tb-dome" d="M-34,-7 C-36,-27 -24,-41 0,-41 C24,-41 36,-27 34,-7 Q0,1 -34,-7Z"/>
+        <path class="tb-seam" d="M0,-41 Q-15,-27 -19,-5 M0,-41 Q15,-27 19,-5"/>
+        <g class="tb-orn">
+          <path d="M0,-11 C-1,-19 -9,-24 -13.5,-19.5 C-16.5,-16 -11.5,-11.5 -9,-15"/>
+          <path d="M0,-11 C1,-19 9,-24 13.5,-19.5 C16.5,-16 11.5,-11.5 9,-15"/>
+          <path d="M0,-11 V-5.5"/>
+          <path d="M-27,-12 c-2,-5 1,-9 4,-8 M27,-12 c2,-5 -1,-9 -4,-8"/>
         </g>
+        <path class="tb-gem" d="M0,-32 l3,3.4 l-3,3.4 l-3,-3.4Z"/>
+        <path class="tb-band" d="M-36,-8 Q0,0 36,-8 L37,0 Q0,9 -37,0Z"/>
+        ${diamonds}
+        <circle class="tb-bead" cx="0" cy="-41" r="2.8"/>
+        <ellipse class="gloss" cx="-15" cy="-27" rx="8" ry="4" transform="rotate(-32 -15 -27)"/>
       </g>`,
     mirror: `
-      <g class="hat hat-mirror">
-        <path class="mirror-strap" d="M53,58 C70,40 130,40 147,58"/>
-        <g transform="translate(100 40)">
-          <circle class="mirror-rim" r="13"/>
-          <circle class="mirror-glass" r="9"/>
-          <circle class="mirror-hole" r="2.2"/>
-          <path class="mirror-shine" d="M-5,-4 a7,7 0 0 1 5,-3.5"/>
+      <g class="hat">
+        <path class="mr-strap" d="M48,56 C66,34 134,34 152,56"/>
+        <path class="mr-strap-hl" d="M60,46 C76,34 124,34 140,46"/>
+        <g transform="translate(100 34)">
+          <circle class="mr-rim" r="13.5"/>
+          <circle class="mr-glass" r="10"/>
+          <circle class="mr-hole" r="2.2"/>
+          <path class="mr-glint" d="M-6,-3.5 a7,7 0 0 1 4.5,-4.5"/>
         </g>
       </g>`,
     cap: `
-      <g class="hat hat-cap">
-        <path class="cap-fill" d="M70,38 C72,14 128,14 130,38 Q100,44 70,38Z"/>
-        <path class="cap-band" d="M70,38 Q100,44 130,38 L131,31 Q100,37 69,31Z"/>
-        <path class="cap-plus" d="M100,18 v12 M94,24 h12"/>
+      <g class="hat">
+        <path class="cp-fill" d="M64,40 C60,10 140,10 136,40 Q100,48 64,40Z"/>
+        <path class="cp-fold" d="M62,41 Q100,50 138,41 L137,32 Q100,41 63,32Z"/>
+        <path class="cp-plus" d="M100,15 v12 M94,21 h12"/>
+        <ellipse class="gloss" cx="80" cy="22" rx="8" ry="4" transform="rotate(-25 80 22)"/>
       </g>`,
     none: '',
   };
@@ -156,10 +203,10 @@
   const GLASSES = {
     round: `
       <g class="glasses">
-        <circle class="lens" cx="76" cy="77" r="18"/>
-        <circle class="lens" cx="124" cy="77" r="18"/>
-        <path class="frame" d="M94,73 Q100,67 106,73 M58,74 L49,71 M142,74 L151,71"/>
-        <path class="lens-shine" d="M65,70 l6,-6 M113,70 l6,-6"/>
+        <circle class="lens" cx="77" cy="70" r="16.5"/>
+        <circle class="lens" cx="123" cy="70" r="16.5"/>
+        <path class="frame" d="M93.5,67 Q100,61 106.5,67 M60.5,67 L48,63 M139.5,67 L152,63"/>
+        <path class="glare" d="M66,63 a12,12 0 0 1 8,-6 M112,63 a12,12 0 0 1 8,-6"/>
       </g>`,
     none: '',
   };
@@ -171,39 +218,51 @@
     'oscar-cap': { hat: 'cap', glasses: 'round', name: 'Oscar' },
   };
 
-  // позиции звёздочек: 2 в покое, +2 (с малышами-спутниками) когда думает
+  // 2 звёздочки в покое, +2 со спутниками, когда думает
   const SPARKS = [
-    { x: 62, y: 122, s: 7, cls: 'base', d: 0 },
-    { x: 150, y: 184, s: 7, cls: 'base', d: 0.9 },
-    { x: 26, y: 102, s: 8, cls: 'extra', d: 0.3, kids: [[-8, -9, 2.4], [7, 8, 2]] },
-    { x: 176, y: 98, s: 8, cls: 'extra', d: 1.2, kids: [[9, -7, 2.4], [-6, 10, 2]] },
+    { x: 60, y: 120, s: 6.5, extra: false, d: 0 },
+    { x: 152, y: 190, s: 6.5, extra: false, d: 1.1 },
+    { x: 22, y: 102, s: 8, extra: true, d: 0.3, kids: [[-8, -10, 2.6], [8, 8, 2]] },
+    { x: 178, y: 96, s: 8, extra: true, d: 1.3, kids: [[9, -8, 2.6], [-7, 10, 2]] },
   ];
+  const sparkSvg = (p) => `
+    <g class="spark-wrap${p.extra ? ' extra' : ''}" transform="translate(${p.x} ${p.y})">
+      <g class="pop"><g class="spark" style="--d:${p.d}s">
+        <path d="${sparkle(p.s)}"/>
+        ${(p.kids || []).map(([x, y, s], j) => `<g transform="translate(${x} ${y})"><path class="kid" style="--k:${j}" d="${sparkle(s)}"/></g>`).join('')}
+      </g></g>
+    </g>`;
+
   const CSS = `
   :host {
     --bota-size: 120px;
-    --bota-accent: #2F6BFF;
-    --bota-accent-think: #FF3B3B;
-    --bota-line: #23227A;
+    --bota-accent: #3B6CFF;
+    --bota-accent-think: #FF3B4E;
+    --bota-line: #1F2350;
     --bota-body: #FFFFFF;
-    --bota-hat: #23227A;
-    --bota-ornament: #F2C230;
-    --bota-glasses: var(--bota-line);
+    --bota-shade: #A9B6D3;
+    --bota-hat: #24307A;
+    --bota-ornament: #E8B931;
+    --bota-gold: #D4A63A;
+    --bota-blush: #FF9DB0;
     --bota-think-time: 1.6s;
+    --bota-star: var(--bota-accent);
+    transition: --bota-star var(--bota-think-time) ease;
     display: inline-block;
     width: var(--bota-size);
-    aspect-ratio: 200 / 230;
+    aspect-ratio: 200 / 252;
     position: relative;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
   }
   :host([variant^="oscar"]) {
-    --bota-accent: #C9A227;
+    --bota-accent: #D9A93A;
     --bota-accent-think: #E5484D;
-    --bota-line: #3A2E1F;
-    --bota-hat: #3A2E1F;
-    --bota-ornament: #C9A227;
-    --bota-glasses: #B8892B;
+    --bota-line: #2B2118;
+    --bota-shade: #CDBB95;
+    --bota-gold: #C99A2E;
   }
+  :host([state="thinking"]) { --bota-star: var(--bota-accent-think); }
   :host([floating]) {
     position: fixed;
     right: max(20px, env(safe-area-inset-right));
@@ -211,104 +270,132 @@
     z-index: 2147483000;
     --bota-size: 88px;
   }
-  button {
-    all: unset; display: block; width: 100%; height: 100%; cursor: pointer;
-    border-radius: 40%;
-  }
+  button { all: unset; display: block; width: 100%; height: 100%; cursor: pointer; border-radius: 40%; }
   button:focus-visible { outline: 3px solid var(--bota-accent); outline-offset: 4px; }
   svg { width: 100%; height: 100%; overflow: visible; display: block; }
 
-  .float  { animation: bob 3.6s ease-in-out infinite; transform-box: view-box; transform-origin: 100px 230px; }
-  .breath { animation: breath 3.6s ease-in-out infinite; transform-box: view-box; transform-origin: 100px 215px; }
-  .squash { transform-box: view-box; transform-origin: 100px 215px; }
+  .float  { animation: bob 3.8s ease-in-out infinite; }
+  .breath { animation: breath 3.8s ease-in-out infinite; transform-box: view-box; transform-origin: 100px 228px; }
+  .squash { transform-box: view-box; transform-origin: 100px 228px; }
   @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-7px) } }
-  @keyframes breath { 0%,100% { transform: scale(1,1) } 50% { transform: scale(1.012,0.988) } }
+  @keyframes breath { 0%,100% { transform: scale(1,1) } 50% { transform: scale(1.014,.986) } }
 
-  .body { fill: var(--bota-body); stroke: var(--bota-line); stroke-width: 3.2; stroke-linejoin: round; }
-  .ring { fill: none; stroke: var(--bota-line); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+  /* объём тела */
+  .sil path { fill: var(--edge); stroke: var(--edge); stroke-width: 4; stroke-linejoin: round; }
+  .sil { --edge: color-mix(in srgb, var(--bota-shade) 75%, var(--bota-line)); }
+  .g-body0 { stop-color: color-mix(in srgb, var(--bota-body) 40%, #fff); }
+  .g-body1 { stop-color: var(--bota-body); }
+  .g-body2 { stop-color: color-mix(in srgb, var(--bota-body), var(--bota-shade) 55%); }
+  .g-arm0 { stop-color: color-mix(in srgb, var(--bota-body) 30%, #fff); }
+  .g-arm1 { stop-color: var(--bota-body); }
+  .g-arm2 { stop-color: color-mix(in srgb, var(--bota-body), var(--bota-shade) 62%); }
+  .crease { fill: none; stroke: color-mix(in srgb, var(--bota-shade) 70%, var(--bota-line)); stroke-width: 1.5; opacity: .55; }
+  .occl { fill: none; stroke: var(--bota-shade); stroke-width: ${GAP * 2}; stroke-linejoin: round; opacity: .35; }
+  .spec { fill: #fff; opacity: .8; }
 
+  /* звезда-кристалл */
   .star-g { transform-box: view-box; transform-origin: ${C.x}px ${C.y}px; animation: starPulse 2.8s ease-in-out infinite; }
-  .star { fill: var(--bota-accent); stroke: var(--bota-line); stroke-width: 3.2; stroke-linejoin: round;
-          transition: fill var(--bota-think-time) ease; }
-  .star-glow { fill: var(--bota-accent);  opacity: .35;
-               transition: fill var(--bota-think-time) ease, opacity var(--bota-think-time) ease;
+  .facet { stroke: none; }
+  .f1 { fill: color-mix(in srgb, var(--bota-star), #fff 48%); }
+  .f2 { fill: color-mix(in srgb, var(--bota-star), #fff 20%); }
+  .f3 { fill: color-mix(in srgb, var(--bota-star), #000 8%); }
+  .f4 { fill: color-mix(in srgb, var(--bota-star), #000 26%); }
+  .star-edge { fill: none; stroke: color-mix(in srgb, var(--bota-star), #000 38%); stroke-width: 1.6; stroke-linejoin: round; }
+  .star-glow { fill: var(--bota-star); opacity: .32; transition: opacity var(--bota-think-time) ease;
                transform-box: view-box; transform-origin: ${C.x}px ${C.y}px; }
-  .star-core { fill: #fff; opacity: .28; transform-box: view-box; transform-origin: ${C.x}px ${C.y}px;
-               transform: scale(.38); transition: opacity var(--bota-think-time) ease; animation: core 2.8s ease-in-out infinite; }
+  .glint { fill: #fff; transform-box: fill-box; transform-origin: center; animation: glint 2.8s ease-in-out infinite; }
   @keyframes starPulse { 0%,100% { transform: scale(1) } 50% { transform: scale(1.025) } }
-  @keyframes core { 0%,100% { opacity: .18 } 50% { opacity: .38 } }
+  @keyframes glint { 0%,100% { opacity: .55; transform: scale(.7) } 50% { opacity: 1; transform: scale(1.1) } }
 
-  .spark-wrap { transition: opacity .5s ease; }
-  .spark { fill: var(--bota-accent); transition: fill var(--bota-think-time) ease;
-           animation: twinkle 2.4s ease-in-out infinite; animation-delay: var(--d); transform-box: fill-box; transform-origin: center; }
+  /* звёздочки */
+  .spark { fill: color-mix(in srgb, var(--bota-star), #fff 18%); animation: twinkle 2.4s ease-in-out infinite;
+           animation-delay: var(--d); transform-box: fill-box; transform-origin: center; }
   .spark .kid { animation: twinkle 1.4s ease-in-out infinite; animation-delay: calc(var(--k) * .5s + .2s);
                 transform-box: fill-box; transform-origin: center; }
-  .extra { opacity: 0; }
-  .pop { transform-box: fill-box; transform-origin: center; transform: scale(0);
-         transition: transform .6s cubic-bezier(.3,1.6,.5,1); }
-  @keyframes twinkle {
-    0%,100% { transform: scale(.55) rotate(0deg); opacity: .55 }
-    50%     { transform: scale(1.1) rotate(45deg); opacity: 1 }
-  }
+  .pop { transform-box: fill-box; transform-origin: center; transition: transform .6s cubic-bezier(.3,1.6,.5,1); }
+  .extra .pop { transform: scale(0); }
+  @keyframes twinkle { 0%,100% { transform: scale(.55) rotate(0deg); opacity: .6 } 50% { transform: scale(1.1) rotate(45deg); opacity: 1 } }
 
-  .eye-white { fill: var(--bota-body); stroke: var(--bota-line); stroke-width: 2.6; }
-  .bar { fill: var(--bota-line); transform-box: fill-box; transform-origin: center; }
-  .eye-lid { transform-box: fill-box; transform-origin: center; transition: transform .45s cubic-bezier(.3,1.4,.5,1); }
-  .eye-wave { transition: transform .25s ease-out; }
-  .squint { fill: none; stroke: var(--bota-line); stroke-width: 2; stroke-linecap: round; opacity: 0; transition: opacity .4s ease; }
-  .eyes.blink .eye-lid { transform: scaleY(.08) !important; transition: transform .07s ease-in; }
+  /* глаза */
+  .sclera { fill: url(#EYEG); stroke: color-mix(in srgb, var(--bota-line) 45%, var(--bota-shade)); stroke-width: 1.3; }
+  .g-eye0 { stop-color: #fff; } .g-eye1 { stop-color: color-mix(in srgb, #fff, var(--bota-shade) 30%); }
+  .bar { fill: var(--bota-line); transform-box: fill-box; transform-origin: center;
+         animation: shimmer var(--dur) ease-in-out var(--del) infinite alternate; }
+  @keyframes shimmer { from { transform: scaleY(.95) } to { transform: scaleY(1.03) } }
+  .pcore { fill: var(--bota-line); }
+  .hl { fill: #fff; } .hl2 { opacity: .85; }
+  .lid { transform-box: fill-box; transform-origin: center; transition: transform .45s cubic-bezier(.3,1.4,.5,1); }
+  .look { transition: transform .25s ease-out; }
+  .eyes.blink .lid { transform: scaleY(.07) !important; transition: transform .07s ease-in; }
 
-  .mouth { fill: none; stroke: var(--bota-line); stroke-width: 2.6; stroke-linecap: round; transition: opacity .3s ease; }
-  .mouth-think { opacity: 0; }
+  .blush { fill: var(--bota-blush); opacity: .38; filter: url(#SOFT); transition: opacity .6s ease; }
+  .mouth { fill: none; stroke: var(--bota-line); stroke-width: 2.2; stroke-linecap: round; transition: opacity .3s ease; }
+  .m-think, .m-talk { opacity: 0; }
+  .m-talk { fill: var(--bota-line); stroke: none; transform-box: fill-box; transform-origin: center; }
 
-  .hat-fill, .cap-fill { fill: var(--bota-hat); stroke: var(--bota-line); stroke-width: 3; stroke-linejoin: round; }
-  .hat-band { fill: var(--bota-ornament); stroke: var(--bota-line); stroke-width: 2; stroke-linejoin: round; }
-  .ornament path { fill: none; stroke: var(--bota-ornament); stroke-width: 1.7; stroke-linecap: round; }
+  /* головные уборы */
+  .tb-dome { fill: url(#HATG); stroke: color-mix(in srgb, var(--bota-hat), #000 45%); stroke-width: 1.4; }
+  .g-hat0 { stop-color: color-mix(in srgb, var(--bota-hat), #fff 22%); }
+  .g-hat1 { stop-color: var(--bota-hat); }
+  .g-hat2 { stop-color: color-mix(in srgb, var(--bota-hat), #000 40%); }
+  .tb-seam { fill: none; stroke: color-mix(in srgb, var(--bota-hat), #000 35%); stroke-width: 1.2; opacity: .7; }
+  .tb-orn path { fill: none; stroke: url(#GOLDG); stroke-width: 1.8; stroke-linecap: round; }
+  .tb-gem, .tb-bead { fill: url(#GOLDG); stroke: color-mix(in srgb, var(--bota-ornament), #000 35%); stroke-width: .8; }
+  .tb-band { fill: url(#GOLDG); stroke: color-mix(in srgb, var(--bota-ornament), #000 35%); stroke-width: 1.1; }
+  .tb-dot { fill: var(--bota-hat); }
+  .g-gold0 { stop-color: color-mix(in srgb, var(--bota-ornament), #fff 45%); }
+  .g-gold1 { stop-color: var(--bota-ornament); }
+  .g-gold2 { stop-color: color-mix(in srgb, var(--bota-ornament), #000 25%); }
+  .gloss { fill: #fff; opacity: .22; }
   .hat-hop { transform-box: view-box; transform-origin: 100px 40px; }
-  .cap-fill { fill: var(--bota-body); }
-  .cap-band { fill: var(--bota-accent); stroke: var(--bota-line); stroke-width: 2; stroke-linejoin: round; transition: fill var(--bota-think-time) ease; }
-  .cap-plus { fill: none; stroke: var(--bota-accent); stroke-width: 3.2; stroke-linecap: round; transition: stroke var(--bota-think-time) ease; }
-  .mirror-strap { fill: none; stroke: var(--bota-line); stroke-width: 4; stroke-linecap: round; }
-  .mirror-rim { fill: var(--bota-glasses); stroke: var(--bota-line); stroke-width: 2.4; }
-  .mirror-glass { fill: #EEF2F6; stroke: var(--bota-line); stroke-width: 1.4; }
-  .mirror-hole { fill: var(--bota-line); }
-  .mirror-shine { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; }
 
-  .lens { fill: var(--bota-accent); fill-opacity: .06; stroke: var(--bota-glasses); stroke-width: 3.2; }
-  .frame { fill: none; stroke: var(--bota-glasses); stroke-width: 3.2; stroke-linecap: round; }
-  .lens-shine { fill: none; stroke: #fff; stroke-width: 2.4; stroke-linecap: round; opacity: .9; }
+  .mr-strap { fill: none; stroke: color-mix(in srgb, var(--bota-line) 70%, var(--bota-shade)); stroke-width: 5; stroke-linecap: round; }
+  .mr-strap-hl { fill: none; stroke: #fff; stroke-width: 1.2; opacity: .35; stroke-linecap: round; }
+  .mr-rim { fill: url(#METALG); stroke: color-mix(in srgb, var(--bota-gold), #000 40%); stroke-width: 1.2; }
+  .mr-glass { fill: url(#MIRRG); stroke: color-mix(in srgb, var(--bota-gold), #000 30%); stroke-width: 1; }
+  .mr-hole { fill: var(--bota-line); }
+  .mr-glint { fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; }
+  .g-met0 { stop-color: color-mix(in srgb, var(--bota-gold), #fff 50%); }
+  .g-met1 { stop-color: var(--bota-gold); }
+  .g-met2 { stop-color: color-mix(in srgb, var(--bota-gold), #000 30%); }
+
+  .cp-fill { fill: url(#CAPG); stroke: color-mix(in srgb, var(--bota-shade) 75%, var(--bota-line)); stroke-width: 1.6; }
+  .cp-fold { fill: color-mix(in srgb, #fff, var(--bota-shade) 35%); stroke: color-mix(in srgb, var(--bota-shade) 75%, var(--bota-line)); stroke-width: 1.4; stroke-linejoin: round; }
+  .cp-plus { fill: none; stroke: var(--bota-gold); stroke-width: 3.6; stroke-linecap: round; }
+  .g-cap0 { stop-color: #fff; } .g-cap1 { stop-color: color-mix(in srgb, #fff, var(--bota-shade) 30%); }
+
+  .lens { fill: #fff; fill-opacity: .14; stroke: url(#METALG); stroke-width: 2.8; }
+  .frame { fill: none; stroke: var(--bota-gold); stroke-width: 2.6; stroke-linecap: round; }
+  .glare { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; opacity: .85; }
 
   /* ---------- думает ---------- */
-  :host([state="thinking"]) .star,
-  :host([state="thinking"]) .star-glow,
-  :host([state="thinking"]) .spark { fill: var(--bota-accent-think); }
-  :host([state="thinking"]) .cap-band { fill: var(--bota-accent-think); }
-  :host([state="thinking"]) .cap-plus { stroke: var(--bota-accent-think); }
-  :host([state="thinking"]) .star-glow { opacity: .9; animation: glow 1.3s ease-in-out infinite; }
-  :host([state="thinking"]) .star-core { opacity: .55; animation: core-hot 1.3s ease-in-out infinite; }
+  :host([state="thinking"]) .star-glow { opacity: .95; animation: glow 1.3s ease-in-out infinite; }
   :host([state="thinking"]) .star-g { animation-duration: 1.3s; }
-  :host([state="thinking"]) .extra { opacity: 1; }
-  :host([state="thinking"]) .pop { transform: scale(1); }
-  :host([state="thinking"]) .eye-lid { transform: scaleY(.5); }
-  :host([state="thinking"]) .squint { opacity: 1; }
-  :host([state="thinking"]) .mouth-idle { opacity: 0; }
-  :host([state="thinking"]) .mouth-think { opacity: 1; }
-  :host([state="thinking"]) .eye-wave { transform: translate(0,0) !important; }
-  @keyframes glow { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-  @keyframes core-hot { 0%,100% { opacity: .4 } 50% { opacity: .8 } }
+  :host([state="thinking"]) .glint { animation-duration: 1.3s; }
+  :host([state="thinking"]) .extra .pop { transform: scale(1); }
+  :host([state="thinking"]) .lid { transform: scaleY(.52); }
+  :host([state="thinking"]) .look { transform: translate(0, 1px) !important; }
+  :host([state="thinking"]) .blush { opacity: .7; }
+  :host([state="thinking"]) .m-idle { opacity: 0; }
+  :host([state="thinking"]) .m-think { opacity: 1; }
+  @keyframes glow { 0%,100% { transform: scale(1) } 50% { transform: scale(1.14) } }
 
-  /* ---------- говорит: глаза-эквалайзер ---------- */
-  :host([state="talking"]) .bar { animation: eq .5s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -.13s); }
-  @keyframes eq { from { transform: scaleY(.35) } to { transform: scaleY(1.05) } }
+  /* ---------- говорит: зрачки-волны двигаются ---------- */
+  :host([state="talking"]) .bar { animation: talk .42s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -.07s); }
+  :host([state="talking"]) .m-idle { opacity: 0; }
+  :host([state="talking"]) .m-talk { opacity: 1; animation: mtalk .32s ease-in-out infinite alternate; }
+  @keyframes talk { from { transform: scaleY(.62) } to { transform: scaleY(1.04) } }
+  @keyframes mtalk { from { transform: scale(1, .5) } to { transform: scale(1, 1.1) } }
 
-  /* частицы при клике */
-  .burst path { fill: var(--bota-accent); }
-  :host([state="thinking"]) .burst path { fill: var(--bota-accent-think); }
+  .burst path { fill: color-mix(in srgb, var(--bota-star), #fff 15%); }
 
   @media (prefers-reduced-motion: reduce) {
-    .float, .breath, .star-g, .star-core, .spark, .spark .kid, .bar, .star-glow { animation: none !important; }
+    .float, .breath, .star-g, .spark, .spark .kid, .bar, .star-glow, .glint, .m-talk { animation: none !important; }
   }
   `;
+
+  const grad = (id, cls, kind, attrs, stops) =>
+    `<${kind}Gradient id="${id}" ${attrs}>${stops.map((o, i) => `<stop offset="${o}" class="${cls}${i}"/>`).join('')}</${kind}Gradient>`;
 
   class BotaAssistant extends HTMLElement {
     static get observedAttributes() { return ['variant', 'hat', 'glasses', 'state', 'label']; }
@@ -317,7 +404,6 @@
       super();
       this._root = this.attachShadow({ mode: 'open' });
       this._onMove = this._onMove.bind(this);
-      this._uid = 'b' + Math.random().toString(36).slice(2, 8);
     }
 
     connectedCallback() {
@@ -334,10 +420,7 @@
 
     attributeChangedCallback(name, oldV, newV) {
       if (!this.isConnected || oldV === newV) return;
-      if (name === 'state') {
-        if (newV === 'thinking') this.burst(4);
-        return; // состояние работает через CSS, перерисовка не нужна
-      }
+      if (name === 'state') { if (newV === 'thinking') this.burst(5); return; }
       this._render();
     }
 
@@ -347,64 +430,68 @@
 
     _cfg() {
       const p = PRESETS[this.getAttribute('variant')] || PRESETS.bota;
+      const hat = this.getAttribute('hat'), gl = this.getAttribute('glasses');
       return {
-        hat: HATS[this.getAttribute('hat')] !== undefined ? this.getAttribute('hat') : p.hat,
-        glasses: GLASSES[this.getAttribute('glasses')] !== undefined ? this.getAttribute('glasses') : p.glasses,
+        hat: hat in HATS ? hat : p.hat,
+        glasses: gl in GLASSES ? gl : p.glasses,
         name: this.getAttribute('label') || p.name,
       };
     }
 
     _render() {
-      const cfg = this._cfg(), u = this._uid;
+      const cfg = this._cfg();
+      const name = cfg.name.replace(/[<>&"]/g, '');
       this._root.innerHTML = `
         <style>${CSS}</style>
-        <button type="button" part="button" aria-label="${cfg.name}">
-          <svg viewBox="0 0 200 230" aria-hidden="true">
+        <button type="button" part="button" aria-label="${name}">
+          <svg viewBox="0 -12 200 252" aria-hidden="true">
             <defs>
-              <filter id="${u}-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="9"/>
-              </filter>
-              <mask id="${u}-notch" maskUnits="userSpaceOnUse" x="-20" y="-20" width="240" height="270">
-                <rect x="-20" y="-20" width="240" height="270" fill="#fff"/>
-                <path d="${notchPath}" fill="#000"/>
-              </mask>
-              <clipPath id="${u}-inside"><path d="${bodyPath}"/></clipPath>
+              ${grad('BODYG', 'g-body', 'radial', 'cx="0.38" cy="0.26" r="0.82"', [0, 0.5, 1])}
+              ${grad('ARMG', 'g-arm', 'linear', 'x1="0.3" y1="0" x2="0.6" y2="1"', [0, 0.45, 1])}
+              ${grad('EYEG', 'g-eye', 'linear', 'x1="0" y1="0" x2="0" y2="1"', [0.3, 1])}
+              ${grad('HATG', 'g-hat', 'linear', 'x1="0.15" y1="0" x2="0.8" y2="1"', [0, 0.45, 1])}
+              ${grad('GOLDG', 'g-gold', 'linear', 'x1="0" y1="0" x2="0.4" y2="1"', [0, 0.5, 1])}
+              ${grad('METALG', 'g-met', 'linear', 'x1="0" y1="0" x2="1" y2="1"', [0, 0.5, 1])}
+              ${grad('CAPG', 'g-cap', 'linear', 'x1="0" y1="0" x2="0.3" y2="1"', [0.2, 1])}
+              <radialGradient id="MIRRG" cx="0.35" cy="0.3" r="0.8"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#BFC9D6"/></radialGradient>
+              <filter id="GLOW" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="10"/></filter>
+              <filter id="SOFT" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>
+              <filter id="BLUR4" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+              <clipPath id="BODYCLIP"><path d="${bodyPath}"/></clipPath>
             </defs>
             <g class="float"><g class="squash"><g class="breath">
-              <g class="sparks-back"></g>
-              <path class="body" mask="url(#${u}-notch)" d="${bodyPath}"/>
-              <path class="ring" clip-path="url(#${u}-inside)" d="${ringPath}"/>
+              <g class="sparks-back">${SPARKS.filter((s) => s.extra).map(sparkSvg).join('')}</g>
+              <g class="sil"><path d="${bodyPath}"/><path d="${armLPath}"/><path d="${armRPath}"/></g>
+              <path d="${bodyPath}" fill="url(#BODYG)"/>
+              <path class="occl" filter="url(#BLUR4)" clip-path="url(#BODYCLIP)" d="${starPath}"/>
+              <path d="${armLPath}" fill="url(#ARMG)"/>
+              <path d="${armRPath}" fill="url(#ARMG)"/>
+              <g clip-path="url(#BODYCLIP)">
+                <path class="crease" d="${armLPath}"/><path class="crease" d="${armRPath}"/>
+              </g>
+              <ellipse class="spec" filter="url(#BLUR4)" cx="78" cy="42" rx="14" ry="8" transform="rotate(-28 78 42)"/>
               <g class="hat-hop">${HATS[cfg.hat]}</g>
-              <g class="eyes">${eye(76, 77, 'l')}${eye(124, 77, 'r')}</g>
-              <path class="mouth mouth-idle" d="M95,83 Q100,84.5 105,83"/>
-              <path class="mouth mouth-think" d="M94,84 q2,-2.5 4,0 t4,0 t4,0"/>
+              <ellipse class="blush" cx="60" cy="90" rx="7.5" ry="4"/>
+              <ellipse class="blush" cx="140" cy="90" rx="7.5" ry="4"/>
+              <g class="eyes">${eye('l')}${eye('r')}</g>
+              <path class="mouth m-idle" d="M96.5,78 Q100,81 103.5,78"/>
+              <path class="mouth m-think" d="M95,80 q1.7,-2 3.3,0 t3.4,0 t3.3,0"/>
+              <ellipse class="mouth m-talk" cx="100" cy="80" rx="2.6" ry="2.4"/>
               ${GLASSES[cfg.glasses]}
-              <g class="sparks-front">${SPARKS.filter((s) => s.cls === 'base').map((p) => `
-                <g class="spark-wrap base" transform="translate(${p.x} ${p.y})">
-                  <g class="spark" style="--d:${p.d}s"><path d="${sparkle(p.s)}"/></g>
-                </g>`).join('')}</g>
+              <g class="sparks-front">${SPARKS.filter((s) => !s.extra).map(sparkSvg).join('')}</g>
               <g class="star-g">
-                <path class="star-glow" filter="url(#${u}-glow)" d="${starPath}"/>
-                <path class="star" d="${starPath}"/>
-                <path class="star-core" d="${starPath}"/>
+                <path class="star-glow" filter="url(#GLOW)" d="${starPath}"/>
+                ${facets}
+                <path class="star-edge" d="${starPath}"/>
+                <path class="glint" transform="translate(88 132)" d="${sparkle(5)}"/>
               </g>
               <g class="burst"></g>
             </g></g></g>
           </svg>
         </button>`;
-      // в «задний» слой оставляем только дополнительные звёздочки
-      const back = this._root.querySelector('.sparks-back');
-      back.innerHTML = SPARKS.filter((s) => s.cls === 'extra').map((p) => `
-        <g class="spark-wrap extra" transform="translate(${p.x} ${p.y})">
-          <g class="pop"><g class="spark" style="--d:${p.d}s">
-            <path d="${sparkle(p.s)}"/>
-            ${p.kids.map(([x, y, s], j) => `<g transform="translate(${x} ${y})"><path class="kid" style="--k:${j}" d="${sparkle(s)}"/></g>`).join('')}
-          </g></g>
-        </g>`).join('');
-
       this._svg = this._root.querySelector('svg');
       this._eyes = this._root.querySelector('.eyes');
-      this._waves = [...this._root.querySelectorAll('.eye-wave')];
+      this._looks = [...this._root.querySelectorAll('.look')];
       this._root.querySelector('button').addEventListener('click', () => this._click());
     }
 
@@ -412,8 +499,7 @@
 
     _click() {
       if (!this._reduced()) {
-        const sq = this._root.querySelector('.squash');
-        sq.animate([
+        this._root.querySelector('.squash').animate([
           { transform: 'scale(1,1)' },
           { transform: 'scale(1.12,.86)', offset: .25 },
           { transform: 'scale(.94,1.08)', offset: .55 },
@@ -426,9 +512,11 @@
           { transform: 'translateY(-14px) rotate(-8deg)', offset: .4 },
           { transform: 'translateY(0) rotate(0)' },
         ], { duration: 600, easing: 'cubic-bezier(.3,1.5,.5,1)' });
-        const star = this._root.querySelector('.star-g');
-        star.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18) rotate(8deg)' }, { transform: 'scale(1)' }],
+        this._root.querySelector('.star-g').animate(
+          [{ transform: 'scale(1)' }, { transform: 'scale(1.16) rotate(8deg)' }, { transform: 'scale(1)' }],
           { duration: 500, easing: 'ease-out' });
+        this._root.querySelectorAll('.blush').forEach((b) => b.animate(
+          [{ opacity: .38 }, { opacity: .9 }, { opacity: .38 }], { duration: 900 }));
         this.burst(10);
       }
       this.dispatchEvent(new CustomEvent('bota-click', { bubbles: true, composed: true }));
@@ -440,15 +528,15 @@
       for (let i = 0; i < n; i++) {
         const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
         const dist = 50 + Math.random() * 40, s = 3 + Math.random() * 4;
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const p = document.createElementNS(SVGNS, 'path');
         p.setAttribute('d', sparkle(s));
-        p.setAttribute('transform', `translate(${C.x} ${C.y})`);
         g.appendChild(p);
         const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
         p.animate([
           { transform: `translate(${C.x}px, ${C.y}px) scale(.2) rotate(0deg)`, opacity: 1 },
           { transform: `translate(${C.x + dx}px, ${C.y + dy}px) scale(1) rotate(90deg)`, opacity: 0 },
-        ], { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.2,.8,.3,1)' }).onfinish = () => p.remove();
+        ], { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' })
+          .onfinish = () => p.remove();
       }
     }
 
@@ -463,7 +551,7 @@
       this._blinkT = setTimeout(() => {
         if (this.state !== 'thinking') {
           this.blink();
-          if (Math.random() < 0.25) setTimeout(() => this.blink(), 260); // иногда двойное моргание
+          if (Math.random() < 0.25) setTimeout(() => this.blink(), 260);
         }
         this._scheduleBlink();
       }, 2600 + Math.random() * 3600);
@@ -476,8 +564,8 @@
       const cx = r.left + r.width / 2, cy = r.top + r.height * 0.33;
       const dx = e.clientX - cx, dy = e.clientY - cy, d = Math.hypot(dx, dy) || 1;
       const k = Math.min(1, d / 300);
-      const tx = (dx / d) * 2.6 * k, ty = (dy / d) * 4 * k;
-      this._waves.forEach((w) => { w.style.transform = `translate(${tx}px, ${ty}px)`; });
+      const tx = (dx / d) * 2.2 * k, ty = (dy / d) * 3.4 * k;
+      this._looks.forEach((w) => { w.style.transform = `translate(${tx}px, ${ty}px)`; });
     }
   }
 
