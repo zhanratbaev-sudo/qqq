@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bota — ИИ-маскот</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="bota.js"></script>
+<style>
+  :root {
+    --bg: #F7F5F0; --card: #FFFFFF; --ink: #1E1C24; --muted: #6B6875; --border: #E7E3DA;
+    --gold: #C9A227; --gold-soft: #F6EED6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; line-height: 1.5; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 48px 0 24px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+  header h1 { font-size: clamp(32px, 6vw, 52px); margin: 0; letter-spacing: -.02em; }
+  header p { margin: 6px 0 0; color: var(--muted); max-width: 560px; }
+  h2 { font-size: 22px; margin: 40px 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 22px 18px 18px;
+          display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .card bota-assistant { --bota-size: 140px; }
+  .card b { font-size: 15px; }
+  .card small { color: var(--muted); text-align: center; }
+  .card code { font-size: 12px; background: #F2F0EA; padding: 2px 6px; border-radius: 6px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+  .bar button { font: inherit; font-weight: 600; border: 1px solid var(--border); background: var(--card); color: var(--ink);
+                padding: 9px 16px; border-radius: 999px; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .colors { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .colors label { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+  .colors input { width: 36px; height: 30px; border: 1px solid var(--border); border-radius: 8px; padding: 0; background: none; cursor: pointer; }
+
+  /* ---- макет сайта клиники ---- */
+  .clinic { margin: 40px 0 120px; border-radius: 24px; overflow: hidden; border: 1px solid var(--border);
+            background: linear-gradient(160deg, #FFFDF7, var(--gold-soft)); position: relative; min-height: 560px; }
+  .clinic nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; border-bottom: 1px solid #EADFBF; }
+  .logo { font-weight: 800; letter-spacing: .04em; color: #3A2E1F; }
+  .logo span { color: var(--gold); }
+  .clinic .hero { padding: 48px 24px; max-width: 520px; }
+  .clinic .hero h3 { font-size: clamp(26px, 4vw, 38px); margin: 0 0 10px; color: #3A2E1F; line-height: 1.15; }
+  .clinic .hero p { color: #6E5E43; margin: 0; }
+  .clinic .launcher { position: absolute; right: 22px; bottom: 22px; --bota-size: 84px; }
+
+  .chat { position: absolute; right: 22px; bottom: 22px; width: min(360px, calc(100% - 44px)); height: 480px; max-height: calc(100% - 44px);
+          background: #fff; border-radius: 22px; border: 1px solid #EADFBF; display: flex; flex-direction: column;
+          transform-origin: bottom right; transform: scale(.6); opacity: 0; pointer-events: none;
+          transition: transform .35s cubic-bezier(.3,1.3,.5,1), opacity .25s ease; }
+  .chat.open { transform: scale(1); opacity: 1; pointer-events: auto; }
+  .chat-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #F0E7CF;
+               background: linear-gradient(180deg, var(--gold-soft), #fff); border-radius: 22px 22px 0 0; }
+  .chat-head bota-assistant { --bota-size: 58px; }
+  .chat-head .t { flex: 1; }
+  .chat-head .t b { display: block; color: #3A2E1F; }
+  .chat-head .t small { color: #8A7752; }
+  .chat-head .x { all: unset; cursor: pointer; font-size: 22px; color: #8A7752; padding: 4px 8px; border-radius: 8px; }
+  .msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .m { max-width: 82%; padding: 9px 13px; border-radius: 16px; font-size: 14px; }
+  .m.bot { background: #F7F1E1; color: #3A2E1F; border-bottom-left-radius: 4px; }
+  .m.me  { background: #3A2E1F; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #F0E7CF; }
+  .chat input { flex: 1; font: inherit; border: 1px solid #EADFBF; border-radius: 12px; padding: 10px 12px; outline-color: var(--gold); }
+  .chat form button { font: inherit; font-weight: 700; border: 0; background: var(--gold); color: #fff; border-radius: 12px; padding: 0 16px; cursor: pointer; }
+  footer { color: var(--muted); font-size: 13px; padding: 0 0 40px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <bota-assistant id="hero" style="--bota-size:150px"></bota-assistant>
+    <div>
+      <h1>Bota</h1>
+      <p>Единый маскот для всех ИИ-ассистентов. Один персонаж, а под каждого клиента меняются аксессуары и цвета. Наведи курсор: глаза следят. Нажми на него.</p>
+    </div>
+  </header>
+
+  <h2>Персонажи</h2>
+  <p class="sub">Базовый Bota с тюбетейкой и три варианта Oscar для Oscar Clinic (очки, золотая палитра).</p>
+  <div class="bar" id="states" role="group" aria-label="Состояние">
+    <button data-s="idle" aria-pressed="true">Покой</button>
+    <button data-s="thinking" aria-pressed="false">Думает</button>
+    <button data-s="talking" aria-pressed="false">Отвечает</button>
+  </div>
+  <div class="grid">
+    <div class="card"><bota-assistant class="demo" variant="bota"></bota-assistant><b>Bota</b><small>Базовый, тюбетейка с орнаментом<br><code>variant="bota"</code></small></div>
+    <div class="card"><bota-assistant class="demo" variant="oscar"></bota-assistant><b>Oscar</b><small>Очки, без головного убора<br><code>variant="oscar"</code></small></div>
+    <div class="card"><bota-assistant class="demo" variant="oscar-doctor"></bota-assistant><b>Oscar · Доктор</b><small>Очки и лобное зеркало<br><code>variant="oscar-doctor"</code></small></div>
+    <div class="card"><bota-assistant class="demo" variant="oscar-cap"></bota-assistant><b>Oscar · Медшапочка</b><small>Очки и медицинская шапочка<br><code>variant="oscar-cap"</code></small></div>
+  </div>
+
+  <h2>Свои цвета</h2>
+  <p class="sub">Меняются через CSS-переменные. Попробуй цвет звезды в покое и когда думает.</p>
+  <div class="colors">
+    <label>Звезда <input type="color" data-v="--bota-accent" value="#2F6BFF"></label>
+    <label>Думает <input type="color" data-v="--bota-accent-think" value="#FF3B3B"></label>
+    <label>Контур <input type="color" data-v="--bota-line" value="#23227A"></label>
+    <label>Головной убор <input type="color" data-v="--bota-hat" value="#23227A"></label>
+    <label>Орнамент <input type="color" data-v="--bota-ornament" value="#F2C230"></label>
+    <label>Тело <input type="color" data-v="--bota-body" value="#FFFFFF"></label>
+  </div>
+  <p class="sub" style="margin-top:8px">Применяется к базовому Bota (первая карточка и шапка страницы).</p>
+
+  <h2>Как это выглядит на сайте</h2>
+  <p class="sub">Пример для Oscar Clinic: Oscar плавает в углу, по клику открывается чат, и он думает, пока готовится ответ. Ответы здесь ненастоящие, только для демонстрации.</p>
+  <section class="clinic" aria-label="Пример сайта клиники">
+    <nav><div class="logo">OSCAR <span>CLINIC</span></div><small style="color:#8A7752">Офтальмология</small></nav>
+    <div class="hero">
+      <h3>Ясный взгляд начинается с заботы</h3>
+      <p>Диагностика зрения, подбор очков и линз, лазерная коррекция. Задайте вопрос Oscar: он поможет записаться к врачу.</p>
+    </div>
+    <bota-assistant class="launcher" id="launcher" variant="oscar-doctor"></bota-assistant>
+    <div class="chat" id="chat" role="dialog" aria-label="Чат с Oscar">
+      <div class="chat-head">
+        <bota-assistant id="chatBot" variant="oscar-doctor"></bota-assistant>
+        <div class="t"><b>Oscar</b><small id="status">Онлайн</small></div>
+        <button class="x" id="close" aria-label="Закрыть">×</button>
+      </div>
+      <div class="msgs" id="msgs"><div class="m bot">Здравствуйте! Я Oscar, ассистент Oscar Clinic. Чем помочь?</div></div>
+      <form id="form"><input id="inp" placeholder="Напишите вопрос…" autocomplete="off"><button>➤</button></form>
+    </div>
+  </section>
+  <footer>bota.js: один файл, без зависимостей. Инструкция по подключению в README.md.</footer>
+</div>
+
+<script>
+  // переключение состояний в галерее
+  const demos = document.querySelectorAll('.demo');
+  document.getElementById('states').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#states button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    demos.forEach(d => d.setState(b.dataset.s));
+  });
+
+  // цвета
+  const tint = [document.getElementById('hero'), demos[0]];
+  document.querySelectorAll('.colors input').forEach(inp => inp.addEventListener('input', () => {
+    tint.forEach(el => el.style.setProperty(inp.dataset.v, inp.value));
+  }));
+
+  // макет чата
+  const launcher = document.getElementById('launcher'), chat = document.getElementById('chat'),
+        bot = document.getElementById('chatBot'), msgs = document.getElementById('msgs'),
+        status = document.getElementById('status');
+  launcher.addEventListener('bota-click', () => setTimeout(() => {
+    chat.classList.add('open'); launcher.style.visibility = 'hidden'; document.getElementById('inp').focus();
+  }, 280));
+  document.getElementById('close').onclick = () => { chat.classList.remove('open'); launcher.style.visibility = ''; };
+
+  const answers = [
+    'Записаться можно на любой будний день с 9:00 до 19:00. Удобнее утром или вечером?',
+    'Проверка зрения занимает около 30 минут. Перед приёмом не нужно специально готовиться.',
+    'Подобрать очки или линзы можно после диагностики. Врач подскажет лучший вариант.',
+  ];
+  let ai = 0;
+  const add = (cls, text) => { const d = document.createElement('div'); d.className = 'm ' + cls; d.textContent = text; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; return d; };
+  document.getElementById('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inp = document.getElementById('inp'); if (!inp.value.trim()) return;
+    add('me', inp.value); inp.value = '';
+    bot.setState('thinking'); status.textContent = 'Думает…';
+    setTimeout(() => {
+      bot.setState('talking'); status.textContent = 'Печатает…';
+      const text = answers[ai++ % answers.length], el = add('bot', '');
+      let i = 0;
+      const t = setInterval(() => {
+        el.textContent = text.slice(0, ++i); msgs.scrollTop = msgs.scrollHeight;
+        if (i >= text.length) { clearInterval(t); bot.setState('idle'); status.textContent = 'Онлайн'; }
+      }, 22);
+    }, 2200);
+  });
+</script>
+</body>
+</html>
