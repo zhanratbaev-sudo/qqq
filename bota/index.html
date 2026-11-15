@@ -44,7 +44,7 @@
   .clinic .hero { padding: 48px 24px; max-width: 520px; }
   .clinic .hero h3 { font-size: clamp(26px, 4vw, 38px); margin: 0 0 10px; color: #3A2E1F; line-height: 1.15; }
   .clinic .hero p { color: #6E5E43; margin: 0; }
-  .clinic .launcher { position: absolute; right: 22px; bottom: 22px; --bota-size: 84px; }
+  .clinic .launcher { position: absolute; right: 22px; bottom: 22px; --bota-size: 104px; }
 
   .chat { position: absolute; right: 22px; bottom: 22px; width: min(360px, calc(100% - 44px)); height: 480px; max-height: calc(100% - 44px);
           background: #fff; border-radius: 22px; border: 1px solid #EADFBF; display: flex; flex-direction: column;
@@ -53,7 +53,7 @@
   .chat.open { transform: scale(1); opacity: 1; pointer-events: auto; }
   .chat-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #F0E7CF;
                background: linear-gradient(180deg, var(--gold-soft), #fff); border-radius: 22px 22px 0 0; }
-  .chat-head bota-assistant { --bota-size: 58px; }
+  .chat-head bota-assistant { --bota-size: 60px; }
   .chat-head .t { flex: 1; }
   .chat-head .t b { display: block; color: #3A2E1F; }
   .chat-head .t small { color: #8A7752; }
@@ -79,7 +79,7 @@
   </header>
 
   <h2>Персонажи</h2>
-  <p class="sub">Базовый Bota с тюбетейкой и три варианта Oscar для Oscar Clinic (очки, золотая палитра).</p>
+  <p class="sub">Базовый Bota с тюбетейкой и Oscar — 3D-персонаж для Oscar Clinic.</p>
   <div class="bar" id="states" role="group" aria-label="Состояние">
     <button data-s="idle" aria-pressed="true">Покой</button>
     <button data-s="thinking" aria-pressed="false">Думает</button>
@@ -87,9 +87,7 @@
   </div>
   <div class="grid">
     <div class="card"><bota-assistant class="demo" variant="bota"></bota-assistant><b>Bota</b><small>Базовый, тюбетейка с орнаментом<br><code>variant="bota"</code></small></div>
-    <div class="card"><bota-assistant class="demo" variant="oscar"></bota-assistant><b>Oscar</b><small>Очки, без головного убора<br><code>variant="oscar"</code></small></div>
-    <div class="card"><bota-assistant class="demo" variant="oscar-doctor"></bota-assistant><b>Oscar · Доктор</b><small>Очки и лобное зеркало<br><code>variant="oscar-doctor"</code></small></div>
-    <div class="card"><bota-assistant class="demo" variant="oscar-cap"></bota-assistant><b>Oscar · Медшапочка</b><small>Очки и медицинская шапочка<br><code>variant="oscar-cap"</code></small></div>
+    <div class="card"><bota-assistant class="demo" variant="oscar" style="--bota-size:190px"></bota-assistant><b>Oscar</b><small>3D-персонаж Oscar Clinic: очки, стетоскоп, живая звезда<br><code>variant="oscar"</code></small></div>
   </div>
 
   <h2>Свои цвета</h2>
@@ -112,10 +110,10 @@
       <h3>Ясный взгляд начинается с заботы</h3>
       <p>Диагностика зрения, подбор очков и линз, лазерная коррекция. Задайте вопрос Oscar: он поможет записаться к врачу.</p>
     </div>
-    <bota-assistant class="launcher" id="launcher" variant="oscar-doctor"></bota-assistant>
+    <bota-assistant class="launcher" id="launcher" variant="oscar"></bota-assistant>
     <div class="chat" id="chat" role="dialog" aria-label="Чат с Oscar">
       <div class="chat-head">
-        <bota-assistant id="chatBot" variant="oscar-doctor"></bota-assistant>
+        <bota-assistant id="chatBot" variant="oscar"></bota-assistant>
         <div class="t"><b>Oscar</b><small id="status">Онлайн</small></div>
         <button class="x" id="close" aria-label="Закрыть">×</button>
       </div>

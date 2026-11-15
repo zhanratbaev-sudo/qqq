@@ -5,7 +5,7 @@
  *   <bota-assistant variant="bota" floating></bota-assistant>
  *
  * Атрибуты:
- *   variant  = bota | oscar | oscar-doctor | oscar-cap   (пресет: аксессуары + цвета)
+ *   variant  = bota | oscar   (oscar — 3D-персонаж Oscar Clinic, слои в папке oscar/)
  *   hat      = tubeteika | mirror | cap | none           (переопределяет пресет)
  *   glasses  = round | none                              (переопределяет пресет)
  *   state    = idle | thinking | talking
@@ -213,10 +213,191 @@
 
   const PRESETS = {
     bota: { hat: 'tubeteika', glasses: 'none', name: 'Bota' },
-    oscar: { hat: 'none', glasses: 'round', name: 'Oscar' },
-    'oscar-doctor': { hat: 'mirror', glasses: 'round', name: 'Oscar' },
-    'oscar-cap': { hat: 'cap', glasses: 'round', name: 'Oscar' },
   };
+
+  // =====================================================================
+  //  OSCAR — 3D-персонаж (растровые слои + анимированные SVG-накладки)
+  //  Координаты ниже — в пикселях исходного рендера (viewBox 40 190 816 860)
+  // =====================================================================
+  const SCRIPT_BASE = (document.currentScript && document.currentScript.src)
+    ? new URL('.', document.currentScript.src).href : './';
+  const VB = { x: 40, y: 190, w: 816, h: 860 };
+  const OS = { x: 447, y: 706 };                       // центр звезды
+  const STAR_BOX = { x: 330, y: 583, w: 237, h: 239 };  // слой звезды
+  const pct = (v, o, s) => `${f(((v - o) / s) * 100)}%`;
+  const EYES3D = [
+    { cx: 346, cy: 421, rx: 71, ry: 92, sx: 347, sy: 425 },
+    { cx: 548, cy: 421, rx: 73, ry: 92, sx: 542, sy: 427 },
+  ];
+  // золотые звёздочки вокруг звезды: [x, y, радиус, появляются только когда думает?]
+  const SPARKS3D = [
+    [525, 605, 20, 0], [595, 740, 18, 0], [355, 822, 16, 0], [382, 627, 12, 0], [334, 752, 13, 0],
+    [552, 772, 12, 0], [599, 677, 11, 0], [300, 672, 13, 0], [425, 812, 9, 0], [290, 795, 12, 0],
+    [485, 775, 13, 1], [331, 651, 9, 1], [455, 827, 10, 1], [272, 707, 9, 1], [317, 709, 8, 1],
+    [565, 596, 9, 1], [590, 620, 7, 1], [615, 712, 7, 1], [489, 594, 6, 1], [277, 752, 7, 1],
+  ];
+  const puffy = (s) => {
+    const k = s * 0.26;
+    return `M0,${-s} Q${f(k)},${f(-k)} ${s},0 Q${f(k)},${f(k)} 0,${s} Q${f(-k)},${f(k)} ${-s},0 Q${f(-k)},${f(-k)} 0,${-s}Z`;
+  };
+
+  const CSS_IMG = `
+  :host {
+    --bota-size: 160px;
+    --bota-accent: #FFC861;
+    --bota-accent-think: #FF4D5E;
+    --bota-think-hue: -42deg;
+    --bota-lid: #9DB3E2;
+    --bota-think-time: 1.6s;
+    --bota-star: var(--bota-accent);
+    transition: --bota-star var(--bota-think-time) ease;
+    display: inline-block; width: var(--bota-size); aspect-ratio: ${VB.w} / ${VB.h};
+    position: relative; -webkit-tap-highlight-color: transparent; user-select: none;
+  }
+  :host([state="thinking"]) { --bota-star: var(--bota-accent-think); }
+  :host([floating]) {
+    position: fixed; right: max(20px, env(safe-area-inset-right)); bottom: max(20px, env(safe-area-inset-bottom));
+    z-index: 2147483000; --bota-size: 104px;
+  }
+  button { all: unset; display: block; width: 100%; height: 100%; cursor: pointer; border-radius: 40%; }
+  button:focus-visible { outline: 3px solid var(--bota-accent); outline-offset: 4px; }
+  .float { width: 100%; height: 100%; animation: bob 4s ease-in-out infinite; }
+  .squash { width: 100%; height: 100%; transform-origin: 50% 100%; }
+  .stage { position: relative; width: 100%; height: 100%; transform-origin: 50% 100%;
+           animation: breath 4s ease-in-out infinite; transition: rotate .4s ease; }
+  button:hover .stage { rotate: -3deg; }
+  @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4%) } }
+  @keyframes breath { 0%,100% { transform: scale(1,1) } 50% { transform: scale(1.015,.985) } }
+  .stage > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .body { object-fit: contain; pointer-events: none; }
+  svg { overflow: visible; pointer-events: none; }
+
+  .glow { fill: url(#OGLOW); opacity: .75; transform-box: fill-box; transform-origin: center;
+          animation: oglow 3s ease-in-out infinite; transition: opacity var(--bota-think-time); }
+  .g0 { stop-color: var(--bota-star); stop-opacity: .85; }
+  .g1 { stop-color: var(--bota-star); stop-opacity: .28; }
+  .g2 { stop-color: var(--bota-star); stop-opacity: 0; }
+  @keyframes oglow { 0%,100% { transform: scale(.94) } 50% { transform: scale(1.06) } }
+
+  .ring { fill: none; stroke: #fff; stroke-opacity: .5; stroke-width: 3.5; }
+  .ring-soft { fill: none; stroke: #E9E4FF; stroke-opacity: .35; stroke-width: 10; filter: url(#OBLUR); }
+  .comet { fill: none; stroke: #fff; stroke-width: 6; stroke-linecap: round; stroke-dasharray: 90 910;
+           filter: url(#OSOFT); animation: comet 5s linear infinite; }
+  .comet.c2 { animation-delay: -2.5s; stroke-width: 4; stroke-dasharray: 40 960; }
+  @keyframes comet { to { stroke-dashoffset: -1000; } }
+
+  .star-wrap { left: ${pct(STAR_BOX.x, VB.x, VB.w)}; top: ${pct(STAR_BOX.y, VB.y, VB.h)};
+               width: ${pct(STAR_BOX.x + STAR_BOX.w, STAR_BOX.x, VB.w)}; height: ${pct(STAR_BOX.y + STAR_BOX.h, STAR_BOX.y, VB.h)};
+               right: auto; bottom: auto; perspective: 600px; }
+  .star-move { width: 100%; height: 100%; animation: sfloat 3.2s ease-in-out infinite; }
+  .star { width: 100%; height: 100%; display: block; transform-style: preserve-3d;
+          animation: ssway 4.6s ease-in-out infinite;
+          filter: hue-rotate(0deg) saturate(1) brightness(1) drop-shadow(0 0 0 transparent);
+          transition: filter var(--bota-think-time) ease; }
+  @keyframes sfloat { 0%,100% { transform: translateY(2%) } 50% { transform: translateY(-5%) } }
+  @keyframes ssway { 0%,100% { transform: rotateY(-18deg) rotateZ(-5deg) scale(1) }
+                     50% { transform: rotateY(18deg) rotateZ(5deg) scale(1.05) } }
+
+  .spark { fill: url(#OSPARK); filter: url(#OSOFT2); transform-box: fill-box; transform-origin: center;
+           animation: otw var(--t) ease-in-out var(--d) infinite; }
+  .spark-wrap.extra { opacity: 0; transition: opacity .5s ease; }
+  .sp0 { stop-color: #FFFBEF; } .sp1 { stop-color: color-mix(in srgb, var(--bota-star), #fff 35%); }
+  .sp2 { stop-color: color-mix(in srgb, var(--bota-star), #b8782a 30%); }
+  @keyframes otw { 0%,100% { transform: scale(.7) rotate(0deg); opacity: .75 } 50% { transform: scale(1.12) rotate(20deg); opacity: 1 } }
+
+  .eglint { fill: #DCE7FF; mix-blend-mode: screen; opacity: .55; filter: url(#OSOFT2);
+            transform-box: fill-box; transform-origin: center; animation: eglint 3.4s ease-in-out infinite; }
+  .eglint.e2 { animation-delay: -1.7s; }
+  @keyframes eglint { 0%,100% { transform: scale(.85) rotate(0deg); opacity: .35 } 50% { transform: scale(1.08) rotate(12deg); opacity: .75 } }
+  .look { transition: transform .3s ease-out; }
+
+  .lid { transform-box: view-box; transition: transform .5s cubic-bezier(.3,1.3,.5,1); }
+  .lid-fill { fill: url(#OLID); }
+  .lid-fill { filter: url(#OSOFT2); }
+  .lid-edge { fill: none; stroke: color-mix(in srgb, var(--bota-lid), #1d2a5a 40%); stroke-width: 5; stroke-linecap: round; filter: url(#OSOFT2); }
+  .lid-hl { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: 3; stroke-linecap: round; filter: url(#OSOFT2); }
+  .l0 { stop-color: color-mix(in srgb, var(--bota-lid), #fff 30%); } .l1 { stop-color: var(--bota-lid); }
+  .l2 { stop-color: color-mix(in srgb, var(--bota-lid), #3a4f9a 22%); }
+
+  /* думает: звезда краснеет, вращается, свет ярче, глаза щурятся, звёздочек больше */
+  :host([state="thinking"]) .star { filter: hue-rotate(var(--bota-think-hue)) saturate(1.7) brightness(1.18)
+                                     drop-shadow(0 0 10px color-mix(in srgb, var(--bota-accent-think) 70%, transparent)); }
+  :host([state="thinking"]) .star { animation: sspin 2.4s cubic-bezier(.45,0,.55,1) infinite; }
+  :host([state="thinking"]) .star-move { animation-duration: 1.6s; }
+  :host([state="thinking"]) .glow { opacity: 1; animation-duration: 1.2s; }
+  :host([state="thinking"]) .comet { animation-duration: 1.8s; }
+  :host([state="thinking"]) .spark-wrap.extra { opacity: 1; }
+  :host([state="thinking"]) .spark { animation-duration: 1.1s !important; }
+  :host([state="thinking"]) .lid { transform: translateY(var(--squint)); }
+  :host([state="thinking"]) .eglint { fill: color-mix(in srgb, var(--bota-accent-think), #fff 40%); opacity: .7; }
+  @keyframes sspin { 0% { transform: rotateY(0deg) scale(1.08) } 100% { transform: rotateY(360deg) scale(1.08) } }
+
+  /* отвечает: звезда пульсирует в такт «голосу», блики в глазах мерцают */
+  :host([state="talking"]) .star-move { animation: stalk .36s ease-in-out infinite alternate; }
+  :host([state="talking"]) .eglint { animation-duration: .7s; }
+  @keyframes stalk { from { transform: translateY(0) scale(.97) } to { transform: translateY(-2%) scale(1.06) } }
+
+  .burst path { fill: url(#OSPARK); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .float, .stage, .star, .star-move, .glow, .comet, .spark, .eglint { animation: none !important; }
+  }`;
+
+  function oscarMarkup(base, name) {
+    const ring = (cls, extra = '') => `<ellipse class="${cls}" ${extra} cx="${OS.x + 3}" cy="${OS.y}" rx="170" ry="50" pathLength="1000"/>`;
+    const ringSet = () => ring('ring-soft') + ring('ring') + ring('comet') + ring('comet c2');
+    const rot = `rotate(-8 ${OS.x} ${OS.y})`;
+    const sparks = (extra) => SPARKS3D.filter((s) => !!s[3] === extra).map(([x, y, r], i) => `
+      <g class="spark-wrap${extra ? ' extra' : ''}" transform="translate(${x} ${y})">
+        <path class="spark" style="--t:${(2 + (i % 5) * 0.35).toFixed(2)}s;--d:${(-(i * 0.47) % 3).toFixed(2)}s" d="${puffy(r)}"/>
+      </g>`).join('');
+    const lids = EYES3D.map((e, i) => `
+      <clipPath id="OEYE${i}"><ellipse cx="${e.cx}" cy="${e.cy}" rx="${e.rx}" ry="${e.ry}"/></clipPath>`).join('');
+    const lidGroups = EYES3D.map((e, i) => {
+      const x0 = e.cx - e.rx - 4, x1 = e.cx + e.rx + 4, top = e.cy - e.ry - 230, bot = e.cy - e.ry - 14;
+      return `
+      <g clip-path="url(#OEYE${i})">
+        <g class="lid" style="--squint:${Math.round(e.ry * 0.62)}px">
+          <path class="lid-fill" d="M${x0},${top} L${x1},${top} L${x1},${bot} Q${e.cx},${bot + 44} ${x0},${bot}Z"/>
+          <path class="lid-edge" d="M${x0},${bot} Q${e.cx},${bot + 44} ${x1},${bot}"/>
+          <path class="lid-hl" d="M${e.cx - e.rx * 0.6},${bot - 4} Q${e.cx},${bot + 22} ${e.cx + e.rx * 0.6},${bot - 4}"/>
+        </g>
+      </g>`;
+    }).join('');
+    const vb = `${VB.x} ${VB.y} ${VB.w} ${VB.h}`;
+    return `
+      <style>${CSS_IMG}</style>
+      <button type="button" part="button" aria-label="${name}">
+        <div class="float"><div class="squash"><div class="stage">
+          <img class="body" src="${base}body.webp" alt="" draggable="false">
+          <svg class="back" viewBox="${vb}" aria-hidden="true">
+            <defs>
+              <radialGradient id="OGLOW"><stop offset="0" class="g0"/><stop offset=".45" class="g1"/><stop offset="1" class="g2"/></radialGradient>
+              <filter id="OBLUR" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+              <filter id="OSOFT" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+              <clipPath id="OBACK"><rect x="${OS.x - 260}" y="${OS.y - 120}" width="520" height="120"/></clipPath>
+              <clipPath id="OFRONT"><rect x="${OS.x - 260}" y="${OS.y}" width="520" height="120"/></clipPath>
+            </defs>
+            <circle class="glow" cx="${OS.x}" cy="${OS.y}" r="185"/>
+            <g transform="${rot}"><g clip-path="url(#OBACK)">${ringSet()}</g></g>
+          </svg>
+          <div class="star-wrap"><div class="star-move"><img class="star" src="${base}star.webp" alt="" draggable="false"></div></div>
+          <svg class="front" viewBox="${vb}" aria-hidden="true">
+            <defs>
+              <radialGradient id="OSPARK" cx=".4" cy=".35" r=".7"><stop offset="0" class="sp0"/><stop offset=".5" class="sp1"/><stop offset="1" class="sp2"/></radialGradient>
+              <linearGradient id="OLID" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" class="l0"/><stop offset=".85" class="l1"/><stop offset="1" class="l2"/></linearGradient>
+              <filter id="OSOFT2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.2"/></filter>
+              ${lids}
+            </defs>
+            <g transform="${rot}"><g clip-path="url(#OFRONT)">${ringSet()}</g></g>
+            ${sparks(false)}${sparks(true)}
+            ${EYES3D.map((e, i) => `<g class="look"><path class="eglint${i ? ' e2' : ''}" transform="translate(${e.sx} ${e.sy})" d="${puffy(30)}"/></g>`).join('')}
+            ${lidGroups}
+            <g class="burst"></g>
+          </svg>
+        </div></div></div>
+      </button>`;
+  }
 
   // 2 звёздочки в покое, +2 со спутниками, когда думает
   const SPARKS = [
@@ -398,7 +579,7 @@
     `<${kind}Gradient id="${id}" ${attrs}>${stops.map((o, i) => `<stop offset="${o}" class="${cls}${i}"/>`).join('')}</${kind}Gradient>`;
 
   class BotaAssistant extends HTMLElement {
-    static get observedAttributes() { return ['variant', 'hat', 'glasses', 'state', 'label']; }
+    static get observedAttributes() { return ['variant', 'hat', 'glasses', 'state', 'label', 'assets']; }
 
     constructor() {
       super();
@@ -438,7 +619,21 @@
       };
     }
 
+    _isOscar() { return /^oscar/.test(this.getAttribute('variant') || ''); }
+
     _render() {
+      if (this._isOscar()) {
+        const base = this.getAttribute('assets') || (SCRIPT_BASE + 'oscar/');
+        const name = (this.getAttribute('label') || 'Oscar').replace(/[<>&"]/g, '');
+        this._root.innerHTML = oscarMarkup(base.replace(/"/g, ''), name);
+        this._svg = this._root.querySelector('svg.front');
+        this._eyes = null;
+        this._looks = [...this._root.querySelectorAll('.look')];
+        this._lids = [...this._root.querySelectorAll('.lid')];
+        this._root.querySelector('button').addEventListener('click', () => this._click());
+        return;
+      }
+      this._lids = null;
       const cfg = this._cfg();
       const name = cfg.name.replace(/[<>&"]/g, '');
       this._root.innerHTML = `
@@ -506,6 +701,14 @@
           { transform: 'scale(1.03,.98)', offset: .8 },
           { transform: 'scale(1,1)' },
         ], { duration: 650, easing: 'ease-out' });
+        if (this._isOscar()) {
+          this._root.querySelector('.star-wrap').animate(
+            [{ transform: 'scale(1) rotate(0deg)' }, { transform: 'scale(1.25) rotate(25deg)' }, { transform: 'scale(1) rotate(0deg)' }],
+            { duration: 700, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+          this.burst(14);
+          this.dispatchEvent(new CustomEvent('bota-click', { bubbles: true, composed: true }));
+          return;
+        }
         const hat = this._root.querySelector('.hat') && this._root.querySelector('.hat-hop');
         if (hat) hat.animate([
           { transform: 'translateY(0) rotate(0)' },
@@ -525,22 +728,30 @@
     burst(n = 10) {
       if (!this._svg || this._reduced()) return;
       const g = this._root.querySelector('.burst');
+      const big = this._isOscar(), K = big ? 3.6 : 1, O = big ? OS : C;
       for (let i = 0; i < n; i++) {
         const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
-        const dist = 50 + Math.random() * 40, s = 3 + Math.random() * 4;
+        const dist = (50 + Math.random() * 40) * K, s = (3 + Math.random() * 4) * K;
         const p = document.createElementNS(SVGNS, 'path');
-        p.setAttribute('d', sparkle(s));
+        p.setAttribute('d', big ? puffy(s) : sparkle(s));
         g.appendChild(p);
         const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist;
         p.animate([
-          { transform: `translate(${C.x}px, ${C.y}px) scale(.2) rotate(0deg)`, opacity: 1 },
-          { transform: `translate(${C.x + dx}px, ${C.y + dy}px) scale(1) rotate(90deg)`, opacity: 0 },
+          { transform: `translate(${O.x}px, ${O.y}px) scale(.2) rotate(0deg)`, opacity: 1 },
+          { transform: `translate(${O.x + dx}px, ${O.y + dy}px) scale(1) rotate(90deg)`, opacity: 0 },
         ], { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' })
           .onfinish = () => p.remove();
       }
     }
 
     blink() {
+      if (this._lids) {
+        if (this._reduced()) return;
+        this._lids.forEach((l) => l.animate(
+          [{ transform: 'translateY(0)' }, { transform: 'translateY(200px)' }, { transform: 'translateY(0)' }],
+          { duration: 220, easing: 'ease-in-out' }));
+        return;
+      }
       if (!this._eyes) return;
       this._eyes.classList.add('blink');
       setTimeout(() => this._eyes && this._eyes.classList.remove('blink'), 140);
@@ -564,7 +775,8 @@
       const cx = r.left + r.width / 2, cy = r.top + r.height * 0.33;
       const dx = e.clientX - cx, dy = e.clientY - cy, d = Math.hypot(dx, dy) || 1;
       const k = Math.min(1, d / 300);
-      const tx = (dx / d) * 2.2 * k, ty = (dy / d) * 3.4 * k;
+      const A = this._isOscar() ? 4 : 1;
+      const tx = (dx / d) * 2.2 * k * A, ty = (dy / d) * 3.4 * k * A;
       this._looks.forEach((w) => { w.style.transform = `translate(${tx}px, ${ty}px)`; });
     }
   }
