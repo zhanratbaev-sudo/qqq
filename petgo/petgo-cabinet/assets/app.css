@@ -955,3 +955,46 @@ html.pgkb-open .pgc-box{max-height:calc(100vh - var(--pgkb,0px) - var(--sat) - 2
 .pgf-row.pgf-ra>span{width:auto;max-width:none}
 .pgc .pgf-row input{text-align:left}
 .pgc .pgf-ra textarea{resize:none;field-sizing:content;max-height:220px}
+
+/* 34.1: приложение не масштабируется, текст и фото не выделяются и не копируются (поля ввода — как обычно) */
+html{touch-action:pan-x pan-y}
+.pgc,.pgc *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.pgc input,.pgc textarea,.pgc [contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+.pgc img{-webkit-user-drag:none}
+
+/* 34.1: «Добавить питомца» — выбор способа, ссылка-анкета */
+.pgc .pgi-add{margin:0 0 12px;min-height:50px}
+.pga-choose{display:flex;flex-direction:column;gap:10px;padding-bottom:6px}
+.pgc .pga-opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border:0;border-radius:var(--r);background:var(--cell);color:var(--tx);text-align:left;box-shadow:0 0 0 .5px var(--ln);font:inherit;cursor:pointer;transition:transform .3s var(--sp),background .2s}
+.pgc .pga-opt:active{transform:scale(.98);background:var(--sel)}
+.pga-oi{flex:none;width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--acs);color:var(--ac)}
+.pgc .pga-oi .pgw-i{width:24px;height:24px}
+.pga-ot{flex:1;min-width:0}.pga-ot b{display:block;font-size:17px;font-weight:600}.pga-ot small{display:block;margin-top:3px;font-size:14px;line-height:1.35;color:var(--mu)}
+.pgc .pga-opt>.pgw-i{width:18px;height:18px;color:var(--mu2)}
+.pgi-hero{display:flex;align-items:flex-start;gap:12px;margin:0 0 16px;padding:14px;border-radius:var(--r);background:var(--acs)}
+.pgi-hi{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ac);color:var(--on)}
+.pgi-hero p{margin:0;font-size:15px;line-height:1.4;color:var(--tx)}
+.pgi-note{margin:8px 16px 16px;font-size:13px;line-height:1.4}
+.pgi-ready{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin:6px 0 18px}
+.pgi-ready b{font-size:21px;font-weight:700;margin-top:6px}.pgi-ready p{margin:0;font-size:15px;line-height:1.4;color:var(--mu);max-width:340px}
+.pgi-share{display:flex;flex-direction:column;gap:10px}
+.pgi-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:var(--so)}
+.pgi-url{flex:1;min-width:0;font-size:14px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.pgi-btns{margin-top:0}
+.pgc .pgi-wa{background:#25D366;color:#fff}
+.pgc .pgi-wa .pgw-i{width:22px;height:22px}
+/* форма питомца: аккуратнее в окне, кнопка «Сохранить» прилипает к низу окна */
+.pgf .pgf-sec:last-of-type{margin-bottom:84px}
+.pgc .pgf .pgf-go{position:sticky;bottom:calc(var(--sab) + 6px);margin-top:-70px;z-index:2}
+.pgcl-cover{position:relative;display:flex;align-items:center;justify-content:center;height:150px;margin:0 0 12px;border-radius:var(--r);background:var(--so);overflow:hidden;cursor:pointer}
+.pgcl-cimg{position:absolute;inset:0;background:center/cover no-repeat}
+.pgcl-cl{position:relative;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:rgba(var(--sheet-rgb),.86);color:var(--tx);font-size:15px;font-weight:600}
+.pgcl-badd[data-bt="blog"] .pgcl-when,.pgcl-badd[data-bt="blog"] .pgcl-place,.pgcl-badd[data-bt="promo"] .pgcl-place{display:none}
+.pgcl-badd .pgi-btns{margin-top:12px}
+.pgc .pgcl-bi{padding:0;overflow:hidden}
+.pgcl-bimg{display:block;width:100%;height:140px;object-fit:cover}
+.pgcl-bb{padding:14px 16px;display:flex;flex-direction:column;gap:4px}.pgcl-bb .pgc-tag{align-self:flex-start}.pgcl-bb b{font-size:17px}.pgcl-bb small{color:var(--mu)}.pgcl-bb p{margin:2px 0 0;font-size:15px}
+.pgcl-bacts{display:flex;gap:8px;margin-top:8px}.pgcl-bacts form{display:inline-flex}
+.pgcl-map{margin-top:16px}.pgcl-map p{margin:6px 0 10px;font-size:14px}.pgcl-map .pgc-btn{margin-top:10px}
+.pgcl-info{margin-bottom:12px}.pgcl-info .pgf-row b,.pgcl-info .pgf-row a{flex:1;text-align:right;font-weight:500}
+.pgcl-rec .pgf-list{margin:12px 0 8px}

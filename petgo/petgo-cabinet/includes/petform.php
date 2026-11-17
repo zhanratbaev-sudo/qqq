@@ -82,24 +82,8 @@ function petgo_pf_opt_label($o, $site) {
 
 /* ---------- значки шагов (общий набор с сайтом и приложением) ---------- */
 function petgo_pf_icon($n) {
-    static $P = array(
-        'paw'    => '<path d="M12 12.3c-2.7 0-4.8 2.1-4.8 4 0 1.7 1.4 2.4 2.8 2 .9-.3 1.4-.6 2-.6s1.1.3 2 .6c1.4.4 2.8-.3 2.8-2 0-1.9-2.1-4-4.8-4z"/><ellipse cx="6.6" cy="10" rx="1.5" ry="2"/><ellipse cx="9.9" cy="6.5" rx="1.5" ry="2.1"/><ellipse cx="14.1" cy="6.5" rx="1.5" ry="2.1"/><ellipse cx="17.4" cy="10" rx="1.5" ry="2"/>',
-        'info'   => '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8h.01"/>',
-        'health' => '<path d="M12 20s-7-4.4-7-10a4.2 4.2 0 0 1 7-3 4.2 4.2 0 0 1 7 3c0 5.6-7 10-7 10z"/><path d="M9.5 11.5h5M12 9v5"/>',
-        'food'   => '<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-1.6 1-1.6 1-3.2M12 7c0-1.6 1-1.6 1-3.2M16 7c0-1.6 1-1.6 1-3.2"/>',
-        'behav'  => '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.5 2.2 2 3.5 2s2.5-.5 3.5-2M9 9.5h.01M15 9.5h.01"/>',
-        'user'   => '<circle cx="12" cy="8.2" r="3.7"/><path d="M4.5 20c0-4 3.3-6.3 7.5-6.3s7.5 2.3 7.5 6.3"/>',
-        'note'   => '<path d="M7 3h8l4 4v14H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
-        'camera' => '<path d="M4 8.5A1.5 1.5 0 0 1 5.5 7H8l1.5-2h5L16 7h2.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.3"/>',
-        'left'   => '<path d="M15 5l-7 7 7 7"/>',
-        'right'  => '<path d="M9 5l7 7-7 7"/>',
-        'check'  => '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
-        'link'   => '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
-        'copy'   => '<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
-        'share'  => '<path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
-        'wa'     => '<path d="M3.5 20.5l1.3-4.4A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 .8c-1-.5-2-1.5-2.5-2.5l.8-1-1-2z"/>',
-    );
-    return isset($P[$n]) ? '<svg class="pgw-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $P[$n] . '</svg>' : '';
+    /* один набор значков на сайте и в приложении (см. petgo_cl_icon в includes/client.php) */
+    return petgo_cl_icon($n, 'pgw-i');
 }
 
 /* ============================================================
@@ -613,27 +597,31 @@ function petgo_h_inv_del() {
 function petgo_inv_share($t) {
     $i    = petgo_inv_get($t);
     $url  = petgo_inv_url($t);
-    $text = 'Здравствуйте! Это PetGo 🐾 Заполните, пожалуйста, анкету вашего питомца — это займёт пару минут: ' . $url;
+    $text = 'Здравствуйте! Это PetGo. Заполните, пожалуйста, анкету вашего питомца — это займёт пару минут: ' . $url;
     $ph   = $i && $i['phone'] !== '' ? preg_replace('/\D/', '', $i['phone']) : '';
     $wa   = 'https://wa.me/' . $ph . '?text=' . rawurlencode($text);
-    $h    = '<div class="pgi-share"><div class="pgi-link"><span class="pgi-li">' . petgo_pf_icon('link') . '</span><input type="text" readonly value="' . esc_attr($url) . '" onfocus="this.select()"></div>';
+    $h    = '<div class="pgi-share"><div class="pgi-link"><span class="pgi-li">' . petgo_pf_icon('link') . '</span><span class="pgi-url">' . esc_html(preg_replace('~^https?://~', '', $url)) . '</span></div>';
+    $h   .= '<a class="pgc-btn wide lg pgi-wa" target="_blank" rel="noopener" href="' . esc_url($wa) . '">' . petgo_pf_icon('wa') . '<span>' . esc_html(petgo_t('pf_send_wa')) . '</span></a>';
     $h   .= '<div class="pgi-btns"><button type="button" class="pgc-btn sec" data-copy="' . esc_attr($url) . '" data-done="' . esc_attr(petgo_t('pf_copied')) . '">' . petgo_pf_icon('copy') . '<span>' . esc_html(petgo_t('pf_copy')) . '</span></button>';
-    $h   .= '<a class="pgc-btn pgi-wa" target="_blank" rel="noopener" href="' . esc_url($wa) . '">' . petgo_pf_icon('wa') . '<span>WhatsApp</span></a>';
-    $h   .= '<button type="button" class="pgc-btn sec" data-share="' . esc_attr($url) . '" data-text="' . esc_attr($text) . '" hidden>' . petgo_pf_icon('share') . '<span>' . esc_html(petgo_t('pf_share')) . '</span></button></div></div>';
+    $h   .= '<button type="button" class="pgc-btn sec" data-share="' . esc_attr($url) . '" data-text="' . esc_attr($text) . '">' . petgo_pf_icon('share') . '<span>' . esc_html(petgo_t('pf_share')) . '</span></button></div></div>';
     return $h;
 }
 
-/* окно «Ссылка-анкета для клиента» */
+/* окна: «Добавить питомца» (выбор), «Ссылка-анкета клиенту», «Ссылка готова» */
 function petgo_inv_modal() {
+    $ch = petgo_pf_icon('right');
+    $c  = '<div class="pga-choose"><button type="button" class="pga-opt" data-open="pgc-m-inv" data-swap><span class="pga-oi">' . petgo_pf_icon('link') . '</span><span class="pga-ot"><b>' . esc_html(petgo_t('pf_add_link')) . '</b><small>' . esc_html(petgo_t('pf_add_link_s')) . '</small></span>' . $ch . '</button>';
+    $c .= '<button type="button" class="pga-opt" data-open="pgc-m-pet" data-swap><span class="pga-oi">' . petgo_pf_icon('edit') . '</span><span class="pga-ot"><b>' . esc_html(petgo_t('pf_add_self')) . '</b><small>' . esc_html(petgo_t('pf_add_self_s')) . '</small></span>' . $ch . '</button></div>';
+    echo petgo_modal('pgc-m-addpet', petgo_t('add_pet'), $c);
     $t = isset($_GET['inv']) ? sanitize_text_field(wp_unslash($_GET['inv'])) : '';
     if ($t !== '' && petgo_inv_get($t)) {
-        $b = '<div class="pgi-ready"><span class="pgi-big">' . petgo_pf_icon('check') . '</span><p>' . esc_html(petgo_t('pf_inv_ready')) . '</p></div>' . petgo_inv_share($t);
+        $b = '<div class="pgi-ready"><span class="pgi-big">' . petgo_pf_icon('check') . '</span><b>' . esc_html(petgo_t('pf_inv_ok')) . '</b><p>' . esc_html(petgo_t('pf_inv_ready')) . '</p></div>' . petgo_inv_share($t);
         echo petgo_modal('pgc-m-invok', petgo_t('pf_inv_t'), $b, true);
     }
-    $b  = '<p class="mu pgi-hint">' . esc_html(petgo_t('pf_inv_hint')) . '</p>' . petgo_form_open('inv_new') . '<div class="pgf-list">';
+    $b  = '<div class="pgi-hero"><span class="pgi-hi">' . petgo_pf_icon('link') . '</span><p>' . esc_html(petgo_t('pf_inv_hint')) . '</p></div>' . petgo_form_open('inv_new', 'class="pgf"') . '<div class="pgf-list">';
     $b .= '<label class="pgf-row"><span>' . esc_html(petgo_t('pf_inv_for')) . '</span><input type="text" name="note" maxlength="80" placeholder="' . esc_attr(petgo_t('pf_inv_for_ph')) . '"></label>';
-    $b .= '<label class="pgf-row"><span>' . esc_html(petgo_t('phone')) . '</span><input type="tel" name="phone" maxlength="20" placeholder="+7 700 000 00 00"></label></div>';
-    $b .= '<button class="pgc-btn wide lg" type="submit" style="margin-top:16px">' . petgo_pf_icon('link') . esc_html(petgo_t('pf_inv_make')) . '</button></form>';
+    $b .= '<label class="pgf-row"><span>' . esc_html(petgo_t('phone')) . '</span><input type="tel" name="phone" maxlength="20" inputmode="tel" placeholder="+7 700 000 00 00"></label></div><p class="mu pgi-note">' . esc_html(petgo_t('pf_inv_opt')) . '</p>';
+    $b .= '<button class="pgc-btn wide lg" type="submit">' . esc_html(petgo_t('pf_inv_make')) . '</button></form>';
     echo petgo_modal('pgc-m-inv', petgo_t('pf_inv_t'), $b);
 }
 

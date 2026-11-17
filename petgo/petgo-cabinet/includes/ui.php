@@ -28,7 +28,6 @@ function petgo_head_tags() {
     $h .= '<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="' . esc_attr(petgo_app_name()) . '"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="format-detection" content="telephone=no">';
     $h .= '<link rel="apple-touch-icon" href="' . esc_url(petgo_asset('apple-touch-icon.png')) . '"><link rel="icon" href="' . esc_url(petgo_asset('icon-192.png')) . '">';
     $h .= '<script>(function(){var t="auto";try{t=localStorage.getItem("pgc_theme")||"auto"}catch(e){}var d=t==="dark"||(t!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);var m=document.querySelector(\'meta[name="theme-color"]\');if(m)m.content=d?"#000000":"#f2f2f7";var g=null;try{g=localStorage.getItem("pgc_glass")}catch(e){}if(g!==null)document.documentElement.style.setProperty("--gu",Math.max(0,Math.min(100,+g||0))/100)})();</script>';
-    $h .= '<script src="' . esc_url(petgo_asset_url('kb.js')) . '" defer></script>';
     $h .= '<script src="' . esc_url(petgo_asset_url('app.js')) . '" defer></script>';
     /* 34.0: трансляция прогулки, «Скопировать / Поделиться» (см. includes/track.php) */
     return (string) apply_filters('petgo_head_extra', $h);
@@ -404,7 +403,7 @@ function petgo_app_cfg($adm) {
     return array(
         'aj' => admin_url('admin-ajax.php'), 'page' => petgo_page_url(), 'scope' => petgo_scope(), 'sw' => petgo_page_url(array('petgo_sw' => 1)),
         'nc' => wp_create_nonce('petgo_chat'), 'no' => wp_create_nonce('petgo_ord'), 'np' => wp_create_nonce('petgo_push'),
-        'key' => $v ? $v['pub'] : '', 't' => time(), 'uid' => get_current_user_id(), 'role' => petgo_role_of(), 'own' => petgo_is_owner(), 'adm' => $adm,
+        'key' => $v ? $v['pub'] : '', 't' => time(), 'b' => petgo_asset_ver('app.css') . '.' . petgo_asset_ver('app.js'), 'uid' => get_current_user_id(), 'role' => petgo_role_of(), 'own' => petgo_is_owner(), 'adm' => $adm,
         'warm' => $warm, 'lang' => petgo_lang(), 'L' => $L,
     );
 }

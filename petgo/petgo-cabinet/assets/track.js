@@ -5,6 +5,14 @@
 (function () {
   "use strict";
   var D = document, W = window, L = W.PGT_L || {};
+  /* приложение не масштабируется щипком и двойным нажатием; текст не выделяется и не копируется */
+  function editable(t) { return t && t.closest && t.closest("input,textarea,[contenteditable]"); }
+  ["gesturestart", "gesturechange"].forEach(function (ev) { D.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false }); });
+  D.addEventListener("touchmove", function (e) { if (e.touches && e.touches.length > 1 && !(e.target.closest && e.target.closest(".leaflet-container,.pgk-map"))) e.preventDefault(); }, { passive: false });
+  D.addEventListener("copy", function (e) { if (!editable(D.activeElement) && !editable(e.target)) e.preventDefault(); });
+  D.addEventListener("cut", function (e) { if (!editable(e.target)) e.preventDefault(); });
+  D.addEventListener("selectstart", function (e) { var t = e.target.nodeType === 3 ? e.target.parentNode : e.target; if (!editable(t)) e.preventDefault(); });
+  D.addEventListener("contextmenu", function (e) { if (!editable(e.target)) e.preventDefault(); });
   function cfg() { try { return JSON.parse(D.getElementById("pgc-cfg").textContent); } catch (e) { return null; } }
   function post(data, file) {
     var c = cfg();
@@ -118,6 +126,14 @@
     setState(T.state || "wait");
   });
 
+  /* из окна выбора («Добавить питомца») — в следующее окно: текущее закрывается */
+  D.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-swap]");
+    if (!b) return;
+    var m = b.closest(".pgc-modal");
+    if (m) m.classList.remove("open");
+  }, true);
+
   /* ---------- быстрые статусы и фото с местом ---------- */
   D.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-trk-st]");
@@ -148,6 +164,12 @@
     try { D.execCommand("copy"); } catch (e) {}
     t.remove();
   }
+  /* «Для клиентов»: тип записи и обложка */
+  D.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.matches && t.matches(".pgcl-btype input")) { var f = t.closest("form"); if (f) f.setAttribute("data-bt", t.value); }
+    if (t.matches && t.matches("input[data-cover]") && t.files && t.files[0]) { var l = t.closest("label"), c = l.querySelector(".pgcl-cimg"); c.style.backgroundImage = "url(" + URL.createObjectURL(t.files[0]) + ")"; l.classList.add("has"); }
+  });
   D.addEventListener("change", function (e) {
     var inp = e.target;
     if (!inp.matches || !inp.matches("[data-trk-photo]") || !inp.files || !inp.files[0]) return;

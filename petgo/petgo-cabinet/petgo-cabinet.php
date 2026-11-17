@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: Сайт PetGo (Главная, Услуги, Няни, Отзывы, Кабинет — без шорткодов, стиль iPhone, матовое Liquid Glass) и приложение для сотрудников (PWA): заказы, календарь, заявки с сайта, питомцы, сотрудники, отзывы, чаты, уведомления и «Настройки сайта». Помощник (ИИ) — отдельный плагин «PetGo ИИ».
- * Version: 34.0.0
+ * Version: 34.1.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.0.0');
+define('PETGO_VER', '34.1.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -1359,7 +1359,7 @@ function petgo_admin_modals() {
 }
 
 function petgo_fab() {
-    echo '<div class="pgc-fabm" id="pgc-fabm"><button type="button" class="pgc-mi" data-open="pgc-m-order">' . petgo_ic('order') . esc_html(petgo_t('new_order')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-pet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-inv">' . petgo_ic('link') . esc_html(petgo_t('pf_inv_t')) . '</button>';
+    echo '<div class="pgc-fabm" id="pgc-fabm"><button type="button" class="pgc-mi" data-open="pgc-m-order">' . petgo_ic('order') . esc_html(petgo_t('new_order')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-addpet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button>';
     if (petgo_can('admin')) {
         echo '<button type="button" class="pgc-mi" data-open="pgc-m-staff">' . petgo_ic('userplus') . esc_html(petgo_t('add_staff')) . '</button>';
     }
@@ -1491,7 +1491,7 @@ function petgo_admin_orders() {
 /* питомцы с фильтром: собаки, кошки и свои виды (хомяк и т. д.) */
 function petgo_admin_pets() {
     $pets = petgo_pets();
-    echo '<div class="pgi-top"><button type="button" class="pgc-btn sec" data-open="pgc-m-inv">' . petgo_ic('link') . esc_html(petgo_t('pf_inv_t')) . '</button><button type="button" class="pgc-btn sec" data-open="pgc-m-pet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button></div>';
+    echo '<button type="button" class="pgc-btn wide pgi-add" data-open="pgc-m-addpet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button>';
     echo petgo_inv_list_html();
     if (!$pets) {
         echo petgo_empty('pets', petgo_t('no_pets'));

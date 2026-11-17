@@ -157,11 +157,6 @@ class PGA_Rest {
 		if ( is_wp_error( $ok ) ) {
 			return $ok;
 		}
-		/* 34.0: клиент в своём кабинете — помощник знает его и его питомцев (метка подписана плагином «PetGo Кабинет») */
-		$ctok = substr( preg_replace( '/[^a-f0-9.]/i', '', (string) $r['ctx'] ), 0, 80 );
-		if ( '' !== $ctok ) {
-			PGA_AI::$client = mb_substr( (string) apply_filters( 'pga_client_context', '', $ctok, $lang ), 0, 4000 );
-		}
 		return array( 'ctx' => compact( 'lang', 'sess', 'msgs', 'last' ) );
 	}
 

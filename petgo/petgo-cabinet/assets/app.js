@@ -187,6 +187,8 @@
 		var n = doc.getElementById("pgc"), nin = doc.getElementById("pgc-in"), cin = $("pgc-in");
 		var nc = readCfg(doc);
 		if (!n || !nin || !cin || n.getAttribute("data-role") !== root.getAttribute("data-role") || nc.uid !== CFG.uid) { hardReload(); return false; }
+		/* плагин обновился — новая версия стилей и скриптов: перезагружаем страницу целиком, иначе новое содержимое останется без оформления */
+		if (nc.b && CFG.b && nc.b !== CFG.b) { hardReload(); return false; }
 		var keep = opts.keep ? openKeys(cin) : null, y = W.scrollY;
 		cin.innerHTML = nin.innerHTML;
 		if (keep) qa("details[data-k]", cin).forEach(function (e) { if (keep[e.getAttribute("data-k")]) e.open = true; });

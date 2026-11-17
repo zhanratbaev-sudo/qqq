@@ -8,7 +8,7 @@ $petgo_html = petgo_render_app();
 <html lang="<?php echo esc_attr(petgo_lang()); ?>">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="robots" content="noindex,nofollow">
 <title><?php echo esc_html(petgo_app_name()); ?></title>
 <?php echo petgo_head_tags(); ?>

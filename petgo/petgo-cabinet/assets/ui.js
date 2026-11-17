@@ -383,7 +383,8 @@
     /* заранее подгрузить все страницы, когда браузер свободен */
     function warmAll() {
       Object.keys(C.pages).forEach(function (k, i) {
-        if (k === C.page) return;
+        /* кабинет и анкету заранее не грузим: они личные и тяжелее остальных страниц */
+        if (k === C.page || k === "account" || k === "join") return;
         setTimeout(function () { load(C.pages[k]).catch(function () {}); }, 300 * i);
       });
     }

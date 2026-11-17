@@ -3,7 +3,7 @@
  * Plugin Name:       PetGo ИИ
  * Plugin URI:        https://petgo.kz/
  * Description:       ИИ‑помощник для сайта PetGo (Google Gemini): чат в центре нижнего меню, ответ «печатается» по мере генерации, голосовые сообщения, знания с сайта, передача чата менеджеру в приложение. Работает вместе с плагином «PetGo Кабинет».
- * Version:           34.0.0
+ * Version:           33.11.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            web.for made
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PGA_VERSION', '34.0.0' );
+define( 'PGA_VERSION', '33.11.0' );
 define( 'PGA_FILE', __FILE__ );
 define( 'PGA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PGA_URL', plugin_dir_url( __FILE__ ) );
@@ -188,10 +188,8 @@ class PGA_Front {
 			'ajax'     => self::rel( admin_url( 'admin-ajax.php' ) ),
 			'lang'     => pga_lang(),
 			'name'     => pga_name(),
-			/* 34.0: в кабинете клиента помощник здоровается по имени и знает его питомцев */
-			'greeting' => (string) apply_filters( 'pga_greeting', pga_l( 'Здравствуйте! Я помощник PetGo 🐾 Расскажу про выгул, визиты к питомцу, цены и помогу оставить заявку. Что вас интересует?' ) ),
-			'chips'    => (array) apply_filters( 'pga_chips', $chips ),
-			'ctx'      => (string) apply_filters( 'pga_client_token', '' ),
+			'greeting' => pga_l( 'Здравствуйте! Я помощник PetGo 🐾 Расскажу про выгул, визиты к питомцу, цены и помогу оставить заявку. Что вас интересует?' ),
+			'chips'    => $chips,
 			'wa'       => function_exists( 'petgo_site_wa' ) ? petgo_site_wa() : '',
 			'waText'   => pga_l( 'Здравствуйте! Пишу с сайта PetGo.' ),
 			'phone'    => function_exists( 'petgo_site_phone_fmt' ) ? petgo_site_phone_fmt() : '',
