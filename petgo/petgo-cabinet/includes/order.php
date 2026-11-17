@@ -77,10 +77,11 @@ function petgo_worker_actions($id) {
         if ($sv === 'walk') {
             $h .= petgo_btn_form('pick', array('order' => $id), petgo_t('picked_btn'), 'pgc-btn', petgo_t('q_pick'));
         } else {
-            $h .= petgo_finish_form($id, 'visit_end_btn');
+            $h .= petgo_trk_worker_block($id) . petgo_finish_form($id, 'visit_end_btn');
         }
     } elseif ($st === 'picked') {
         $wa = petgo_wa_url($ph);
+        $h .= petgo_trk_worker_block($id);
         $h .= '<div class="pgc-wa" data-end="' . ($ts + $dur * 60) . '">' . esc_html(petgo_t('tip_wa')) . ($wa ? '<br><a class="pgc-btn sec" style="margin-top:8px" target="_blank" rel="noopener" href="' . esc_url($wa) . '">' . petgo_ic('msg') . esc_html(petgo_t('wa_btn')) . '</a>' : '') . '</div>';
         $h .= petgo_finish_form($id, 'return_btn');
     } elseif ($st === 'done') {

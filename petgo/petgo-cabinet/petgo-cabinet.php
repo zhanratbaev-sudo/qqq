@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: Сайт PetGo (Главная, Услуги, Няни, Отзывы, Кабинет — без шорткодов, стиль iPhone, матовое Liquid Glass) и приложение для сотрудников (PWA): заказы, календарь, заявки с сайта, питомцы, сотрудники, отзывы, чаты, уведомления и «Настройки сайта». Помощник (ИИ) — отдельный плагин «PetGo ИИ».
- * Version: 33.11.0
+ * Version: 34.0.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '33.11.0');
+define('PETGO_VER', '34.0.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -230,7 +230,7 @@ function petgo_dict() {
         'o_yes' => array('Да', 'Иә', 'Yes', '是'),
         'o_no' => array('Нет', 'Жоқ', 'No', '否'),
     );
-    $D = array_merge($D, petgo_dict_more());
+    $D = array_merge($D, petgo_dict_more(), function_exists('petgo_dict_v34') ? petgo_dict_v34() : array());
     return $D;
 }
 
@@ -1097,7 +1097,7 @@ function petgo_h_finish() {
     $pid = (int) petgo_o($oid, 'pet');
     $ph  = petgo_photos($pid);
     if (count($ph) < 10) {
-        $ph[] = array('id' => wp_generate_password(10, false), 'url' => $r['url'], 'file' => '', 'by' => get_current_user_id(), 'order' => $oid, 't' => time());
+        $ph[] = array_merge(array('id' => wp_generate_password(10, false), 'url' => $r['url'], 'file' => '', 'by' => get_current_user_id(), 'order' => $oid, 't' => time()), function_exists('petgo_trk_last_geo') ? petgo_trk_last_geo($oid) : array());
         update_post_meta($pid, '_photos', $ph);
         $a = get_post_meta($pid, '_avatar', true);
         if (!is_array($a) || empty($a['url'])) {
@@ -1352,13 +1352,14 @@ function petgo_render_admin() {
 function petgo_admin_modals() {
     petgo_modal_order();
     petgo_modal_pet();
+    petgo_inv_modal();
     if (petgo_can('admin')) {
         petgo_modal_staff();
     }
 }
 
 function petgo_fab() {
-    echo '<div class="pgc-fabm" id="pgc-fabm"><button type="button" class="pgc-mi" data-open="pgc-m-order">' . petgo_ic('order') . esc_html(petgo_t('new_order')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-pet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button>';
+    echo '<div class="pgc-fabm" id="pgc-fabm"><button type="button" class="pgc-mi" data-open="pgc-m-order">' . petgo_ic('order') . esc_html(petgo_t('new_order')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-pet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button><button type="button" class="pgc-mi" data-open="pgc-m-inv">' . petgo_ic('link') . esc_html(petgo_t('pf_inv_t')) . '</button>';
     if (petgo_can('admin')) {
         echo '<button type="button" class="pgc-mi" data-open="pgc-m-staff">' . petgo_ic('userplus') . esc_html(petgo_t('add_staff')) . '</button>';
     }
@@ -1403,17 +1404,8 @@ function petgo_modal_pet() {
             $fr = 0;
         }
     }
-    $b = petgo_form_open('pet_save', 'enctype="multipart/form-data"') . '<input type="hidden" name="pet_id" value="' . (int) $edit . '"><input type="hidden" name="from_req" value="' . (int) $fr . '">';
-    if ($fr) {
-        $b .= '<div class="pgc-tip">' . esc_html(petgo_t('rq_from')) . '</div>';
-    }
-    $b .= '<label class="pgc-avpick">' . petgo_av($edit ? petgo_pet_avatar_url($edit) : '', $edit ? get_the_title($edit) : '+', 'xl') . '<span>' . esc_html(petgo_t('av_change')) . '</span><input class="pgc-vh" type="file" name="avatar" accept="image/*" data-preview></label><div class="pgc-grid">';
-    $b .= petgo_field('title', petgo_t('pet_name'), 'text', $edit ? get_the_title($edit) : '', array(), true);
-    foreach (petgo_pet_fields() as $k => $f) {
-        $b .= petgo_field('f_' . $k, petgo_t('f_' . $k), $f[0], $edit ? (string) get_post_meta($edit, '_pf_' . $k, true) : (isset($pre[$k]) ? $pre[$k] : ''), isset($f[1]) ? $f[1] : array());
-    }
-    $b .= '</div><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
-    echo petgo_modal('pgc-m-pet', petgo_t($edit ? 'edit' : 'add_pet'), $b, (bool) ($edit || $fr));
+    /* 34.0: форма разделами, одинаковые строки, переключатели вместо списков (см. includes/petform.php) */
+    echo petgo_modal('pgc-m-pet', petgo_t($edit ? 'edit' : 'add_pet'), petgo_pf_app_form($edit, $pre, $fr), (bool) ($edit || $fr));
 }
 
 function petgo_modal_staff() {
@@ -1499,6 +1491,8 @@ function petgo_admin_orders() {
 /* питомцы с фильтром: собаки, кошки и свои виды (хомяк и т. д.) */
 function petgo_admin_pets() {
     $pets = petgo_pets();
+    echo '<div class="pgi-top"><button type="button" class="pgc-btn sec" data-open="pgc-m-inv">' . petgo_ic('link') . esc_html(petgo_t('pf_inv_t')) . '</button><button type="button" class="pgc-btn sec" data-open="pgc-m-pet">' . petgo_ic('paw') . esc_html(petgo_t('add_pet')) . '</button></div>';
+    echo petgo_inv_list_html();
     if (!$pets) {
         echo petgo_empty('pets', petgo_t('no_pets'));
         return;
@@ -1525,7 +1519,7 @@ function petgo_admin_pets() {
     echo '</div>';
     foreach ($pets as $p) {
         $s = petgo_sp($p->ID);
-        echo '<details class="pgc-ord" data-k="p' . (int) $p->ID . '" data-sp="' . esc_attr($s[0]) . '"><summary>' . petgo_av(petgo_pet_avatar_url($p->ID), $p->post_title, 'md') . '<div class="pgc-sm"><div class="pgc-l1"><b>' . esc_html($p->post_title) . '</b><span class="mu">' . esc_html($s[1]) . '</span></div><div class="pgc-l2">' . esc_html(get_post_meta($p->ID, '_pf_owner', true) . ' · ' . get_post_meta($p->ID, '_pf_phone', true)) . '</div></div></summary><div class="pgc-body">';
+        echo '<details class="pgc-ord" data-k="p' . (int) $p->ID . '" data-sp="' . esc_attr($s[0]) . '"><summary>' . petgo_av(petgo_pet_avatar_url($p->ID), $p->post_title, 'md') . '<div class="pgc-sm"><div class="pgc-l1"><b>' . esc_html($p->post_title) . '</b><span class="mu">' . esc_html($s[1]) . '</span></div><div class="pgc-l2">' . esc_html(get_post_meta($p->ID, '_pf_owner', true) . ' · ' . get_post_meta($p->ID, '_pf_phone', true)) . '</div></div>' . ((int) get_post_meta($p->ID, '_client', true) ? '<span class="pgc-tag ok pgc-cltag">' . esc_html(petgo_t('cl_has_acc')) . '</span>' : '') . '</summary><div class="pgc-body">';
         echo petgo_pet_profile($p->ID, true);
         if (petgo_can('admin')) {
             echo '<a class="pgc-btn sec pgc-inline" href="' . esc_url(petgo_page_url(array('pg' => 'pets', 'edit' => $p->ID))) . '">' . petgo_ic('edit') . esc_html(petgo_t('edit')) . '</a>';
@@ -1734,6 +1728,10 @@ require_once __DIR__ . '/includes/site-admin.php';
 require_once __DIR__ . '/includes/lead.php';
 require_once __DIR__ . '/includes/front.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/petform.php';
+require_once __DIR__ . '/includes/client.php';
+require_once __DIR__ . '/includes/track.php';
+require_once __DIR__ . '/includes/i18n-v34.php';
 
 /* ============================================================
    11. ЖИВОЕ ОБНОВЛЕНИЕ: «ревизия» данных меняется при любой правке, телефон раз в 20 секунд спрашивает одно число

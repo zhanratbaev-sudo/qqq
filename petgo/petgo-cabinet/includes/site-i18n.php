@@ -432,5 +432,9 @@ function petgo_site_dict() {
         'Как заказать?' => array('Қалай тапсырыс беруге болады?', 'How do I order?'),
         'Заполните заявку на сайте или напишите нам в WhatsApp. Мы свяжемся с вами и подберём няню.' => array('Сайтта өтінім толтырыңыз немесе бізге WhatsApp-қа жазыңыз. Біз сізбен хабарласып, күтуші таңдаймыз.', 'Fill in a request on the site or message us on WhatsApp. We will contact you and find a sitter.'),
     );
+    /* 34.0: анкета питомца, кабинет клиента */
+    if (function_exists('petgo_site_dict_v34')) {
+        $D = array_merge($D, petgo_site_dict_v34());
+    }
     return $D;
 }

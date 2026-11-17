@@ -261,6 +261,7 @@
 				session: state.session,
 				pv: state.pv || '',
 				lang: C.lang || 'ru',
+				ctx: C.ctx || '',
 				messages: state.messages.slice(-14).map(function (m) { return { role: m.role, text: m.text }; })
 			});
 			var call = function (url) {

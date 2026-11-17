@@ -30,7 +30,8 @@ function petgo_head_tags() {
     $h .= '<script>(function(){var t="auto";try{t=localStorage.getItem("pgc_theme")||"auto"}catch(e){}var d=t==="dark"||(t!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);var m=document.querySelector(\'meta[name="theme-color"]\');if(m)m.content=d?"#000000":"#f2f2f7";var g=null;try{g=localStorage.getItem("pgc_glass")}catch(e){}if(g!==null)document.documentElement.style.setProperty("--gu",Math.max(0,Math.min(100,+g||0))/100)})();</script>';
     $h .= '<script src="' . esc_url(petgo_asset_url('kb.js')) . '" defer></script>';
     $h .= '<script src="' . esc_url(petgo_asset_url('app.js')) . '" defer></script>';
-    return $h;
+    /* 34.0: трансляция прогулки, «Скопировать / Поделиться» (см. includes/track.php) */
+    return (string) apply_filters('petgo_head_extra', $h);
 }
 
 function petgo_svg($d, $cls = 'pgc-ic') {

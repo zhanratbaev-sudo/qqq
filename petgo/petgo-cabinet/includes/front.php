@@ -131,7 +131,7 @@ function petgo_site_head($page = 'home') {
     }
     $h  = '<title>' . esc_html($full) . '</title>';
     $h .= '<meta name="description" content="' . esc_attr($desc) . '">';
-    if (!get_option('blog_public') || $page === 'account') {
+    if (!get_option('blog_public') || $page === 'account' || $page === 'join') {
         $h .= '<meta name="robots" content="noindex,nofollow">';
     }
     $h .= '<link rel="canonical" href="' . esc_url($url) . '">';

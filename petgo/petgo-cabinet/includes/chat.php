@@ -170,6 +170,7 @@ function petgo_install() {
   note text NOT NULL,
   extra text,
   pet_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  pf longtext,
   status varchar(8) NOT NULL DEFAULT 'new',
   ts int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY  (id),
@@ -439,7 +440,7 @@ function petgo_chat_push($c, $from, $subj, $body, $photo) {
     }
     $u     = get_userdata($from);
     $name  = $u ? $u->display_name : 'PetGo';
-    $title = $c->type === 'dm' ? $name : $name . ' · ' . $c->title;
+    $title = $c->type === 'dm' ? $name : ($c->type === 'client' ? $name . ' · ' . petgo_t('cl_chat_sub') : $name . ' · ' . $c->title);
     $text  = $body !== '' ? preg_replace('/\s+/u', ' ', $body) : '📷 ' . petgo_t('c_photo');
     if ($body !== '' && $photo) {
         $text = '📷 ' . $text;
@@ -457,6 +458,11 @@ function petgo_chat_head($c, $uid) {
     }
     if ($c->type === 'sys') {
         return array('t' => $c->title, 'av' => isset($c->av) && $c->av !== '' ? petgo_media($c->av) : '', 'sub' => petgo_t('c_sys'));
+    }
+    /* 34.0: чат с клиентом из его кабинета на сайте */
+    if ($c->type === 'client' && preg_match('/^cl_(\d+)$/', (string) $c->ckey, $m)) {
+        $x = get_userdata((int) $m[1]);
+        return array('t' => $x ? $x->display_name : $c->title, 'av' => $x ? petgo_user_avatar_url($x->ID) : '', 'sub' => petgo_t('cl_chat_sub') . ($x ? ' · ' . petgo_cl_code($x->ID) : ''));
     }
     $n = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . petgo_tb('members') . ' WHERE chat_id=%d', $c->id));
     return array('t' => $c->title, 'av' => isset($c->av) && $c->av !== '' ? petgo_media($c->av) : '', 'sub' => $n . ' ' . petgo_t('c_members'));

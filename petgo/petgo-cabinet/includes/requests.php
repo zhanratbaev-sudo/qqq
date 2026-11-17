@@ -135,9 +135,15 @@ function petgo_admin_requests() {
         }
         echo '<a class="pgc-btn sec" href="tel:' . esc_attr($tel) . '">' . petgo_icon('phone') . '<span>' . esc_html(petgo_t('rq_call')) . '</span></a>';
         if (!(int) $r->pet_id) {
-            echo '<a class="pgc-btn" href="' . esc_url(petgo_page_url(array('pg' => 'pets', 'from_req' => $id))) . '">' . petgo_icon('plus') . '<span>' . esc_html(petgo_t('rq_addpet')) . '</span></a>';
-        } elseif ($f === 'new') {
-            echo petgo_btn_form('req_set', array('id' => $id, 'do' => 'done'), petgo_t('rq_mark'), 'pgc-btn');
+            /* 34.0: питомец добавляется сам, со всеми полями анкеты и фото — ничего вводить не нужно */
+            echo petgo_form_open('req_addpet', 'class="pgc-inline"') . '<input type="hidden" name="id" value="' . $id . '"><button type="submit" class="pgc-btn">' . petgo_icon('plus') . '<span>' . esc_html(petgo_t('rq_addpet')) . '</span></button></form>';
+        } else {
+            if (get_post_type((int) $r->pet_id) === 'petgo_pet' && petgo_can('admin')) {
+                echo '<a class="pgc-btn sec" href="' . esc_url(petgo_page_url(array('pg' => 'pets', 'edit' => (int) $r->pet_id))) . '">' . petgo_ic('edit') . '<span>' . esc_html(petgo_t('edit')) . '</span></a>';
+            }
+            if ($f === 'new') {
+                echo petgo_btn_form('req_set', array('id' => $id, 'do' => 'done'), petgo_t('rq_mark'), 'pgc-btn');
+            }
         }
         echo '</div><p class="pgc-rqc">' . petgo_icon('check') . esc_html(petgo_t('rq_consent')) . '</p></article>';
     }

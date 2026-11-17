@@ -89,7 +89,8 @@ function petgo_media($url) {
 add_action('admin_post_petgo_img', 'petgo_img_serve');
 add_action('admin_post_nopriv_petgo_img', 'petgo_img_serve');
 function petgo_img_serve() {
-    if (!is_user_logged_in() || petgo_role_of() === '') {
+    /* 34.0: клиент в своём кабинете тоже видит фото (подписанные ссылки выдаются ему только на его питомцев и его чат) */
+    if (!is_user_logged_in() || (petgo_role_of() === '' && !(function_exists('petgo_cl_uid') && petgo_cl_uid()))) {
         status_header(403);
         exit;
     }

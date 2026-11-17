@@ -354,6 +354,8 @@ function petgo_site_pages() {
         'nannies'  => array('slug' => 'nyani', 'name' => $l('Няни'), 'title' => $l('Наши няни')),
         'reviews'  => array('slug' => 'otzyvy', 'name' => $l('Отзывы'), 'title' => $l('Отзывы')),
         'account'  => array('slug' => 'lk', 'name' => $l('Кабинет'), 'title' => $l('Кабинет')),
+        /* 34.0: анкета питомца (по ссылке из приложения или регистрация с сайта) — в меню не показывается */
+        'join'     => array('slug' => 'anketa', 'name' => $l('Анкета питомца'), 'title' => $l('Анкета питомца'), 'hide' => true),
     );
 }
 
@@ -457,7 +459,8 @@ function petgo_site_layer($page) {
     $h .= petgo_site_sheet('request', $l('Оставьте заявку'), $l('Мы свяжемся с вами и подберём няню.'), petgo_lead_form('request'));
     /* лист регистрации есть на всех страницах: между страницами сайт переходит без перезагрузки */
     if ($page !== '') {
-        $h .= petgo_site_sheet('pet', $l('Регистрация питомца'), $l('Расскажите о питомце — данные попадут к нам в базу.'), petgo_lead_form('pet'));
+        /* 34.0: регистрация питомца — анкета карточками (см. includes/petform.php) */
+        $h .= petgo_site_sheet('pet', $l('Регистрация питомца'), $l('Расскажите о питомце: анкета попадёт к нам, мы добавим питомца в базу и свяжемся с вами.'), petgo_pf_wizard('site'));
     }
 
     /* окна просмотра отзывов и фото */
@@ -523,7 +526,6 @@ function petgo_site_b_services($head = true) {
     if (!$sv) {
         return '';
     }
-    $wa   = petgo_site_wa();
     $pets = array();
     foreach ($sv as $s) {
         $pets[$s['pet']] = 1;
@@ -543,7 +545,7 @@ function petgo_site_b_services($head = true) {
         $p     = petgo_site_price($s);
         $title = $L($s['title']);
         $pet   = $L($s['pet'] === 'dog' ? 'собаки' : ($s['pet'] === 'cat' ? 'кошки' : 'питомца'));
-        $msg   = petgo_site_lf('Здравствуйте! Хочу заказать: %1$s (для %2$s).', $title, $pet);
+        $msg   = petgo_site_lf('Хочу заказать: %s', $title . ' (' . $pet . ')');
         $h    .= '<article class="pg-card pg-rise"' . ($both && $s['pet'] !== 'all' ? ' data-only="' . esc_attr($s['pet']) . '"' : '') . '>';
         if ($s['media']) {
             $h .= '<div class="pg-ph pg-slider" data-media="' . esc_attr(wp_json_encode(array_values($s['media']), JSON_UNESCAPED_SLASHES)) . '"></div>';
@@ -561,7 +563,8 @@ function petgo_site_b_services($head = true) {
             $h .= '<div class="pg-price-row"><span class="pg-price">' . esc_html(petgo_site_money($p['now'])) . ' ₸</span>' . ($p['off'] ? '<span class="pg-off">−' . (int) $p['off'] . '%</span>' : '');
             $h .= '<span class="pg-meta">' . esc_html($L($s['unit'])) . ($p['old'] ? ' · ' . esc_html($L('потом')) . ' <s>' . esc_html(petgo_site_money($p['old'])) . ' ₸</s>' : '') . '</span></div>';
         }
-        $h .= '<a class="pg-btn pg-btn-primary" href="https://wa.me/' . esc_attr($wa) . '?text=' . rawurlencode($msg) . '" target="_blank" rel="noopener">' . esc_html($L($s['btn'] !== '' ? $s['btn'] : 'Заказать')) . '</a></article>';
+        /* 34.0: кнопка услуги открывает заявку (а не WhatsApp): услуга и вид питомца подставляются сами */
+        $h .= '<button type="button" class="pg-b pg-btn pg-btn-primary" data-sheet="request" data-note="' . esc_attr($msg) . '"' . ($s['pet'] !== 'all' ? ' data-species="' . esc_attr($s['pet']) . '"' : '') . '>' . esc_html($L($s['btn'] !== '' ? $s['btn'] : 'Заказать')) . '</button></article>';
     }
     return $h . '</div></div></section>';
 }
@@ -628,6 +631,9 @@ function petgo_site_b_foot() {
     $pgs = petgo_site_pages();
     $h   = '<footer class="pg-foot"><div class="pg-wrap"><div class="pg-foot-in"><a class="pg-foot-logo" href="' . esc_url(petgo_site_url('home')) . '" aria-label="PetGo.kz">' . petgo_site_logo() . '</a><nav class="pg-foot-links" aria-label="' . esc_attr(petgo_site_l('Разделы')) . '">';
     foreach ($pgs as $k => $p) {
+        if (!empty($p['hide'])) {
+            continue;
+        }
         $h .= '<a href="' . esc_url(petgo_site_url($k)) . '">' . esc_html($p['name']) . '</a>';
     }
     $h .= '<a href="https://wa.me/' . esc_attr(petgo_site_wa()) . '" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+' . esc_attr(petgo_site_phone()) . '">' . esc_html(petgo_site_phone_fmt()) . '</a></nav></div>';
@@ -656,11 +662,32 @@ function petgo_site_content($page, $a = array()) {
             return petgo_site_b_title($L('Отзывы'), $rv !== '' ? $L('Настоящие отзывы хозяев. Мы публикуем их после завершённого заказа.') : $L('Отзывов пока нет. Они появятся здесь после первых заказов.'))
                 . $rv . petgo_site_b_cta($L('Хотите так же?'), $L('Оставьте заявку, и мы подберём няню вашему питомцу.'));
         case 'account':
-            $h  = petgo_site_b_title($L('Кабинет'), $L('Зарегистрируйте питомца или войдите как сотрудник PetGo.'));
-            $h .= '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><div class="pg-grid pg-g2 pg-acc">';
-            $h .= '<button type="button" class="pg-b pg-acc-card pg-rise" data-sheet="pet"><span class="pg-acc-i">' . petgo_site_icon('paw') . '</span><b>' . esc_html($L('Зарегистрировать питомца')) . '</b><span>' . esc_html($L('Собаку, кошку или другого питомца. Анкета попадёт к нам в базу, и мы свяжемся с вами.')) . '</span><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></button>';
-            $h .= '<a class="pg-acc-card pg-acc-staff pg-rise" data-ext href="' . esc_url(petgo_page_url()) . '"><span class="pg-acc-i">' . petgo_site_icon('key') . '</span><b>' . esc_html($L('Войти как сотрудник')) . '</b><span>' . esc_html($L('Для нянь, менеджеров и администраторов PetGo. Вход по логину и паролю.')) . '</span><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></a>';
-            return $h . '</div></div></section>';
+            /* 34.0: кабинет клиента — вход, регистрация; после входа — питомцы, карта, прогулки (см. includes/client.php) */
+            if (petgo_cl_uid()) {
+                return petgo_cl_dashboard();
+            }
+            if (is_user_logged_in() && petgo_role_of() !== '') {
+                return petgo_site_b_title($L('Кабинет'), $L('Вы вошли как сотрудник PetGo.')) . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><a class="pg-btn pg-btn-primary" data-ext href="' . esc_url(petgo_page_url()) . '">' . esc_html($L('Открыть приложение')) . '</a></div></section>';
+            }
+            return petgo_site_b_title($L('Кабинет'), $L('Следите за питомцем на прогулке, смотрите фото и историю, оставляйте отзывы няням.')) . petgo_cl_guest();
+        case 'join':
+            $tok = isset($_GET['t']) ? sanitize_text_field(wp_unslash($_GET['t'])) : '';
+            $inv = $tok !== '' ? petgo_inv_get($tok) : null;
+            if ($inv && $inv['pet']) {
+                return petgo_site_b_title($L('Анкета уже заполнена'), $L('Спасибо! Питомец уже в нашей базе. Если нужно что-то изменить — напишите нам.')) . petgo_site_b_cta($L('Нужна няня?'), $L('Оставьте заявку, и мы подберём няню вашему питомцу.'));
+            }
+            $mode = $inv ? 'invite' : 'site';
+            $pre  = array();
+            if ($inv) {
+                $pre['phone'] = $inv['phone'];
+            }
+            if (petgo_cl_uid()) {
+                $cu = wp_get_current_user();
+                $pre['owner'] = $cu->display_name;
+                $pre['phone'] = (string) get_user_meta($cu->ID, 'petgo_phone', true);
+            }
+            return petgo_site_b_title($L('Анкета питомца'), $L($inv ? 'Заполните анкету — это займёт пару минут. Питомец сразу появится у нас в базе.' : 'Расскажите о питомце: анкета попадёт к нам, мы добавим питомца в базу и свяжемся с вами.'))
+                . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap pg-narrow"><div class="pgw-solo pg-rise">' . petgo_pf_wizard($mode, array('token' => $inv ? $tok : '', 'pre' => $pre)) . '</div></div></section>';
         default:
             $form = !isset($a['form']) || $a['form'] !== '0';
             return petgo_site_b_hero() . petgo_site_b_services() . petgo_site_b_how() . ((!isset($a['reviews']) || $a['reviews'] !== '0') ? petgo_site_b_reviews(6) : '') . petgo_site_b_apply($form);
@@ -687,7 +714,9 @@ function petgo_site_render($page, $a = array()) {
         /* переходы без перезагрузки — только на своих страницах (не внутри темы через шорткод) */
         'spa' => petgo_site_is_front(),
         /* язык сайта и строки для скриптов */
-        'lang' => petgo_site_lang(), 'tr' => petgo_site_js_dict(),
+        'lang' => petgo_site_lang(), 'tr' => array_merge((array) petgo_site_js_dict(), petgo_pf_js_dict()),
+        /* 34.0: кабинет клиента */
+        'client' => petgo_cl_uid() > 0,
     );
     foreach (array_keys($pgs) as $k) {
         $cfg['pages'][$k] = petgo_site_url($k);
@@ -700,7 +729,7 @@ function petgo_site_render($page, $a = array()) {
     $h .= petgo_site_layer($page);
     $h .= '<div class="pg pg-p-' . esc_attr($page) . '" id="pg"><main>' . petgo_site_content($page, $a) . '</main>' . petgo_site_b_foot() . '</div>';
     $h .= '<script>window.PG_CONFIG=' . wp_json_encode($cfg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';</script>';
-    foreach (array('glass.js', 'site.js', 'kb.js', 'ui.js') as $f) {
+    foreach (array('glass.js', 'site.js', 'kb.js', 'ui.js', 'client.js') as $f) {
         $h .= '<script src="' . esc_url(petgo_asset_url($f)) . '" defer></script>';
     }
     /* скрипты других плагинов сайта (например, «PetGo ИИ») */
