@@ -1,0 +1,280 @@
+/* PetGo — своя клавиатура для телефонов и планшетов (сайт и приложение).
+   Раскладки: русская, казахская (ә і ң ғ ү ұ қ ө һ — отдельным рядом), английская, цифры и символы.
+   Системная клавиатура не открывается, поэтому нет и полоски браузера над ней.
+   Долгое нажатие — доп. буквы (ё, ъ, казахские). «Системная клавиатура» возвращает обычную для поля.
+   Подключение: PGKB.init({ sel, theme: "site"|"app", lang, T, layer, pad }) */
+(function () {
+  "use strict";
+  var doc = document, W = window;
+  var LAYOUTS = {
+    ru: ["йцукенгшщзх", "фывапролджэ", "ячсмитьбю"],
+    kz: ["әіңғүұқөһ", "йцукенгшщзх", "фывапролджэ", "ячсмитьбю"],
+    en: ["qwertyuiop", "asdfghjkl", "zxcvbnm"],
+    sym: ["1234567890", "-/:;()₸&@\"", ".,?!'+%"]
+  };
+  var NAMES = { ru: "РУ", kz: "ҚАЗ", en: "EN" };
+  var ALT = { "е": "ё", "ь": "ъ", "а": "ә", "и": "і", "н": "ң", "г": "ғ", "у": "ұү", "к": "қ", "о": "ө", "х": "һ", "e": "é", "a": "á" };
+  var CSS =
+    ".pgkb{position:fixed;z-index:2147483000;left:0;right:0;bottom:0;padding:6px 3px calc(env(safe-area-inset-bottom,0px) + 6px);border-radius:24px 24px 0 0;" +
+    "background:var(--pgkb-bg);-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6);box-shadow:0 -1px 0 var(--pgkb-line),0 -10px 40px rgba(0,0,0,.12);" +
+    "transform:translateY(105%);transition:transform .32s cubic-bezier(.32,.72,0,1);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}" +
+    ".pgkb[hidden]{display:none}.pgkb.on{transform:none}" +
+    ".pgkb-top{display:flex;justify-content:space-between;align-items:center;padding:0 5px 6px;gap:8px}" +
+    ".pgkb button{-webkit-appearance:none;appearance:none;border:0;margin:0;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}" +
+    ".pgkb .pgkb-t{height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--pgkb-mu);background:transparent}" +
+    ".pgkb .pgkb-done{background:var(--pgkb-fill);color:var(--pgkb-ac);font-weight:700}" +
+    ".pgkb-r{display:flex;justify-content:center;gap:5px;margin-bottom:8px;padding:0 2px}.pgkb-r:last-child{margin-bottom:0}" +
+    ".pgkb .pgkb-k{flex:1 1 0;min-width:0;height:44px;padding:0;border-radius:10px;display:grid;place-items:center;background:var(--pgkb-key);color:var(--pgkb-ink);box-shadow:0 1px 0 var(--pgkb-keysh);font-size:21px;line-height:1;transition:transform .08s,background .08s}" +
+    ".pgkb-r.kz4 .pgkb-k{height:40px;font-size:19px}" +
+    ".pgkb .pgkb-k.sp{flex:1.45 1 0;background:var(--pgkb-key2);font-size:15px;font-weight:600}" +
+    ".pgkb .pgkb-k.sp.w{flex:2.2 1 0}.pgkb .pgkb-k.space{flex:5 1 0}" +
+    ".pgkb .pgkb-k.go,.pgkb .pgkb-k.act{background:var(--pgkb-ac);color:var(--pgkb-on)}" +
+    ".pgkb .pgkb-k.down{background:var(--pgkb-ac);color:var(--pgkb-on);transform:scale(1.14) translateY(-3px)}" +
+    ".pgkb .pgkb-k.alt{background:var(--pgkb-alt);color:#fff;font-weight:600;transform:scale(1.4) translateY(-16px);position:relative;z-index:2}" +
+    ".pgkb-num{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:420px;margin:0 auto;padding:0 6px}.pgkb-num .pgkb-k{height:52px;font-size:25px}" +
+    /* сайт: цвета PetGo, матовое стекло */
+    ".pgkb--site{--pgkb-bg:rgba(251,249,232,.82);--pgkb-line:rgba(2,76,70,.12);--pgkb-key:rgba(255,255,255,.94);--pgkb-key2:rgba(2,76,70,.17);--pgkb-keysh:rgba(2,76,70,.3);--pgkb-ink:#024C46;--pgkb-mu:rgba(2,76,70,.65);--pgkb-fill:rgba(2,76,70,.1);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C}" +
+    /* приложение: светлая и тёмная темы приложения */
+    ".pgkb--app{--pgkb-bg:rgba(209,212,217,.86);--pgkb-line:rgba(0,0,0,.08);--pgkb-key:#fff;--pgkb-key2:rgba(171,177,186,.9);--pgkb-keysh:rgba(0,0,0,.3);--pgkb-ink:#000;--pgkb-mu:rgba(60,60,67,.7);--pgkb-fill:rgba(13,124,109,.12);--pgkb-ac:var(--ac,#0d7c6d);--pgkb-on:#fff;--pgkb-alt:#ff9f0a}" +
+    ":root.dark .pgkb--app{--pgkb-bg:rgba(43,43,46,.88);--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#6b6b6e;--pgkb-key2:#47474a;--pgkb-keysh:rgba(0,0,0,.5);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.65);--pgkb-fill:rgba(63,199,174,.18);--pgkb-ac:var(--acb,#12917b);--pgkb-on:#fff}" +
+    ":root.dark .pgkb--app .pgkb-done{color:var(--ac,#3fc7ae)}" +
+    "@media (min-width:700px){.pgkb .pgkb-k{height:50px}.pgkb-num .pgkb-k{height:56px}}" +
+    "@media (prefers-reduced-motion:reduce){.pgkb{transition:none}.pgkb .pgkb-k.down,.pgkb .pgkb-k.alt{transform:none}}";
+
+  function css() {
+    if (doc.getElementById("pgkb-css")) return;
+    var s = doc.createElement("style");
+    s.id = "pgkb-css"; s.textContent = CSS;
+    (doc.head || doc.documentElement).appendChild(s);
+  }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+
+  function init(o) {
+    o = o || {};
+    var api = { hide: function () {}, scan: function () {}, on: false };
+    if (!(W.matchMedia && matchMedia("(pointer: coarse)").matches) || o.off) return api;
+    css();
+    var T = o.T || function (s) { return s; };
+    var SEL = o.sel;
+    var reduce = !!(W.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var langs = o.langs || ["ru", "kz", "en"];
+    var lang = store("pgkb_lang");
+    if (langs.indexOf(lang) < 0) lang = langs.indexOf(o.lang) > -1 ? o.lang : langs[0];
+    var el = o.el || doc.createElement("div");
+    el.className = (el.className ? el.className + " " : "") + "pgkb pgkb--" + (o.theme || "site");
+    el.hidden = true;
+    el.setAttribute("aria-hidden", "true");
+    if (!el.parentNode) (o.host || doc.body).appendChild(el);
+
+    var cur = null, mode = lang, shift = false, held = null, holdT = 0, repT = 0;
+    function sel(f) { try { return f.selectionStart; } catch (e) { return null; } }
+    function isNum(f) { var im = f.getAttribute("data-im") || ""; return f.type === "tel" || f.type === "number" || im === "decimal" || im === "numeric" || im === "tel"; }
+    function arm(f) {
+      if (f.getAttribute("data-kb")) return;
+      f.setAttribute("data-kb", "1");
+      f.setAttribute("data-im", f.getAttribute("inputmode") || "");
+      f.setAttribute("data-ac", f.getAttribute("autocomplete") || "");
+      f.setAttribute("inputmode", "none");
+      f.setAttribute("autocomplete", "off");
+      f.setAttribute("autocorrect", "off");
+      f.setAttribute("spellcheck", "false");
+    }
+    function ok(f) { return f && f.matches && f.matches(SEL) && !f.getAttribute("data-sys") && !f.readOnly && !f.disabled; }
+    function scan(root) {
+      var list = (root && root.querySelectorAll ? root : doc).querySelectorAll(SEL);
+      for (var i = 0; i < list.length; i++) if (!list[i].getAttribute("data-sys")) arm(list[i]);
+    }
+    function key(ch, cls, attr) { return '<button type="button" tabindex="-1" class="pgkb-k' + (cls ? " " + cls : "") + '"' + (attr || ' data-k="' + ch.replace(/"/g, "&quot;") + '"') + ">" + ch.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</button>"; }
+    function nextLang() { return langs[(langs.indexOf(lang) + 1) % langs.length]; }
+    function render() {
+      var h = '<div class="pgkb-top"><button type="button" tabindex="-1" class="pgkb-t" data-a="sys">' + T("Системная клавиатура") + '</button><button type="button" tabindex="-1" class="pgkb-t pgkb-done" data-a="done">' + T("Готово") + "</button></div>";
+      if (mode === "num") {
+        var dec = cur && cur.type !== "tel";
+        h += '<div class="pgkb-num">';
+        "123456789".split("").forEach(function (c) { h += key(c); });
+        h += key(dec ? "," : "+") + key("0") + key("⌫", "sp", ' data-a="bs" aria-label="' + T("Стереть") + '"') + "</div>";
+      } else {
+        var rows = LAYOUTS[mode], last = rows.length - 1;
+        rows.forEach(function (r, i) {
+          h += '<div class="pgkb-r' + (rows.length > 3 ? " kz4" : "") + '">';
+          if (i === last && mode !== "sym") h += key("⇧", "sp" + (shift ? " act" : ""), ' data-a="shift" aria-label="' + T("Заглавные") + '"');
+          r.split("").forEach(function (c) { h += key(shift && mode !== "sym" ? c.toUpperCase() : c); });
+          if (i === last) h += key("⌫", "sp", ' data-a="bs" aria-label="' + T("Стереть") + '"');
+          h += "</div>";
+        });
+        var ent = cur && cur.hasAttribute("data-kb-send") ? "↑" : (cur && cur.tagName === "TEXTAREA" ? "↵" : T("Далее"));
+        var mail = cur && cur.type === "email";
+        h += '<div class="pgkb-r">' + key(mode === "sym" ? (NAMES[lang] || "АБВ") : "123", "sp w", ' data-a="mode"') +
+          (langs.length > 1 ? key(NAMES[nextLang()], "sp", ' data-a="lang" aria-label="' + T("Язык клавиатуры") + '"') : "") +
+          (mail ? key("@") : "") +
+          key(" ", "space", ' data-k=" " aria-label="' + T("Пробел") + '"') + key(mode === "sym" ? "," : ".", "") + key(ent, "sp go w", ' data-a="enter"') + "</div>";
+      }
+      el.innerHTML = h;
+      measure();
+    }
+    function measure() {
+      var hgt = el.hidden ? 0 : el.offsetHeight;
+      W.PGKB_H = hgt;
+      doc.documentElement.style.setProperty("--pgkb", hgt + "px");
+      if (o.layer) o.layer.style.setProperty("--kb", hgt + "px");
+      var p = o.pad ? o.pad() : null;
+      if (p) p.style.paddingBottom = hgt ? hgt + "px" : "";
+      try { W.dispatchEvent(new Event("pgkb")); } catch (e) {}
+    }
+    function fire(f) { f.dispatchEvent(new Event("input", { bubbles: true })); }
+    function caps() {
+      if (!cur || mode === "sym" || mode === "num" || cur.type === "email" || cur.type === "url") return false;
+      var s = sel(cur), before = cur.value.slice(0, s == null ? cur.value.length : s);
+      if (before === "") return true;
+      if (/[.!?]\s$/.test(before)) return true;
+      return (cur.name === "name" || cur.name === "pet" || cur.name === "title") && /\s$/.test(before);
+    }
+    function ins(t) {
+      var f = cur;
+      if (!f) return;
+      var s = sel(f);
+      if (f.maxLength > 0 && f.value.length >= f.maxLength && (s == null || s === f.selectionEnd)) return;
+      if (s == null) f.value += t; else f.setRangeText(t, s, f.selectionEnd, "end");
+      fire(f);
+      var c = caps();
+      if (c !== shift && mode !== "num" && mode !== "sym") { shift = c; render(); }
+    }
+    function bs() {
+      var f = cur;
+      if (!f) return;
+      var s = sel(f), e = s == null ? null : f.selectionEnd;
+      if (s == null) f.value = f.value.slice(0, -1);
+      else if (s !== e) f.setRangeText("", s, e, "end");
+      else if (s > 0) f.setRangeText("", s - 1, s, "end");
+      fire(f);
+    }
+    function vis(f) { return f.offsetParent !== null || f.getClientRects().length > 0; }
+    function nextField() {
+      if (!cur) return null;
+      var box = cur.form || cur.closest(".pgc-box, .pgc-sheet, .pgc-fe, .pg-sheet, form") || doc;
+      var all = Array.prototype.filter.call(box.querySelectorAll(SEL), function (f) { return vis(f) && !f.readOnly && !f.disabled; }), i = all.indexOf(cur);
+      return all[i + 1] || null;
+    }
+    function act(a) {
+      if (a === "shift") { shift = !shift; render(); }
+      else if (a === "mode") { mode = mode === "sym" ? lang : "sym"; shift = mode === "sym" ? false : caps(); render(); }
+      else if (a === "lang") { lang = nextLang(); store("pgkb_lang", lang); mode = lang; shift = caps(); render(); }
+      else if (a === "done") { var f = cur; hide(); if (f) f.blur(); }
+      else if (a === "sys") {
+        var g = cur;
+        if (!g) return;
+        g.setAttribute("data-sys", "1");
+        var im = g.getAttribute("data-im"), ac = g.getAttribute("data-ac");
+        if (im) g.setAttribute("inputmode", im); else g.removeAttribute("inputmode");
+        if (ac) g.setAttribute("autocomplete", ac); else g.removeAttribute("autocomplete");
+        hide(); g.blur();
+        setTimeout(function () { g.focus(); }, 60);
+      } else if (a === "enter") {
+        if (!cur) return;
+        if (cur.hasAttribute("data-kb-send") && cur.form) { cur.form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true })); return; }
+        if (cur.tagName === "TEXTAREA") { ins("\n"); return; }
+        var n = nextField();
+        if (n) n.focus(); else { var c = cur; hide(); c.blur(); }
+      }
+    }
+    function stopHold() {
+      clearTimeout(holdT); clearInterval(repT);
+      if (held) { held.b.classList.remove("down", "alt"); if (held.txt != null) held.b.textContent = held.txt; }
+      held = null;
+    }
+    el.addEventListener("mousedown", function (e) { e.preventDefault(); });
+    el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    el.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      var b = e.target.closest ? e.target.closest("button") : null;
+      if (!b) return;
+      stopHold();
+      b.classList.add("down");
+      if (navigator.vibrate) { try { navigator.vibrate(4); } catch (x) {} }
+      var a = b.getAttribute("data-a");
+      held = { b: b, ch: null, txt: null };
+      if (a === "bs") { bs(); holdT = setTimeout(function () { repT = setInterval(bs, 60); }, 380); return; }
+      if (a) { held.a = a; return; }
+      var ch = b.getAttribute("data-k");
+      held.ch = ch;
+      var alts = ALT[ch.toLowerCase()];
+      if (alts) {
+        var up = ch !== ch.toLowerCase(), step = 0;
+        holdT = setTimeout(function next() {
+          if (!held || held.b !== b) return;
+          if (held.txt == null) held.txt = b.textContent;
+          var c = alts.charAt(step % alts.length);
+          held.ch = up ? c.toUpperCase() : c;
+          b.textContent = held.ch; b.classList.add("alt");
+          step++;
+          if (alts.length > 1) holdT = setTimeout(next, 650);
+        }, 380);
+      }
+    });
+    function up(e) {
+      if (!held) return;
+      var h = held, cancel = e.type === "pointercancel";
+      stopHold();
+      if (cancel) return;
+      if (h.a) act(h.a); else if (h.ch != null) ins(h.ch);
+    }
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    el.addEventListener("pointerleave", function (e) { if (held && e.pointerType === "mouse") stopHold(); });
+
+    function show(f) {
+      cur = f;
+      mode = isNum(f) ? "num" : (f.type === "email" || f.type === "url" ? "en" : lang);
+      shift = caps();
+      el.hidden = false;
+      doc.documentElement.classList.add("pgkb-open");
+      if (o.layer) o.layer.classList.add("kb-open");
+      render();
+      requestAnimationFrame(function () { el.classList.add("on"); });
+      setTimeout(function () { if (cur === f && f.scrollIntoView) f.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); }, 140);
+      if (f.type === "tel" && f.value === "" && o.telPrefix !== false) { f.value = "+7 "; fire(f); }
+    }
+    function hide() {
+      if (el.hidden) return;
+      stopHold();
+      cur = null;
+      el.classList.remove("on");
+      el.hidden = true;
+      doc.documentElement.classList.remove("pgkb-open");
+      if (o.layer) { o.layer.classList.remove("kb-open"); o.layer.style.removeProperty("--kb"); }
+      measure();
+    }
+    /* пока палец на экране, клавиатуру не прячем: иначе всё сдвигается и нажатие (например, на «Отправить»)
+       попадает мимо кнопки. Прячем, когда палец отпущен и нажатие уже сработало */
+    var pressing = false, later = false;
+    function check() { var a = doc.activeElement; if (!ok(a)) hide(); }
+    doc.addEventListener("pointerdown", function (e) { if (!el.contains(e.target)) pressing = true; }, true);
+    doc.addEventListener("pointerup", function () { if (!pressing) return; pressing = false; if (later) { later = false; setTimeout(check, 120); } }, true);
+    doc.addEventListener("pointercancel", function () { pressing = false; if (later) { later = false; setTimeout(check, 120); } }, true);
+    /* поле ещё не «вооружено» (появилось только что) — до фокуса ставим inputmode=none, чтобы системная не выскочила */
+    doc.addEventListener("touchstart", function (e) { var f = e.target; if (f && f.matches && f.matches(SEL) && !f.getAttribute("data-sys")) arm(f); }, { capture: true, passive: true });
+    doc.addEventListener("focusin", function (e) {
+      var f = e.target;
+      if (ok(f)) { later = false; arm(f); show(f); }
+    });
+    doc.addEventListener("focusout", function () {
+      if (pressing) { later = true; return; }
+      setTimeout(check, 80);
+    });
+    W.addEventListener("resize", function () { if (!el.hidden) measure(); });
+    /* новые поля (страницы и окна приложения загружаются без перезагрузки) */
+    if (W.MutationObserver) {
+      var t = 0;
+      new MutationObserver(function (recs) {
+        for (var i = 0; i < recs.length; i++) {
+          if (!el.contains(recs[i].target)) { clearTimeout(t); t = setTimeout(function () { scan(); if (cur && !cur.isConnected) hide(); }, 60); return; }
+        }
+      })
+        .observe(doc.body, { childList: true, subtree: true });
+    }
+    scan();
+    api.hide = hide; api.on = true; api.scan = scan; api.el = el;
+    return api;
+  }
+  W.PGKB = { init: init };
+})();

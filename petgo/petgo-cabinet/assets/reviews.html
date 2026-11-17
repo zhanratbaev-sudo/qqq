@@ -1,0 +1,140 @@
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+.pgv,.pgv-layer{--bg:#FBF9E8;--green:#024C46;--muted:#5f8480;--line:#e3e0cc;--star:#f5a623;--r:12px;--pad:16px;--btn-top:100px;font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;color:var(--green);-webkit-font-smoothing:antialiased}
+.pgv{background:var(--bg);width:100%;overflow-x:clip}
+.pgv *,.pgv *::before,.pgv *::after,.pgv-layer *,.pgv-layer *::before,.pgv-layer *::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.pgv p,.pgv h2{margin:0;padding:0}.pgv svg,.pgv img{display:block;max-width:100%}.pgv a,.pgv-layer a{color:inherit;text-decoration:none}
+.pgv :focus-visible,.pgv-layer :focus-visible{outline:3px solid var(--green);outline-offset:2px;border-radius:var(--r)}
+.pgv .pgv-sec{padding:64px 0;scroll-margin-top:92px}.pgv .pgv-wrap{max-width:1120px;margin:0 auto;padding:0 20px}.pgv .pgv-head{margin-bottom:32px}
+.pgv .pgv-h{font-family:inherit;font-size:clamp(28px,4vw,36px);line-height:1.15;font-weight:800;letter-spacing:-.02em;color:var(--green);margin:0}
+.pgv .pgv-sub{font-size:18px;line-height:1.5;color:var(--green);opacity:.8;margin:12px 0 0;max-width:560px}
+.pgv-b.pgv-b,.pgv-b.pgv-b:hover,.pgv-b.pgv-b:focus{font-family:inherit;background:none;border:0;box-shadow:none;color:inherit;text-decoration:none;margin:0;text-transform:none;letter-spacing:normal}
+.pgv .pgv-reviews{max-width:100%}
+.pgv .pgv-summary{display:flex;flex-wrap:wrap;gap:16px;align-items:center;background:var(--green);color:#fff;border-radius:12px;padding:20px;margin-bottom:16px;max-width:560px}
+.pgv .pgv-summary__big{font-size:44px;font-weight:800;line-height:1}.pgv .pgv-summary__count{font-size:14px;opacity:.8;margin-top:4px}.pgv .pgv-summary__bars{flex:1;min-width:140px}
+.pgv .pgv-bar{display:flex;align-items:center;gap:8px;font-size:14px}.pgv .pgv-bar i{display:block;flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}.pgv .pgv-bar b{display:block;height:100%;background:#fff}
+.pgv-b.pgv-allph,.pgv-b.pgv-allph:hover,.pgv-b.pgv-allph:focus{flex:1 0 100%;min-height:44px;padding:0 16px;background:#fff;color:var(--green);border-radius:12px;font:800 14px/1 "Manrope",system-ui,sans-serif;cursor:pointer}
+.pgv .pgv-stars,.pgv-layer .pgv-stars{display:inline-flex;gap:2px;vertical-align:middle}.pgv .pgv-stars svg,.pgv-layer .pgv-stars svg{width:20px;height:20px;display:block}
+.pgv .pgv-stars .full,.pgv-layer .pgv-stars .full{fill:var(--star);stroke:var(--star)}.pgv .pgv-stars .empty,.pgv-layer .pgv-stars .empty{fill:#ece8cf;stroke:#ece8cf}
+.pgv .pgv-stars path,.pgv-layer .pgv-stars path{stroke-width:3;stroke-linejoin:round;stroke-linecap:round}.pgv .pgv-summary .pgv-stars svg{width:18px;height:18px}
+.pgv .pgv-rlist{display:flex;align-items:stretch;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 0 8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}.pgv .pgv-rlist::-webkit-scrollbar{display:none}
+.pgv .pgv-rcard{flex:0 0 300px;scroll-snap-align:start;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px;cursor:pointer}
+.pgv .pgv-thumbs,.pgv-layer .pgv-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.pgv-b.pgv-thumb,.pgv-b.pgv-thumb:hover,.pgv-b.pgv-thumb:focus{position:relative;aspect-ratio:1/1;padding:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg);cursor:pointer;display:block;width:100%}
+.pgv-b.pgv-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pgv-b.pgv-thumb .pgv-thumb__more{position:absolute;inset:0;display:grid;place-items:center;background:rgba(2,76,70,.6);color:#fff;font-weight:800;font-size:18px}
+.pgv .pgv-rcard__head,.pgv-layer .pgv-rcard__head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:800;font-size:18px}
+.pgv .pgv-rcard__head small,.pgv-layer .pgv-rcard__head small{color:var(--muted);font-weight:400;font-size:14px;white-space:nowrap}
+.pgv .pgv-rcard .pgv-stars{margin:6px 0 8px}
+.pgv .pgv-rcard__text{flex:1;margin:0;font-size:16px;line-height:1.5;color:var(--green);opacity:.85;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.pgv-b.pgv-rmore,.pgv-b.pgv-rmore:hover,.pgv-b.pgv-rmore:focus{align-self:flex-start;margin-top:12px;min-height:40px;padding:0 16px;background:#fff;color:var(--green);border:2px solid var(--green);border-radius:12px;font:800 14px/1 "Manrope",system-ui,sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.pgv-b.pgv-rmore:hover,.pgv-b.pgv-rmore:focus{background:var(--green);color:#fff}.pgv-b.pgv-rmore.hide{visibility:hidden}
+.pgv-b.pgv-showall,.pgv-b.pgv-showall:hover,.pgv-b.pgv-showall:focus{display:none}
+.pgv-layer .pgv-viewer{position:fixed;inset:0;z-index:99990;background:var(--bg);display:flex;flex-direction:column}.pgv-layer .pgv-viewer[hidden]{display:none}.pgv-layer .pgv-viewer--photo{z-index:99995}
+.pgv-b.pgv-back,.pgv-b.pgv-back:hover,.pgv-b.pgv-back:focus{position:absolute;z-index:5;top:var(--btn-top);left:12px;width:52px;height:52px;border:2px solid var(--green);border-radius:12px;background:#fff;color:var(--green);display:grid;place-items:center;padding:0;cursor:pointer;transition:background .2s}
+.pgv-b.pgv-back:hover,.pgv-b.pgv-back:focus{background:var(--green)}
+.pgv-layer .pgv-back svg{width:24px;height:24px;fill:none;stroke:var(--green);transition:stroke .2s;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}.pgv-layer .pgv-back:hover svg,.pgv-layer .pgv-back:focus svg{stroke:#fff}
+.pgv-layer .pgv-counter{position:absolute;z-index:5;left:0;right:0;text-align:center;top:calc(var(--btn-top) + 16px);font-weight:800;font-size:14px;color:var(--muted);pointer-events:none}
+.pgv-layer .pgv-track{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.pgv-layer .pgv-track::-webkit-scrollbar{display:none}
+.pgv-layer .pgv-rslide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;overflow-y:auto;padding:calc(var(--btn-top) + 64px) var(--pad) calc(env(safe-area-inset-bottom,0px) + 32px)}
+.pgv-layer .pgv-rslide__in{max-width:520px;margin:0 auto}.pgv-layer .pgv-rslide .pgv-thumbs{grid-template-columns:repeat(2,1fr)}
+.pgv-layer .pgv-rslide .pgv-rcard__head{font-size:20px}.pgv-layer .pgv-rslide .pgv-stars svg{width:24px;height:24px}.pgv-layer .pgv-rslide p{font-size:16px;margin:0;white-space:pre-line}
+.pgv-layer .pgv-pslide{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always;display:grid;place-items:center;padding:calc(var(--btn-top) + 64px) var(--pad) calc(env(safe-area-inset-bottom,0px) + 24px)}
+.pgv-layer .pgv-pslide img{max-width:100%;max-height:100%;border-radius:var(--r);object-fit:contain}
+@media(max-width:600px){.pgv .pgv-sec{padding:48px 0}.pgv .pgv-wrap{padding:0 16px}}
+.pgv-b.pgv-vnav{display:none}
+@media(min-width:861px){
+.pgv .pgv-reviews{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:start}
+.pgv .pgv-summary{position:sticky;top:110px;margin:0;max-width:none}
+.pgv .pgv-rlist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;overflow:visible;scroll-snap-type:none;padding:0}
+.pgv .pgv-rcard{flex:none;width:auto;transition:border-color .2s,transform .2s}.pgv .pgv-rcard:hover{border-color:var(--green);transform:translateY(-2px)}
+.pgv .pgv-rcard.pgv-extra{display:none}.pgv .pgv-rlist.open .pgv-rcard.pgv-extra{display:flex}
+.pgv-b.pgv-showall,.pgv-b.pgv-showall:hover,.pgv-b.pgv-showall:focus{display:inline-flex;align-items:center;justify-content:center;margin-top:16px;min-height:48px;padding:0 24px;background:#fff;color:var(--green);border:2px solid var(--green);border-radius:12px;font:800 16px/1 "Manrope",system-ui,sans-serif;cursor:pointer}
+.pgv-b.pgv-showall:hover{background:var(--green);color:#fff}.pgv-b.pgv-showall[hidden]{display:none}
+.pgv-layer{--btn-top:28px}.pgv-layer .pgv-rslide{padding:calc(var(--btn-top) + 76px) 110px 48px}.pgv-layer .pgv-rslide__in{max-width:680px}
+.pgv-layer .pgv-rslide .pgv-thumbs{grid-template-columns:repeat(3,1fr)}.pgv-layer .pgv-rslide .pgv-rcard__head{font-size:24px}.pgv-layer .pgv-rslide p{font-size:18px}
+.pgv-layer .pgv-pslide{padding:calc(var(--btn-top) + 76px) 110px 40px}.pgv-layer .pgv-pslide img{width:auto;height:auto;max-width:100%;max-height:calc(100vh - 150px)}
+.pgv-b.pgv-vnav,.pgv-b.pgv-vnav:hover,.pgv-b.pgv-vnav:focus{display:grid;place-items:center;position:absolute;z-index:5;top:50%;margin-top:-26px;width:52px;height:52px;padding:0;border:2px solid var(--green);border-radius:12px;background:#fff;color:var(--green);cursor:pointer;transition:background .2s}
+.pgv-b.pgv-vnav:hover,.pgv-b.pgv-vnav:focus{background:var(--green)}.pgv-b.pgv-vnav.prev{left:24px}.pgv-b.pgv-vnav.next{right:24px}
+.pgv-layer .pgv-vnav svg{width:24px;height:24px;fill:none;stroke:var(--green);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}.pgv-layer .pgv-vnav:hover svg,.pgv-layer .pgv-vnav:focus svg{stroke:#fff}
+}
+@media(prefers-reduced-motion:reduce){.pgv *,.pgv *::before,.pgv *::after{animation:none!important;transition:none!important}}
+</style>
+<div class="pgv-layer" id="pgv-layer">
+<div class="pgv-viewer" id="pgv-rv" hidden><div class="pgv-counter" id="pgv-rvCount"></div>
+<button class="pgv-b pgv-back" id="pgv-rvBack" type="button" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="pgv-b pgv-vnav prev" id="pgv-rvPrev" type="button" aria-label="Предыдущий"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="pgv-b pgv-vnav next" id="pgv-rvNext" type="button" aria-label="Следующий"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+<div class="pgv-track" id="pgv-rvTrack"></div></div>
+<div class="pgv-viewer pgv-viewer--photo" id="pgv-pv" hidden><div class="pgv-counter" id="pgv-pvCount"></div>
+<button class="pgv-b pgv-back" id="pgv-pvBack" type="button" aria-label="Назад"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="pgv-b pgv-vnav prev" id="pgv-pvPrev" type="button" aria-label="Предыдущий"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+<button class="pgv-b pgv-vnav next" id="pgv-pvNext" type="button" aria-label="Следующий"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+<div class="pgv-track" id="pgv-pvTrack"></div></div>
+</div>
+<div class="pgv" id="pgv"><section class="pgv-sec" id="pgv-reviews"><div class="pgv-wrap">
+<div class="pgv-head"><h2 class="pgv-h">Хозяева доверяют нам своих питомцев</h2><p class="pgv-sub">Отзывы наших клиентов.</p></div>
+<div class="pgv-reviews"><div class="pgv-summary"><div><div class="pgv-summary__big" id="pgv-avg">5.0</div><div id="pgv-avgStars"></div><div class="pgv-summary__count" id="pgv-count"></div></div><div class="pgv-summary__bars" id="pgv-bars"></div><button class="pgv-b pgv-allph" id="pgv-allph" type="button" hidden></button></div>
+<div><div class="pgv-rlist" id="pgv-list"></div><button class="pgv-b pgv-showall" id="pgv-showall" type="button" hidden></button></div></div>
+</div></section></div>
+<script>
+(function(){
+var reviews=__PGV_DATA__;
+var layer=document.getElementById("pgv-layer"),root=document.getElementById("pgv");
+if(!root||!layer||root.getAttribute("data-ready"))return;root.setAttribute("data-ready","1");
+if(layer.parentNode!==document.body)document.body.appendChild(layer);
+function $(id){return document.getElementById(id)}
+function qa(s,e){return Array.prototype.slice.call((e||document).querySelectorAll(s))}
+function esc(x){return String(x).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+var STARP='<path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6 6.8 19.4l1-5.9L3.5 9.4l5.9-.8z"/>';
+function stars(n){var s='<span class="pgv-stars" aria-label="Оценка '+n+' из 5">';for(var i=1;i<=5;i++)s+='<svg viewBox="0 0 24 24" class="'+(i<=n?"full":"empty")+'">'+STARP+"</svg>";return s+"</span>"}
+function thumbs(rev,ri,max){if(!rev.p.length)return"";var html='<div class="pgv-thumbs">',shown=Math.min(rev.p.length,max);
+for(var k=0;k<shown;k++){var extra=(k===shown-1&&rev.p.length>shown)?rev.p.length-shown:0;
+html+='<button class="pgv-b pgv-thumb" type="button" data-r="'+ri+'" data-p="'+k+'" aria-label="Открыть фото"><img src="'+esc(rev.p[k])+'" alt="" loading="lazy">'+(extra?'<span class="pgv-thumb__more">+'+extra+"</span>":"")+"</button>"}
+return html+"</div>"}
+var LIMIT=4;
+function render(){
+var total=reviews.length,sum=0,c=[0,0,0,0,0,0],ph=0;
+reviews.forEach(function(x){sum+=x.r;c[x.r]++;ph+=x.p.length});
+var avg=total?sum/total:0;
+$("pgv-avg").textContent=avg.toFixed(1);$("pgv-avgStars").innerHTML=stars(Math.round(avg));$("pgv-count").textContent=total+" "+(total%10===1&&total%100!==11?"отзыв":(total%10>=2&&total%10<=4&&(total%100<10||total%100>=20)?"отзыва":"отзывов"));
+var bars="";for(var i=5;i>=1;i--)bars+='<div class="pgv-bar">'+i+'<i><b style="width:'+(total?c[i]/total*100:0)+'%"></b></i></div>';
+$("pgv-bars").innerHTML=bars;
+if(ph){$("pgv-allph").hidden=false;$("pgv-allph").textContent="Все фото ("+ph+")"}
+$("pgv-list").innerHTML=reviews.map(function(x,i){
+return'<article class="pgv-rcard'+(i>=LIMIT?" pgv-extra":"")+'" data-i="'+i+'" tabindex="0">'+thumbs(x,i,3)+'<div class="pgv-rcard__head"><span>'+esc(x.n)+"</span><small>"+esc(x.d)+"</small></div>"+stars(x.r)+'<p class="pgv-rcard__text">'+esc(x.t)+'</p><button class="pgv-b pgv-rmore hide" type="button">читать далее</button></article>'}).join("");
+if(total>LIMIT){$("pgv-showall").hidden=false;$("pgv-showall").textContent="Все отзывы ("+total+")"}
+checkClamp()}
+function checkClamp(){qa(".pgv-rcard",root).forEach(function(card){var t=card.querySelector(".pgv-rcard__text");card.querySelector(".pgv-rmore").classList.toggle("hide",t.scrollHeight<=t.clientHeight+1)})}
+window.addEventListener("resize",checkClamp);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(checkClamp);
+function openViewer(rootEl,track,counter,slides,index,total){
+track.innerHTML=slides;rootEl.hidden=false;document.body.style.overflow="hidden";
+track.style.scrollSnapType="none";track.scrollLeft=index*track.clientWidth;track.style.scrollSnapType="";
+function upd(){counter.textContent=(Math.round(track.scrollLeft/track.clientWidth)+1)+" / "+total}
+track.onscroll=upd;upd();rootEl.querySelector(".pgv-back").focus()}
+function closeViewer(r){r.hidden=true;if($("pgv-rv").hidden&&$("pgv-pv").hidden)document.body.style.overflow=""}
+function openReviews(index){
+var html=reviews.map(function(x,i){return'<div class="pgv-rslide"><div class="pgv-rslide__in">'+thumbs(x,i,99)+'<div class="pgv-rcard__head"><span>'+esc(x.n)+"</span><small>"+esc(x.d)+'</small></div><div style="margin:6px 0 12px">'+stars(x.r)+"</div><p>"+esc(x.t)+"</p></div></div>"}).join("");
+openViewer($("pgv-rv"),$("pgv-rvTrack"),$("pgv-rvCount"),html,index,reviews.length)}
+function openList(list,pi){
+var html=list.map(function(s){return'<div class="pgv-pslide"><img src="'+esc(s)+'" alt=""></div>'}).join("");
+openViewer($("pgv-pv"),$("pgv-pvTrack"),$("pgv-pvCount"),html,pi,list.length)}
+$("pgv-list").addEventListener("click",function(e){
+var th=e.target.closest(".pgv-thumb");
+if(th){e.stopPropagation();openList(reviews[+th.getAttribute("data-r")].p,+th.getAttribute("data-p"));return}
+var card=e.target.closest(".pgv-rcard");if(card)openReviews(+card.getAttribute("data-i"))});
+$("pgv-rvTrack").addEventListener("click",function(e){var th=e.target.closest(".pgv-thumb");if(th)openList(reviews[+th.getAttribute("data-r")].p,+th.getAttribute("data-p"))});
+$("pgv-list").addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.classList.contains("pgv-rcard"))openReviews(+e.target.getAttribute("data-i"))});
+$("pgv-allph").onclick=function(){var all=[];reviews.forEach(function(x){x.p.forEach(function(s){all.push(s)})});if(all.length)openList(all,0)};
+$("pgv-showall").onclick=function(){$("pgv-list").classList.add("open");$("pgv-showall").hidden=true;checkClamp()};
+$("pgv-rvBack").onclick=function(){closeViewer($("pgv-rv"))};$("pgv-pvBack").onclick=function(){closeViewer($("pgv-pv"))};
+function step(t,d){t.scrollBy({left:d*t.clientWidth,behavior:"smooth"})}
+$("pgv-rvPrev").onclick=function(){step($("pgv-rvTrack"),-1)};$("pgv-rvNext").onclick=function(){step($("pgv-rvTrack"),1)};
+$("pgv-pvPrev").onclick=function(){step($("pgv-pvTrack"),-1)};$("pgv-pvNext").onclick=function(){step($("pgv-pvTrack"),1)};
+document.addEventListener("keydown",function(e){var pv=!$("pgv-pv").hidden,rv=!$("pgv-rv").hidden;
+if(e.key==="Escape"){if(pv)closeViewer($("pgv-pv"));else if(rv)closeViewer($("pgv-rv"))}
+else if((e.key==="ArrowLeft"||e.key==="ArrowRight")&&(pv||rv))step(pv?$("pgv-pvTrack"):$("pgv-rvTrack"),e.key==="ArrowLeft"?-1:1)});
+render();
+})();
+</script>

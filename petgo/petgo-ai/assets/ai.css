@@ -1,0 +1,123 @@
+/* PetGo ИИ — стили чата (в фирменном стиле сайта PetGo: кремовый, зелёный, матовое стекло) */
+.pg-layer .pga-chat {
+	--pga-g: #024C46; --pga-g2: #013a35; --pga-bg: #FBF9E8; --pga-mu: #5f8480; --pga-line: rgba(2, 76, 70, .12); --pga-star: #f5a623;
+	--pga-ease: cubic-bezier(.32, .72, 0, 1); --pga-spring: cubic-bezier(.34, 1.36, .64, 1);
+	position: fixed; z-index: 9997; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr); align-items: end; justify-items: stretch;
+	background: rgba(1, 40, 36, .3); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; color: var(--pga-g); -webkit-font-smoothing: antialiased;
+	animation: pga-fade .25s ease;
+}
+.pg-layer .pga-chat[hidden] { display: none; }
+.pg-layer .pga-chat *, .pg-layer .pga-chat *::before, .pg-layer .pga-chat *::after { box-sizing: border-box; }
+.pg-layer .pga-chat.is-closing { animation: pga-fadeout .28s ease forwards; }
+.pg-layer .pga-chat__panel {
+	min-width: 0; max-width: 100%; overflow: hidden; width: 100%; height: min(88dvh, 720px);
+	display: flex; flex-direction: column; border-radius: 26px 26px 0 0;
+	background: rgba(251, 249, 232, .92); -webkit-backdrop-filter: blur(30px) saturate(150%); backdrop-filter: blur(30px) saturate(150%);
+	box-shadow: inset 0 0 0 .5px rgba(2, 76, 70, .12), inset 0 1px 0 rgba(255, 255, 255, .9), 0 -20px 60px -20px rgba(1, 40, 36, .35);
+	padding-bottom: env(safe-area-inset-bottom);
+	animation: pga-up .5s var(--pga-ease);
+}
+.pg-layer .pga-chat.is-closing .pga-chat__panel { animation: pga-down .28s var(--pga-ease) forwards; }
+@media (min-width: 640px) {
+	.pg-layer .pga-chat { padding: 24px; grid-template-columns: minmax(0, 420px); justify-content: end; }
+	.pg-layer .pga-chat__panel { height: min(680px, calc(100vh - 48px)); border-radius: 28px; animation: pga-pop .45s var(--pga-spring); box-shadow: inset 0 0 0 .5px rgba(2, 76, 70, .12), inset 0 1px 0 rgba(255, 255, 255, .9), 0 30px 80px -20px rgba(1, 40, 36, .4); }
+}
+/* телефон: чат на весь экран, своя клавиатура сайта — вплотную под полем ввода */
+@media (max-width: 639px) {
+	.pg-layer .pga-chat { align-items: stretch; background: rgba(1, 40, 36, .3); }
+	.pg-layer .pga-chat__panel { height: 100%; max-height: 100dvh; border-radius: 0; padding-top: env(safe-area-inset-top); }
+}
+.pg-layer.kb-open .pga-chat { bottom: var(--kb, 0px); }
+.pg-layer.kb-open .pga-chat__panel { padding-bottom: 0; }
+.pg-layer.kb-open .pga-chat__disc { display: none; }
+@media (max-width: 639px) {
+	.pg-layer.kb-open .pga-chat__form { margin: 0; max-width: 100%; border-radius: 18px 18px 0 0; box-shadow: inset 0 1px 0 var(--pga-line); }
+}
+html.pga-lock, html.pga-lock body { overflow: hidden; }
+
+/* шапка */
+.pg-layer .pga-chat__head { display: flex; align-items: center; gap: 10px; padding: 14px 12px 12px 16px; border-bottom: .5px solid var(--pga-line); min-width: 0; }
+.pg-layer .pga-chat__avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--pga-g); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2); }
+.pg-layer .pga-chat__who { flex: 1; min-width: 0; line-height: 1.2; padding-left: 2px; }
+.pg-layer .pga-chat__who strong { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pg-layer .pga-chat__who small { color: var(--pga-mu); font-size: 12.5px; }
+.pg-layer .pga-online { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #34c759; margin: 0 6px 0 3px; vertical-align: 1px; box-shadow: 0 0 0 3px rgba(52, 199, 89, .22); }
+.pg-layer .pga-round { all: unset; box-sizing: border-box; flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--pga-g); background: rgba(2, 76, 70, .07); transition: transform .3s var(--pga-spring), background .2s; -webkit-tap-highlight-color: transparent; }
+.pg-layer .pga-round:active { transform: scale(.88); }
+.pg-layer .pga-round:hover { background: rgba(2, 76, 70, .12); }
+
+/* сообщения */
+.pg-layer .pga-chat__log { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+.pg-layer .pga-msg { max-width: 86%; padding: 10px 14px; border-radius: 18px; font-size: 15.5px; line-height: 1.45; letter-spacing: -.005em; animation: pga-msg .4s var(--pga-spring); overflow-wrap: anywhere; }
+.pg-layer .pga-msg p { margin: 0 0 6px; }
+.pg-layer .pga-msg p:last-child { margin: 0; }
+.pg-layer .pga-msg ul { margin: 4px 0 6px; padding-left: 18px; list-style: disc; }
+.pg-layer .pga-msg li { margin: 2px 0; }
+.pg-layer .pga-msg b { font-weight: 650; }
+.pg-layer .pga-msg a[href^="tel:"] { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.pg-layer .pga-msg--bot { align-self: flex-start; background: #fff; border-bottom-left-radius: 6px; box-shadow: 0 1px 2px rgba(2, 76, 70, .06); }
+.pg-layer .pga-msg--me { align-self: flex-end; color: #fff; background: var(--pga-g); border-bottom-right-radius: 6px; }
+.pg-layer .pga-msg--err { align-self: flex-start; background: #FFF1EC; color: #9A3412; border-bottom-left-radius: 6px; }
+.pg-layer .pga-msg--sys { align-self: center; max-width: 92%; padding: 6px 12px; border-radius: 999px; background: rgba(2, 76, 70, .06); color: var(--pga-mu); font-size: 12.5px; text-align: center; }
+.pg-layer .pga-msg--mgr { align-self: flex-start; background: #fff; border-bottom-left-radius: 6px; box-shadow: inset 0 0 0 1.5px rgba(245, 166, 35, .55); }
+.pg-layer .pga-msg__who { display: block; font-size: 11.5px; font-weight: 700; color: #b26b00; margin-bottom: 3px; }
+.pg-layer .pga-msg__cta { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-layer .pga-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform .3s var(--pga-spring); -webkit-tap-highlight-color: transparent; }
+.pg-layer .pga-btn:active { transform: scale(.95); }
+.pg-layer .pga-btn--pri { color: #fff; background: var(--pga-g); }
+.pg-layer .pga-btn--wa { color: var(--pga-g); background: rgba(2, 76, 70, .08); }
+.pg-layer .pga-a { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; margin: 2px 0; border-radius: 999px; font-weight: 600; font-size: 14px; color: var(--pga-g) !important; background: rgba(2, 76, 70, .08); text-decoration: none !important; }
+.pg-layer .pga-typing { align-self: flex-start; display: inline-flex; gap: 4px; padding: 14px 16px; background: #fff; border-radius: 18px; border-bottom-left-radius: 6px; }
+.pg-layer .pga-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--pga-mu); animation: pga-dot 1.2s infinite ease-in-out; }
+.pg-layer .pga-typing i:nth-child(2) { animation-delay: .15s; }
+.pg-layer .pga-typing i:nth-child(3) { animation-delay: .3s; }
+.pg-layer .pga-caret { display: inline-block; width: 7px; height: 7px; margin-left: 4px; border-radius: 50%; background: var(--pga-star); vertical-align: 1px; animation: pga-blink .9s ease-in-out infinite; }
+.pg-layer .pga-msg--tr p { background: linear-gradient(90deg, rgba(255, 255, 255, .55) 0%, #fff 40%, rgba(255, 255, 255, .55) 80%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: pga-shimmer 1.4s linear infinite; font-style: italic; }
+.pg-layer .pga-msg.is-in p { animation: pga-fade .35s ease; }
+
+/* подсказки */
+.pg-layer .pga-chat__chips { flex: none; display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; padding: 2px 12px 10px; scroll-padding-inline: 12px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.pg-layer .pga-chat__chips::-webkit-scrollbar { display: none; }
+.pg-layer .pga-chat__chips[hidden] { display: none; }
+.pg-layer .pga-chip { all: unset; box-sizing: border-box; flex: none; padding: 9px 13px; border-radius: 12px; font-size: 13.5px; font-weight: 600; white-space: nowrap; cursor: pointer; color: var(--pga-g); background: rgba(255, 255, 255, .9); box-shadow: inset 0 0 0 1px rgba(2, 76, 70, .1); transition: transform .3s var(--pga-spring); -webkit-tap-highlight-color: transparent; }
+.pg-layer .pga-chip:active { transform: scale(.95); }
+
+/* поле ввода: микрофон ↔ отправить, как в мессенджерах */
+.pg-layer .pga-chat__form { position: relative; flex: none; display: flex; align-items: center; gap: 8px; min-width: 0; max-width: calc(100% - 24px); margin: 0 12px; padding: 6px 6px 6px 14px; border-radius: 18px; background: #fff; box-shadow: inset 0 0 0 1px rgba(2, 76, 70, .1), 0 4px 14px -6px rgba(2, 76, 70, .15); }
+.pg-layer .pga-chat__form textarea { all: unset; box-sizing: border-box; display: block; flex: 1; min-width: 0; font-family: inherit; font-size: 16px; line-height: 1.4; color: var(--pga-g); padding: 10px 0; max-height: 120px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; }
+.pg-layer .pga-chat__form textarea::placeholder { color: var(--pga-mu); opacity: 1; }
+.pg-layer .pga-chat__send, .pg-layer .pga-chat__mic { all: unset; box-sizing: border-box; flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; color: #fff !important; background: var(--pga-g); transition: transform .3s var(--pga-spring), opacity .2s; -webkit-tap-highlight-color: transparent; }
+.pg-layer .pga-chat__send:active, .pg-layer .pga-chat__mic:active { transform: scale(.9); }
+.pg-layer .pga-chat__send:disabled { opacity: .45; }
+.pg-layer .pga-chat__form:not(.has-text) .pga-chat__send { display: none; }
+.pg-layer .pga-chat__form.has-text .pga-chat__mic { display: none; }
+.pg-layer .pga-chat__form.no-voice .pga-chat__mic { display: none !important; }
+.pg-layer .pga-chat__form.no-voice:not(.has-text) .pga-chat__send { display: grid; }
+.pg-layer .pga-chat__disc { flex: none; margin: 0; text-align: center; font-size: 11px; color: var(--pga-mu); padding: 8px 16px 12px; }
+
+/* запись голоса */
+.pg-layer .pga-rec { display: none; }
+.pg-layer .pga-chat__form.is-rec > *:not(.pga-rec) { display: none !important; }
+.pg-layer .pga-chat__form.is-rec { padding: 6px; }
+.pg-layer .pga-chat__form.is-rec .pga-rec { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; height: 40px; animation: pga-fade .25s ease; }
+.pg-layer .pga-rec__x, .pg-layer .pga-rec__send { all: unset; box-sizing: border-box; flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; cursor: pointer; transition: transform .3s var(--pga-spring); -webkit-tap-highlight-color: transparent; }
+.pg-layer .pga-rec__x { color: var(--pga-mu); background: rgba(2, 76, 70, .07); }
+.pg-layer .pga-rec__send { color: #fff; background: var(--pga-g); animation: pga-ring 1.6s ease-out infinite; }
+.pg-layer .pga-rec__x:active, .pg-layer .pga-rec__send:active { transform: scale(.9); }
+.pg-layer .pga-rec__dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: #ff3b30; animation: pga-blink 1s ease-in-out infinite; }
+.pg-layer .pga-rec__time { flex: none; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 36px; }
+.pg-layer .pga-rec__wave { flex: 1; min-width: 0; height: 30px; display: flex; align-items: center; justify-content: space-between; gap: 2px; overflow: hidden; }
+.pg-layer .pga-rec__wave i { flex: 1 1 0; max-width: 4px; height: 100%; border-radius: 3px; transform: scaleY(.12); background: linear-gradient(180deg, #2a7a71, var(--pga-g)); transition: transform .08s linear; }
+
+@keyframes pga-up { from { transform: translateY(100%); } }
+@keyframes pga-down { to { transform: translateY(100%); } }
+@keyframes pga-pop { from { opacity: 0; transform: translateY(24px) scale(.94); } }
+@keyframes pga-fade { from { opacity: 0; } }
+@keyframes pga-fadeout { to { opacity: 0; } }
+@keyframes pga-msg { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+@keyframes pga-dot { 0%, 80%, 100% { transform: scale(.6); opacity: .4; } 40% { transform: scale(1); opacity: 1; } }
+@keyframes pga-blink { 50% { opacity: .25; transform: scale(.75); } }
+@keyframes pga-shimmer { to { background-position: -200% 0; } }
+@keyframes pga-ring { 0% { box-shadow: 0 0 0 0 rgba(2, 76, 70, .45); } 100% { box-shadow: 0 0 0 12px rgba(2, 76, 70, 0); } }
+@media (prefers-reduced-motion: reduce) { .pg-layer .pga-chat * { animation: none !important; transition: none !important; } }
