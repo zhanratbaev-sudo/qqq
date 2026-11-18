@@ -193,7 +193,7 @@
       api("review", { order: f.elements.order.value, rating: rate, text: f.elements.text.value }).then(function (j) { busyEnd(f, function () {
         if (!j.ok) { formErr(f, j.msg || ""); return; }
         qa('[data-k-review="' + f.elements.order.value + '"]').forEach(function (b) {
-          if (b.closest(".pgk-n")) { b.remove(); return; }
+          if (b.closest(".pgk-n")) { b.outerHTML = '<span class="pgk-myrv">' + stars(rate) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>"; return; }
           var st = ""; for (var i = 1; i <= 5; i++) st += i <= rate ? ICON.starOn : ICON.star;
           var w = b.closest(".pgk-wacts");
           b.remove();
@@ -473,11 +473,12 @@
     var cls = anim ? " new" : "", st = anim && i ? ' style="animation-delay:' + Math.min(i, 5) * 40 + 'ms"' : "";
     if (m.k === "sys" || m.k === "rv") {
       return '<div class="pgk-n' + cls + '" data-id="' + m.id + '"' + st + ">" + (m.h ? "<p>" + m.h + "</p>" : "") +
-        (m.k === "rv" && m.s ? '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>" : "") + "<small>" + esc(m.tm) + "</small></div>";
+        (m.k === "rv" && m.s ? (m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>") : "") + "<small>" + esc(m.tm) + "</small></div>";
     }
     return '<div class="pgk-m' + (m.me ? " me" : "") + cls + '" data-id="' + m.id + '"' + st + ">" + (!m.me ? '<span class="pgk-m-av">' + (m.av ? '<img src="' + esc(m.av) + '" alt="">' : "<b>" + esc((m.n || "P").charAt(0)) + "</b>") + "</span>" : "") +
       '<div class="pgk-m-b">' + (!m.me && m.n ? "<small>" + esc(m.n) + "</small>" : "") + (m.p ? '<button type="button" class="pg-b pgk-m-ph" data-k-photo="' + esc(m.p) + '"><img src="' + esc(m.p) + '" alt="" loading="lazy"></button>' : "") + (m.h ? "<p>" + m.h + "</p>" : "") + "<time>" + esc(m.tm) + "</time></div></div>";
   }
+  function stars(n) { var st = ""; for (var i = 1; i <= 5; i++) st += i <= n ? ICON.starOn : ICON.star; return st; }
   function dayLabel(dl) {
     var n = almaty(), t = pad(n.getDate()) + "." + pad(n.getMonth() + 1) + "." + n.getFullYear();
     var y = new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1), ys = pad(y.getDate()) + "." + pad(y.getMonth() + 1) + "." + y.getFullYear();
@@ -546,13 +547,33 @@
     }
     ta.value = ""; ta.style.height = "";
     function done() { clearTimeout(tyT); if (typing) { typing.remove(); typing = null; } btn.disabled = false; }
+    /* 34.6: помощник отвечает уже после «отправлено» — ждём его сообщение частым опросом (до 45 с) */
+    function waitAi(from) {
+      var t0 = Date.now();
+      (function tick() {
+        loadMsgs().then(function () {
+          var got = qa(".pgk-m:not(.me)", inn).some(function (x) { return +x.getAttribute("data-id") > from; });
+          if (got || Date.now() - t0 > 45000 || !CL.chatOpen) { done(); return; }
+          setTimeout(tick, 1500);
+        });
+      })();
+    }
     (file ? shrink(file, 1600) : Promise.resolve(null)).then(function (b) {
       return api("send", { body: body }, b ? { photo: b } : null);
     }).then(function (j) {
       if (!j.ok) { done(); if (mine) mine.remove(); ta.value = body; toast(j.msg || T("Не получилось — проверьте интернет."), true); return; }
       if (inp) inp.value = ""; f.classList.remove("has-ph");
+      if (j.ai === "wait") { btn.disabled = false; return loadMsgs().then(function () { waitAi(j.id || CL.lastMsg); }); }
       return loadMsgs().then(done);
-    }).catch(function () { done(); if (mine) mine.remove(); ta.value = body; toast(T("Не получилось — проверьте интернет."), true); });
+    }).catch(function () {
+      /* связь оборвалась: сообщение могло уже сохраниться — проверяем, прежде чем предлагать отправить снова */
+      loadMsgs().then(function () {
+        done();
+        if (mine && !mine.classList.contains("sending")) return;
+        if (mine) mine.remove();
+        ta.value = body; toast(T("Не получилось — проверьте интернет."), true);
+      });
+    });
   }
   function unread(n) { qa("[data-k-unread]").forEach(function (b) { b.textContent = n; b.hidden = !n; }); }
 
@@ -590,8 +611,25 @@
     var wait = CL.tab === "map" ? (anyLive ? 8000 : 30000) : (anyLive ? 15000 : 45000);
     CL.timer = setTimeout(function () {
       if (D.hidden) { live(); return; }
-      api("live").then(function (j) { if (j.ok) { applyPets(j.pets); unread(CL.chatOpen ? 0 : (j.u || 0)); } }).catch(function () {}).then(live);
+      refresh().then(live);
     }, wait);
+  }
+  /* 34.6: статусы питомцев, «Ближайшие» и прогулки — свежие, даже если кабинет долго был открыт */
+  var refreshing = null;
+  function refresh() {
+    if (!K) return Promise.resolve();
+    if (refreshing) return refreshing;
+    refreshing = api("live").then(function (j) {
+      if (!j.ok) return;
+      applyPets(j.pets); unread(CL.chatOpen ? 0 : (j.u || 0));
+      var up = $("[data-k-up]");
+      if (up && typeof j.up === "string" && up._h !== j.up && up.innerHTML !== j.up) { up._h = j.up; up.innerHTML = j.up; }
+      var wk = $("[data-k-walks]");
+      if (wk && j.wk && wk.getAttribute("data-sig") !== j.wk) {
+        return api("walks").then(function (w) { if (w.ok) { wk.innerHTML = w.h; wk.setAttribute("data-sig", w.wk); } });
+      }
+    }).catch(function () {}).then(function () { refreshing = null; });
+    return refreshing;
   }
 
   /* ---------- отзыв ---------- */
@@ -885,7 +923,13 @@
     /* прогулка завершилась — кабинет сам предлагает оценить няню (один раз) */
     if (K.rv) {
       var seen = ""; try { seen = sessionStorage.getItem("pgk_rv") || ""; } catch (x) {}
-      if (seen !== String(K.rv.o)) setTimeout(function () { try { sessionStorage.setItem("pgk_rv", String(K.rv.o)); } catch (x) {} if (!stack.length) reviewOpen(K.rv.o, K.rv.n, K.rv.av, true); }, 1400);
+      if (seen !== String(K.rv.o)) setTimeout(function () {
+        try { sessionStorage.setItem("pgk_rv", String(K.rv.o)); } catch (x) {}
+        if (stack.length) return;
+        reviewOpen(K.rv.o, K.rv.n, K.rv.av, true);
+        /* 34.6: больше сам не спросит про эту прогулку (оценить можно в «Прогулках» или в чате) */
+        api("rv_skip", { order: K.rv.o }).catch(function () {});
+      }, 1400);
     }
   }
   function leaveCabinet() {
@@ -970,7 +1014,9 @@
     if (e.key === "Escape") { if ($(".pgk-lb.on")) lbClose(); else if (stack.length) kClose(); }
     if (e.key === "Enter" && !e.shiftKey && e.target.matches && e.target.matches("[data-k-send] textarea") && !("ontouchstart" in W)) { e.preventDefault(); sendMsg(e.target.closest("form")); }
   });
-  D.addEventListener("visibilitychange", function () { if (!D.hidden && K) { live(); if (CL.chatOpen) loadMsgs(); } });
+  D.addEventListener("visibilitychange", function () { if (!D.hidden && K) { refresh().then(live); if (CL.chatOpen) loadMsgs(); } });
+  /* iPhone вернул страницу из памяти (переключились между приложениями) — сразу обновить */
+  W.addEventListener("pageshow", function (e) { if (e.persisted && K) { refresh().then(live); if (CL.chatOpen) loadMsgs(); } });
   var rzT = 0;
   W.addEventListener("resize", function () {
     clearTimeout(rzT);

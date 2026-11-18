@@ -155,6 +155,13 @@ function petgo_cl_say($uid, $body, $photo = '') {
     if (!$cid) {
         return 0;
     }
+    /* 34.6: то же сообщение за 20 секунд второй раз не записываем (двойное нажатие, повтор запроса на плохой связи) */
+    if ($photo === '' && $body !== '') {
+        $dup = (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM ' . petgo_tb('msgs') . ' WHERE chat_id=%d AND user_id=%d AND body=%s AND ts>%d ORDER BY id DESC LIMIT 1', $cid, (int) $uid, $body, time() - 20));
+        if ($dup) {
+            return $dup;
+        }
+    }
     $wpdb->insert(petgo_tb('msgs'), array('chat_id' => $cid, 'user_id' => (int) $uid, 'subject_id' => 0, 'kind' => 'msg', 'body' => $body, 'photo' => $photo, 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
     $mid = (int) $wpdb->insert_id;
     if ($mid) {
@@ -309,6 +316,13 @@ function petgo_cl_sys($uid, $body, $kind = 'sys', $subj = 0) {
     $cid = petgo_cl_chat($uid);
     if (!$cid) {
         return 0;
+    }
+    /* 34.6: одно и то же уведомление (например, «Оцените няню» по одному заказу) — только один раз */
+    $dup = $subj
+        ? (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM ' . petgo_tb('msgs') . ' WHERE chat_id=%d AND user_id=0 AND kind=%s AND subject_id=%d LIMIT 1', $cid, $kind, (int) $subj))
+        : (int) $wpdb->get_var($wpdb->prepare('SELECT id FROM ' . petgo_tb('msgs') . ' WHERE chat_id=%d AND user_id=0 AND body=%s AND ts>%d LIMIT 1', $cid, $body, time() - 120));
+    if ($dup) {
+        return $dup;
     }
     $wpdb->insert(petgo_tb('msgs'), array('chat_id' => $cid, 'user_id' => 0, 'subject_id' => (int) $subj, 'kind' => $kind, 'body' => $body, 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
     petgo_bump();

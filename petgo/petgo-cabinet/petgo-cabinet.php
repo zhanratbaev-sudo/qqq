@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 34.5.0
+ * Version: 34.6.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.5.0');
+define('PETGO_VER', '34.6.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -1098,8 +1098,17 @@ function petgo_h_finish() {
     if (($walk && $st !== 'picked') || (!$walk && $st !== 'arrived')) {
         petgo_fail('err_na');
     }
+    /* 34.6: два одновременных «Завершить» (двойное нажатие на плохой связи) — второй просто возвращается */
+    if (!add_post_meta($oid, '_finishing', time(), true)) {
+        $lock = (int) get_post_meta($oid, '_finishing', true);
+        if (time() - $lock < 120) {
+            petgo_back('orders', array('o' => $oid));
+        }
+        update_post_meta($oid, '_finishing', time());
+    }
     $r = isset($_FILES['photo']) ? petgo_save_image($_FILES['photo'], 1024, 68) : 'none';
     if (!is_array($r)) {
+        delete_post_meta($oid, '_finishing');
         petgo_fail($r === 'none' ? 'err_photo_req' : $r);
     }
     update_post_meta($oid, '_rphoto', $r);

@@ -249,7 +249,16 @@ function petgo_cl_ajax() {
     global $wpdb;
 
     if ($op === 'live') {
-        petgo_cl_json(true, array('pets' => petgo_cl_pets_state($uid), 'u' => petgo_cl_unread($uid)));
+        /* 34.6: вместе со статусами питомцев — «Ближайшие» и отметка, изменились ли прогулки (заказ выполнен, отменён…) */
+        $out = array('pets' => petgo_cl_pets_state($uid), 'u' => petgo_cl_unread($uid));
+        if (function_exists('petgo_cl_upcoming_html')) {
+            $out['up'] = petgo_cl_upcoming_html($uid);
+            $out['wk'] = petgo_cl_walks_sig($uid);
+        }
+        petgo_cl_json(true, $out);
+    }
+    if ($op === 'walks' && function_exists('petgo_cl_walks_html')) {
+        petgo_cl_json(true, array('h' => petgo_cl_walks_html($uid), 'wk' => petgo_cl_walks_sig($uid)));
     }
     if ($op === 'map') {
         petgo_cl_json(true, array('pets' => petgo_cl_pets_state($uid), 'hist' => petgo_cl_map_history($uid)));
@@ -266,7 +275,7 @@ function petgo_cl_ajax() {
             $a     = (int) $r->user_id ? get_userdata((int) $r->user_id) : false;
             $me    = (int) $r->user_id === $uid;
             $max   = max($max, (int) $r->id);
-            $out[] = array('id' => (int) $r->id, 'me' => $me, 'k' => (string) $r->kind, 's' => (int) $r->subject_id, 'n' => $me ? '' : ($a ? $a->display_name : petgo_site_l($r->kind === 'ai' ? 'Помощник PetGo' : 'PetGo')), 'av' => (!$me && $a) ? petgo_user_avatar_url($a->ID) : '',
+            $out[] = array('id' => (int) $r->id, 'me' => $me, 'k' => (string) $r->kind, 's' => (int) $r->subject_id, 'rv' => ($r->kind === 'rv' && (int) $r->subject_id && function_exists('petgo_rv_by_order') && petgo_rv_by_order((int) $r->subject_id)) ? (int) petgo_rv_by_order((int) $r->subject_id)->rating : 0, 'n' => $me ? '' : ($a ? $a->display_name : petgo_site_l($r->kind === 'ai' ? 'Помощник PetGo' : 'PetGo')), 'av' => (!$me && $a) ? petgo_user_avatar_url($a->ID) : '',
                 'h' => petgo_msg_html($r->body), 'p' => $r->photo !== '' ? petgo_media($r->photo) : '', 'tm' => wp_date('H:i', (int) $r->ts, petgo_tz()), 'dl' => wp_date('d.m.Y', (int) $r->ts, petgo_tz()));
         }
         if ($max) {
@@ -290,10 +299,21 @@ function petgo_cl_ajax() {
         if ($body === '' && $photo === '') {
             petgo_cl_json(false, array('msg' => $L('Напишите сообщение.')));
         }
-        petgo_cl_say($uid, $body, $photo);
-        /* помощник (ИИ) отвечает сразу, если менеджер не ведёт этот чат сам */
-        $ai = ($body !== '' && function_exists('petgo_cl_ai_reply')) ? petgo_cl_ai_reply($uid) : false;
-        petgo_cl_json(true, array('ai' => (bool) $ai));
+        $mid = petgo_cl_say($uid, $body, $photo);
+        /* 34.6: помощник (ИИ) отвечает после того, как сообщение уже сохранено и телефон получил «отправлено»:
+           долгий ответ ИИ больше не держит отправку (из-за этого на плохой связи сообщение уходило дважды) */
+        $want = $body !== '' && function_exists('petgo_cl_ai_reply') && function_exists('petgo_cl_ai_on') && petgo_cl_ai_on();
+        if ($want && function_exists('fastcgi_finish_request')) {
+            nocache_headers();
+            header('Content-Type: application/json; charset=utf-8');
+            echo wp_json_encode(array('ok' => true, 'id' => (int) $mid, 'ai' => 'wait'));
+            fastcgi_finish_request();
+            @ignore_user_abort(true);
+            petgo_cl_ai_reply($uid);
+            exit;
+        }
+        $ai = $want ? petgo_cl_ai_reply($uid) : false;
+        petgo_cl_json(true, array('id' => (int) $mid, 'ai' => (bool) $ai));
     }
     if ($op === 'profile') {
         $name = mb_substr(sanitize_text_field((string) petgo_p('name')), 0, 60);
