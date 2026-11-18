@@ -223,6 +223,10 @@ function petgo_pf_send() {
             }
             $extra[] = array(petgo_pf_meta()[$k][0], petgo_val($k, $d[$k], $f[0]));
         }
+        /* 34.5: откуда пришёл клиент (реклама, метки utm) */
+        if (function_exists('petgo_src_pairs')) {
+            $extra = array_merge($extra, petgo_src_pairs());
+        }
         $pf = $d;
         if ($av) {
             $pf['_avatar'] = $av;
@@ -237,6 +241,9 @@ function petgo_pf_send() {
         }
         petgo_bump();
         petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Регистрация питомца', $d['title'] . ' · ' . $d['owner'] . ' · ' . $d['phone'], petgo_page_url(array('pg' => 'requests')));
+        if (function_exists('petgo_event')) {
+            petgo_event('pet_form', array('request' => (int) $wpdb->insert_id, 'mode' => 'site'));
+        }
         wp_send_json(array('ok' => true));
     }
 

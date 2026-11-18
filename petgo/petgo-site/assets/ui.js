@@ -235,9 +235,12 @@
     if (ph) {
       ph.addEventListener("focus", function () { if (ph.value === "") ph.value = "+7 "; });
       ph.addEventListener("blur", function () { if (ph.value.replace(/\D/g, "").length <= 1) ph.value = ""; });
-      ph.addEventListener("input", function () { var v = ph.value.replace(/[^\d+\s()\-]/g, ""); if (v !== ph.value) ph.value = v; });
+      /* 34.5: вставили номер целиком («+7 701…» или «8 701…») поверх готового «+7 » — второй префикс убираем */
+      ph.addEventListener("input", function () { var v = ph.value.replace(/[^\d+\s()\-]/g, "").replace(/^\+7\s*(?=\+|8\s*\(?\d{3})/, ""); if (v !== ph.value) ph.value = v; });
     }
     function sent() {
+      /* 34.5: цель «заявка» для рекламы */
+      if (window.PGEvent) window.PGEvent("lead", { form: f.getAttribute("data-kind") || "request" });
       /* форма плавно сворачивается, на её месте рисуется галочка */
       var h0 = f.offsetHeight;
       f.style.height = h0 + "px";
@@ -326,7 +329,8 @@
     var spinT = 0;
     function loading(on) {
       clearTimeout(spinT);
-      if (on) spinT = setTimeout(function () { spin.classList.add("on"); }, 140);
+      /* кружок — только если страница грузится дольше 300 мс (быстрые переходы не мигают) */
+      if (on) spinT = setTimeout(function () { spin.classList.add("on"); }, 300);
       else spin.classList.remove("on");
     }
     function swap(d, u, push, key) {
@@ -340,9 +344,12 @@
       var md = d.querySelector('meta[name="description"]'), cd = doc.querySelector('meta[name="description"]');
       if (md && cd) cd.setAttribute("content", md.getAttribute("content"));
       C.page = key;
+      var from = location.href;
       if (push) history.pushState({ pg: key }, "", u);
       window.scrollTo(0, 0);
       if (window.PGInitPage) window.PGInitPage();
+      /* 34.5: просмотр страницы — для счётчиков (переход без перезагрузки) */
+      if (window.PGEvent) window.PGEvent("page_view", { page: key, from: from });
       var vh = window.innerHeight;
       qa(".pg-rise, .pg-summary", imp).forEach(function (x) { if (x.getBoundingClientRect().top < vh) x.classList.add("in"); });
       initHero();
@@ -399,5 +406,41 @@
       var k = keyOf(location.href);
       if (k && k !== C.page) go(location.href, false);
     });
+  })();
+
+  /* ============================================================
+     34.5: БЕЗ ИНТЕРНЕТА — плашка сверху вместо пустого экрана; service worker сайта
+     ============================================================ */
+  (function () {
+    var bar = null, hideT = 0, NET = '<svg class="pg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0M12 19h.01"/><path d="M3 3l18 18"/></svg>';
+    function show(text, kind, btn) {
+      if (!bar) {
+        bar = doc.createElement("div"); bar.className = "pg-net"; bar.setAttribute("role", "status"); bar.setAttribute("aria-live", "polite");
+        (layer || doc.body).appendChild(bar);
+      }
+      clearTimeout(hideT);
+      bar.className = "pg-net" + (kind ? " " + kind : "");
+      bar.innerHTML = (kind === "ok" ? "" : NET) + "<span>" + esc(text) + "</span>" + (btn ? '<button type="button" class="pg-b" data-net-reload>' + esc(T("Обновить")) + "</button>" : "");
+      bar.hidden = false; void bar.offsetWidth; bar.classList.add("on");
+    }
+    function hide(after) {
+      if (!bar) return;
+      clearTimeout(hideT);
+      hideT = setTimeout(function () { bar.classList.remove("on"); setTimeout(function () { if (!bar.classList.contains("on")) bar.hidden = true; }, 200); }, after || 0);
+    }
+    function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+    window.addEventListener("offline", function () { show(T("Нет интернета"), "off"); });
+    window.addEventListener("online", function () { if (bar && bar.classList.contains("on")) { show(T("Снова онлайн"), "ok"); hide(1800); } });
+    doc.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-net-reload]")) location.reload(); });
+    /* страница открыта из сохранённой копии (нет связи или она очень медленная) */
+    if (window.PG_SW_COPY === "offline") show(T("Нет интернета — показана сохранённая страница"), "off", true);
+    else if (window.PG_SW_COPY === "slow") show(T("Медленный интернет — показана сохранённая страница"), "slow", true);
+    else if (!navigator.onLine) show(T("Нет интернета"), "off");
+    /* service worker: регистрируем, когда страница уже загрузилась */
+    var sw = C.sw;
+    if (sw && sw.url && "serviceWorker" in navigator && window.isSecureContext !== false) {
+      var reg = function () { navigator.serviceWorker.register(sw.url, { scope: sw.scope || "/" }).catch(function () {}); };
+      if (doc.readyState === "complete") setTimeout(reg, 800); else window.addEventListener("load", function () { setTimeout(reg, 800); });
+    }
   })();
 })();

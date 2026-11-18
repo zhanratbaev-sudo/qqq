@@ -146,6 +146,10 @@ function petgo_lead_ajax() {
             $extra[] = array('Возраст', $age);
         }
     }
+    /* 34.5: откуда пришёл клиент (реклама, метки utm) */
+    if (function_exists('petgo_src_pairs')) {
+        $extra = array_merge($extra, petgo_src_pairs());
+    }
     global $wpdb;
     $t   = petgo_tb('reqs');
     /* повтор той же заявки за 10 минут не создаёт вторую запись (для регистрации питомца — если та же кличка) */
@@ -164,6 +168,9 @@ function petgo_lead_ajax() {
         }
         petgo_bump();
         petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), $pet ? 'Регистрация питомца' : 'Новая заявка', ($pet ? $nick . ' · ' : '') . $name . ' · +' . $d, petgo_page_url(array('pg' => 'requests')));
+        if (function_exists('petgo_event')) {
+            petgo_event($pet ? 'pet_form' : 'lead', array('request' => (int) $wpdb->insert_id));
+        }
     }
     set_transient($ik, (int) get_transient($ik) + 1, HOUR_IN_SECONDS);
     wp_send_json(array('ok' => true));

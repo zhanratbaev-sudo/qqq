@@ -367,8 +367,27 @@ function petgo_settings_modal() {
             return esc_url(wp_nonce_url(admin_url('admin-post.php?action=petgo_export&type=' . $type), 'petgo_exp'));
         };
         $s .= '<div class="pgc-sgrp"><h4>' . esc_html(petgo_t('nav_site')) . '</h4><div class="pgc-sgl">';
-        $s .= '<a class="pgc-srow pgc-link" href="' . esc_url(petgo_page_url(array('pg' => 'site'))) . '" data-close-nav><span class="pgc-sri ic-globe">' . petgo_icon('globe') . '</span><span class="pgc-srt"><b>' . esc_html(petgo_t('nav_site')) . '</b><small>' . esc_html(petgo_t('site_s')) . '</small></span>' . petgo_icon('right') . '</a>';
+        if (function_exists('petgo_page_site')) {
+            $s .= '<a class="pgc-srow pgc-link" href="' . esc_url(petgo_page_url(array('pg' => 'site'))) . '" data-close-nav><span class="pgc-sri ic-globe">' . petgo_icon('globe') . '</span><span class="pgc-srt"><b>' . esc_html(petgo_t('nav_site')) . '</b><small>' . esc_html(petgo_t('site_s')) . '</small></span>' . petgo_icon('right') . '</a>';
+        }
+        /* 34.5: строки от других плагинов (например, «Реклама и SEO»): array(icon, title, sub, url) */
+        foreach ((array) apply_filters('petgo_settings_rows', array()) as $r) {
+            if (!is_array($r) || empty($r['title']) || empty($r['url'])) {
+                continue;
+            }
+            $ic = isset($r['icon']) ? (string) $r['icon'] : 'globe';
+            $s .= '<a class="pgc-srow pgc-link" href="' . esc_url($r['url']) . '" data-close-nav><span class="pgc-sri ic-' . esc_attr($ic) . '">' . petgo_icon($ic) . '</span><span class="pgc-srt"><b>' . esc_html($r['title']) . '</b><small>' . esc_html(isset($r['sub']) ? $r['sub'] : '') . '</small></span>' . petgo_icon('right') . '</a>';
+        }
         $s .= '</div></div>';
+        /* 34.5: какие плагины PetGo установлены — новые появляются здесь сами */
+        $pl = function_exists('petgo_plugins') ? petgo_plugins() : array();
+        if ($pl) {
+            $s .= '<div class="pgc-sgrp"><h4>Плагины PetGo</h4><div class="pgc-sgl">';
+            foreach ($pl as $x) {
+                $s .= '<div class="pgc-srow"><span class="pgc-sri ic-install">' . petgo_icon('install') . '</span><span class="pgc-srt"><b>' . esc_html($x['name']) . '</b><small>' . esc_html(trim(($x['ver'] !== '' ? 'версия ' . $x['ver'] : '') . ($x['desc'] !== '' && !$x['core'] ? ' · ' . wp_trim_words(wp_strip_all_tags($x['desc']), 10, '…') : ''))) . '</small></span></div>';
+            }
+            $s .= '</div></div>';
+        }
         $s .= '<div class="pgc-sgrp"><h4>' . esc_html(petgo_t('set_data')) . '</h4><div class="pgc-sgl">';
         $s .= '<a class="pgc-srow pgc-link" href="' . esc_url(petgo_page_url(array('pg' => 'log'))) . '" data-close-nav><span class="pgc-sri ic-log">' . petgo_icon('log') . '</span><span class="pgc-srt"><b>' . esc_html(petgo_t('nav_log')) . '</b><small>' . esc_html(petgo_t('log_s')) . '</small></span>' . petgo_icon('right') . '</a>';
         $s .= '<details class="pgc-srow pgc-exp"><summary><span class="pgc-sri ic-download">' . petgo_icon('download') . '</span><span class="pgc-srt"><b>' . esc_html(petgo_t('export')) . '</b><small>' . esc_html(petgo_t('export_s')) . '</small></span>' . petgo_icon('chev') . '</summary><div class="pgc-expl2">';

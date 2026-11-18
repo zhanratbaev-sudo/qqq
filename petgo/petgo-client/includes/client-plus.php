@@ -156,6 +156,13 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
     if ($note !== '') {
         $com .= "\nКомментарий: " . mb_substr($note, 0, 500);
     }
+    /* 34.5: откуда пришёл клиент — для заказов из кабинета (если пришёл по рекламе) */
+    if ($by === 'client' && function_exists('petgo_src_read')) {
+        $st = petgo_src_text(petgo_src_read());
+        if ($st !== '') {
+            $com .= "\nИсточник: " . $st;
+        }
+    }
     $ids = array();
     for ($i = 0; $i < $sv['days']; $i++) {
         $id = wp_insert_post(array('post_type' => 'petgo_order', 'post_status' => 'publish', 'post_title' => 'Order'));
@@ -175,6 +182,9 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
     petgo_audit('client_book', 'pet=' . $pid . ' ' . $kind . ' ' . $date . ' ' . $time . ' by=' . $by, $uid);
     petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), $by === 'ai' ? 'Помощник записал клиента' : 'Заказ из кабинета клиента', get_the_title($pid) . ' · ' . $sv['t'] . ' · ' . $when . ' · ' . $u->display_name . ($nname !== '' ? ' · няня ' . $nname : ''), petgo_page_url(array('pg' => 'orders')));
     petgo_cl_sys($uid, sprintf('Заявка принята: %s для %s, %s (%d мин)%s. Менеджер подтвердит время или предложит другое.', mb_strtolower($sv['t']), get_the_title($pid), $when, $dur, $nname !== '' ? ', няня ' . $nname : ''));
+    if (function_exists('petgo_event')) {
+        petgo_event('booking', array('user' => (int) $uid, 'orders' => $ids, 'kind' => $kind, 'by' => $by));
+    }
     return array('ok' => true, 'msg' => $L('Заявка отправлена. Менеджер подтвердит время.'), 'ids' => $ids);
 }
 

@@ -160,7 +160,9 @@
       var fd = new FormData(f);
       fd.append("action", f.getAttribute("data-op"));
       fetch(C.ajax || "/wp-admin/admin-ajax.php", { method: "POST", body: fd, credentials: "same-origin" }).then(json).then(function (j) {
-        if (j.ok && j.go) { location.href = j.go; return; }
+        /* 34.5: цель «регистрация» для рекламы — отправляем и только потом переходим */
+        if (j.ok && j.ev && W.PGEvent) W.PGEvent(j.ev, {});
+        if (j.ok && j.go) { var go = j.go; setTimeout(function () { location.href = go; }, j.ev ? 350 : 0); return; }
         busyEnd(f, function () {
           if (!j.ok) { formErr(f, j.msg || "", j.field, $(".pgk-list", f)); return; }
           if (j.wa) { var dn = f.parentNode.querySelector(".pgk-done"); if (dn) { f.hidden = true; dn.hidden = false; var w = $("[data-wa]", dn); if (w) w.href = j.wa; } }
@@ -332,11 +334,15 @@
     });
     box.innerHTML = h;
   }
+  function bkPrice() {
+    var p = petOf(BK.pet), pr = K.price || {};
+    if (BK.kind === "walk") return Math.round((pr.walk || 0) * BK.dur / 60);
+    if (BK.kind === "week") return (p && p.sp === "cat" ? pr.week_cat : pr.week_dog) || 0;
+    return 0;
+  }
   function bkSum() {
     var box = bpart("sum"); if (!box) return;
-    var p = petOf(BK.pet), pr = K.price || {}, price = 0, sv = K.svcs[BK.kind] || {};
-    if (BK.kind === "walk") price = (pr.walk || 0) * BK.dur / 60;
-    if (BK.kind === "week") price = p && p.sp === "cat" ? pr.week_cat : pr.week_dog;
+    var price = bkPrice(), sv = K.svcs[BK.kind] || {};
     var d = BK.date ? new Date(BK.date + "T00:00:00") : null, st = BK.h * 60 + BK.m, en = st + BK.dur;
     var when = d ? T(WD[d.getDay()]).replace(/^./, function (c) { return c.toUpperCase(); }) + ", " + d.getDate() + " " + T(MON[d.getMonth()]) : "";
     when += " · " + pad(BK.h) + ":" + pad(BK.m) + "–" + pad(Math.floor(en / 60) % 24) + ":" + pad(en % 60);
@@ -447,7 +453,8 @@
     if (!BK.pet) { formErr(f, T("Выберите питомца."), "", bpart("pet")); return; }
     if (!BK.date) { formErr(f, T("Выберите день и время."), "", bpart("date")); return; }
     formErr(f, ""); busyBtn(f, true);
-    api("book", { pet: BK.pet, kind: BK.kind, date: BK.date, time: pad(BK.h) + ":" + pad(BK.m), dur: BK.dur, nanny: BK.nanny, note: f.elements.note.value }).then(function (j) { busyEnd(f, function () {
+    api("book", { pet: BK.pet, kind: BK.kind, date: BK.date, time: pad(BK.h) + ":" + pad(BK.m), dur: BK.dur, nanny: BK.nanny, note: f.elements.note.value, pg_src: W.PGSrc ? W.PGSrc() : "" }).then(function (j) { busyEnd(f, function () {
+      if (j.ok && W.PGEvent) W.PGEvent("booking", { kind: BK.kind, value: bkPrice() });
       if (!j.ok) { formErr(f, j.msg || "", "", j.busy ? bpart("nanny") : $('[data-b="time"]', f)); if (j.busy) bkBusy(); return; }
       f.hidden = true; $(".pgk-done", f.parentNode).hidden = false; f.reset(); BK.touched = false;
       var sc = f.closest(".pgk-sc"); if (sc) sc.scrollTop = 0;
@@ -973,6 +980,13 @@
       if (on) authSeg(g, on.getAttribute("data-auth"));
     }, 120);
   });
+
+  /* 34.5: для других плагинов — запросы кабинета, сообщения, листы, вкладки и настройки (window.PGK) */
+  W.PGK = {
+    api: function (op, data, files) { return K ? api(op, data, files) : Promise.reject(new Error("no cabinet")); },
+    toast: toast, open: function (id) { return kOpen(id); }, close: kClose, tab: function (to) { tab(to, {}); },
+    cfg: function () { return K; }, on: function (n, f) { if (W.PGEvent && W.PGEvent.on) W.PGEvent.on(n, f); }
+  };
 
   /* переходы по сайту без перезагрузки: ui.js вызывает PGInitPage после смены страницы */
   var prev = W.PGInitPage;

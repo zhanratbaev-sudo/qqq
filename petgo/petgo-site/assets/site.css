@@ -1035,3 +1035,21 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
   html .pg-layer .pga-chat, html .pg-layer .pga-chat * { animation: none !important; transition: none !important; }
   .pg.js .pg-rise { filter: none; transform: none; }
 }
+
+/* ============================================================
+   34.5 БЕЗ ИНТЕРНЕТА — плашка сверху (появляется 240 мс, уходит 170 мс)
+   ============================================================ */
+.pg-layer .pg-net { position: fixed; z-index: 99996; left: 0; right: 0; top: calc(var(--sat) + 74px); margin: 0 auto; width: max-content; display: flex; align-items: center; gap: 10px; max-width: min(520px, calc(100% - 24px)); min-height: 44px; padding: 6px 8px 6px 14px; border-radius: 22px;
+  background: #1C1C1E; color: #fff; font: 600 14px/1.25 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+  opacity: 0; transform: translateY(-16px); pointer-events: none; transition: opacity var(--t-pop-out) var(--ease-in), transform var(--t-pop-out) var(--ease-in); }
+.pg-layer .pg-net[hidden] { display: none; }
+.pg-layer .pg-net.on { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-pop-in) var(--ease-out), transform var(--t-pop-in) var(--ease-out); }
+.pg-layer .pg-net:not(:has(button)) { padding-right: 16px; }
+.pg-layer .pg-net .pg-i { flex: none; width: 18px; height: 18px; color: #FF9F0A; }
+.pg-layer .pg-net.ok { background: #0E7A64; }
+.pg-layer .pg-net span { min-width: 0; }
+.pg-layer .pg-net .pg-b.pg-b { flex: none; min-height: 30px; padding: 0 12px; border-radius: 999px; background: rgba(255, 255, 255, .16); color: #fff; font-weight: 600; font-size: 13px; line-height: 1; font-family: inherit; cursor: pointer; transition: transform var(--t-press) var(--ease-out); }
+.pg-layer .pg-net .pg-b.pg-b:active { transform: scale(.96); }
+@media (max-width: 860px) { html.pgk-on .pg-layer .pg-net { top: calc(var(--sat) + 8px); } }
+.pg-layer .pg-net span { flex: 1 1 auto; }
+@media (prefers-reduced-motion: reduce) { .pg-layer .pg-net { transition: none; } }

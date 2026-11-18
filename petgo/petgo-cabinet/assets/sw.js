@@ -19,7 +19,15 @@ function plain(u) {
 	return !x;
 }
 function offline() {
-	return new Response('<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + C.off.t + '</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;font:16px system-ui,sans-serif;background:#ffffff;color:#12201e;text-align:center;padding:24px"><div><img src="' + C.icon + '" width="72" height="72" style="border-radius:20px" alt=""><h1 style="font-size:22px;margin:18px 0 6px">' + C.off.t + '</h1><p style="color:#6b7a77;margin:0 0 20px">' + C.off.b + '</p><button onclick="location.reload()" style="font:600 16px system-ui;padding:12px 22px;border:0;border-radius:12px;background:#0b6b5f;color:#fff">' + C.off.r + '</button></div>', { headers: { "Content-Type": "text/html; charset=utf-8" } });
+	/* 34.5: экран «Нет интернета» — в цветах приложения, светлый и тёмный; связь вернулась — открывается сам */
+	return new Response('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f2f2f7"><title>' + C.off.t + '</title>' +
+		'<style>:root{--bg:#f2f2f7;--tx:#12201e;--mu:#6b7a77;--ac:#0d7c6d}@media(prefers-color-scheme:dark){:root{--bg:#000;--tx:#fff;--mu:#8e8e93;--ac:#0E7A64}}' +
+		'html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:17px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;-webkit-user-select:none;user-select:none}' +
+		'main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;text-align:center;box-sizing:border-box;animation:in 240ms cubic-bezier(.32,.72,0,1) both}@keyframes in{from{opacity:0;transform:translateY(8px)}}' +
+		'img{width:72px;height:72px;border-radius:20px}h1{font-size:22px;margin:10px 0 0}p{color:var(--mu);margin:0 0 14px;max-width:320px}' +
+		'button{font:600 17px system-ui,sans-serif;min-height:50px;padding:0 24px;border:0;border-radius:999px;background:var(--ac);color:#fff;transition:transform 150ms cubic-bezier(.32,.72,0,1)}button:active{transform:scale(.96)}' +
+		'@media(prefers-reduced-motion:reduce){main{animation:none}}</style></head><body><main><img src="' + C.icon + '" alt=""><h1>' + C.off.t + '</h1><p>' + C.off.b + '</p><button onclick="location.reload()">' + C.off.r + '</button></main>' +
+		'<script>addEventListener("online",function(){location.reload()})</script></body></html>', { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 }
 
 self.addEventListener("install", function (e) {

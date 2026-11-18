@@ -149,6 +149,8 @@ function petgo_cl_dashboard() {
         'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
         'tr' => petgo_cl_js_dict(),
     );
+    /* 34.5: плагины добавляют свои данные для скриптов кабинета (window.PGK.cfg) */
+    $cfg = (array) apply_filters('petgo_cl_cfg', $cfg, $uid);
     $h  = '<div class="pgk" id="pgk" data-tab="home">';
     $h .= '<script type="application/json" id="pgk-cfg">' . wp_json_encode($cfg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script><div class="pgk-panes">';
 
@@ -175,6 +177,8 @@ function petgo_cl_dashboard() {
         $h .= '</div>';
     }
     $h .= petgo_cl_for_html($uid);
+    /* 34.5: блоки других плагинов на главной кабинета */
+    $h .= (string) apply_filters('petgo_cl_home_html', '', $uid);
     $h .= '</div></section>';
 
     /* КАРТА */
@@ -193,7 +197,7 @@ function petgo_cl_dashboard() {
     $h .= '<section class="pgk-pane" data-pane="walks"><div class="pg-wrap"><header class="pgk-hd"><h1>' . esc_html($L('Прогулки')) . '</h1><button type="button" class="pg-b pgk-hd-btn" data-k-book="walk">' . petgo_cl_icon('plus') . esc_html($L('Заказать')) . '</button></header>' . petgo_cl_walks_html($uid) . '</div></section>';
 
     /* АККАУНТ */
-    $h .= '<section class="pgk-pane" data-pane="acc"><div class="pg-wrap"><header class="pgk-hd"><h1>' . esc_html($L('Аккаунт')) . '</h1></header>' . petgo_cl_account_html($u, $un) . '</div></section>';
+    $h .= '<section class="pgk-pane" data-pane="acc"><div class="pg-wrap"><header class="pgk-hd"><h1>' . esc_html($L('Аккаунт')) . '</h1></header>' . petgo_cl_account_html($u, $un) . (string) apply_filters('petgo_cl_account_html', '', $uid) . '</div></section>';
     $h .= '</div>';
 
     /* нижняя панель вкладок — на всю ширину, как в приложениях iPhone */
@@ -217,6 +221,8 @@ function petgo_cl_dashboard() {
     $rv .= '</div><div class="pgk-list"><label class="pgk-f pgk-fa"><span>' . esc_html($L('Как всё прошло?')) . '</span><textarea name="text" rows="4" maxlength="1500" placeholder="' . esc_attr($L('Что понравилось, что можно сделать лучше')) . '"></textarea></label></div><p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Отправить отзыв')) . '</span><i class="pg-spin" aria-hidden="true"></i></button><button type="button" class="pg-b pgk-link" data-k-rvlater>' . esc_html($L('Позже')) . '</button></form>';
     $h .= petgo_cl_sheet('review', $L('Оцените няню'), $rv);
     $h .= petgo_cl_sheet('post', '', '<article class="pgk-post" data-k-post-body></article>', '', 'pgk-sheet-tall');
+    /* 34.5: листы других плагинов: petgo_cl_sheet('id', 'Заголовок', $html) — открываются кнопкой data-k-open="id" */
+    $h .= (string) apply_filters('petgo_cl_sheets', '', $uid);
     $h .= '<div class="pgk-lb" data-k-lb hidden><button type="button" class="pg-b pgk-x" data-k-lbx aria-label="' . esc_attr($L('Закрыть')) . '">' . petgo_cl_icon('x') . '</button><img alt=""><span></span></div>';
     $h .= '<div class="pgk-toast" data-k-toast role="status" aria-live="polite"></div>';
     return $h . '</div>';

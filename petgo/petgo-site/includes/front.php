@@ -129,7 +129,12 @@ function petgo_site_head($page = 'home') {
             break;
         }
     }
-    $h  = '<title>' . esc_html($full) . '</title>';
+    /* 34.5: заголовок, описание и картинку для поиска и соцсетей можно задать в «Реклама и SEO» */
+    $full = (string) apply_filters('petgo_site_seo_title', $full, $page);
+    $desc = (string) apply_filters('petgo_site_seo_desc', $desc, $page);
+    $img  = (string) apply_filters('petgo_site_seo_image', $img, $page);
+    $h  = function_exists('petgo_site_boot_js') ? petgo_site_boot_js() : '';
+    $h .= '<title>' . esc_html($full) . '</title>';
     $h .= '<meta name="description" content="' . esc_attr($desc) . '">';
     if (!get_option('blog_public') || $page === 'account' || $page === 'join') {
         $h .= '<meta name="robots" content="noindex,nofollow">';
@@ -148,8 +153,9 @@ function petgo_site_head($page = 'home') {
     $h .= '<meta name="theme-color" content="#FBF9E8"><meta name="color-scheme" content="light"><meta name="format-detection" content="telephone=no">';
     $h .= '<link rel="icon" href="' . esc_url(petgo_asset('icon-192.png')) . '"><link rel="apple-touch-icon" href="' . esc_url(petgo_asset('apple-touch-icon.png')) . '">';
     $h .= '<link rel="stylesheet" href="' . esc_url(petgo_asset_url('site.css')) . '">';
+    $graph = array();
     if ($page === 'home') {
-        $ld = array(
+        $graph[] = array(
             '@context'    => 'https://schema.org',
             '@type'       => 'LocalBusiness',
             'name'        => $name !== '' ? $name : 'PetGo.kz',
@@ -159,7 +165,11 @@ function petgo_site_head($page = 'home') {
             'telephone'   => '+' . petgo_site_phone(),
             'areaServed'  => 'Алматы',
         );
-        $h .= '<script type="application/ld+json">' . wp_json_encode($ld, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
+    }
+    /* 34.5: разметка для поиска (компания, услуги, вопросы) дополняется фильтром petgo_site_schema */
+    $graph = (array) apply_filters('petgo_site_schema', $graph, $page);
+    if ($graph) {
+        $h .= '<script type="application/ld+json">' . wp_json_encode(count($graph) === 1 ? $graph[0] : array('@context' => 'https://schema.org', '@graph' => array_values($graph)), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
     }
     /* счётчики: код вводит администратор сайта в настройках */
     if (trim((string) $c['head']) !== '') {

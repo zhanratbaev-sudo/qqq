@@ -170,6 +170,8 @@
       });
     }
     function done() {
+      /* 34.5: цель «анкета питомца» для рекламы */
+      if (W.PGEvent) W.PGEvent("pet_form", { mode: f.getAttribute("data-mode") || "" });
       f.classList.add("sent-out");
       setTimeout(function () {
         qa(".pgw-head,.pgw-stack,.pgw-nav,.pgw-skip,.pgw-err", f).forEach(function (x) { x.hidden = true; });

@@ -153,8 +153,16 @@ function petgo_cl_reg() {
     wp_set_auth_cookie($uid, true, is_ssl());
     petgo_cl_chat($uid);
     petgo_audit('client_reg', $login . ' pets=' . $linked, $uid);
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Новый клиент на сайте', $name . ' · ' . $phone . ($linked ? ' · питомцев: ' . $linked : ''), petgo_page_url(array('pg' => 'clients')));
-    petgo_cl_json(true, array('go' => petgo_site_url('account')));
+    /* 34.5: откуда пришёл клиент (реклама, метки utm) — видно в карточке клиента */
+    $src = function_exists('petgo_src_read') ? petgo_src_read() : array();
+    if ($src) {
+        update_user_meta($uid, 'petgo_src', $src);
+    }
+    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Новый клиент на сайте', $name . ' · ' . $phone . ($linked ? ' · питомцев: ' . $linked : '') . ($src ? ' · ' . petgo_src_text($src) : ''), petgo_page_url(array('pg' => 'clients')));
+    if (function_exists('petgo_event')) {
+        petgo_event('sign_up', array('user' => (int) $uid));
+    }
+    petgo_cl_json(true, array('go' => petgo_site_url('account'), 'ev' => 'sign_up'));
 }
 
 add_action('wp_ajax_nopriv_petgo_cl_login', 'petgo_cl_login');
@@ -626,7 +634,13 @@ function petgo_page_clients() {
         if ($ph !== '') {
             echo '<div class="pgf-row"><span>' . esc_html(petgo_t('phone')) . '</span><a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $ph)) . '">' . esc_html(petgo_phone_fmt($ph)) . '</a></div>';
         }
-        echo '<div class="pgf-row"><span>' . esc_html(petgo_t('cl_since')) . '</span><b>' . esc_html(wp_date('d.m.Y', strtotime($u->user_registered . ' UTC'), petgo_tz())) . '</b></div></div>';
+        echo '<div class="pgf-row"><span>' . esc_html(petgo_t('cl_since')) . '</span><b>' . esc_html(wp_date('d.m.Y', strtotime($u->user_registered . ' UTC'), petgo_tz())) . '</b></div>';
+        /* 34.5: откуда пришёл (реклама, метки utm) */
+        $src = get_user_meta($u->ID, 'petgo_src', true);
+        if ($src && function_exists('petgo_src_text')) {
+            echo '<div class="pgf-row"><span>Источник</span><b>' . esc_html(petgo_src_text((array) $src)) . '</b></div>';
+        }
+        echo '</div>';
         if ($pets) {
             echo '<div class="pgcl-pets">';
             foreach ($pets as $p) {

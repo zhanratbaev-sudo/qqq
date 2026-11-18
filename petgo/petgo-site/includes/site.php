@@ -348,7 +348,9 @@ function petgo_site_hook($name) {
 /* ---------- страницы сайта ---------- */
 function petgo_site_pages() {
     $l = 'petgo_site_l';
-    return array(
+    /* 34.5: новые плагины добавляют свои страницы фильтром petgo_site_pages:
+       'akcii' => array('slug' => 'akcii', 'name' => 'Акции', 'title' => 'Акции', 'nav' => true) — адрес /akcii/ заработает сам */
+    return (array) apply_filters('petgo_site_pages', array(
         'home'     => array('slug' => '', 'name' => $l('Главная'), 'title' => ''),
         'services' => array('slug' => 'uslugi', 'name' => $l('Услуги'), 'title' => $l('Услуги и цены')),
         'nannies'  => array('slug' => 'nyani', 'name' => $l('Няни'), 'title' => $l('Наши няни')),
@@ -356,7 +358,19 @@ function petgo_site_pages() {
         'account'  => array('slug' => 'lk', 'name' => $l('Кабинет'), 'title' => $l('Кабинет')),
         /* 34.0: анкета питомца (по ссылке из приложения или регистрация с сайта) — в меню не показывается */
         'join'     => array('slug' => 'anketa', 'name' => $l('Анкета питомца'), 'title' => $l('Анкета питомца'), 'hide' => true),
-    );
+    ));
+}
+
+/* разделы в верхнем меню: свои + страницы плагинов с 'nav' => true (перед «Кабинетом») */
+function petgo_site_nav_keys() {
+    $keys = array('services', 'nannies', 'reviews');
+    foreach (petgo_site_pages() as $k => $p) {
+        if (!empty($p['nav']) && !in_array($k, $keys, true) && $k !== 'account') {
+            $keys[] = $k;
+        }
+    }
+    $keys[] = 'account';
+    return (array) apply_filters('petgo_site_nav', $keys);
 }
 
 /* адрес страницы сайта; язык (kz, en) сохраняется в адресе. $lang = 'ru' — без языка */
@@ -426,7 +440,10 @@ function petgo_site_layer($page) {
     /* верх: логотип, разделы, язык, номер */
     $h .= '<nav class="pg-nav pg-glass" id="pg-nav" aria-label="' . esc_attr($l('Меню')) . '"' . $gl . '><a class="pg-nav-logo" href="' . esc_url(petgo_site_url('home')) . '" aria-label="' . esc_attr($l('PetGo.kz — на главную')) . '">' . petgo_site_logo() . '</a>';
     $h .= '<div class="pg-nav-links" id="pg-links"><span class="pg-lens" aria-hidden="true"></span>';
-    foreach (array('services', 'nannies', 'reviews', 'account') as $k) {
+    foreach (petgo_site_nav_keys() as $k) {
+        if (!isset($pgs[$k])) {
+            continue;
+        }
         $h .= '<a href="' . esc_url(petgo_site_url($k)) . '"' . $cur($k) . '>' . esc_html($pgs[$k]['name']) . '</a>';
     }
     $h .= '</div>';
@@ -645,6 +662,15 @@ function petgo_site_b_foot() {
 function petgo_site_content($page, $a = array()) {
     $c = petgo_site_cfg();
     $L = 'petgo_site_l';
+    /* 34.5: страницы других плагинов рисуют себя сами (фильтр petgo_site_page_html) */
+    if (!in_array($page, array('home', 'services', 'nannies', 'reviews', 'account', 'join'), true)) {
+        $x = apply_filters('petgo_site_page_html', null, $page, $a);
+        if ($x !== null) {
+            return (string) $x;
+        }
+        $pgs = petgo_site_pages();
+        return petgo_site_b_title(isset($pgs[$page]['title']) ? $pgs[$page]['title'] : '', '');
+    }
     switch ($page) {
         case 'services':
             $off = (int) $c['off'];
@@ -694,7 +720,17 @@ function petgo_site_content($page, $a = array()) {
                 . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap pg-narrow"><div class="pgw-solo pg-rise">' . petgo_pf_wizard($mode, array('token' => $inv ? $tok : '', 'pre' => $pre)) . '</div></div></section>';
         default:
             $form = !isset($a['form']) || $a['form'] !== '0';
-            return petgo_site_b_hero() . petgo_site_b_services() . petgo_site_b_how() . ((!isset($a['reviews']) || $a['reviews'] !== '0') ? petgo_site_b_reviews(6) : '') . petgo_site_b_apply($form);
+            /* 34.5: блоки главной по порядку; плагины добавляют свои (фильтр petgo_site_home_sections, ключ — порядок) */
+            $sec = array(
+                10 => petgo_site_b_hero(),
+                20 => petgo_site_b_services(),
+                30 => petgo_site_b_how(),
+                40 => (!isset($a['reviews']) || $a['reviews'] !== '0') ? petgo_site_b_reviews(6) : '',
+                50 => petgo_site_b_apply($form),
+            );
+            $sec = (array) apply_filters('petgo_site_home_sections', $sec, $a);
+            ksort($sec);
+            return implode('', $sec);
     }
 }
 
@@ -721,6 +757,8 @@ function petgo_site_render($page, $a = array()) {
         'lang' => petgo_site_lang(), 'tr' => array_merge((array) petgo_site_js_dict(), petgo_pf_js_dict()),
         /* 34.0: кабинет клиента */
         'client' => petgo_cl_uid() > 0,
+        /* 34.5: service worker сайта — экран «Нет интернета» и «Загружаем…» вместо белого экрана */
+        'sw' => (petgo_site_is_front() && function_exists('petgo_site_sw_cfg')) ? petgo_site_sw_cfg() : null,
     );
     foreach (array_keys($pgs) as $k) {
         $cfg['pages'][$k] = petgo_site_url($k);
