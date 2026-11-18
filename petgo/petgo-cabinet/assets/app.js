@@ -625,10 +625,11 @@
 			kz: { "Системная клавиатура": "Жүйелік пернетақта", "Готово": "Дайын", "Стереть": "Өшіру", "Заглавные": "Бас әріптер", "Далее": "Келесі", "Пробел": "Бос орын", "Язык клавиатуры": "Пернетақта тілі" },
 			en: { "Системная клавиатура": "System keyboard", "Готово": "Done", "Стереть": "Delete", "Заглавные": "Shift", "Далее": "Next", "Пробел": "Space", "Язык клавиатуры": "Keyboard language" }
 		}[klang] || {};
-		var NOT = ":not([readonly]):not([data-nokb]):not([autocomplete=username]):not([autocomplete=one-time-code])";
+		/* 34.2: клавиатура PetGo во всех полях приложения, включая логин и пароль — без полоски браузера над клавиатурой */
+		var NOT = ":not([readonly]):not([data-nokb])";
 		W.PGKB.init({
-			sel: ["text", "tel", "email", "number", "search", "url"].map(function (t) { return "input[type=" + t + "]" + NOT; }).concat(["input:not([type])" + NOT, "textarea" + NOT]).join(","),
-			theme: "app", lang: klang, telPrefix: false,
+			sel: ["text", "tel", "email", "number", "search", "url", "password"].map(function (t) { return "input[type=" + t + "]" + NOT; }).concat(["input:not([type])" + NOT, "textarea" + NOT]).join(","),
+			theme: "app", lang: klang, telPrefix: false, noSys: true,
 			T: function (s) { return KT[s] || s; },
 			pad: function () { return D.body; }
 		});

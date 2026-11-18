@@ -998,3 +998,38 @@ html{touch-action:pan-x pan-y}
 .pgcl-map{margin-top:16px}.pgcl-map p{margin:6px 0 10px;font-size:14px}.pgcl-map .pgc-btn{margin-top:10px}
 .pgcl-info{margin-bottom:12px}.pgcl-info .pgf-row b,.pgcl-info .pgf-row a{flex:1;text-align:right;font-weight:500}
 .pgcl-rec .pgf-list{margin:12px 0 8px}
+
+/* 34.2: на телефоне чат и окно заказа — отдельный экран: страница за ними не видна, заглянуть за них нельзя */
+@media(max-width:1023px){
+.pgc-in{touch-action:pan-y}
+.pgc-chat,.pgc-ov{z-index:85;background:var(--bg)}
+html:has(.pgc-chat.open) #pgc-in,html:has(.pgc-chat.open) .pgc-top,html:has(.pgc-chat.open) #pgc-nav,html:has(.pgc-chat.open) .pgc-fab,html:has(.pgc-chat.open) .pgt-pill,
+html:has(.pgc-ov.open) #pgc-in,html:has(.pgc-ov.open) .pgc-top,html:has(.pgc-ov.open) #pgc-nav,html:has(.pgc-ov.open) .pgc-fab{visibility:hidden}
+/* анкета питомца — целая страница */
+.pgc-modal.pgc-full{align-items:stretch;padding-top:0;background:var(--bg)}
+.pgc-modal.pgc-full .pgc-box{width:100%;max-width:none;margin:0;height:100dvh;max-height:none!important;border-radius:0;padding-top:var(--sat);background:var(--bg);transform:translateY(24px);opacity:0;transition:transform .3s var(--e),opacity .2s}
+.pgc-modal.pgc-full.open .pgc-box{transform:none;opacity:1}
+.pgc-modal.pgc-full .pgc-mb{padding-bottom:calc(var(--pgkb,0px) + var(--sab) + 24px)}
+html:has(.pgc-modal.pgc-full.open) #pgc-in,html:has(.pgc-modal.pgc-full.open) .pgc-top,html:has(.pgc-modal.pgc-full.open) #pgc-nav,html:has(.pgc-modal.pgc-full.open) .pgc-fab{visibility:hidden}
+}
+.pgc-modal.pgc-full .pgf .pgf-go{bottom:calc(var(--pgkb,0px) + var(--sab) + 8px)}
+.pgkb .pgkb-tl{pointer-events:none}
+/* 34.2: отчёт няни при завершении — настроение питомца и что сделано */
+.pgr{margin:0 0 12px;padding:14px;border-radius:var(--r);background:var(--cell);box-shadow:0 0 0 .5px var(--ln)}
+.pgr-h{font-size:15px;font-weight:600;margin:0 0 10px}
+.pgr-mood{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0 0 12px}
+.pgr-mood label,.pgr-did label{position:relative;cursor:pointer;margin:0}
+.pgr-mood input,.pgr-did input{position:absolute;opacity:0;inset:0;margin:0}
+.pgr-mood span{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:14px;color:var(--mu);transition:background .2s,color .2s}
+.pgr-mood .pgw-i{width:30px;height:30px}.pgr-mood small{font-size:11px;font-weight:600}
+.pgr-mood input:checked+span{background:var(--acs);color:var(--ac)}
+.pgr-did{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.pgr-did span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;background:var(--so);font-size:14px;font-weight:500;color:var(--tx);transition:background .2s,color .2s}
+.pgr-did input:checked+span{background:var(--acb);color:#fff}
+.pgr textarea{width:100%}
+.pgcl-ok{margin:12px 0 0}
+.pgc-modal.pgc-full .pgf .pgf-go{bottom:calc(var(--sab) + 8px)}
+html.pgkb-open .pgc-modal.pgc-full .pgf .pgf-go{visibility:hidden}
+html:has(.pgc-ov.open) .pgt-pill,html:has(.pgc-chat.open) .pgt-pill{top:auto;bottom:calc(var(--sab) + 12px)}
+/* 34.2: длинные списки (заказы, питомцы, клиенты) рисуются только на экране — приложение не тормозит */
+.pgc-in>.pgc-ord:not([open]),.pgc-in>.pgc-oc{content-visibility:auto;contain-intrinsic-size:auto 76px}

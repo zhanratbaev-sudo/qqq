@@ -709,7 +709,7 @@ function petgo_site_render($page, $a = array()) {
     }
     $cfg = array(
         'page' => $page, 'wa' => petgo_site_wa(), 'phone' => petgo_site_phone(), 'phone_fmt' => petgo_site_phone_fmt(),
-        'reviews' => petgo_site_reviews(), 'kbd' => false,
+        'reviews' => petgo_site_reviews(), 'kbd' => true,
         'ajax' => petgo_rel_url(admin_url('admin-ajax.php')), 'ic' => $ic, 'pages' => array(),
         /* переходы без перезагрузки — только на своих страницах (не внутри темы через шорткод) */
         'spa' => petgo_site_is_front(),
@@ -729,8 +729,8 @@ function petgo_site_render($page, $a = array()) {
     $h .= petgo_site_layer($page);
     $h .= '<div class="pg pg-p-' . esc_attr($page) . '" id="pg"><main>' . petgo_site_content($page, $a) . '</main>' . petgo_site_b_foot() . '</div>';
     $h .= '<script>window.PG_CONFIG=' . wp_json_encode($cfg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';</script>';
-    /* 34.1: везде системная клавиатура телефона (своя клавиатура kb.js больше не подключается) */
-    foreach (array('glass.js', 'site.js', 'ui.js', 'client.js') as $f) {
+    /* 34.2: везде клавиатура PetGo (kb.js) — без полоски браузера над клавиатурой */
+    foreach (array('glass.js', 'site.js', 'kb.js', 'ui.js', 'client.js') as $f) {
         $h .= '<script src="' . esc_url(petgo_asset_url($f)) . '" defer></script>';
     }
     /* скрипты других плагинов сайта (например, «PetGo ИИ») */

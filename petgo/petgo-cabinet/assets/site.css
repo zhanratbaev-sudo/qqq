@@ -810,9 +810,11 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop .6s .15s cubic-bezier(.34,
    ============================================================ */
 html.pg-html { touch-action: pan-x pan-y; }
 .pgw, .pgk, .pg .pgk-auth, .pg .pgk-alt, .pg-layer .pgk-dock, .pg-layer .pgk-sheet, .pgk-lb, .pgk-toast {
-  --k-bg: #FBF9E8; --k-card: #fff; --k-tx: #024C46; --k-mu: #5f8480; --k-fill: rgba(2, 76, 70, .06); --k-fill2: rgba(2, 76, 70, .1); --k-line: rgba(2, 76, 70, .12);
+  --k-bg: #FBF9E8; --k-card: rgba(255, 255, 255, .56); --k-tx: #024C46; --k-mu: #5f8480; --k-fill: rgba(2, 76, 70, .06); --k-fill2: rgba(2, 76, 70, .1); --k-line: rgba(2, 76, 70, .12);
   --k-acc: #024C46; --k-acc-tx: #fff; --k-ok: #1f9d63; --k-ok-bg: rgba(31, 157, 99, .12); --k-warn: #b06b00; --k-warn-bg: rgba(245, 166, 35, .15); --k-err: #c0392b; --k-err-bg: rgba(214, 69, 58, .1);
-  --k-sheet: rgba(251, 249, 232, .95); --k-glass: 251, 249, 232; --k-sh: 0 1px 2px rgba(2, 76, 70, .04), 0 8px 24px rgba(2, 76, 70, .06); --k-r: 26px;
+  --k-sheet: rgba(251, 249, 232, .96); --k-glass: 251, 249, 232; --k-r: 26px;
+  /* 34.2: светлая тема — полупрозрачные «стеклянные» блоки, не белые: мягче на кремовом фоне */
+  --k-sh: inset 0 0 0 .5px rgba(255, 255, 255, .85), 0 1px 2px rgba(2, 76, 70, .03), 0 6px 20px rgba(2, 76, 70, .05);
   --k-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 html.pgk-dark .pgw, html.pgk-dark .pgk, html.pgk-dark .pg-layer .pgk-dock, html.pgk-dark .pg-layer .pgk-sheet, html.pgk-dark .pgk-toast {
@@ -1254,3 +1256,81 @@ html.pgk-dark .pgk-map .pgk-tiles { filter: invert(1) hue-rotate(180deg) saturat
 @media (prefers-reduced-motion: reduce) { .pgk-pane.on, .pg-layer .pgk-dock, .pgk-mcard { animation: none !important; } }
 .pgk-form input:focus-visible, .pgk-form textarea:focus-visible, .pgw input:focus-visible, .pgw textarea:focus-visible, .pgk-cf textarea:focus-visible { outline: none !important; }
 .pgk-f:focus-within { background: var(--k-fill); }
+
+/* ============================================================
+   34.2 — КАБИНЕТ: главная (заказать, питомцы, новости), страница питомца, заказ, отчёт няни
+   ============================================================ */
+.pgk .pgk-auth, .pg .pgk-auth, .pg .pgk-alt { background: var(--k-card); }
+.pg-layer .pgk-sheet .pgk-fg, .pg-layer .pgk-sheet .pgw-card { background: rgba(255, 255, 255, .7); }
+html.pgk-dark .pg-layer .pgk-sheet .pgk-fg, html.pgk-dark .pg-layer .pgk-sheet .pgw-card { background: var(--k-card); }
+/* кнопка «Заказать» — заметно, в нескольких местах */
+.pgk-cta { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px 14px; margin-top: 14px; padding: 16px; border-radius: var(--k-r); background: var(--k-card); box-shadow: var(--k-sh); }
+.pgk-cta b { display: block; font-size: 19px; letter-spacing: -.02em; } .pgk-cta span { display: block; margin-top: 2px; font-size: 14px; color: var(--k-mu); }
+.pgk-cta .pg-btn.pg-btn-primary { grid-column: 1 / -1; min-height: 52px; width: 100%; gap: 8px; }
+.pgk-cta .pg-btn .pg-i, .pgk-cta-s .pg-i { width: 21px; height: 21px; }
+.pgk-cta-o.pg-b, .pgk-cta-o.pg-b:hover, .pgk-cta-o.pg-b:focus { grid-row: 1; grid-column: 2; align-self: start; border: 0; background: var(--k-fill2); color: var(--k-tx); border-radius: 999px; min-height: 34px; padding: 0 12px; font: 600 13.5px/1 var(--k-font); cursor: pointer; }
+.pgk .pg-btn.pgk-cta-s { display: flex; width: 100%; min-height: 54px; margin: 22px 0 6px; gap: 8px; }
+/* питомец на главной — одна строка, нажатие открывает его страницу */
+.pgk-pet { padding: 8px; }
+.pgk-pet-open.pg-b, .pgk-pet-open.pg-b:hover, .pgk-pet-open.pg-b:focus { display: flex; align-items: center; gap: 12px; width: 100%; padding: 4px; border: 0; background: none; color: var(--k-tx); text-align: left; cursor: pointer; font-family: var(--k-font); }
+.pgk-pet-open > .pg-i { width: 20px; height: 20px; color: var(--k-mu); flex: none; }
+.pgk-pet-av { position: relative; flex: none; border-radius: 50%; }
+.pgk-pet-av .pgk-av { width: 56px; height: 56px; font-size: 22px; }
+.pgk-pet .pgk-status.pg-b { margin: 6px 0 0; }
+/* страница питомца */
+.pgk-pp { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 4px 0 12px; }
+.pgk-pp-av { position: relative; cursor: pointer; border-radius: 50%; }
+.pgk-pp-av .pgk-av { width: 96px; height: 96px; font-size: 38px; }
+.pgk-pp-av.live .pgk-av { box-shadow: 0 0 0 3px var(--k-bg), 0 0 0 5px var(--k-ok); }
+.pgk-pp-av .pgk-cam { width: 30px; height: 30px; } .pgk-pp-av .pgk-cam .pg-i { width: 16px; height: 16px; }
+.pgk-pp > b { margin-top: 6px; font-size: 24px; font-weight: 750; letter-spacing: -.025em; } .pgk-pp > small { font-size: 14.5px; color: var(--k-mu); }
+.pgk-pp-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
+.pgk-pp-acts .pg-btn { min-height: 48px; gap: 6px; font-size: 15.5px; padding: 0 12px; } .pgk-pp-acts .pg-i { width: 19px; height: 19px; }
+.pgk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-radius: 18px; overflow: hidden; }
+.pgk-grid .pg-b, .pgk-grid .pg-b:hover, .pgk-grid .pg-b:focus { aspect-ratio: 1; padding: 0; border: 0; background: var(--k-fill); cursor: zoom-in; overflow: hidden; }
+.pgk-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* отчёт няни */
+.pgk-rep { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.pgk-rep-m, .pgk-rep-d { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px 4px 7px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--k-fill); color: var(--k-tx); }
+.pgk-rep .pg-i { width: 16px; height: 16px; }
+.pgk-rep-m.m4, .pgk-rep-m.m5 { background: var(--k-ok-bg); color: var(--k-ok); } .pgk-rep-m.m1, .pgk-rep-m.m2 { background: var(--k-warn-bg); color: var(--k-warn); }
+.pgk-rep-n { margin: 6px 0 0; font-size: 14px; line-height: 1.4; color: var(--k-mu); font-style: italic; }
+/* заказ */
+.pgk-book { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; }
+.pgk-book .pgk-sect { margin: 14px 4px 6px; }
+.pgk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pgk-days, .pgk-times { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -14px; padding: 0 14px 2px; scroll-snap-type: x proximity; }
+.pgk-days::-webkit-scrollbar, .pgk-times::-webkit-scrollbar { display: none; }
+.pgk-c.pg-b, .pgk-c.pg-b:hover, .pgk-c.pg-b:focus { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--k-card); box-shadow: var(--k-sh); color: var(--k-tx); font: 600 14.5px/1 var(--k-font); cursor: pointer; scroll-snap-align: start; transition: background .2s, color .2s, transform .25s cubic-bezier(.34, 1.56, .64, 1); }
+.pgk-c.on { background: var(--k-acc) !important; color: var(--k-acc-tx) !important; box-shadow: none !important; }
+.pgk-c:disabled { opacity: .38; cursor: default; }
+.pgk-c.busy em { font-style: normal; font-weight: 500; font-size: 12px; color: var(--k-err); }
+.pgk-c .pgk-av.xs { margin-left: -8px; }
+.pgk-any { background: var(--k-fill2) !important; color: var(--k-tx) !important; font-size: 13px !important; }
+.pgk-day-c.pg-b { flex-direction: column; justify-content: center; gap: 3px; width: 58px; min-height: 62px; padding: 0; border-radius: 18px; }
+.pgk-day-c small { font-size: 11.5px; font-weight: 600; opacity: .7; } .pgk-day-c b { font-size: 19px; }
+.pgk-bsum { margin: 12px 4px 0; font-size: 15px; color: var(--k-mu); } .pgk-bsum b { color: var(--k-tx); font-size: 18px; }
+.pgk-book .pgk-fg { margin-top: 12px; }
+/* чат: помощник печатает */
+.pgk-m-b.ai { box-shadow: inset 0 0 0 1px var(--k-fill2); }
+.pgk-m-b .pgk-chip { margin: 8px 0 2px; }
+.pgk-pending { opacity: .6; }
+.pgk-typing { display: flex; align-items: center; gap: 4px; padding: 6px 2px; color: var(--k-mu); font-size: 13px; }
+.pgk-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--k-mu); animation: pgDot 1.2s infinite; } .pgk-typing i:nth-child(2) { animation-delay: .15s; } .pgk-typing i:nth-child(3) { animation-delay: .3s; }
+.pgk-typing span { margin-left: 6px; }
+/* аккаунт */
+.pgk-bd.pgk-bd-row { position: static; margin-right: 4px; box-shadow: none; }
+.pgk-del { margin-top: 18px; } .pgk-del > summary { color: var(--k-err); }
+.pg-btn.pgk-red { color: var(--k-err) !important; }
+/* фото на карте — просто снимок, без рамки */
+.pgk-phm { width: 46px; height: 46px; padding: 0; border-radius: 13px; background: none; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, .95), 0 6px 14px rgba(0, 0, 0, .25); transform: translate(-50%, -50%); }
+.pgk-phm img { border-radius: 0; }
+/* клавиатура PetGo открыта — листы поднимаются над ней */
+.pg-layer.kb-open .pgk-sin { margin-bottom: var(--kb, 0px); max-height: calc(100dvh - var(--kb, 0px) - var(--sat) - 10px); }
+.pg-layer.kb-open .pgk-sheet-tall .pgk-sin { height: calc(100dvh - var(--kb, 0px) - var(--sat) - 10px); }
+.pg-layer.kb-open .pgk-cf { padding-bottom: 8px; }
+html.pgkb-open .pg-layer .pgk-dock { transform: translate(-50%, 160%); }
+.pgkb .pgkb-tl { pointer-events: none; }
+.pgk-book[hidden], .pgk-done[hidden], .pgw-ok[hidden], .pgk-form[hidden] { display: none !important; }
+.pgk-f:focus-within { background: transparent; }
+.pgk-walk, .pgk-bpost { content-visibility: auto; contain-intrinsic-size: auto 110px; }

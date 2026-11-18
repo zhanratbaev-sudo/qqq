@@ -187,7 +187,7 @@
         qa(".pgw-head,.pgw-stack,.pgw-nav,.pgw-skip", f).forEach(function (x) { x.hidden = false; });
         layout(); sync();
       } else if (w === "reload") {
-        try { sessionStorage.setItem("pgk_tab", "pets"); } catch (x) {}
+        try { sessionStorage.setItem("pgk_tab", "home"); } catch (x) {}
         location.reload();
       }
     });
@@ -296,7 +296,7 @@
   /* ============================================================
      4. КАБИНЕТ КЛИЕНТА
      ============================================================ */
-  var CL = { box: null, tab: "pets", timer: 0, chatT: 0, lastMsg: 0, chatOpen: false };
+  var CL = { box: null, tab: "home", timer: 0, chatT: 0, lastMsg: 0, chatOpen: false };
   function svg(d, cls) { return '<svg class="' + (cls || "pg-i") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>"; }
   var ICON = {
     route: svg('<circle cx="6" cy="18.5" r="2"/><circle cx="18" cy="5.5" r="2"/><path d="M8 18.5h8a3.3 3.3 0 0 0 0-6.6H8a3.3 3.3 0 0 1 0-6.6h8"/>'),
@@ -337,27 +337,30 @@
     clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove("on"); }, 2600);
   }
 
-  /* --- листы снизу --- */
-  var openSheet = null;
+  /* --- листы снизу: открываются друг над другом (страница питомца → анкета, заказ, отзыв) --- */
+  var stack = [];
   function kOpen(id) {
     var s = D.getElementById("pgk-" + id);
     if (!s) return null;
-    if (openSheet && openSheet !== s) kClose();
+    if (stack.indexOf(s) > -1) return s;
     if (W.PGCloseAI) W.PGCloseAI();
+    s.style.zIndex = String(9996 + stack.length);
     s.hidden = false; void s.offsetWidth; s.classList.add("on");
     D.documentElement.classList.add("pgk-lock");
-    openSheet = s;
+    stack.push(s);
     return s;
   }
-  function kClose() {
-    var s = openSheet;
-    if (!s) return;
-    openSheet = null;
-    s.classList.remove("on");
-    var inn = $(".pgk-sin", s); if (inn) inn.style.transform = "";
-    D.documentElement.classList.remove("pgk-lock");
-    if (s.id === "pgk-chat") { CL.chatOpen = false; clearInterval(CL.chatT); }
-    setTimeout(function () { if (!s.classList.contains("on")) s.hidden = true; }, reduce ? 0 : 420);
+  function kClose(all) {
+    do {
+      var s = stack.pop();
+      if (!s) break;
+      s.classList.remove("on");
+      var inn = $(".pgk-sin", s); if (inn) inn.style.transform = "";
+      if (s.id === "pgk-chat") { CL.chatOpen = false; clearInterval(CL.chatT); }
+      if (s.id === "pgk-review" && CL.rvAuto) { var o = $("[data-k-rvform]", s); if (o && o.elements.order.value && !CL.rvSent) api("rv_skip", { order: o.elements.order.value }).catch(function () {}); CL.rvAuto = false; }
+      (function (x) { setTimeout(function () { if (!x.classList.contains("on")) x.hidden = true; }, reduce ? 0 : 420); })(s);
+    } while (all && stack.length);
+    if (!stack.length) D.documentElement.classList.remove("pgk-lock");
   }
   function dragSheets(root) {
     qa("[data-k-drag]", root).forEach(function (h) {
@@ -406,6 +409,7 @@
       api(f.getAttribute("data-k-op"), d).then(function (j) {
         busyBtn(f, false);
         if (!j.ok) { formErr(f, j.msg || "", j.field); return; }
+        if (j.go) { location.href = j.go; return; }
         toast(j.msg || T("Сохранено"));
         if (f.getAttribute("data-k-op") === "pass") f.reset();
       }).catch(function () { busyBtn(f, false); formErr(f, T("Не получилось — проверьте интернет.")); });
@@ -420,7 +424,7 @@
         if (!j.ok) { formErr(f, j.msg || ""); return; }
         var b = $('[data-k-review="' + f.elements.order.value + '"]');
         if (b) { var s = +(r ? r.value : 5), st = ""; for (var i = 1; i <= 5; i++) st += i <= s ? ICON.starOn : ICON.star; b.outerHTML = '<div class="pgk-myrv">' + st + "</div>"; }
-        f.reset(); kClose(); toast(j.msg || T("Отправлено"));
+        CL.rvSent = true; f.reset(); kClose(); CL.rvSent = false; toast(j.msg || T("Отправлено"));
       }).catch(function () { busyBtn(f, false); formErr(f, T("Не получилось — проверьте интернет.")); });
       return;
     }
@@ -447,7 +451,7 @@
   }
 
   /* --- вкладки кабинета --- */
-  var TABS = ["pets", "map", "walks", "for", "me"];
+  var TABS = ["home", "map", "walks", "acc"];
   function lens() {
     var dock = $(".pgk-dock"), l = dock && $(".pgk-lens", dock), a = dock && $("[data-k-tab].on", dock);
     if (!l) return;
@@ -473,7 +477,7 @@
     try { history.replaceState(history.state, "", "#" + to); sessionStorage.setItem("pgk_tab", to); } catch (x) {}
     if (!opts.keep) W.scrollTo({ top: 0, behavior: reduce || opts.quiet ? "auto" : "smooth" });
     if (to === "map") MapK.show(opts);
-    if (to === "me") setTimeout(themeApply, 30);
+    if (to === "acc") setTimeout(themeApply, 30);
     live();
   }
 
@@ -512,10 +516,95 @@
     var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
   }
 
+  /* --- страница питомца: фото, где он, прогулки и отчёты --- */
+  function petPage(pid) {
+    var tpl = D.getElementById("pgk-pp-" + pid), s = kOpen("petp");
+    if (!s || !tpl) return;
+    var body = $("[data-k-pp-body]", s), tt = $("[data-k-sht]", s), p = (K.pets || []).filter(function (x) { return x.id === pid; })[0];
+    body.innerHTML = ""; body.appendChild(D.importNode(tpl.content, true));
+    if (tt) tt.textContent = p ? p.name : "";
+    var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
+  }
+
+  /* --- заказ: питомец, услуга, день, время, длительность, няня (занятые видны сразу) --- */
+  var BK = { pet: 0, kind: "walk", date: "", time: "", dur: 60, nanny: 0, busy: [] };
+  function chip(v, html, on, cls, dis) { return '<button type="button" class="pg-b pgk-c' + (cls ? " " + cls : "") + (on ? " on" : "") + '" data-v="' + esc(v) + '"' + (dis ? " disabled" : "") + ">" + html + "</button>"; }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function ymd(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function almaty() { var d = new Date(Date.now() + (5 * 60 + new Date().getTimezoneOffset()) * 60000); return d; }
+  function bookRender() {
+    var f = $("[data-k-bookform]"); if (!f) return;
+    var sv = K.svcs[BK.kind] || K.svcs.walk, now = almaty(), h = "";
+    if (sv.durs.indexOf(BK.dur) < 0) BK.dur = sv.dur;
+    (K.pets || []).forEach(function (p) { h += chip(p.id, '<span class="pgk-av xs">' + (p.av ? '<img src="' + esc(p.av) + '" alt="">' : "<b>" + esc(p.name.charAt(0)) + "</b>") + "</span>" + esc(p.name), BK.pet === p.id); });
+    $('[data-b="pet"]', f).innerHTML = h;
+    h = ""; Object.keys(K.svcs).forEach(function (k) { h += chip(k, esc(K.svcs[k].t), BK.kind === k); });
+    $('[data-b="kind"]', f).innerHTML = h;
+    var WD = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+    h = "";
+    for (var i = 0; i < 14; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i), v = ymd(d);
+      h += chip(v, "<small>" + esc(i === 0 ? T("Сегодня") : i === 1 ? T("Завтра") : T(WD[d.getDay()])) + "</small><b>" + d.getDate() + "</b>", BK.date === v, "pgk-day-c");
+    }
+    $('[data-b="date"]', f).innerHTML = h;
+    h = "";
+    for (var m = 7 * 60; m <= 21 * 60 + 30; m += 30) {
+      var t = pad(Math.floor(m / 60)) + ":" + pad(m % 60), past = BK.date === ymd(now) && m < now.getHours() * 60 + now.getMinutes() + 45;
+      h += chip(t, t, BK.time === t, "", past);
+    }
+    $('[data-b="time"]', f).innerHTML = h;
+    h = ""; sv.durs.forEach(function (x) { h += chip(x, x + " " + esc(T("мин")), BK.dur === x); });
+    $('[data-b="dur"]', f).innerHTML = h;
+    h = chip(0, '<span class="pgk-av xs pgk-any">✦</span>' + esc(T("Любая")), !BK.nanny);
+    (K.nannies || []).forEach(function (n) {
+      var busy = BK.busy.indexOf(n.id) > -1;
+      h += chip(n.id, '<span class="pgk-av xs">' + (n.img ? '<img src="' + esc(n.img) + '" alt="">' : "<b>" + esc(n.name.charAt(0)) + "</b>") + "</span>" + esc(n.name) + (busy ? " <em>" + esc(T("Занята")) + "</em>" : ""), BK.nanny === n.id, busy ? "busy" : "", busy);
+    });
+    $('[data-b="nanny"]', f).innerHTML = h;
+    var p = (K.pets || []).filter(function (x) { return x.id === BK.pet; })[0], price = 0, pr = K.price || {};
+    if (BK.kind === "walk") price = Math.round((pr.walk || 0) * BK.dur / 60);
+    if (BK.kind === "week") price = p && p.sp === "cat" ? pr.week_cat : pr.week_dog;
+    $('[data-b="sum"]', f).innerHTML = price ? esc(T("Примерно")) + " <b>" + String(price).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₸</b>" + (BK.kind === "week" ? " " + esc(T("за неделю")) : "") : esc(T("Цену подтвердит менеджер"));
+  }
+  function bookBusy() {
+    if (!BK.date || !BK.time) return;
+    api("slots", { kind: BK.kind, date: BK.date, time: BK.time, dur: BK.dur }).then(function (j) { if (j.ok) { BK.busy = j.busy || []; if (BK.busy.indexOf(BK.nanny) > -1) BK.nanny = 0; bookRender(); } }).catch(function () {});
+  }
+  function book(kind, pid) {
+    var s = kOpen("book"); if (!s) return;
+    var f = $("[data-k-bookform]", s), dn = $(".pgk-done", s);
+    f.hidden = false; dn.hidden = true; formErr(f, "");
+    BK.kind = K.svcs[kind] ? kind : "walk"; BK.pet = pid || (K.pets && K.pets.length === 1 ? K.pets[0].id : BK.pet); BK.busy = []; BK.nanny = 0;
+    if (!BK.date) BK.date = ymd(almaty());
+    bookRender(); bookBusy();
+  }
+  D.addEventListener("click", function (e) {
+    var c = e.target.closest && e.target.closest("[data-k-bookform] .pgk-c");
+    if (!c || c.disabled) return;
+    var b = c.parentNode.getAttribute("data-b"), v = c.getAttribute("data-v");
+    if (b === "pet" || b === "dur" || b === "nanny") BK[b] = +v; else BK[b] = v;
+    bookRender();
+    if (b === "date" || b === "time" || b === "dur" || b === "kind") bookBusy();
+  });
+  D.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f.matches || !f.matches("[data-k-bookform]")) return;
+    e.preventDefault();
+    if (!BK.pet) { formErr(f, T("Выберите питомца.")); return; }
+    if (!BK.date || !BK.time) { formErr(f, T("Выберите день и время.")); return; }
+    formErr(f, ""); busyBtn(f, true);
+    api("book", { pet: BK.pet, kind: BK.kind, date: BK.date, time: BK.time, dur: BK.dur, nanny: BK.nanny, note: f.elements.note.value }).then(function (j) {
+      busyBtn(f, false);
+      if (!j.ok) { formErr(f, j.msg || ""); if (j.busy) bookBusy(); return; }
+      f.hidden = true; $(".pgk-done", f.parentNode).hidden = false; f.reset(); BK.time = "";
+    }).catch(function () { busyBtn(f, false); formErr(f, T("Не получилось — проверьте интернет.")); });
+  });
+
   /* --- чат с менеджером --- */
   function msgHtml(m) {
     return '<div class="pgk-m' + (m.me ? " me" : "") + '" data-id="' + m.id + '">' + (!m.me ? '<span class="pgk-m-av">' + (m.av ? '<img src="' + esc(m.av) + '" alt="">' : "<b>" + esc((m.n || "P").charAt(0)) + "</b>") + "</span>" : "") +
-      '<div class="pgk-m-b">' + (!m.me && m.n ? "<small>" + esc(m.n) + "</small>" : "") + (m.p ? '<button type="button" class="pg-b pgk-m-ph" data-k-photo="' + esc(m.p) + '"><img src="' + esc(m.p) + '" alt="" loading="lazy"></button>' : "") + (m.h ? "<p>" + m.h + "</p>" : "") + "<time>" + esc(m.tm) + "</time></div></div>";
+      '<div class="pgk-m-b' + (m.k === "ai" ? " ai" : "") + '">' + (!m.me && m.n ? "<small>" + esc(m.n) + "</small>" : "") + (m.p ? '<button type="button" class="pg-b pgk-m-ph" data-k-photo="' + esc(m.p) + '"><img src="' + esc(m.p) + '" alt="" loading="lazy"></button>' : "") + (m.h ? "<p>" + m.h + "</p>" : "") +
+      (m.k === "rv" && m.s ? '<button type="button" class="pg-b pgk-chip pgk-chip-acc" data-k-review="' + m.s + '">' + ICON.star + esc(T("Оценить няню")) + "</button>" : "") + "<time>" + esc(m.tm) + "</time></div></div>";
   }
   function loadMsgs(first) {
     var box = $("[data-k-msgs]");
@@ -550,14 +639,23 @@
     if (!body && !file) return;
     var btn = $(".pgk-send", f);
     btn.disabled = true;
+    /* своё сообщение видно сразу, помощник «печатает» */
+    var box = $("[data-k-msgs]"), mine = D.createElement("div");
+    mine.className = "pgk-m me pgk-pending"; mine.innerHTML = '<div class="pgk-m-b"><p>' + esc(body).replace(/\n/g, "<br>") + "</p><time>…</time></div>";
+    if (body && box) { box.appendChild(mine); box.scrollTop = box.scrollHeight; }
+    var typing = null;
+    if (K.ai && body && box) { typing = D.createElement("div"); typing.className = "pgk-typing"; typing.innerHTML = "<i></i><i></i><i></i><span>" + esc(T("Помощник PetGo")) + " " + esc(T("печатает…")) + "</span>"; setTimeout(function () { if (typing) { box.appendChild(typing); box.scrollTop = box.scrollHeight; } }, 500); }
+    ta.value = ""; ta.style.height = "";
     (file ? shrink(file, 1600) : Promise.resolve(null)).then(function (b) {
       return api("send", { body: body }, b ? { photo: b } : null);
     }).then(function (j) {
+      if (typing) { typing.remove(); typing = null; }
+      mine.remove();
       btn.disabled = false;
       if (!j.ok) { toast(j.msg || T("Не получилось — проверьте интернет."), true); return; }
       ta.value = ""; ta.style.height = ""; if (inp) inp.value = ""; f.classList.remove("has-ph");
       loadMsgs(false);
-    }).catch(function () { btn.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
+    }).catch(function () { if (typing) { typing.remove(); typing = null; } mine.remove(); ta.value = body; btn.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
   }
   function unread(n) {
     qa("[data-k-unread]").forEach(function (b) { b.textContent = n; b.hidden = !n; });
@@ -566,6 +664,8 @@
   /* --- живое состояние питомцев (статусы, баннер прогулки, непрочитанные) --- */
   function applyPets(pets) {
     if (!pets) return;
+    /* место дома, найденное по адресу, не теряем при обновлении */
+    (K.pets || []).forEach(function (o) { pets.forEach(function (p) { if (p.id === o.id) { if (!p.home && o.home) p.home = o.home; if (o._geo) p._geo = 1; } }); });
     K.pets = pets;
     var live = null;
     pets.forEach(function (p) {
@@ -594,6 +694,16 @@
       if (D.hidden) { live(); return; }
       api("live").then(function (j) { if (j.ok) { applyPets(j.pets); unread(j.u || 0); } }).catch(function () {}).then(live);
     }, wait);
+  }
+
+  /* --- отзыв: из списка прогулок, из чата или сам после завершения --- */
+  function reviewOpen(oid, name, av, auto) {
+    var s = kOpen("review"); if (!s) return;
+    var f = s.querySelector("form");
+    f.elements.order.value = oid;
+    CL.rvAuto = !!auto;
+    var fr = $("[data-k-rv-for]", s);
+    if (fr) fr.innerHTML = name ? (av ? '<span class="pgk-av sm"><img src="' + esc(av) + '" alt=""></span>' : "") + "<b>" + esc(T("Отзыв для няни %s").replace("%s", name)) + "</b>" : "";
   }
 
   /* --- лайтбокс фото --- */
@@ -748,34 +858,39 @@
       var pets = K.pets || [], any = false, ch = "", halo = dark() ? "#0c1211" : "#ffffff";
       seg();
       if (mode === "now") {
+        /* каждый питомец на карте: гуляет — живая метка и маршрут; нет — последнее место прогулки или дом */
+        var first = "";
         pets.forEach(function (p) {
-          if (!shown(p.id) || !p.live || !p.pos) return;
-          any = true;
-          if (p.track && p.track.length > 1) {
-            var line = p.track.map(function (t) { return [t[0], t[1]]; });
-            E.line(line, { color: color(p.id), weight: 5, opacity: 1, halo: halo });
-            E.html(line[0], dotMk(color(p.id)), {});
-            pts = pts.concat(line);
+          if (!shown(p.id)) return;
+          var c = "";
+          if (p.live && p.pos) {
+            if (p.track && p.track.length > 1) {
+              var line = p.track.map(function (t) { return [t[0], t[1]]; });
+              E.line(line, { color: color(p.id), weight: 5, opacity: 1, halo: halo });
+              E.html(line[0], dotMk(color(p.id)), {});
+              pts = pts.concat(line);
+            }
+            (p.photos || []).forEach(function (ph) { if (ph.lat != null) E.html([ph.lat, ph.lng], photoMk(ph.u), { z: 200, click: function () { lightbox(ph.u, p.name + " · " + ph.t); } }); });
+            E.html(p.pos, petMk(p, true), { z: 1000, click: function () { focus = p.id; fitted = false; draw(); } });
+            pts.push(p.pos);
+            c = liveCard(p);
+          } else {
+            var w = hist ? hist.walks.filter(function (x) { return x.pet === p.id; })[0] : null;
+            if (w && w.p.length) {
+              var last = w.p[w.p.length - 1];
+              E.line(w.p.map(function (t) { return [t[0], t[1]]; }), { color: color(p.id), weight: 4, opacity: 0.45, dash: "1 9" });
+              E.html([last[0], last[1]], petMk(p, false), { z: 900, click: function () { focus = p.id; fitted = false; draw(); } });
+              pts.push([last[0], last[1]]);
+              c = '<div class="pgk-mc">' + avHtml(p, "md") + "<div><b>" + esc(p.name) + '</b><span class="pgk-mc-st st-' + esc(p.st) + '">' + esc(p.text) + "</span><small>" + esc(T("Последнее место")) + " · " + esc(w.d) + "</small></div></div>";
+            } else if (p.home) {
+              E.html(p.home, petMk(p, false), { z: 900, click: function () { focus = p.id; fitted = false; draw(); } });
+              pts.push(p.home);
+              c = '<div class="pgk-mc">' + avHtml(p, "md") + "<div><b>" + esc(p.name) + '</b><span class="pgk-mc-st st-home">' + esc(T("Дома")) + "</span><small>" + esc(p.addr || "") + "</small></div></div>";
+            }
           }
-          (p.photos || []).forEach(function (ph) { if (ph.lat != null) E.html([ph.lat, ph.lng], photoMk(ph.u), { z: 200, click: function () { lightbox(ph.u, p.name + " · " + ph.t); } }); });
-          E.html(p.pos, petMk(p, true), { z: 1000, click: function () { focus = p.id; fitted = false; draw(); } });
-          pts.push(p.pos);
-          if (!ch || focus === p.id) ch = liveCard(p);
+          if (c) { any = true; if (focus === p.id || (!ch && p.live)) ch = c; if (!first) first = c; }
         });
-        if (!any && hist) {
-          pets.forEach(function (p) {
-            if (!shown(p.id)) return;
-            var w = hist.walks.filter(function (x) { return x.pet === p.id; })[0];
-            if (!w || !w.p.length) return;
-            var last = w.p[w.p.length - 1];
-            any = true;
-            E.line(w.p.map(function (t) { return [t[0], t[1]]; }), { color: color(p.id), weight: 4, opacity: 0.5, dash: "1 9" });
-            E.html([last[0], last[1]], petMk(p, false), { z: 900 });
-            pts.push([last[0], last[1]]);
-            if (!ch || focus === p.id) ch = '<div class="pgk-mc">' + avHtml(p, "md") + "<div><b>" + esc(p.name) + '</b><span class="pgk-mc-st st-' + esc(p.st) + '">' + esc(p.text) + "</span><small>" + esc(T("Последнее место")) + " · " + esc(w.d) + "</small></div></div>";
-          });
-        }
-        card(ch);
+        card(ch || first);
       } else if (mode === "all" && hist) {
         var n = 0;
         hist.walks.forEach(function (w) {
@@ -829,9 +944,24 @@
       if (!D.getElementById("pgk-map")) return;
       start().then(function () {
         if (!E) return;
+        homes();
         setTimeout(function () { E.resize(); seg(); }, 60);
-        if (!hist) api("map").then(function (j) { if (j.ok) { hist = j.hist; applyPets(j.pets); draw(); } });
+        if (!hist) api("map").then(function (j) { if (j.ok) { hist = j.hist; applyPets(j.pets); homes(); draw(); } });
         draw();
+      });
+    }
+    /* место дома по адресу питомца: находим один раз (OpenStreetMap) и запоминаем в кабинете */
+    function homes() {
+      (K.pets || []).forEach(function (p) {
+        if (p.home || !p.addr || p._geo) return;
+        p._geo = 1;
+        var q = /алмат|almat/i.test(p.addr) ? p.addr : p.addr + ", Алматы";
+        fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kz&accept-language=ru&q=" + encodeURIComponent(q)).then(function (r) { return r.json(); }).then(function (a) {
+          if (!a || !a[0]) return;
+          p.home = [+a[0].lat, +a[0].lon];
+          api("home", { pet: p.id, lat: p.home[0], lng: p.home[1] }).catch(function () {});
+          fitted = false; draw();
+        }).catch(function () {});
       });
     }
     return {
@@ -871,13 +1001,17 @@
     var layerEl = D.getElementById("pg-layer") || D.body;
     qa(".pgk-sheet,.pgk-lb,.pgk-toast", box).forEach(function (s) { layerEl.appendChild(s); });
     var dock = $(".pgk-dock", box); if (dock) layerEl.appendChild(dock);
-    if (W.PGGlass && dock) W.PGGlass.scan(dock.parentNode);
     var t = (location.hash || "").replace("#", "");
-    try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "pets"; } catch (x) { t = "pets"; }
-    tab(TABS.indexOf(t) > -1 ? t : "pets", { quiet: true, keep: true });
+    try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "home"; } catch (x) { t = "home"; }
+    tab(TABS.indexOf(t) > -1 ? t : "home", { quiet: true, keep: true });
     setTimeout(lens, 50);
     W.addEventListener("resize", lens);
     live();
+    /* прогулка завершилась — кабинет сам предлагает оценить няню (один раз; «Позже» — больше не спрашивает) */
+    if (K.rv) {
+      var seen = ""; try { seen = sessionStorage.getItem("pgk_rv") || ""; } catch (x) {}
+      if (seen !== String(K.rv.o)) setTimeout(function () { try { sessionStorage.setItem("pgk_rv", String(K.rv.o)); } catch (x) {} if (!stack.length) reviewOpen(K.rv.o, K.rv.n, K.rv.av, true); }, 1400);
+    }
   }
   /* уходим со страницы кабинета (переход без перезагрузки) — убираем его меню и листы */
   function leaveCabinet() {
@@ -896,11 +1030,14 @@
     if ((b = t.closest("[data-eye]"))) { var inp = b.parentNode.querySelector("input"); if (inp) { inp.type = inp.type === "password" ? "text" : "password"; b.classList.toggle("on", inp.type === "text"); } return; }
     if ((b = t.closest("[data-k-open]"))) { e.preventDefault(); var id = b.getAttribute("data-k-open"); if (id === "chat") chat(); else kOpen(id); return; }
     if ((b = t.closest("[data-k-close]"))) { e.preventDefault(); kClose(); return; }
+    if ((b = t.closest("[data-k-rvlater]"))) { e.preventDefault(); kClose(); return; }
+    if ((b = t.closest("[data-k-bookdone]"))) { e.preventDefault(); try { sessionStorage.setItem("pgk_tab", "walks"); } catch (x) {} location.hash = "walks"; location.reload(); return; }
     if ((b = t.closest("[data-k-lbx]")) || (t.classList && t.classList.contains("pgk-lb"))) { lbClose(); return; }
     if ((b = t.closest("[data-k-photo]"))) { e.preventDefault(); lightbox(b.getAttribute("data-k-photo"), b.getAttribute("data-k-cap")); return; }
     if (!K) return;
     if ((b = t.closest("[data-k-tab]"))) {
       e.preventDefault();
+      if (stack.length) kClose(true);
       var o = {};
       if (b.hasAttribute("data-k-focus")) o.focus = +b.getAttribute("data-k-focus");
       if (b.hasAttribute("data-k-walk")) o.walk = +b.getAttribute("data-k-walk");
@@ -908,17 +1045,17 @@
       return;
     }
     if ((b = t.closest("[data-k-pet]"))) { e.preventDefault(); petSheet(+b.getAttribute("data-k-pet")); return; }
+    if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
+    if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }
     if ((b = t.closest("[data-k-post]"))) { e.preventDefault(); postSheet(b); return; }
     if ((b = t.closest("[data-k-theme]"))) { try { localStorage.setItem("pgk_theme", b.getAttribute("data-k-theme")); } catch (x) {} themeApply(); return; }
     if ((b = t.closest("[data-k-mmode]"))) { MapK.mode(b.getAttribute("data-k-mmode")); return; }
     if ((b = t.closest("[data-k-mpet]"))) { MapK.focus(+b.getAttribute("data-k-mpet")); return; }
     if ((b = t.closest("[data-k-mfit]"))) { MapK.fit(); return; }
-    if ((b = t.closest("[data-k-review]"))) {
-      var s = kOpen("review"); if (!s) return;
-      var f = s.querySelector("form");
-      f.elements.order.value = b.getAttribute("data-k-review");
-      var nm = b.getAttribute("data-k-rv-name"), av = b.getAttribute("data-k-rv-av"), fr = $("[data-k-rv-for]", s);
-      if (fr) fr.innerHTML = nm ? (av ? '<span class="pgk-av sm"><img src="' + esc(av) + '" alt=""></span>' : "") + "<b>" + esc(T("Отзыв для няни %s").replace("%s", nm)) + "</b>" : "";
+    if ((b = t.closest("[data-k-review]")) && !b.matches("form")) {
+      var rid = +b.getAttribute("data-k-review"), nm = b.getAttribute("data-k-rv-name"), av = b.getAttribute("data-k-rv-av");
+      if (!nm && K.rv && K.rv.o === rid) { nm = K.rv.n; av = K.rv.av; }
+      reviewOpen(rid, nm || "", av || "", false);
       return;
     }
     if ((b = t.closest("[data-k-join]"))) {
@@ -949,7 +1086,7 @@
     if (t.matches && t.matches("[data-k-send] textarea")) { t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; }
   });
   D.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { if ($(".pgk-lb.on")) lbClose(); else if (openSheet) kClose(); }
+    if (e.key === "Escape") { if ($(".pgk-lb.on")) lbClose(); else if (stack.length) kClose(); }
     if (e.key === "Enter" && !e.shiftKey && e.target.matches && e.target.matches("[data-k-send] textarea") && !("ontouchstart" in W)) { e.preventDefault(); sendMsg(e.target.closest("form")); }
   });
   D.addEventListener("visibilitychange", function () { if (!D.hidden && K) live(); });

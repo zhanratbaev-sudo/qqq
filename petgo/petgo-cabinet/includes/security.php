@@ -169,7 +169,8 @@ add_filter('authenticate', function ($user) {
 
 /* логины сотрудников не отдаются наружу */
 add_filter('rest_endpoints', function ($e) {
-    if (!is_user_logged_in()) {
+    /* список пользователей закрыт для гостей и клиентов (данные клиентов и сотрудников не видны снаружи) */
+    if (!is_user_logged_in() || (function_exists('petgo_role_of') && petgo_role_of() === '')) {
         foreach (array_keys($e) as $r) {
             if (strpos($r, '/wp/v2/users') === 0) {
                 unset($e[$r]);

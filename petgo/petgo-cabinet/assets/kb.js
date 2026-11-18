@@ -87,7 +87,8 @@
     function key(ch, cls, attr) { return '<button type="button" tabindex="-1" class="pgkb-k' + (cls ? " " + cls : "") + '"' + (attr || ' data-k="' + ch.replace(/"/g, "&quot;") + '"') + ">" + ch.replace(/&/g, "&amp;").replace(/</g, "&lt;") + "</button>"; }
     function nextLang() { return langs[(langs.indexOf(lang) + 1) % langs.length]; }
     function render() {
-      var h = '<div class="pgkb-top"><button type="button" tabindex="-1" class="pgkb-t" data-a="sys">' + T("Системная клавиатура") + '</button><button type="button" tabindex="-1" class="pgkb-t pgkb-done" data-a="done">' + T("Готово") + "</button></div>";
+      /* 34.2: везде только эта клавиатура — кнопки «Системная клавиатура» нет (o.noSys) */
+      var h = '<div class="pgkb-top">' + (o.noSys ? '<span class="pgkb-t pgkb-tl">' + (NAMES[lang] || "") + "</span>" : '<button type="button" tabindex="-1" class="pgkb-t" data-a="sys">' + T("Системная клавиатура") + "</button>") + '<button type="button" tabindex="-1" class="pgkb-t pgkb-done" data-a="done">' + T("Готово") + "</button></div>";
       if (mode === "num") {
         var dec = cur && cur.type !== "tel";
         h += '<div class="pgkb-num">';

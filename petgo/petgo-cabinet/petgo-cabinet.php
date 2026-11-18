@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: Сайт PetGo (Главная, Услуги, Няни, Отзывы, Кабинет — без шорткодов, стиль iPhone, матовое Liquid Glass) и приложение для сотрудников (PWA): заказы, календарь, заявки с сайта, питомцы, сотрудники, отзывы, чаты, уведомления и «Настройки сайта». Помощник (ИИ) — отдельный плагин «PetGo ИИ».
- * Version: 34.1.0
+ * Version: 34.2.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.1.0');
+define('PETGO_VER', '34.2.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -977,6 +977,9 @@ function petgo_h_order_new() {
         update_post_meta($id, '_comment', sanitize_textarea_field((string) petgo_p('comment')));
         update_post_meta($id, '_status', $nanny ? 'assigned' : 'new');
     }
+    if ($slots && $nanny && !empty($id)) {
+        do_action('petgo_order_event', $id, 'assigned');
+    }
     if ($slots) {
         petgo_push_notify($nanny ? array($nanny) : petgo_push_users(array('owner', 'admin', 'manager')), $nanny ? 'Вам назначен заказ' : 'Новый заказ без няни', get_the_title($pet) . ' · ' . petgo_fmt($slots[0]), petgo_page_url(array('pg' => 'orders')));
     }
@@ -1003,6 +1006,7 @@ function petgo_h_order_assign() {
     update_post_meta($oid, '_nanny', $nanny);
     update_post_meta($oid, '_nanny_name', $u->display_name);
     update_post_meta($oid, '_status', 'assigned');
+    do_action('petgo_order_event', $oid, 'assigned');
     petgo_push_notify(array($nanny), 'Вам назначен заказ', petgo_pet_name($oid) . ' · ' . petgo_fmt((int) petgo_o($oid, 'ts')), petgo_page_url(array('pg' => 'orders', 'o' => $oid)));
     petgo_flash(petgo_t('ok_saved'));
     petgo_back('orders');
@@ -1020,6 +1024,7 @@ function petgo_h_order_set() {
         } elseif ($do === 'cancel' && $st !== 'confirmed' && $st !== 'cancelled') {
             petgo_why('Отменил заказ №' . $oid . ' (' . petgo_pet_name($oid) . ')', 'orders');
             update_post_meta($oid, '_status', 'cancelled');
+            do_action('petgo_order_event', $oid, 'cancelled');
             petgo_flash(petgo_t('ok_saved'));
         } else {
             petgo_flash(petgo_t('err_na'), false);
@@ -1049,6 +1054,7 @@ function petgo_h_arrive() {
     update_post_meta($oid, '_acc', (int) petgo_p('acc'));
     update_post_meta($oid, '_arrived_at', time());
     update_post_meta($oid, '_status', 'arrived');
+    do_action('petgo_order_event', $oid, 'arrived');
     petgo_flash(petgo_t('ok_arrived'));
     $late = petgo_late_min($oid);
     if ($late > 0) {
@@ -1067,6 +1073,7 @@ function petgo_h_pick() {
     }
     update_post_meta($oid, '_picked_at', time());
     update_post_meta($oid, '_status', 'picked');
+    do_action('petgo_order_event', $oid, 'picked');
     petgo_flash(petgo_t('ok_picked'));
     petgo_back('orders', array('o' => $oid));
 }
@@ -1106,6 +1113,11 @@ function petgo_h_finish() {
     }
     update_post_meta($oid, '_done_at', time());
     update_post_meta($oid, '_status', 'done');
+    /* 34.2: отчёт няни (настроение, что сделано) и уведомление клиенту «Оцените няню» */
+    if (function_exists('petgo_rep_save')) {
+        petgo_rep_save($oid);
+    }
+    do_action('petgo_order_event', $oid, 'done');
     petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Заказ завершён', petgo_pet_name($oid) . ' · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'orders', 'o' => $oid)));
     petgo_flash(petgo_t('ok_finished'));
     petgo_back('orders', array('o' => $oid));
@@ -1315,7 +1327,7 @@ function petgo_timeline($id, $admin) {
 
 /* карточка заказа: сверху всегда главное, одно нажатие открывает профиль питомца и действия */
 function petgo_finish_form($id, $labelkey) {
-    return petgo_form_open('finish', 'enctype="multipart/form-data" class="pgc-finish"') . '<input type="hidden" name="order" value="' . (int) $id . '"><label class="pgc-shot"><input class="pgc-vh" type="file" name="photo" accept="image/*" capture="environment" required data-preview><span class="pgc-shot-in"><svg class="pgc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>' . esc_html(petgo_t('tip_photo')) . '</span></span></label><button class="pgc-btn wide" type="submit" onclick="return confirm(\'' . esc_js(petgo_t('q_finish')) . '\')">' . esc_html(petgo_t($labelkey)) . '</button></form>';
+    return petgo_form_open('finish', 'enctype="multipart/form-data" class="pgc-finish"') . '<input type="hidden" name="order" value="' . (int) $id . '">' . (function_exists('petgo_rep_fields') ? petgo_rep_fields($id) : '') . '<label class="pgc-shot"><input class="pgc-vh" type="file" name="photo" accept="image/*" capture="environment" required data-preview><span class="pgc-shot-in"><svg class="pgc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>' . esc_html(petgo_t('tip_photo')) . '</span></span></label><button class="pgc-btn wide" type="submit" onclick="return confirm(\'' . esc_js(petgo_t('q_finish')) . '\')">' . esc_html(petgo_t($labelkey)) . '</button></form>';
 }
 
 /* ============================================================
@@ -1405,7 +1417,8 @@ function petgo_modal_pet() {
         }
     }
     /* 34.0: форма разделами, одинаковые строки, переключатели вместо списков (см. includes/petform.php) */
-    echo petgo_modal('pgc-m-pet', petgo_t($edit ? 'edit' : 'add_pet'), petgo_pf_app_form($edit, $pre, $fr), (bool) ($edit || $fr));
+    /* 34.2: анкета открывается целой страницей (на телефоне — на весь экран, поля не сжимаются клавиатурой) */
+    echo str_replace('class="pgc-modal', 'class="pgc-modal pgc-full', petgo_modal('pgc-m-pet', petgo_t($edit ? 'edit' : 'add_pet'), petgo_pf_app_form($edit, $pre, $fr), (bool) ($edit || $fr)));
 }
 
 function petgo_modal_staff() {
@@ -1730,6 +1743,7 @@ require_once __DIR__ . '/includes/front.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/petform.php';
 require_once __DIR__ . '/includes/client.php';
+require_once __DIR__ . '/includes/client-plus.php';
 require_once __DIR__ . '/includes/track.php';
 require_once __DIR__ . '/includes/i18n-v34.php';
 

@@ -136,8 +136,9 @@
   })();
 
   var KB = (window.PGKB && layer && C.kbd) ? window.PGKB.init({
-    sel: ".pg-form input[type=text], .pg-form input[type=tel], .pg-form textarea, [data-kb-send]",
-    theme: "site", lang: C.lang || "ru", T: T, layer: layer, pad: pgRoot
+    /* 34.2: клавиатура PetGo во всех полях сайта и кабинета (анкета, вход, чаты, отзывы) */
+    sel: ["text", "tel", "email", "number", "search", "url", "password"].map(function (t) { return ".pg input[type=" + t + "], .pg-layer input[type=" + t + "]"; }).concat([".pg input:not([type])", ".pg-layer input:not([type])", ".pg textarea", ".pg-layer textarea", "[data-kb-send]"]).join(", "),
+    theme: "site", lang: C.lang || "ru", T: T, layer: layer, pad: pgRoot, noSys: true
   }) : { hide: function () {}, scan: function () {}, on: false };
 
   /* ============================================================
