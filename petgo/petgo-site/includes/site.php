@@ -663,11 +663,15 @@ function petgo_site_content($page, $a = array()) {
                 . $rv . petgo_site_b_cta($L('Хотите так же?'), $L('Оставьте заявку, и мы подберём няню вашему питомцу.'));
         case 'account':
             /* 34.0: кабинет клиента — вход, регистрация; после входа — питомцы, карта, прогулки (см. includes/client.php) */
-            if (petgo_cl_uid()) {
+            if (petgo_cl_uid() && function_exists('petgo_cl_dashboard')) {
                 return petgo_cl_dashboard();
             }
             if (is_user_logged_in() && petgo_role_of() !== '') {
                 return petgo_site_b_title($L('Кабинет'), $L('Вы вошли как сотрудник PetGo.')) . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><a class="pg-btn pg-btn-primary" data-ext href="' . esc_url(petgo_page_url()) . '">' . esc_html($L('Открыть приложение')) . '</a></div></section>';
+            }
+            /* без плагина «PetGo Клиент» — регистрация питомца и вход для сотрудников */
+            if (!function_exists('petgo_cl_guest')) {
+                return petgo_site_b_title($L('Кабинет'), $L('Зарегистрируйте питомца или войдите как сотрудник PetGo.')) . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><div class="pg-grid pg-g2 pg-acc"><button type="button" class="pg-b pg-acc-card pg-rise" data-sheet="pet"><span class="pg-acc-i">' . petgo_site_icon('paw') . '</span><b>' . esc_html($L('Зарегистрировать питомца')) . '</b><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></button><a class="pg-acc-card pg-acc-staff pg-rise" data-ext href="' . esc_url(petgo_page_url()) . '"><span class="pg-acc-i">' . petgo_site_icon('key') . '</span><b>' . esc_html($L('Войти как сотрудник')) . '</b><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></a></div></div></section>';
             }
             return petgo_site_b_title($L('Кабинет'), $L('Следите за питомцем на прогулке, смотрите фото и историю, оставляйте отзывы няням.')) . petgo_cl_guest();
         case 'join':
@@ -730,7 +734,7 @@ function petgo_site_render($page, $a = array()) {
     $h .= '<div class="pg pg-p-' . esc_attr($page) . '" id="pg"><main>' . petgo_site_content($page, $a) . '</main>' . petgo_site_b_foot() . '</div>';
     $h .= '<script>window.PG_CONFIG=' . wp_json_encode($cfg, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';</script>';
     /* 34.2: везде клавиатура PetGo (kb.js) — без полоски браузера над клавиатурой */
-    foreach (array('glass.js', 'site.js', 'kb.js', 'ui.js', 'client.js') as $f) {
+    foreach (array('glass.js', 'site.js', 'kb.js', 'ui.js', 'form.js') as $f) {
         $h .= '<script src="' . esc_url(petgo_asset_url($f)) . '" defer></script>';
     }
     /* скрипты других плагинов сайта (например, «PetGo ИИ») */

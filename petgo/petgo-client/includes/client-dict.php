@@ -1,0 +1,61 @@
+<?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/* Переводы кабинета клиента (34.3): «русский текст» => [казахский, английский].
+   Добавляются в общий словарь сайта, поэтому работают и в разметке, и в client.js. */
+add_filter('petgo_site_dict_more', function ($d) {
+    return array_merge($d, array(
+        'Подтверждён' => array('Расталды', 'Confirmed'),
+        'Завершён' => array('Аяқталды', 'Completed'),
+        'Отменён' => array('Бас тартылды', 'Cancelled'),
+        'Ближайшие' => array('Жақын арада', 'Upcoming'),
+        'Заказ' => array('Тапсырыс', 'Booking'),
+        'От менеджера' => array('Менеджерден', 'From your manager'),
+        'Где сейчас' => array('Қазір қайда', 'Where now'),
+        'Часы' => array('Сағат', 'Hours'),
+        'Минуты' => array('Минут', 'Minutes'),
+        'ч' => array('сағ', 'h'),
+        'дней' => array('күн', 'days'),
+        'Любая свободная' => array('Кез келген бос', 'Any available'),
+        'Свободна' => array('Бос', 'Available'),
+        'Занята в это время' => array('Бұл уақытта бос емес', 'Busy at this time'),
+        'Нет нянь в списке — подберёт менеджер' => array('Тізімде күтуші жоқ — менеджер таңдайды', 'No sitters listed — the manager will pick one'),
+        'января' => array('қаңтар', 'January'),
+        'февраля' => array('ақпан', 'February'),
+        'марта' => array('наурыз', 'March'),
+        'апреля' => array('сәуір', 'April'),
+        'мая' => array('мамыр', 'May'),
+        'июня' => array('маусым', 'June'),
+        'июля' => array('шілде', 'July'),
+        'августа' => array('тамыз', 'August'),
+        'сентября' => array('қыркүйек', 'September'),
+        'октября' => array('қазан', 'October'),
+        'ноября' => array('қараша', 'November'),
+        'декабря' => array('желтоқсан', 'December'),
+        'Выберите услугу.' => array('Қызметті таңдаңыз.', 'Choose a service.'),
+        'Это время уже недоступно. Выберите другое.' => array('Бұл уақыт енді қолжетімсіз. Басқасын таңдаңыз.', 'This time is no longer available. Please choose another.'),
+        'Мы работаем с 7:00 до 22:00.' => array('Біз 7:00-ден 22:00-ге дейін жұмыс істейміз.', 'We work from 7:00 to 22:00.'),
+        'Няня %s занята в это время. Выберите другое время или другую няню.' => array('%s күтушісі бұл уақытта бос емес. Басқа уақытты немесе басқа күтушіні таңдаңыз.', '%s is busy at this time. Choose another time or another sitter.'),
+        'Не получилось сохранить. Попробуйте ещё раз.' => array('Сақтау мүмкін болмады. Қайталап көріңіз.', 'Couldn’t save. Please try again.'),
+        'Заявка отправлена. Менеджер подтвердит время.' => array('Өтінім жіберілді. Менеджер уақытты растайды.', 'Request sent. The manager will confirm the time.'),
+        'Слишком много заявок подряд. Напишите менеджеру.' => array('Өтінімдер тым көп. Менеджерге жазыңыз.', 'Too many requests in a row. Please message the manager.'),
+        'Записать может менеджер: нажмите «Заказать» на главной — он подтвердит время.' => array('Менеджер жаза алады: басты беттегі «Тапсырыс беру» батырмасын басыңыз — ол уақытты растайды.', 'The manager can book you: tap “Book” on the home screen and they will confirm the time.'),
+        'Обновите страницу и попробуйте ещё раз.' => array('Бетті жаңартып, қайталап көріңіз.', 'Refresh the page and try again.'),
+        'Вы уже вошли. Обновите страницу.' => array('Сіз кірдіңіз. Бетті жаңартыңыз.', 'You are already signed in. Refresh the page.'),
+        'Слишком много попыток. Попробуйте позже.' => array('Әрекеттер тым көп. Кейінірек көріңіз.', 'Too many attempts. Try again later.'),
+        'Слишком много попыток. Подождите 15 минут или напишите менеджеру.' => array('Әрекеттер тым көп. 15 минут күтіңіз немесе менеджерге жазыңыз.', 'Too many attempts. Wait 15 minutes or message the manager.'),
+        'Доступ отключён. Напишите менеджеру.' => array('Қолжетімділік өшірілген. Менеджерге жазыңыз.', 'Access is disabled. Please message the manager.'),
+        'Заявка уже у менеджера. Мы скоро свяжемся с вами.' => array('Өтінім менеджерде. Жақында хабарласамыз.', 'Your request is with the manager. We’ll contact you soon.'),
+        'Здравствуйте! Я забыл(а) логин или пароль от кабинета PetGo. Мой номер: %s' => array('Сәлеметсіз бе! PetGo кабинетінің логинін немесе құпиясөзін ұмыттым. Нөмірім: %s', 'Hello! I forgot my PetGo account login or password. My number: %s'),
+        'Слишком много сообщений подряд. Подождите немного.' => array('Хабарламалар тым көп. Сәл күтіңіз.', 'Too many messages in a row. Please wait a moment.'),
+        'Не удалось загрузить фото. Нужен JPG, PNG или WebP.' => array('Фото жүктелмеді. JPG, PNG немесе WebP керек.', 'Couldn’t upload the photo. Use JPG, PNG or WebP.'),
+        'Проверьте почту — возможно, она уже занята.' => array('Поштаны тексеріңіз — ол бос емес болуы мүмкін.', 'Check the email — it may already be in use.'),
+        'Этот номер уже привязан к другому кабинету.' => array('Бұл нөмір басқа кабинетке байланған.', 'This number is already linked to another account.'),
+        'Старый пароль неверный.' => array('Ескі құпиясөз қате.', 'The old password is incorrect.'),
+        'Нет доступа.' => array('Қолжетімділік жоқ.', 'No access.'),
+        'Отзыв пока нельзя оставить.' => array('Пікірді әзірге қалдыруға болмайды.', 'You can’t leave a review yet.'),
+        'Событие не найдено.' => array('Іс-шара табылмады.', 'Event not found.'),
+    ));
+});

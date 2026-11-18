@@ -6,13 +6,32 @@ if (!defined('ABSPATH')) {
 /* ============================================================
    ВНЕШНИЙ ВИД 27.0 (iOS 27 Liquid Glass): лёгкая страница-приложение, меню-таблетка, главная, настройки, вход
    ============================================================ */
+/* 34.3: файлы оформления лежат в своих плагинах (база, «PetGo Сайт», «PetGo Клиент»):
+   плагин сообщает свою папку через petgo_asset_root(), адрес файла находится сам */
+function petgo_asset_root($file = null) {
+    static $roots = array();
+    if ($file !== null) {
+        $roots[] = $file;
+    }
+    return array_merge($roots, array(PETGO_FILE));
+}
+
+function petgo_asset_where($f) {
+    foreach (petgo_asset_root() as $main) {
+        if (is_readable(dirname($main) . '/assets/' . $f)) {
+            return $main;
+        }
+    }
+    return PETGO_FILE;
+}
+
 function petgo_asset_ver($f) {
-    $p = dirname(__DIR__) . '/assets/' . $f;
+    $p = dirname(petgo_asset_where($f)) . '/assets/' . $f;
     return PETGO_VER . '.' . (is_readable($p) ? (int) filemtime($p) : 0);
 }
 
 function petgo_asset_url($f) {
-    return plugins_url('assets/' . $f, PETGO_FILE) . '?ver=' . petgo_asset_ver($f);
+    return plugins_url('assets/' . $f, petgo_asset_where($f)) . '?ver=' . petgo_asset_ver($f);
 }
 
 /* стили, значок, манифест, тема до отрисовки (без мигания), скрипт приложения */
@@ -64,7 +83,7 @@ function petgo_icon($n) {
         'eye'      => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
         'download' => '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
         'phone'    => '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
-        'wa'       => '<path d="M3.5 20.5l1.3-4.4A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.6-2-1-1 .8c-1-.5-2-1.5-2.5-2.5l.8-1-1-2z"/>',
+        'wa'       => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3.5 20.5l1.4-4.8A8.5 8.5 0 1 1 21 11.5z"/>',
         'more'     => '<circle cx="12" cy="5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/>',
         'theme'    => '<circle cx="12" cy="12" r="9"/><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"/>',
         'install'  => '<rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M12 7.5v7M9 12l3 3 3-3"/>',
@@ -101,7 +120,9 @@ function petgo_nav_data($adm) {
         $items['reviews']  = array(petgo_t('nav_reviews'), petgo_page_url(array('pg' => 'reviews')), 'reviews', 'd');
         if (petgo_can('admin')) {
             $items['staff'] = array(petgo_t('staff'), petgo_page_url(array('pg' => 'staff')), 'staff', 'd');
-            $items['site']  = array(petgo_t('nav_site'), petgo_page_url(array('pg' => 'site')), 'globe', 'd');
+            if (function_exists('petgo_page_site')) {
+                $items['site'] = array(petgo_t('nav_site'), petgo_page_url(array('pg' => 'site')), 'globe', 'd');
+            }
             $items['log']   = array(petgo_t('nav_log'), petgo_page_url(array('pg' => 'log')), 'log', 'x');
         }
         /* разделы от других плагинов (например, «PetGo ИИ» → «Чаты с сайта») */

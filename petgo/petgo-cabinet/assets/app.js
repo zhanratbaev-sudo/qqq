@@ -613,8 +613,15 @@
 		R.style.setProperty("--vvt", top + "px");
 		var a = D.activeElement, typing = a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && !/checkbox|radio|file|button|submit/.test(a.type || "");
 		R.classList.toggle("kb", kbh > 0 || (!!typing && (W.innerHeight - h > 120 || /Android|iPhone|iPad/i.test(navigator.userAgent))));
-		if (Chat.isOpen()) Chat.stick();
+		if (Chat.isOpen()) {
+			/* 34.3: окно чата плавно меняет высоту вместе с клавиатурой — лента всё это время прижата вниз */
+			Chat.stick();
+			var t0 = Date.now();
+			cancelAnimationFrame(vpRaf);
+			(function f() { Chat.stick(); if (Date.now() - t0 < 420) vpRaf = requestAnimationFrame(f); })();
+		}
 	}
+	var vpRaf = 0;
 	if (vv) { vv.addEventListener("resize", vp); vv.addEventListener("scroll", vp); }
 	W.addEventListener("pgkb", vp);
 

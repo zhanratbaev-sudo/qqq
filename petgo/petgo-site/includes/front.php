@@ -148,10 +148,6 @@ function petgo_site_head($page = 'home') {
     $h .= '<meta name="theme-color" content="#FBF9E8"><meta name="color-scheme" content="light"><meta name="format-detection" content="telephone=no">';
     $h .= '<link rel="icon" href="' . esc_url(petgo_asset('icon-192.png')) . '"><link rel="apple-touch-icon" href="' . esc_url(petgo_asset('apple-touch-icon.png')) . '">';
     $h .= '<link rel="stylesheet" href="' . esc_url(petgo_asset_url('site.css')) . '">';
-    /* кабинет клиента: тема (светлая / тёмная) включается до отрисовки, без мигания */
-    if ($page === 'account' && function_exists('petgo_cl_uid') && petgo_cl_uid()) {
-        $h .= '<script>(function(){var d=document.documentElement,t="auto";try{t=localStorage.getItem("pgk_theme")||"auto"}catch(e){}d.classList.add("pgk-on");if(t==="dark"||(t==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))d.classList.add("pgk-dark")})();</script>';
-    }
     if ($page === 'home') {
         $ld = array(
             '@context'    => 'https://schema.org',

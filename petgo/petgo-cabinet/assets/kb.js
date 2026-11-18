@@ -15,29 +15,34 @@
   var NAMES = { ru: "РУ", kz: "ҚАЗ", en: "EN" };
   var ALT = { "е": "ё", "ь": "ъ", "а": "ә", "и": "і", "н": "ң", "г": "ғ", "у": "ұү", "к": "қ", "о": "ө", "х": "һ", "e": "é", "a": "á" };
   var CSS =
-    ".pgkb{position:fixed;z-index:2147483000;left:0;right:0;bottom:0;padding:6px 3px calc(env(safe-area-inset-bottom,0px) + 6px);border-radius:24px 24px 0 0;" +
-    "background:var(--pgkb-bg);-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6);box-shadow:0 -1px 0 var(--pgkb-line),0 -10px 40px rgba(0,0,0,.12);" +
-    "transform:translateY(105%);transition:transform .32s cubic-bezier(.32,.72,0,1);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}" +
+    /* 34.3: прямые углы, плотный фон (без размытия), плавное появление */
+    ".pgkb{position:fixed;z-index:2147483000;left:0;right:0;bottom:0;padding:6px 3px calc(env(safe-area-inset-bottom,0px) + 6px);border-radius:0;" +
+    "background:var(--pgkb-bg);box-shadow:0 -.5px 0 var(--pgkb-line);" +
+    "transform:translateY(105%);transition:transform .38s cubic-bezier(.32,.72,0,1);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}" +
     ".pgkb[hidden]{display:none}.pgkb.on{transform:none}" +
     ".pgkb-top{display:flex;justify-content:space-between;align-items:center;padding:0 5px 6px;gap:8px}" +
     ".pgkb button{-webkit-appearance:none;appearance:none;border:0;margin:0;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}" +
     ".pgkb .pgkb-t{height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--pgkb-mu);background:transparent}" +
     ".pgkb .pgkb-done{background:var(--pgkb-fill);color:var(--pgkb-ac);font-weight:700}" +
     ".pgkb-r{display:flex;justify-content:center;gap:5px;margin-bottom:8px;padding:0 2px}.pgkb-r:last-child{margin-bottom:0}" +
-    ".pgkb .pgkb-k{flex:1 1 0;min-width:0;height:44px;padding:0;border-radius:10px;display:grid;place-items:center;background:var(--pgkb-key);color:var(--pgkb-ink);box-shadow:0 1px 0 var(--pgkb-keysh);font-size:21px;line-height:1;transition:transform .08s,background .08s}" +
+    ".pgkb .pgkb-k{flex:1 1 0;min-width:0;height:44px;padding:0;border-radius:7px;display:grid;place-items:center;background:var(--pgkb-key);color:var(--pgkb-ink);box-shadow:0 1px 0 var(--pgkb-keysh);font-size:21px;line-height:1;transition:background-color .16s ease,color .16s ease}" +
     ".pgkb-r.kz4 .pgkb-k{height:40px;font-size:19px}" +
     ".pgkb .pgkb-k.sp{flex:1.45 1 0;background:var(--pgkb-key2);font-size:15px;font-weight:600}" +
     ".pgkb .pgkb-k.sp.w{flex:2.2 1 0}.pgkb .pgkb-k.space{flex:5 1 0}" +
     ".pgkb .pgkb-k.go,.pgkb .pgkb-k.act{background:var(--pgkb-ac);color:var(--pgkb-on)}" +
-    ".pgkb .pgkb-k.down{background:var(--pgkb-ac);color:var(--pgkb-on);transform:scale(1.14) translateY(-3px)}" +
+    /* нажатие: клавиша мягко подсвечивается, без «прыжка» */
+    ".pgkb .pgkb-k.down{background:var(--pgkb-down);color:var(--pgkb-ink);transition-duration:.04s}" +
     ".pgkb .pgkb-k.alt{background:var(--pgkb-alt);color:#fff;font-weight:600;transform:scale(1.4) translateY(-16px);position:relative;z-index:2}" +
     ".pgkb-num{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:420px;margin:0 auto;padding:0 6px}.pgkb-num .pgkb-k{height:52px;font-size:25px}" +
     /* сайт: цвета PetGo, матовое стекло */
-    ".pgkb--site{--pgkb-bg:rgba(251,249,232,.82);--pgkb-line:rgba(2,76,70,.12);--pgkb-key:rgba(255,255,255,.94);--pgkb-key2:rgba(2,76,70,.17);--pgkb-keysh:rgba(2,76,70,.3);--pgkb-ink:#024C46;--pgkb-mu:rgba(2,76,70,.65);--pgkb-fill:rgba(2,76,70,.1);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C}" +
+    ".pgkb--site{--pgkb-bg:#E9E7D8;--pgkb-line:rgba(2,76,70,.14);--pgkb-key:#FFFEF8;--pgkb-key2:#CFCDBC;--pgkb-keysh:rgba(2,76,70,.28);--pgkb-ink:#024C46;--pgkb-mu:rgba(2,76,70,.65);--pgkb-fill:rgba(2,76,70,.1);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C;--pgkb-down:#D6D4C3}" +
+    /* сайт в тёмной теме (кабинет клиента) — тёмная клавиатура */
+    ".pgk-dark .pgkb--site{--pgkb-bg:#1C1C1E;--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#4A4A4D;--pgkb-key2:#2E2E31;--pgkb-keysh:rgba(0,0,0,.6);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.6);--pgkb-fill:rgba(255,255,255,.12);--pgkb-ac:#0E7A64;--pgkb-on:#fff;--pgkb-alt:#F0B04D;--pgkb-down:#6A6A6E}" +
+    ".pgk-dark .pgkb--site .pgkb-done{color:#4CC38A}" +
     /* приложение: светлая и тёмная темы приложения */
-    ".pgkb--app{--pgkb-bg:rgba(209,212,217,.86);--pgkb-line:rgba(0,0,0,.08);--pgkb-key:#fff;--pgkb-key2:rgba(171,177,186,.9);--pgkb-keysh:rgba(0,0,0,.3);--pgkb-ink:#000;--pgkb-mu:rgba(60,60,67,.7);--pgkb-fill:rgba(13,124,109,.12);--pgkb-ac:var(--ac,#0d7c6d);--pgkb-on:#fff;--pgkb-alt:#ff9f0a}" +
-    ":root.dark .pgkb--app{--pgkb-bg:rgba(43,43,46,.88);--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#6b6b6e;--pgkb-key2:#47474a;--pgkb-keysh:rgba(0,0,0,.5);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.65);--pgkb-fill:rgba(63,199,174,.18);--pgkb-ac:var(--acb,#12917b);--pgkb-on:#fff}" +
-    ":root.dark .pgkb--app .pgkb-done{color:var(--ac,#3fc7ae)}" +
+    ".pgkb--app{--pgkb-down:#B4B8BF;--pgkb-bg:#D1D4D9;--pgkb-line:rgba(0,0,0,.08);--pgkb-key:#fff;--pgkb-key2:rgba(171,177,186,.9);--pgkb-keysh:rgba(0,0,0,.3);--pgkb-ink:#000;--pgkb-mu:rgba(60,60,67,.7);--pgkb-fill:rgba(13,124,109,.12);--pgkb-ac:var(--ac,#0d7c6d);--pgkb-on:#fff;--pgkb-alt:#ff9f0a}" +
+    ":root.dark .pgkb--app{--pgkb-down:#8A8A8E;--pgkb-bg:#2B2B2E;--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#6b6b6e;--pgkb-key2:#47474a;--pgkb-keysh:rgba(0,0,0,.5);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.65);--pgkb-fill:rgba(61,190,139,.18);--pgkb-ac:var(--acb,#0E7A64);--pgkb-on:#fff}" +
+    ":root.dark .pgkb--app .pgkb-done{color:var(--ac,#3DBE8B)}" +
     "@media (min-width:700px){.pgkb .pgkb-k{height:50px}.pgkb-num .pgkb-k{height:56px}}" +
     "@media (prefers-reduced-motion:reduce){.pgkb{transition:none}.pgkb .pgkb-k.down,.pgkb .pgkb-k.alt{transform:none}}";
 
@@ -113,8 +118,8 @@
       el.innerHTML = h;
       measure();
     }
-    function measure() {
-      var hgt = el.hidden ? 0 : el.offsetHeight;
+    function measure(zero) {
+      var hgt = (zero || el.hidden) ? 0 : el.offsetHeight;
       W.PGKB_H = hgt;
       doc.documentElement.style.setProperty("--pgkb", hgt + "px");
       if (o.layer) o.layer.style.setProperty("--kb", hgt + "px");
@@ -227,23 +232,27 @@
       cur = f;
       mode = isNum(f) ? "num" : (f.type === "email" || f.type === "url" ? "en" : lang);
       shift = caps();
+      clearTimeout(hideT);
       el.hidden = false;
       doc.documentElement.classList.add("pgkb-open");
       if (o.layer) o.layer.classList.add("kb-open");
       render();
       requestAnimationFrame(function () { el.classList.add("on"); });
-      setTimeout(function () { if (cur === f && f.scrollIntoView) f.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); }, 140);
+      setTimeout(function () { if (cur === f && f.scrollIntoView && !f.hasAttribute("data-kb-send")) f.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); }, 140);
       if (f.type === "tel" && f.value === "" && o.telPrefix !== false) { f.value = "+7 "; fire(f); }
     }
+    /* 34.3: клавиатура уезжает вниз плавно (как появляется), страница и листы опускаются вместе с ней */
+    var hideT = 0;
     function hide() {
-      if (el.hidden) return;
+      if (el.hidden || !el.classList.contains("on")) return;
       stopHold();
       cur = null;
       el.classList.remove("on");
-      el.hidden = true;
       doc.documentElement.classList.remove("pgkb-open");
       if (o.layer) { o.layer.classList.remove("kb-open"); o.layer.style.removeProperty("--kb"); }
-      measure();
+      measure(true);
+      clearTimeout(hideT);
+      hideT = setTimeout(function () { if (!el.classList.contains("on")) el.hidden = true; }, reduce ? 0 : 400);
     }
     /* пока палец на экране, клавиатуру не прячем: иначе всё сдвигается и нажатие (например, на «Отправить»)
        попадает мимо кнопки. Прячем, когда палец отпущен и нажатие уже сработало */
@@ -262,7 +271,7 @@
       if (pressing) { later = true; return; }
       setTimeout(check, 80);
     });
-    W.addEventListener("resize", function () { if (!el.hidden) measure(); });
+    W.addEventListener("resize", function () { if (el.classList.contains("on")) measure(); });
     /* новые поля (страницы и окна приложения загружаются без перезагрузки) */
     if (W.MutationObserver) {
       var t = 0;
@@ -275,6 +284,7 @@
     }
     scan();
     api.hide = hide; api.on = true; api.scan = scan; api.el = el;
+    W.PGKB_HIDE = function () { var a = doc.activeElement; hide(); if (a && a !== doc.body && a.blur && ok(a)) a.blur(); };
     return api;
   }
   W.PGKB = { init: init };

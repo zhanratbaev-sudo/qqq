@@ -18,7 +18,7 @@ color-scheme:light}
 :root.dark{
 --bg:#000;--cd:#1c1c1e;--cd2:#2c2c2e;--cell:#2c2c2e;--so:rgba(118,118,128,.24);--in:rgba(118,118,128,.24);--ln:rgba(84,84,88,.48);--ln2:rgba(84,84,88,.72);
 --tx:#fff;--mu:rgba(235,235,245,.6);--mu2:rgba(235,235,245,.3);
---ac:#3fc7ae;--ac2:#62d6c0;--acs:rgba(63,199,174,.16);--on:#00221d;--acb:#12917b;
+--ac:#3DBE8B;--ac2:#5ACB9C;--acs:rgba(61,190,139,.16);--on:#03241a;--acb:#0E7A64;
 --ok:#30d158;--okf:#30d158;--oks:rgba(48,209,88,.16);--wn:#ff9f0a;--wns:rgba(255,159,10,.17);--er:#ff453a;--erf:#ff453a;--ers:rgba(255,69,58,.16);--in2:#409cff;--ins:rgba(10,132,255,.18);
 --sh2:0 12px 44px rgba(0,0,0,.55);
 --g-rgb:30,30,32;--g-a:calc(.93 - .3 * var(--gt));
@@ -904,7 +904,7 @@ html.pgkb-open .pgc-box{max-height:calc(100vh - var(--pgkb,0px) - var(--sat) - 2
 .pgi-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .pgi-btns .pgc-btn{min-height:48px;font-size:16px}.pgi-btns .pgw-i{width:20px;height:20px}
 .pgi-btns [data-share]:not([hidden]){grid-column:1/-1}
-.pgc .pgi-wa{background:#25D366;color:#fff}
+.pgc .pgi-wa{background:var(--acb);color:#fff}
 .pgc-rqact form{display:block}.pgc-rqact form .pgc-btn{width:100%}
 .pgc-cltag{margin-left:auto;flex:none;height:22px;font-size:12px}
 
@@ -981,7 +981,7 @@ html{touch-action:pan-x pan-y}
 .pgi-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;background:var(--so)}
 .pgi-url{flex:1;min-width:0;font-size:14px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
 .pgi-btns{margin-top:0}
-.pgc .pgi-wa{background:#25D366;color:#fff}
+.pgc .pgi-wa{background:var(--acb);color:#fff}
 .pgc .pgi-wa .pgw-i{width:22px;height:22px}
 /* форма питомца: аккуратнее в окне, кнопка «Сохранить» прилипает к низу окна */
 .pgf .pgf-sec:last-of-type{margin-bottom:84px}
@@ -1033,3 +1033,17 @@ html.pgkb-open .pgc-modal.pgc-full .pgf .pgf-go{visibility:hidden}
 html:has(.pgc-ov.open) .pgt-pill,html:has(.pgc-chat.open) .pgt-pill{top:auto;bottom:calc(var(--sab) + 12px)}
 /* 34.2: длинные списки (заказы, питомцы, клиенты) рисуются только на экране — приложение не тормозит */
 .pgc-in>.pgc-ord:not([open]),.pgc-in>.pgc-oc{content-visibility:auto;contain-intrinsic-size:auto 76px}
+/* 34.3: плавные переходы — окна, страницы и чат двигаются вместе с клавиатурой PetGo (та же скорость и кривая) */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.22s;animation-timing-function:ease}
+body.pgc-body{transition:padding-bottom .38s cubic-bezier(.32,.72,0,1)}
+.pgc-modal{transition:opacity .3s,visibility 0s .5s,padding-bottom .38s cubic-bezier(.32,.72,0,1)}
+.pgc-modal.open,html.pgkb-open .pgc-modal,html.pgkb-open .pgc-sheet{transition:opacity .3s,visibility 0s,padding-bottom .38s cubic-bezier(.32,.72,0,1)}
+.pgc-box{transition:transform .3s var(--e),max-height .38s cubic-bezier(.32,.72,0,1)}
+.pgc-modal.open .pgc-box{transition:transform .5s var(--sp2),max-height .38s cubic-bezier(.32,.72,0,1)}
+.pgc-ov,.pgc-chat{transition:transform .35s var(--e),visibility 0s .35s,height .38s cubic-bezier(.32,.72,0,1),top .38s cubic-bezier(.32,.72,0,1)}
+.pgc-ov.open,.pgc-chat.open{transition:transform .45s var(--sp2),visibility 0s,height .38s cubic-bezier(.32,.72,0,1),top .38s cubic-bezier(.32,.72,0,1)}
+.pgc-ov.drag,.pgc-chat.drag,.pgc-cth.drag{transition:none}
+.pgc-modal.pgc-full .pgc-mb{transition:padding-bottom .38s cubic-bezier(.32,.72,0,1)}
+.pgc .pgc-btn:active,.pgc .pgc-chip:active,.pgc .pgc-iconb:active{transition-duration:.12s}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}body.pgc-body,.pgc-modal,.pgc-box,.pgc-ov,.pgc-chat{transition:none}}

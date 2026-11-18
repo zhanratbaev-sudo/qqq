@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: PetGo Кабинет
- * Description: Сайт PetGo (Главная, Услуги, Няни, Отзывы, Кабинет — без шорткодов, стиль iPhone, матовое Liquid Glass) и приложение для сотрудников (PWA): заказы, календарь, заявки с сайта, питомцы, сотрудники, отзывы, чаты, уведомления и «Настройки сайта». Помощник (ИИ) — отдельный плагин «PetGo ИИ».
- * Version: 34.2.0
+ * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
+ * Version: 34.3.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.2.0');
+define('PETGO_VER', '34.3.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -897,7 +897,9 @@ function petgo_h_staff_save() {
     } else {
         delete_user_meta($u->ID, 'petgo_disabled');
     }
-    petgo_staff_site_save($u->ID);
+    if (function_exists('petgo_staff_site_save')) {
+        petgo_staff_site_save($u->ID);
+    }
     petgo_flash(petgo_t('ok_saved'));
     petgo_back('staff');
 }
@@ -1433,7 +1435,7 @@ function petgo_modal_staff() {
         if (petgo_is_owner()) {
             $e .= petgo_role_select(petgo_role_of($eu));
         }
-        $e .= petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . petgo_staff_site_fields($eu) . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
+        $e .= petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . (function_exists('petgo_staff_site_fields') ? petgo_staff_site_fields($eu) : '') . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
         echo petgo_modal('pgc-m-staffe', $eu->display_name . ' · ' . $eu->user_login, $e, true);
     }
 }
@@ -1728,23 +1730,16 @@ require_once __DIR__ . '/includes/chat.php';
 require_once __DIR__ . '/includes/order.php';
 require_once __DIR__ . '/includes/security.php';
 require_once __DIR__ . '/includes/ui.php';
-require_once __DIR__ . '/includes/formeditor.php';
 require_once __DIR__ . '/includes/reviews.php';
 require_once __DIR__ . '/includes/journal.php';
 require_once __DIR__ . '/includes/calendar.php';
 require_once __DIR__ . '/includes/pwa.php';
-require_once __DIR__ . '/includes/site.php';
-require_once __DIR__ . '/includes/site-i18n.php';
-require_once __DIR__ . '/includes/site-nannies.php';
 require_once __DIR__ . '/includes/site-guard.php';
-require_once __DIR__ . '/includes/site-admin.php';
-require_once __DIR__ . '/includes/lead.php';
-require_once __DIR__ . '/includes/front.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/people.php';
 require_once __DIR__ . '/includes/petform.php';
-require_once __DIR__ . '/includes/client.php';
-require_once __DIR__ . '/includes/client-plus.php';
 require_once __DIR__ . '/includes/track.php';
+/* 34.3: сайт и кабинет клиента — отдельные плагины «PetGo Сайт» и «PetGo Клиент» (их можно обновлять по одному) */
 require_once __DIR__ . '/includes/i18n-v34.php';
 
 /* ============================================================

@@ -235,7 +235,7 @@ function petgo_ext_page($pg) {
         petgo_admin_reviews();
     } elseif ($pg === 'log' && petgo_can('admin')) {
         petgo_page_log();
-    } elseif ($pg === 'site' && petgo_can('admin')) {
+    } elseif ($pg === 'site' && petgo_can('admin') && function_exists('petgo_page_site')) {
         petgo_page_site();
     } else {
         /* страницы от других плагинов: выводят себя и возвращают true */
