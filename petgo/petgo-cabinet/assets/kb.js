@@ -15,23 +15,23 @@
   var NAMES = { ru: "РУ", kz: "ҚАЗ", en: "EN" };
   var ALT = { "е": "ё", "ь": "ъ", "а": "ә", "и": "і", "н": "ң", "г": "ғ", "у": "ұү", "к": "қ", "о": "ө", "х": "һ", "e": "é", "a": "á" };
   var CSS =
-    /* 34.3: прямые углы, плотный фон (без размытия), плавное появление */
+    /* 34.4: прямые углы, плотный фон; движение по правилам UX-анимации: появляется 280 мс (ease-out), уходит 200 мс (ease-in) */
     ".pgkb{position:fixed;z-index:2147483000;left:0;right:0;bottom:0;padding:6px 3px calc(env(safe-area-inset-bottom,0px) + 6px);border-radius:0;" +
     "background:var(--pgkb-bg);box-shadow:0 -.5px 0 var(--pgkb-line);" +
-    "transform:translateY(105%);transition:transform .38s cubic-bezier(.32,.72,0,1);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}" +
-    ".pgkb[hidden]{display:none}.pgkb.on{transform:none}" +
+    "transform:translateY(105%);transition:transform 200ms cubic-bezier(.55,0,1,.45);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif}" +
+    ".pgkb[hidden]{display:none}.pgkb.on{transform:none;transition:transform 280ms cubic-bezier(.32,.72,0,1)}" +
     ".pgkb-top{display:flex;justify-content:space-between;align-items:center;padding:0 5px 6px;gap:8px}" +
     ".pgkb button{-webkit-appearance:none;appearance:none;border:0;margin:0;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}" +
     ".pgkb .pgkb-t{height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:500;color:var(--pgkb-mu);background:transparent}" +
     ".pgkb .pgkb-done{background:var(--pgkb-fill);color:var(--pgkb-ac);font-weight:700}" +
     ".pgkb-r{display:flex;justify-content:center;gap:5px;margin-bottom:8px;padding:0 2px}.pgkb-r:last-child{margin-bottom:0}" +
-    ".pgkb .pgkb-k{flex:1 1 0;min-width:0;height:44px;padding:0;border-radius:7px;display:grid;place-items:center;background:var(--pgkb-key);color:var(--pgkb-ink);box-shadow:0 1px 0 var(--pgkb-keysh);font-size:21px;line-height:1;transition:background-color .16s ease,color .16s ease}" +
+    ".pgkb .pgkb-k{flex:1 1 0;min-width:0;height:44px;padding:0;border-radius:7px;display:grid;place-items:center;background:var(--pgkb-key);color:var(--pgkb-ink);box-shadow:0 1px 0 var(--pgkb-keysh);font-size:21px;line-height:1;transition:background-color 120ms ease,color 120ms ease}" +
     ".pgkb-r.kz4 .pgkb-k{height:40px;font-size:19px}" +
     ".pgkb .pgkb-k.sp{flex:1.45 1 0;background:var(--pgkb-key2);font-size:15px;font-weight:600}" +
     ".pgkb .pgkb-k.sp.w{flex:2.2 1 0}.pgkb .pgkb-k.space{flex:5 1 0}" +
     ".pgkb .pgkb-k.go,.pgkb .pgkb-k.act{background:var(--pgkb-ac);color:var(--pgkb-on)}" +
     /* нажатие: клавиша мягко подсвечивается, без «прыжка» */
-    ".pgkb .pgkb-k.down{background:var(--pgkb-down);color:var(--pgkb-ink);transition-duration:.04s}" +
+    ".pgkb .pgkb-k.down{background:var(--pgkb-down);color:var(--pgkb-ink);transition-duration:0s}" +
     ".pgkb .pgkb-k.alt{background:var(--pgkb-alt);color:#fff;font-weight:600;transform:scale(1.4) translateY(-16px);position:relative;z-index:2}" +
     ".pgkb-num{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:420px;margin:0 auto;padding:0 6px}.pgkb-num .pgkb-k{height:52px;font-size:25px}" +
     /* сайт: цвета PetGo, матовое стекло */
@@ -118,13 +118,24 @@
       el.innerHTML = h;
       measure();
     }
+    var padT = 0;
     function measure(zero) {
       var hgt = (zero || el.hidden) ? 0 : el.offsetHeight;
       W.PGKB_H = hgt;
       doc.documentElement.style.setProperty("--pgkb", hgt + "px");
       if (o.layer) o.layer.style.setProperty("--kb", hgt + "px");
       var p = o.pad ? o.pad() : null;
-      if (p) p.style.paddingBottom = hgt ? hgt + "px" : "";
+      if (p) {
+        clearTimeout(padT);
+        if (hgt) p.style.paddingBottom = hgt + "px";
+        else if (p.style.paddingBottom) {
+          /* клавиатура уходит: если страница была прокручена в её место — плавно возвращаем, отступ убираем после (без скачка) */
+          var se = doc.scrollingElement || doc.documentElement, cur = parseFloat(p.style.paddingBottom) || 0;
+          var over = se.scrollTop + W.innerHeight - (se.scrollHeight - cur);
+          if (over > 1) W.scrollBy({ top: -over, behavior: reduce ? "auto" : "smooth" });
+          padT = setTimeout(function () { if (!el.classList.contains("on")) p.style.paddingBottom = ""; }, reduce ? 0 : 220);
+        }
+      }
       try { W.dispatchEvent(new Event("pgkb")); } catch (e) {}
     }
     function fire(f) { f.dispatchEvent(new Event("input", { bubbles: true })); }
@@ -252,7 +263,7 @@
       if (o.layer) { o.layer.classList.remove("kb-open"); o.layer.style.removeProperty("--kb"); }
       measure(true);
       clearTimeout(hideT);
-      hideT = setTimeout(function () { if (!el.classList.contains("on")) el.hidden = true; }, reduce ? 0 : 400);
+      hideT = setTimeout(function () { if (!el.classList.contains("on")) el.hidden = true; }, reduce ? 0 : 220);
     }
     /* пока палец на экране, клавиатуру не прячем: иначе всё сдвигается и нажатие (например, на «Отправить»)
        попадает мимо кнопки. Прячем, когда палец отпущен и нажатие уже сработало */

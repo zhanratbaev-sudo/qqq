@@ -1,4 +1,4 @@
-/* PetGo Клиент — кабинет клиента (34.3).
+/* PetGo Клиент — кабинет клиента (34.4). Движение — по правилам UX-анимации (.claude/skills/charles-ux-animation).
    Вкладки внизу на всю ширину, листы поверх страницы, заказ с колёсами времени (часы и минуты),
    чат всегда прижат вниз и новые сообщения появляются плавно, карта прогулки, тёмная тема.
    Общие помощники (уменьшение фото, маска телефона, анкета) берёт у «PetGo Сайт» — window.PGForm. */
@@ -42,7 +42,10 @@
   /* ---------- тема: авто / светлая / тёмная ---------- */
   function themeGet() { try { return localStorage.getItem("pgk_theme") || "auto"; } catch (e) { return "auto"; } }
   var mq = W.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
-  function themeApply() {
+  function themeApply(user) {
+    var root = D.documentElement;
+    /* цвета меняются одним кадром: на время смены переходы выключены */
+    if (user) { root.classList.add("pgk-theming"); requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.remove("pgk-theming"); }); }); }
     var t = themeGet(), on = !!D.getElementById("pgk") && (t === "dark" || (t === "auto" && !!(mq && mq.matches)));
     D.documentElement.classList.toggle("pgk-dark", on);
     var m = $('meta[name="theme-color"]'); if (m) m.setAttribute("content", on ? "#000000" : "#F2F0E3");
@@ -81,6 +84,7 @@
     if (stack.indexOf(s) > -1) return s;
     if (W.PGCloseAI) W.PGCloseAI();
     s.style.zIndex = String(9996 + stack.length);
+    s.inert = false;
     s.hidden = false; void s.offsetWidth; s.classList.add("on");
     D.documentElement.classList.add("pgk-lock");
     stack.push(s);
@@ -91,11 +95,11 @@
     do {
       var s = stack.pop();
       if (!s) break;
-      s.classList.remove("on");
+      s.classList.remove("on"); s.inert = true;
       var inn = $(".pgk-sin", s); if (inn) inn.style.transform = "";
       if (s.id === "pgk-chat") { CL.chatOpen = false; clearInterval(CL.chatT); }
       if (s.id === "pgk-review" && CL.rvAuto) { var o = $("[data-k-rvform]", s); if (o && o.elements.order.value && !CL.rvSent) api("rv_skip", { order: o.elements.order.value }).catch(function () {}); CL.rvAuto = false; }
-      (function (x) { setTimeout(function () { if (!x.classList.contains("on")) x.hidden = true; }, reduce ? 0 : 460); })(s);
+      (function (x) { setTimeout(function () { if (!x.classList.contains("on")) x.hidden = true; }, reduce ? 0 : 230); })(s);
     } while (all && stack.length);
     if (!stack.length) D.documentElement.classList.remove("pgk-lock");
   }
@@ -103,23 +107,49 @@
   function dragSheets(root) {
     qa("[data-k-drag]", root).forEach(function (h) {
       if (h._d) return; h._d = 1;
-      var y0 = 0, dy = 0, inn = h.closest(".pgk-sin"), drag = false;
-      h.addEventListener("touchstart", function (e) { if (e.target.closest("button")) return; drag = true; y0 = e.touches[0].clientY; dy = 0; inn.style.transition = "none"; }, { passive: true });
-      h.addEventListener("touchmove", function (e) { if (!drag) return; dy = Math.max(0, e.touches[0].clientY - y0); inn.style.transform = "translateY(" + dy + "px)"; }, { passive: true });
-      h.addEventListener("touchend", function () { if (!drag) return; drag = false; inn.style.transition = ""; if (dy > 110) kClose(); else inn.style.transform = ""; });
+      var y0 = 0, dy = 0, t0 = 0, ly = 0, lt = 0, v = 0, inn = h.closest(".pgk-sin"), sh = h.closest(".pgk-sheet"), drag = false;
+      h.addEventListener("touchstart", function (e) { if (e.target.closest("button")) return; drag = true; y0 = ly = e.touches[0].clientY; t0 = lt = Date.now(); dy = 0; v = 0; sh.classList.add("drag"); }, { passive: true });
+      h.addEventListener("touchmove", function (e) {
+        if (!drag) return;
+        var y = e.touches[0].clientY, now = Date.now();
+        if (now > lt) { v = (y - ly) / (now - lt); ly = y; lt = now; }
+        dy = y - y0;
+        /* вверх — с сопротивлением (лист упирается), вниз — ровно за пальцем */
+        var up = dy < 0 ? -12 * (-dy / (-dy + 150)) : dy;
+        inn.style.transform = "translateY(" + up + "px)";
+      }, { passive: true });
+      h.addEventListener("touchend", function () { if (!drag) return; drag = false; sh.classList.remove("drag"); if (dy > 110 || (dy > 8 && v > 0.1)) kClose(); else inn.style.transform = ""; });
     });
   }
 
   /* ---------- формы ---------- */
-  function formErr(f, msg, field) {
+  /* ошибка после отправки: сообщение рядом, поле с ошибкой коротко «качает головой» */
+  function shake(el) { if (!el || reduce) return; el.classList.remove("pgk-shake"); void el.offsetWidth; el.classList.add("pgk-shake"); setTimeout(function () { el.classList.remove("pgk-shake"); }, 400); }
+  function formErr(f, msg, field, box) {
     var er = $(".pgk-err", f);
     qa(".bad", f).forEach(function (x) { x.classList.remove("bad"); });
     if (er) { er.textContent = msg; er.hidden = !msg; }
     var el = field && f.elements[field];
-    if (el && el.closest) { var b = el.closest(".pgk-f") || el.closest(".pgk-check"); if (b) b.classList.add("bad"); }
+    if (el && el.closest) {
+      var b = el.closest(".pgk-f") || el.closest(".pgk-check");
+      if (b) { b.classList.add("bad"); shake(b); }
+      if (el.focus && el.type !== "checkbox") try { el.focus({ preventScroll: true }); } catch (x) {}
+    } else if (box) shake(box);
   }
-  function busyBtn(f, on) { var b = $(".pgk-go", f); if (b) { b.classList.toggle("busy", on); b.disabled = on; } }
-  function netErr(f) { return function () { busyBtn(f, false); formErr(f, T("Не получилось — проверьте интернет.")); }; }
+  function busyBtn(f, on) {
+    var b = $(".pgk-go", f);
+    if (!b) return;
+    clearTimeout(b._bt);
+    if (on) { b.disabled = true; b._at = 0; b._bt = setTimeout(function () { b.classList.add("busy"); b._at = Date.now(); }, 300); }
+    else { b.classList.remove("busy"); b.disabled = false; b._at = 0; }
+  }
+  /* ответ пришёл: если крутилка уже видна — держим её минимум 500 мс, потом показываем результат */
+  function busyEnd(f, fn) {
+    var b = $(".pgk-go", f), wait = b && b._at ? Math.max(0, 500 - (Date.now() - b._at)) : 0;
+    if (b) clearTimeout(b._bt);
+    setTimeout(function () { busyBtn(f, false); fn(); }, wait);
+  }
+  function netErr(f) { return function () { busyEnd(f, function () { formErr(f, T("Не получилось — проверьте интернет.")); }); }; }
   D.addEventListener("submit", function (e) {
     var f = e.target;
     if (!f.matches) return;
@@ -130,10 +160,11 @@
       var fd = new FormData(f);
       fd.append("action", f.getAttribute("data-op"));
       fetch(C.ajax || "/wp-admin/admin-ajax.php", { method: "POST", body: fd, credentials: "same-origin" }).then(json).then(function (j) {
-        busyBtn(f, false);
-        if (!j.ok) { formErr(f, j.msg || "", j.field); return; }
-        if (j.go) { location.href = j.go; return; }
-        if (j.wa) { var dn = f.parentNode.querySelector(".pgk-done"); if (dn) { f.hidden = true; dn.hidden = false; var w = $("[data-wa]", dn); if (w) w.href = j.wa; } }
+        if (j.ok && j.go) { location.href = j.go; return; }
+        busyEnd(f, function () {
+          if (!j.ok) { formErr(f, j.msg || "", j.field, $(".pgk-list", f)); return; }
+          if (j.wa) { var dn = f.parentNode.querySelector(".pgk-done"); if (dn) { f.hidden = true; dn.hidden = false; var w = $("[data-wa]", dn); if (w) w.href = j.wa; } }
+        });
       }).catch(netErr(f));
       return;
     }
@@ -144,11 +175,12 @@
       var d = {};
       qa("input,textarea,select", f).forEach(function (x) { if (x.name) d[x.name] = x.value; });
       api(f.getAttribute("data-k-op"), d).then(function (j) {
-        busyBtn(f, false);
-        if (!j.ok) { formErr(f, j.msg || "", j.field); return; }
-        if (j.go) { location.href = j.go; return; }
-        toast(j.msg || T("Сохранено"));
-        if (f.getAttribute("data-k-op") === "pass") { f.reset(); var dt = f.closest("details"); if (dt) dt.open = false; }
+        if (j.ok && j.go) { location.href = j.go; return; }
+        busyEnd(f, function () {
+          if (!j.ok) { formErr(f, j.msg || "", j.field, $(".pgk-list", f)); return; }
+          toast(j.msg || T("Сохранено"));
+          if (f.getAttribute("data-k-op") === "pass") { f.reset(); var dt = f.closest("details"); if (dt) dt.open = false; }
+        });
       }).catch(netErr(f));
       return;
     }
@@ -156,8 +188,7 @@
       e.preventDefault(); kbHide();
       formErr(f, ""); busyBtn(f, true);
       var r = $('input[name="rating"]:checked', f), rate = +(r ? r.value : 5);
-      api("review", { order: f.elements.order.value, rating: rate, text: f.elements.text.value }).then(function (j) {
-        busyBtn(f, false);
+      api("review", { order: f.elements.order.value, rating: rate, text: f.elements.text.value }).then(function (j) { busyEnd(f, function () {
         if (!j.ok) { formErr(f, j.msg || ""); return; }
         qa('[data-k-review="' + f.elements.order.value + '"]').forEach(function (b) {
           if (b.closest(".pgk-n")) { b.remove(); return; }
@@ -167,7 +198,7 @@
           if (w) w.insertAdjacentHTML("beforebegin", '<div class="pgk-myrv">' + st + "<small>" + esc(T("Ваш отзыв")) + "</small></div>");
         });
         CL.rvSent = true; f.reset(); kClose(); CL.rvSent = false; toast(j.msg || T("Отправлено"));
-      }).catch(netErr(f));
+      }); }).catch(netErr(f));
       return;
     }
     if (f.matches("[data-k-send]")) { e.preventDefault(); sendMsg(f); }
@@ -179,9 +210,7 @@
     if (!sg) return;
     qa("[data-auth]", sg).forEach(function (b) { var on = b.getAttribute("data-auth") === to; b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false"); });
     sgMove(sg);
-    qa("[data-auth-p]", box).forEach(function (p) { p.classList.toggle("on", p.getAttribute("data-auth-p") === to); });
-    var pages = $(".pgk-auth-pages", box), cur = $('[data-auth-p="' + to + '"]', box);
-    if (pages && cur) pages.style.height = cur.offsetHeight + "px";
+    qa("[data-auth-p]", box).forEach(function (p) { var on = p.getAttribute("data-auth-p") === to; p.classList.toggle("on", on); p.inert = !on; });
   }
 
   /* ---------- вкладки ---------- */
@@ -415,16 +444,15 @@
     var f = e.target;
     if (!f.matches || !f.matches("[data-k-bookform]") || !K) return;
     e.preventDefault(); kbHide();
-    if (!BK.pet) { formErr(f, T("Выберите питомца.")); return; }
-    if (!BK.date) { formErr(f, T("Выберите день и время.")); return; }
+    if (!BK.pet) { formErr(f, T("Выберите питомца."), "", bpart("pet")); return; }
+    if (!BK.date) { formErr(f, T("Выберите день и время."), "", bpart("date")); return; }
     formErr(f, ""); busyBtn(f, true);
-    api("book", { pet: BK.pet, kind: BK.kind, date: BK.date, time: pad(BK.h) + ":" + pad(BK.m), dur: BK.dur, nanny: BK.nanny, note: f.elements.note.value }).then(function (j) {
-      busyBtn(f, false);
-      if (!j.ok) { formErr(f, j.msg || ""); if (j.busy) bkBusy(); return; }
+    api("book", { pet: BK.pet, kind: BK.kind, date: BK.date, time: pad(BK.h) + ":" + pad(BK.m), dur: BK.dur, nanny: BK.nanny, note: f.elements.note.value }).then(function (j) { busyEnd(f, function () {
+      if (!j.ok) { formErr(f, j.msg || "", "", j.busy ? bpart("nanny") : $('[data-b="time"]', f)); if (j.busy) bkBusy(); return; }
       f.hidden = true; $(".pgk-done", f.parentNode).hidden = false; f.reset(); BK.touched = false;
       var sc = f.closest(".pgk-sc"); if (sc) sc.scrollTop = 0;
       CL.booked = true;
-    }).catch(netErr(f));
+    }); }).catch(netErr(f));
   });
 
   /* ============================================================
@@ -434,13 +462,13 @@
   function msgsIn() { return $("[data-k-msgs-in]"); }
   function nearBottom() { var b = msgsBox(); return !b || Math.abs(b.scrollTop) < 80; }
   function toBottom(smooth) { var b = msgsBox(); if (b) b.scrollTo({ top: 0, behavior: smooth && !reduce ? "smooth" : "auto" }); }
-  function msgHtml(m, anim) {
-    var cls = anim ? " new" : "";
+  function msgHtml(m, anim, i) {
+    var cls = anim ? " new" : "", st = anim && i ? ' style="animation-delay:' + Math.min(i, 5) * 40 + 'ms"' : "";
     if (m.k === "sys" || m.k === "rv") {
-      return '<div class="pgk-n' + cls + '" data-id="' + m.id + '">' + (m.h ? "<p>" + m.h + "</p>" : "") +
+      return '<div class="pgk-n' + cls + '" data-id="' + m.id + '"' + st + ">" + (m.h ? "<p>" + m.h + "</p>" : "") +
         (m.k === "rv" && m.s ? '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>" : "") + "<small>" + esc(m.tm) + "</small></div>";
     }
-    return '<div class="pgk-m' + (m.me ? " me" : "") + cls + '" data-id="' + m.id + '">' + (!m.me ? '<span class="pgk-m-av">' + (m.av ? '<img src="' + esc(m.av) + '" alt="">' : "<b>" + esc((m.n || "P").charAt(0)) + "</b>") + "</span>" : "") +
+    return '<div class="pgk-m' + (m.me ? " me" : "") + cls + '" data-id="' + m.id + '"' + st + ">" + (!m.me ? '<span class="pgk-m-av">' + (m.av ? '<img src="' + esc(m.av) + '" alt="">' : "<b>" + esc((m.n || "P").charAt(0)) + "</b>") + "</span>" : "") +
       '<div class="pgk-m-b">' + (!m.me && m.n ? "<small>" + esc(m.n) + "</small>" : "") + (m.p ? '<button type="button" class="pg-b pgk-m-ph" data-k-photo="' + esc(m.p) + '"><img src="' + esc(m.p) + '" alt="" loading="lazy"></button>' : "") + (m.h ? "<p>" + m.h + "</p>" : "") + "<time>" + esc(m.tm) + "</time></div></div>";
   }
   function dayLabel(dl) {
@@ -460,7 +488,7 @@
     loading = api("msgs", { after: CL.lastMsg }).then(function (j) {
       loading = null;
       if (!j.ok || !j.msgs || !j.msgs.length) return;
-      var stick = first || nearBottom(), html = "";
+      var stick = first || nearBottom(), html = "", k = 0;
       j.msgs.forEach(function (m) {
         if (m.id <= CL.lastMsg || inn.querySelector('[data-id="' + m.id + '"]')) return;
         CL.lastMsg = Math.max(CL.lastMsg, m.id);
@@ -468,7 +496,7 @@
         var pend = m.me && inn.querySelector(".pgk-m.sending");
         if (pend) { pend.classList.remove("sending"); pend.setAttribute("data-id", m.id); var tm = $("time", pend); if (tm) tm.textContent = m.tm; return; }
         if (m.dl !== CL.day) { CL.day = m.dl; html += '<div class="pgk-day-l' + (first ? "" : " new") + '">' + esc(dayLabel(m.dl)) + "</div>"; }
-        html += msgHtml(m, !first);
+        html += msgHtml(m, !first, k++);
       });
       if (html) {
         var ty = $(".pgk-typing", inn);
@@ -576,7 +604,7 @@
     $("img", lb).src = src; $("span", lb).textContent = cap || "";
     lb.hidden = false; void lb.offsetWidth; lb.classList.add("on");
   }
-  function lbClose() { var lb = $(".pgk-lb.on"); if (lb) { lb.classList.remove("on"); setTimeout(function () { if (!lb.classList.contains("on")) lb.hidden = true; }, 260); } }
+  function lbClose() { var lb = $(".pgk-lb.on"); if (lb) { lb.classList.remove("on"); setTimeout(function () { if (!lb.classList.contains("on")) lb.hidden = true; }, reduce ? 0 : 170); } }
 
   /* ============================================================
      КАРТА: где питомец сейчас, маршрут, все места, фото на карте.
@@ -889,7 +917,7 @@
     if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
     if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }
     if ((b = t.closest("[data-k-post]"))) { e.preventDefault(); postSheet(b); return; }
-    if ((b = t.closest("[data-k-theme]"))) { try { localStorage.setItem("pgk_theme", b.getAttribute("data-k-theme")); } catch (x) {} themeApply(); return; }
+    if ((b = t.closest("[data-k-theme]"))) { try { localStorage.setItem("pgk_theme", b.getAttribute("data-k-theme")); } catch (x) {} themeApply(true); return; }
     if ((b = t.closest("[data-k-mmode]"))) { MapK.mode(b.getAttribute("data-k-mmode")); return; }
     if ((b = t.closest("[data-k-mpet]"))) { MapK.focus(+b.getAttribute("data-k-mpet")); return; }
     if ((b = t.closest("[data-k-mfit]"))) { MapK.fit(); return; }

@@ -88,6 +88,8 @@
         if ("inert" in c) c.inert = d !== 0;
       });
       dots.forEach(function (d, k) { d.classList.toggle("on", k === i); d.classList.toggle("done", k < i); });
+      /* 34.4: полоса прогресса — растёт от последнего значения, с первого шага уже не ноль */
+      var bar = $(".pgw-dots", f); if (bar && dots.length) bar.style.setProperty("--p", String((i + 1) / dots.length));
       if (cnt) cnt.textContent = i + 1;
       f.classList.toggle("first", i === 0);
       f.classList.toggle("last", i === n - 1);
@@ -104,9 +106,13 @@
         var card = el.closest(".pgw-card"), k = cards.indexOf(card);
         if (k > -1 && k !== i) { i = k; layout(); }
         var box = el.closest(".pgw-f") || el.closest(".pgw-consent") || el.closest(".pgw-photo");
-        if (box) box.classList.add("bad");
+        if (box) {
+          box.classList.add("bad");
+          /* поле с ошибкой коротко «качает головой», фокус — туда же */
+          if (!reduce) { box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); setTimeout(function () { box.classList.remove("shake"); }, 400); }
+          if (el.focus && el.type !== "radio" && el.type !== "checkbox" && el.type !== "file") try { el.focus({ preventScroll: true }); } catch (x) {}
+        }
       }
-      if (!reduce) { next.classList.remove("shake"); void next.offsetWidth; next.classList.add("shake"); }
     }
     function check(k) {
       var key = cards[k].getAttribute("data-k");
@@ -262,14 +268,14 @@
     var href = a.href;
     if (reduce) { location.href = href; return; }
     setTimeout(function () { D.documentElement.classList.add("pg-lang-out"); }, 160);
-    setTimeout(function () { location.href = href; }, 520);
+    setTimeout(function () { location.href = href; }, 380);
   });
   (function () {
     var on = false;
     try { on = sessionStorage.getItem("pg_lang_anim") === "1"; sessionStorage.removeItem("pg_lang_anim"); } catch (x) {}
     if (on && !reduce) {
       D.documentElement.classList.add("pg-lang-in");
-      setTimeout(function () { D.documentElement.classList.remove("pg-lang-in"); }, 900);
+      setTimeout(function () { D.documentElement.classList.remove("pg-lang-in"); }, 600);
     }
     W.addEventListener("pageshow", function () { D.documentElement.classList.remove("pg-lang-out"); qa(".pg-lang-to").forEach(function (x) { x.classList.remove("pg-lang-to"); }); langAll(); });
   })();

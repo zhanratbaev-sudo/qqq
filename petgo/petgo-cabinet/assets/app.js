@@ -42,7 +42,9 @@
 
 	/* ---------- тема ---------- */
 	function themePref() { return ls("pgc_theme") || "auto"; }
-	function applyTheme() {
+	function applyTheme(user) {
+		/* 34.4: смена темы — одним кадром, без того чтобы каждый цвет менялся со своей скоростью */
+		if (user) { R.classList.add("pgc-theming"); requestAnimationFrame(function () { requestAnimationFrame(function () { R.classList.remove("pgc-theming"); }); }); }
 		var t = themePref(), d = t === "dark" || (t !== "light" && W.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
 		R.classList.toggle("dark", d);
 		var m = D.querySelector('meta[name="theme-color"]');
@@ -124,9 +126,8 @@
 		qa(".pgc-wa").forEach(function (e) { e.classList.toggle("hot", (+e.getAttribute("data-end")) - n <= 1200); });
 		qa(".pgc-prog").forEach(function (p) {
 			var s = +p.getAttribute("data-s"), en = +p.getAttribute("data-e"), k = Math.max(0, Math.min(1, (n - s) / (en - s)));
-			var f = p.querySelector(".pgc-pf"), d = p.querySelector(".pgc-pd");
-			if (f) f.style.width = (k * 100) + "%";
-			if (d) d.style.left = (k * 100) + "%";
+			/* 34.4: полоса и точка двигаются transform-ом (scaleX и сдвиг), а не шириной и left */
+			p.style.setProperty("--k", k.toFixed(4));
 			p.classList.toggle("late", n > en);
 		});
 	}
@@ -419,7 +420,7 @@
 		var t = e.target, b;
 		if (e.defaultPrevented) return;
 		b = t.closest("[data-theme]");
-		if (b) { ls("pgc_theme", b.getAttribute("data-theme")); applyTheme(); return; }
+		if (b) { ls("pgc_theme", b.getAttribute("data-theme")); applyTheme(true); return; }
 		b = t.closest("[data-lmode]");
 		if (b) {
 			var cm = b.getAttribute("data-lmode") === "code", er = $("pgc-lerr");

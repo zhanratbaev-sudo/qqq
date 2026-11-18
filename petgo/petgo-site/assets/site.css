@@ -7,7 +7,10 @@
 .pg, .pg-layer {
   --bg: #FBF9E8; --green: #024C46; --green2: #013a35; --white: #fff; --muted: #5f8480; --line: #e3e0cc; --star: #f5a623;
   --fill: rgba(2, 76, 70, .07); --fill2: rgba(2, 76, 70, .12); --sep: rgba(2, 76, 70, .12);
-  --pad: 16px; --e: cubic-bezier(.22, 1, .36, 1); --spring: cubic-bezier(.34, 1.36, .64, 1);
+  --pad: 16px; --e: cubic-bezier(.32, .72, 0, 1); --spring: cubic-bezier(.32, .72, 0, 1);
+  /* 34.4: движение по правилам UX-анимации — появляется ease-out, уходит ease-in, двигается на месте ease-in-out */
+  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.55, 0, 1, .45); --ease-io: cubic-bezier(.77, 0, .175, 1);
+  --t-press: 150ms; --t-in: 280ms; --t-out: 200ms; --t-pop-in: 240ms; --t-pop-out: 170ms;
   --sh: 0 1px 2px rgba(2, 76, 70, .04), 0 10px 30px rgba(2, 76, 70, .07);
   /* стекло: матовое — плотный кремовый тон, сильное размытие, светлый ободок */
   --g-rgb: 251, 249, 232; --g-a: .68; --g-blur: 22px;
@@ -810,6 +813,7 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop .6s .15s cubic-bezier(.34,
    ============================================================ */
 html.pg-html { touch-action: pan-x pan-y; }
 .pgw {
+  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.55, 0, 1, .45); --ease-io: cubic-bezier(.77, 0, .175, 1);
   --k-bg: #FBF9E8; --k-card: #FFFEF8; --k-tx: #024C46; --k-mu: #5f8480; --k-fill: rgba(2, 76, 70, .06); --k-fill2: rgba(2, 76, 70, .1); --k-line: rgba(2, 76, 70, .12);
   --k-acc: #024C46; --k-acc-tx: #fff; --k-ok: #1f9d63; --k-ok-bg: rgba(31, 157, 99, .12); --k-warn: #b06b00; --k-warn-bg: rgba(245, 166, 35, .15); --k-err: #c0392b; --k-err-bg: rgba(214, 69, 58, .1);
   --k-sh: 0 0 0 .5px rgba(2, 76, 70, .08), 0 4px 16px rgba(2, 76, 70, .05); --k-r: 22px;
@@ -833,34 +837,33 @@ html.pgk-dark .pgw {
 .pgw [hidden] { display: none !important; }
 .pgw-solo { max-width: 600px; margin: 0 auto; }
 .pgw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 6px 14px; }
-.pgw-dots { display: flex; align-items: center; gap: 6px; }
-.pgw-dots i { width: 7px; height: 7px; border-radius: 999px; background: var(--k-fill2); transition: width .5s cubic-bezier(.22, 1, .36, 1), background .3s; }
-.pgw-dots i.done { background: var(--k-mu); }
-.pgw-dots i.on { width: 26px; background: var(--k-acc); }
+.pgw-dots { position: relative; width: 112px; height: 5px; border-radius: 3px; overflow: hidden; background: var(--k-fill2); }
+.pgw-dots i { display: none; }
+.pgw-dots::after { content: ""; position: absolute; inset: 0; background: var(--k-acc); transform-origin: left center; transform: scaleX(var(--p, .14)); transition: transform 300ms var(--ease-io); }
 .pgw-cnt { font-size: 13px; font-weight: 600; color: var(--k-mu); font-variant-numeric: tabular-nums; }
 .pgw-cnt b { color: var(--k-tx); }
-.pgw-stack { position: relative; min-height: 200px; transition: height .55s cubic-bezier(.22, 1, .36, 1); }
+/* высота колоды подстраивается под карточку — «раскрывашка» на месте, 280 мс ease-in-out */
+.pgw-stack { position: relative; min-height: 200px; transition: height 280ms var(--ease-io); }
 .pgw-card { position: absolute; left: 0; right: 0; top: 0; padding: 18px 16px 16px; border-radius: 28px; background: var(--k-card); box-shadow: var(--k-sh); transform-origin: 50% 0;
-  transition: transform .62s cubic-bezier(.2, .9, .25, 1.02), opacity .45s ease; will-change: transform, opacity; }
-.pgw-card.on { z-index: 4; transform: none; opacity: 1; }
+  transition: transform 380ms var(--ease-io), opacity 300ms var(--ease-io); will-change: transform, opacity; }
+/* следующая карточка выходит вперёд (ease-out), стопка сдвигается на месте (ease-in-out), пройденная улетает (ease-in, быстрее) */
+.pgw-card.on { z-index: 4; transform: none; opacity: 1; transition: transform 380ms var(--ease-out), opacity 280ms var(--ease-out); }
 .pgw-card.n1 { z-index: 3; transform: translateY(14px) scale(.94); opacity: .75; }
 .pgw-card.n2 { z-index: 2; transform: translateY(26px) scale(.88); opacity: .4; }
 .pgw-card.n3 { z-index: 1; transform: translateY(34px) scale(.82); opacity: 0; }
-.pgw-card.prev { z-index: 5; transform: translate(-115%, 30px) rotate(-9deg); opacity: 0; pointer-events: none; }
+.pgw-card.prev { z-index: 5; transform: translate(-115%, 30px) rotate(-9deg); opacity: 0; pointer-events: none; transition: transform 300ms var(--ease-in), opacity 240ms var(--ease-in); }
 .pgw-card:not(.on):not(.prev) { height: var(--pgw-h, auto); overflow: hidden; }
 .pgw-card:not(.on) .pgw-fields, .pgw-card:not(.on) .pgw-sum, .pgw-card:not(.on) .pgw-consent { visibility: hidden; }
 .pgw-ch { display: flex; align-items: center; gap: 12px; margin: 0 2px 14px; }
 .pgw-ico { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--k-acc); background: var(--k-fill); }
-.pgw-card.on .pgw-ico { animation: pgwIco .6s cubic-bezier(.34, 1.56, .64, 1) both; }
-@keyframes pgwIco { from { transform: scale(.6); opacity: 0; } }
+
 .pgw-ico .pgw-i { width: 24px; height: 24px; }
 .pgw-ch h3 { margin: 0; font: 700 21px/1.15 var(--k-font); letter-spacing: -.022em; color: var(--k-tx); }
 .pgw-ch p { margin: 2px 0 0; font-size: 14.5px; line-height: 1.35; color: var(--k-mu); }
 .pgw-fields { display: flex; flex-direction: column; gap: 8px; }
-.pgw-card.on .pgw-fields > * { animation: pgwIn .45s cubic-bezier(.22, 1, .36, 1) both; }
-.pgw-card.on .pgw-fields > :nth-child(2) { animation-delay: .04s; } .pgw-card.on .pgw-fields > :nth-child(3) { animation-delay: .08s; } .pgw-card.on .pgw-fields > :nth-child(n+4) { animation-delay: .12s; }
-@keyframes pgwIn { from { opacity: 0; transform: translateY(8px); } }
-.pgw .pgw-f { position: relative; display: block; margin: 0; padding: 9px 14px 8px; border-radius: 16px; background: var(--k-fill); cursor: text; transition: background .2s; }
+.pgw-card.on .pgw-fields { animation: pgwIn 280ms var(--ease-out) both; }
+@keyframes pgwIn { from { opacity: 0; } }
+.pgw .pgw-f { position: relative; display: block; margin: 0; padding: 9px 14px 8px; border-radius: 16px; background: var(--k-fill); cursor: text; transition: background-color 150ms ease; }
 .pgw .pgw-f:focus-within { background: var(--k-fill2); }
 .pgw .pgw-l { display: block; margin: 0; font-size: 12.5px; font-weight: 600; line-height: 1.3; color: var(--k-mu); }
 .pgw .pgw-l em { font-style: normal; color: var(--k-err); margin-left: 2px; }
@@ -871,7 +874,7 @@ html.pgk-dark .pgw {
 .pgw:not(.oth) .pgw-other { display: none; }
 .pgw .pgw-fseg { cursor: default; }
 .pgw .pgw-seg { position: relative; display: flex; margin-top: 6px; padding: 3px; border-radius: 12px; background: var(--k-fill); isolation: isolate; }
-.pgw .pgw-segi { position: absolute; left: 0; top: 3px; bottom: 3px; width: 0; z-index: 0; border-radius: 9px; background: var(--k-card); box-shadow: 0 1px 4px rgba(0, 0, 0, .1); opacity: 0; transition: transform .45s cubic-bezier(.34, 1.3, .55, 1), width .45s cubic-bezier(.34, 1.3, .55, 1), opacity .2s; }
+.pgw .pgw-segi { position: absolute; left: 0; top: 3px; bottom: 3px; width: 0; z-index: 0; border-radius: 9px; background: var(--k-card); box-shadow: 0 1px 4px rgba(0, 0, 0, .1); opacity: 0; transition: transform 250ms var(--ease-io), opacity 150ms ease; }
 html.pgk-dark .pgw .pgw-segi { background: rgba(255, 255, 255, .14); box-shadow: none; }
 .pgw .pgw-seg label { position: relative; z-index: 1; flex: 1 1 0; min-width: 0; margin: 0; cursor: pointer; }
 .pgw .pgw-seg input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
@@ -881,16 +884,16 @@ html.pgk-dark .pgw .pgw-segi { background: rgba(255, 255, 255, .14); box-shadow:
 .pgw .pgw-photo { position: relative; display: flex; align-items: center; gap: 14px; margin: 0; padding: 10px 14px; border-radius: 16px; background: var(--k-fill); cursor: pointer; }
 .pgw .pgw-ph { flex: none; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; color: var(--k-mu); background: var(--k-card) center/cover no-repeat; border: 1.5px dashed var(--k-mu); }
 .pgw .pgw-ph .pgw-i { width: 24px; height: 24px; }
-.pgw .pgw-photo.has .pgw-ph { border: 0; animation: pgwPh .5s cubic-bezier(.34, 1.56, .64, 1); }
+.pgw .pgw-photo.has .pgw-ph { border: 0; animation: pgwPh 250ms var(--ease-out); }
 .pgw .pgw-photo.has .pgw-ph .pgw-i { display: none; }
-@keyframes pgwPh { from { transform: scale(.7); } }
+@keyframes pgwPh { from { transform: scale(.95); opacity: 0; } }
 .pgw .pgw-pht b { display: block; font-size: 16px; font-weight: 600; } .pgw .pgw-pht small { display: block; font-size: 13px; color: var(--k-mu); }
 .pgw-consent, .pgk-check { position: relative; display: flex; align-items: center; gap: 12px; margin: 12px 0 0; padding: 2px 4px; font-size: 14.5px; line-height: 1.3; color: var(--k-tx); cursor: pointer; }
 .pgw-consent input, .pgk-check input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.pgw-consent i, .pgk-check i { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: var(--k-acc-tx); box-shadow: inset 0 0 0 1.5px var(--k-mu); transition: background .2s, box-shadow .2s; }
-.pgw-consent i svg, .pgk-check i svg { width: 15px; height: 15px; stroke-width: 3; opacity: 0; transform: scale(.4); transition: opacity .2s, transform .3s cubic-bezier(.34, 1.56, .64, 1); }
+.pgw-consent i, .pgk-check i { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; color: var(--k-acc-tx); box-shadow: inset 0 0 0 1.5px var(--k-mu); transition: background-color 150ms ease, box-shadow 150ms ease; }
+.pgw-consent i svg, .pgk-check i svg { width: 15px; height: 15px; stroke-width: 3; opacity: 0; transform: scale(.3); filter: blur(3px); transition: opacity 300ms cubic-bezier(.25, .1, 0, 1), transform 300ms cubic-bezier(.25, .1, 0, 1), filter 300ms cubic-bezier(.25, .1, 0, 1); }
 .pgw-consent input:checked + i, .pgk-check input:checked + i { background: var(--k-acc); box-shadow: none; }
-.pgw-consent input:checked + i svg, .pgk-check input:checked + i svg { opacity: 1; transform: none; }
+.pgw-consent input:checked + i svg, .pgk-check input:checked + i svg { opacity: 1; transform: none; filter: none; }
 .pgw-consent.bad i, .pgk-check.bad i { box-shadow: inset 0 0 0 2px var(--k-err); }
 .pgw-sum { margin-top: 12px; padding: 14px; border-radius: 18px; background: var(--k-fill); }
 .pgw-sum-h { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -902,26 +905,133 @@ html.pgk-dark .pgw .pgw-segi { background: rgba(255, 255, 255, .14); box-shadow:
 .pgw-err, .pgk-err { margin: 10px 0 0; padding: 11px 14px; border-radius: 14px; background: var(--k-err-bg); color: var(--k-err); font-size: 15px; font-weight: 500; line-height: 1.35; }
 .pgk-err[hidden] { display: none; }
 .pgw-nav { display: flex; gap: 10px; margin-top: 14px; }
-.pgw .pgw-back, .pgw .pgw-back:hover, .pgw .pgw-back:focus { flex: none; width: 54px; height: 54px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--k-fill2); color: var(--k-tx); cursor: pointer; transition: opacity .3s, transform .3s, width .3s, margin .3s; }
+.pgw .pgw-back, .pgw .pgw-back:hover, .pgw .pgw-back:focus { flex: none; width: 54px; height: 54px; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--k-fill2); color: var(--k-tx); cursor: pointer; transition: opacity 150ms ease, transform 150ms var(--ease-out); }
 .pgw .pgw-back .pgw-i { width: 22px; height: 22px; stroke-width: 2.2; }
-.pgw.first .pgw-back { opacity: 0; transform: scale(.6); pointer-events: none; width: 0; margin-right: -10px; }
-.pgw .pgw-next, .pgw .pgw-next:hover, .pgw .pgw-next:focus { position: relative; flex: 1; min-height: 54px; border: 0; border-radius: 999px; padding: 0 22px; background: var(--k-acc); color: var(--k-acc-tx); cursor: pointer; font: 600 17px/1 var(--k-font); transition: transform .3s cubic-bezier(.34, 1.56, .64, 1); }
+.pgw.first .pgw-back { opacity: 0; transform: scale(.95); pointer-events: none; visibility: hidden; transition: opacity 150ms ease, transform 150ms var(--ease-out), visibility 0s 150ms; }
+.pgw .pgw-next, .pgw .pgw-next:hover, .pgw .pgw-next:focus { position: relative; flex: 1; min-height: 54px; border: 0; border-radius: 999px; padding: 0 22px; background: var(--k-acc); color: var(--k-acc-tx); cursor: pointer; font: 600 17px/1 var(--k-font); transition: transform 150ms var(--ease-out); }
 .pgw .pgw-next:active, .pgw .pgw-back:active { transform: scale(.96); }
 .pgw .pgw-gl { display: none; } .pgw.last .pgw-gl { display: inline; } .pgw.last .pgw-nl { display: none; }
-.pgw .pgw-next.shake { animation: pgShake .4s; }
+.pgw .pgw-f.shake, .pgw .pgw-fseg.shake, .pgw .pgw-consent.shake { animation: pgShake 360ms var(--ease-io); }
 .pgw .pgw-next.busy span, .pgk-go.busy span { opacity: 0; }
 .pgw .pgw-next.busy .pg-spin, .pgk-go.busy .pg-spin { display: block; }
 .pgw-skip { margin: 12px 8px 0; text-align: center; font-size: 13px; color: var(--k-mu); }
-.pgw.sent-out .pgw-stack, .pgw.sent-out .pgw-nav, .pgw.sent-out .pgw-head { transition: opacity .3s, transform .4s; opacity: 0; transform: translateY(-12px) scale(.97); }
+.pgw.sent-out .pgw-stack, .pgw.sent-out .pgw-nav, .pgw.sent-out .pgw-head { transition: opacity 200ms var(--ease-in), transform 200ms var(--ease-in); opacity: 0; transform: translateY(-8px); }
 .pgw-ok, .pgk-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 12px 12px; text-align: center; color: var(--k-tx); }
 .pgw-ok .pg-ok-svg { width: 84px; height: 84px; fill: none; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
-.pgw-ok .pg-ok-svg circle { fill: var(--k-acc); transform-box: fill-box; transform-origin: center; animation: pgOkPop .6s cubic-bezier(.34, 1.56, .64, 1) both; }
-.pgw-ok .pg-ok-svg path { stroke: var(--k-acc-tx); stroke-width: 6.5; stroke-dasharray: 52; stroke-dashoffset: 52; animation: pgOkDraw .45s .32s cubic-bezier(.65, 0, .35, 1) forwards; }
+.pgw-ok .pg-ok-svg circle { fill: var(--k-acc); transform-box: fill-box; transform-origin: center; animation: pgOkPop 280ms var(--ease-out) both; }
+.pgw-ok .pg-ok-svg path { stroke: var(--k-acc-tx); stroke-width: 6.5; stroke-dasharray: 52; stroke-dashoffset: 52; animation: pgOkDraw 300ms 120ms var(--ease-out) forwards; }
 .pgw-ok b, .pgk-done b { font-size: 22px; font-weight: 700; } .pgw-ok p, .pgk-done p { margin: 0; max-width: 340px; font-size: 15.5px; line-height: 1.4; color: var(--k-mu); }
 .pgw-ok .pg-btn { margin-top: 8px; }
-.pgk-done-i { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--k-ok-bg); color: var(--k-ok); } .pgk-done-i .pg-i { width: 32px; height: 32px; stroke-width: 2.4; }
-@media (prefers-reduced-motion: reduce) { .pgw-card, .pgw-stack, .pgw-dots i, .pgw-segi { transition: none !important; } .pgw-card.on .pgw-fields > *, .pgw-card.on .pgw-ico { animation: none; } }
+.pgk-done-i { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--k-ok-bg); color: var(--k-ok); animation: pgOkPop 280ms var(--ease-out) both; } .pgk-done-i .pg-i { width: 32px; height: 32px; stroke-width: 2.4; }
+@media (prefers-reduced-motion: reduce) { .pgw-card, .pgw-stack, .pgw-dots::after, .pgw-segi, .pgw-back { transition: none !important; } .pgw-card.on .pgw-fields, .pgw-f.shake, .pgw-ok .pg-ok-svg circle { animation: none; } .pgw-ok .pg-ok-svg path { animation: none; stroke-dashoffset: 0; } }
 
-/* 34.3: страница плавно поднимается и опускается вместе с клавиатурой PetGo */
-#pg.pg { transition: padding-bottom .38s cubic-bezier(.32, .72, 0, 1); }
-@media (prefers-reduced-motion: reduce) { #pg.pg { transition: none; } }
+
+/* ============================================================
+   34.4 ДВИЖЕНИЕ — правила UX-анимации (.claude/skills/charles-ux-animation)
+   Появляется — ease-out, уходит — ease-in и на 20–30% быстрее, двигается на месте — ease-in-out.
+   Нажатие и цвет — 150 мс; меню — 160/120; окна и листы — 280/200; всплывающее — 240/170; переходы страниц — 340.
+   Без «пружинки» с перелётом, нажатие сжимает до 0.96 (не меньше 0.95), движение при наведении — только мышью.
+   ============================================================ */
+/* карточки: тень и подъём при наведении — 150 мс; широкая карточка при нажатии не сжимается, а темнеет */
+.pg .pg-card, .pg .pg-rcard { transition: transform var(--t-press) ease, box-shadow var(--t-press) ease, background-color var(--t-press) ease; }
+.pg .pg-rcard:active { transform: none; background-color: #F3F1E4; }
+.pg .pg-rv-panel .pg-rcard:active { background-color: rgba(255, 255, 255, .2); }
+.pg .pg-acc-card, .pg .pg-b.pg-acc-card, .pg .pg-b.pg-acc-card:hover, .pg .pg-b.pg-acc-card:focus { transition: transform var(--t-press) ease, box-shadow var(--t-press) ease, background-color var(--t-press) ease; }
+.pg .pg-acc-card:active { transform: none; background-color: #F6F4EA; }
+.pg .pg-acc-go { transition: transform var(--t-press) var(--ease-out); }
+@media (hover: none), (pointer: coarse) { .pg-b.pg-thumb:hover img { transform: none; } }
+.pg-b.pg-thumb img { transition: transform var(--t-press) ease; }
+/* кнопки */
+.pg-btn.pg-btn { transition: background-color var(--t-press) ease, color var(--t-press) ease, transform var(--t-press) var(--ease-out), box-shadow var(--t-press) ease; }
+.pg-layer .pg-dock > a, .pg-b.pg-dock-ai, .pg-b.pg-dock-ai:hover, .pg-b.pg-dock-ai:focus { transition: opacity var(--t-press) ease, transform var(--t-press) var(--ease-out); }
+.pg-layer .pg-dock > a:active { transform: scale(.96); }
+.pg-b.pg-dock-ai:active i, .pg-b.pg-x:active, .pg-b.pg-back:active, .pg-b.pg-vnav:active, .pg-b.pg-ai-x:active, .pg-b.pg-ai-send:active,
+.pg-layer .pg-ai-act a:active, .pg-b.pg-chip:active, .pg-layer .pg-langs a:active, .pg .pg-langs a:active { transform: scale(.96); }
+.pg-b.pg-x, .pg-b.pg-x:hover, .pg-b.pg-x:focus { transition: transform var(--t-press) var(--ease-out), background-color var(--t-press) ease; }
+/* кнопку помощника нажимают — вокруг неё ничего не «дышит» */
+.pg-layer .pg-dock-ai i::after { animation: none; opacity: 0; }
+/* точки слайдов: на месте, ease-in-out */
+.pg-b.pg-dot, .pg-b.pg-dot:hover, .pg-b.pg-dot:focus { transition: width 250ms var(--ease-io), background-color var(--t-press) ease; }
+.pg-b.pg-hdot, .pg-b.pg-hdot:hover, .pg-b.pg-hdot:focus { transition: width 250ms var(--ease-io); }
+/* блоки при прокрутке: мягкий вход — 8 px, размытие 2 px, 400 мс ease-out (лесенка 90 мс задаётся в site.js) */
+.pg.js .pg-rise { transform: translateY(8px); filter: blur(2px); transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), filter 400ms var(--ease-out); }
+.pg.js .pg-rise.in { filter: none; }
+/* меню сайта: линза и док */
+.pg-layer .pg-lens { transition: transform 300ms var(--ease-io), width 300ms var(--ease-io), opacity var(--t-press) ease; }
+.pg-layer .pg-dock { transition: transform var(--t-in) var(--ease-out), opacity var(--t-press) ease; }
+/* главный экран: смена фото и заголовков — одновременно, старое уходит быстрее */
+.pg .pg-hero-m { transition: opacity 600ms ease; }
+.pg .pg-hero-t { transform: translateY(8px); filter: blur(2px); transition: opacity var(--t-out) var(--ease-in), transform var(--t-out) var(--ease-in), filter var(--t-out) var(--ease-in); }
+.pg .pg-hero-t.on { transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), filter 400ms var(--ease-out); transition-delay: 0s; }
+/* выбор «собака / кошка» и карточки услуг: новые входят по очереди, 40 мс, только первые 6 */
+.pg .pg-picker-ind { transition: transform 300ms var(--ease-io), width 300ms var(--ease-io); }
+.pg-b.pg-pet, .pg-b.pg-pet:hover, .pg-b.pg-pet:focus { transition: color var(--t-press) ease; }
+.pg .pg-svc [data-only] { transition: opacity 200ms ease; }
+.pg .pg-cards.swap > * { animation: pgSwap 350ms var(--ease-out) both; }
+.pg .pg-cards.swap > :nth-child(2) { animation-delay: 40ms; } .pg .pg-cards.swap > :nth-child(3) { animation-delay: 80ms; } .pg .pg-cards.swap > :nth-child(4) { animation-delay: 120ms; }
+.pg .pg-cards.swap > :nth-child(5) { animation-delay: 160ms; } .pg .pg-cards.swap > :nth-child(n+6) { animation-delay: 200ms; }
+@keyframes pgSwap { from { opacity: 0; transform: translateY(8px); filter: blur(2px); } }
+/* «Как это работает»: раскрывашка 250/190 мс, прогресс шага — scaleX, а не ширина */
+.pg .pg-step { transition: background-color 200ms ease, box-shadow 200ms ease; }
+.pg .pg-step .pg-num { transition: background-color var(--t-press) ease, color var(--t-press) ease; }
+.pg .pg-step-body { transition: grid-template-rows 190ms var(--ease-io); }
+.pg .pg-step.on .pg-step-body { transition: grid-template-rows 250ms var(--ease-io); }
+.pg .pg-prog { width: 100%; border-radius: 0; transform-origin: left center; transform: scaleX(0); }
+@keyframes pgProg { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* просмотр фото, вопросы, окно помощника, сообщения */
+.pg-layer .pg-viewer { animation: pgVIn 220ms var(--ease-out); }
+.pg .pg-q[open] .pg-qa { animation: pgQ 220ms var(--ease-out); }
+.pg-layer .pg-msg { animation: pgMsg var(--t-pop-in) var(--ease-out); }
+@keyframes pgMsg { from { opacity: 0; transform: translateY(8px); } }
+html .pg-layer .pga-chat { animation-duration: 220ms; }
+html .pg-layer .pga-chat.is-closing { animation: pga-fadeout var(--t-out) var(--ease-in) forwards; }
+html .pg-layer .pga-chat__panel { animation: pga-up var(--t-in) var(--ease-out); }
+html .pg-layer .pga-chat.is-closing .pga-chat__panel { animation: pga-down var(--t-out) var(--ease-in) forwards; }
+@media (min-width: 720px) { html .pg-layer .pga-chat__panel { animation: pga-pop var(--t-pop-in) var(--ease-out); } html .pg-layer .pga-chat.is-closing .pga-chat__panel { animation: pga-fadeout var(--t-pop-out) var(--ease-in) forwards; } }
+@keyframes pga-pop { from { opacity: 0; transform: translateY(16px) scale(.97); } }
+html .pg-layer .pga-msg { animation: pga-msg var(--t-pop-in) var(--ease-out); }
+@keyframes pga-msg { from { opacity: 0; transform: translateY(8px); } }
+html .pg-layer .pga-round:active, html .pg-layer .pga-btn:active, html .pg-layer .pga-chip:active, html .pg-layer .pga-chat__send:active, html .pg-layer .pga-chat__mic:active, html .pg-layer .pga-rec__x:active, html .pg-layer .pga-rec__send:active { transform: scale(.96); }
+/* язык: меню 160 мс от кнопки, плашка едет без «сплющивания», страница меняется мягко */
+@media (max-width: 600px) { .pg-layer .pg-nav-lang.open .pg-langs-more { animation: pgLangIn 160ms var(--ease-out); } }
+@keyframes pgLangIn { from { opacity: 0; transform: translate(-50%, -4px) scale(.95); } to { opacity: 1; transform: translateX(-50%); } }
+.pg-layer .pg-langs a, .pg .pg-langs a { transition: opacity var(--t-press) ease, color var(--t-press) ease, transform var(--t-press) var(--ease-out); }
+.pg-lang-ind { transition: transform 300ms var(--ease-io), width 300ms var(--ease-io), opacity var(--t-press) ease; }
+.pg-langs.pg-lang-moving .pg-lang-ind { animation: none; }
+html.pg-lang-out .pg, html.pg-lang-out .pg-layer .pg-dock { transition: opacity var(--t-out) var(--ease-in), filter var(--t-out) var(--ease-in), transform var(--t-out) var(--ease-in); filter: blur(4px); }
+html.pg-lang-in .pg { animation: pgLangPage 400ms var(--ease-out) both; }
+@keyframes pgLangPage { from { opacity: 0; filter: blur(2px); transform: translateY(8px); } }
+html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out) both; }
+@keyframes pgLangPop { from { transform: scale(.95); opacity: 0; } }
+/* смена страницы: старая гаснет за 140 мс (ease-in), новая проявляется за 340 мс (ease-out) */
+.pg { transition: opacity 140ms var(--ease-in); }
+.pg.pg-in { transition: opacity 340ms var(--ease-out), transform 340ms var(--ease-out); }
+.pg.pg-enter { transform: translateY(8px); }
+/* листы снизу (заявка, анкета): 280 мс вверх, 200 мс вниз до края; фон — на тех же часах */
+.pg-layer .pg-sheet-bg { transition: opacity var(--t-out) var(--ease-in); }
+.pg-layer .pg-sheet.on .pg-sheet-bg { transition: opacity var(--t-in) var(--ease-out); }
+.pg-layer .pg-sheet-in { transition: transform var(--t-out) var(--ease-in), margin-bottom var(--t-out) var(--ease-in), max-height var(--t-out) var(--ease-in); }
+.pg-layer .pg-sheet.on .pg-sheet-in { transition: transform var(--t-in) var(--ease-out), margin-bottom var(--t-out) var(--ease-in), max-height var(--t-out) var(--ease-in); }
+.pg-layer.kb-open .pg-sheet.on .pg-sheet-in { transition: transform var(--t-in) var(--ease-out), margin-bottom var(--t-in) var(--ease-out), max-height var(--t-in) var(--ease-out); }
+/* заявка: поля и переключатели — 150 мс, галочка согласия — смена значка, ошибка — поле «качает головой» */
+.pg-form { transition: height 300ms var(--ease-io); }
+.pg-form .pg-form-body { transition: opacity var(--t-pop-out) var(--ease-in), transform var(--t-pop-out) var(--ease-in); }
+.pg-form .pg-fl { transition: background-color var(--t-press) ease; }
+.pg-form .pg-seg span { transition: background-color var(--t-press) ease, box-shadow var(--t-press) ease, transform var(--t-press) var(--ease-out); }
+.pg-form .pg-consent i { transition: background-color var(--t-press) ease, box-shadow var(--t-press) ease; }
+.pg-form .pg-consent i .pg-i { transform: scale(.3); filter: blur(3px); transition: opacity 300ms cubic-bezier(.25, .1, 0, 1), transform 300ms cubic-bezier(.25, .1, 0, 1), filter 300ms cubic-bezier(.25, .1, 0, 1); }
+.pg-form .pg-consent input:checked + i .pg-i { filter: none; }
+.pg-form .pg-form-err { animation: pgQ 200ms var(--ease-out); }
+.pg-form .pg-form-go span { transition: opacity var(--t-press) ease; }
+.pg-form .pg-form-go.shake { animation: none; }
+.pg-form .pg-fl.shake, .pg-form .pg-fs.shake, .pg-form .pg-consent.shake { animation: pgShake 360ms var(--ease-io); }
+.pg-form .pg-ok-svg circle { animation: pgOkPop 280ms var(--ease-out) both; }
+.pg-form .pg-ok-svg path { animation: pgOkDraw 300ms 120ms var(--ease-out) forwards; }
+@keyframes pgOkPop { from { transform: scale(.95); opacity: 0; } }
+@keyframes pgShake { 0%, 100% { transform: none; } 16% { transform: translateX(-10px); } 33% { transform: translateX(10px); } 50% { transform: translateX(-6px); } 66% { transform: translateX(6px); } 83% { transform: translateX(-3px); } }
+/* «Уменьшить движение»: всё стоит, кроме индикатора загрузки */
+@media (prefers-reduced-motion: reduce) {
+  .pg .pg-spin, .pg-layer .pg-spin, .pg-form .pg-spin, .pgw .pg-spin { animation: pgSpin .7s linear infinite !important; }
+  html .pg-layer .pga-chat, html .pg-layer .pga-chat * { animation: none !important; transition: none !important; }
+  .pg.js .pg-rise { filter: none; transform: none; }
+}

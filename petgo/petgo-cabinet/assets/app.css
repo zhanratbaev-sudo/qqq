@@ -5,7 +5,7 @@
 --ac:#0d7c6d;--ac2:#0a6a5d;--acs:rgba(13,124,109,.12);--on:#fff;--acb:#0d7c6d;
 --ok:#248a3d;--okf:#34c759;--oks:rgba(52,199,89,.15);--wn:#c45c00;--wns:rgba(255,141,40,.16);--er:#d70015;--erf:#ff383c;--ers:rgba(255,56,60,.12);--in2:#0068d6;--ins:rgba(0,136,255,.12);
 --sh:none;--sh2:0 10px 40px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.06);
---r:24px;--rg:34px;--e:cubic-bezier(.25,.46,.45,.94);--sp:cubic-bezier(.34,1.56,.64,1);--sp2:cubic-bezier(.34,1.25,.64,1);
+--r:24px;--rg:34px;--e:cubic-bezier(.32,.72,0,1);--sp:cubic-bezier(.32,.72,0,1);--sp2:cubic-bezier(.32,.72,0,1);--ein:cubic-bezier(.55,0,1,.45);--eio:cubic-bezier(.77,0,.175,1);--tp:150ms;--tin:280ms;--tout:200ms;
 --toph:64px;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
 /* Liquid Glass: --gt 0 = тонированное … 1 = прозрачное (ползунок в настройках задаёт --gu) */
 --gt:var(--gu,.5);
@@ -1033,17 +1033,77 @@ html.pgkb-open .pgc-modal.pgc-full .pgf .pgf-go{visibility:hidden}
 html:has(.pgc-ov.open) .pgt-pill,html:has(.pgc-chat.open) .pgt-pill{top:auto;bottom:calc(var(--sab) + 12px)}
 /* 34.2: длинные списки (заказы, питомцы, клиенты) рисуются только на экране — приложение не тормозит */
 .pgc-in>.pgc-ord:not([open]),.pgc-in>.pgc-oc{content-visibility:auto;contain-intrinsic-size:auto 76px}
-/* 34.3: плавные переходы — окна, страницы и чат двигаются вместе с клавиатурой PetGo (та же скорость и кривая) */
+/* ============================================================
+   34.4 ДВИЖЕНИЕ — правила UX-анимации (.claude/skills/charles-ux-animation)
+   Появляется — ease-out, уходит — ease-in и быстрее, двигается на месте — ease-in-out. Без «пружинки» с перелётом.
+   Нажатие и цвет — 150 мс, меню — 160/120, окна и листы — 280/200, всплывающее — 240/170, экраны поверх — 340/240.
+   Размер окон и чата меняется только вместе с клавиатурой PetGo — на её часах (280 мс вверх, 200 мс вниз).
+   ============================================================ */
+/* смена страниц приложения: короткое растворение, без задержки */
 @view-transition{navigation:auto}
-::view-transition-old(root),::view-transition-new(root){animation-duration:.22s;animation-timing-function:ease}
-body.pgc-body{transition:padding-bottom .38s cubic-bezier(.32,.72,0,1)}
-.pgc-modal{transition:opacity .3s,visibility 0s .5s,padding-bottom .38s cubic-bezier(.32,.72,0,1)}
-.pgc-modal.open,html.pgkb-open .pgc-modal,html.pgkb-open .pgc-sheet{transition:opacity .3s,visibility 0s,padding-bottom .38s cubic-bezier(.32,.72,0,1)}
-.pgc-box{transition:transform .3s var(--e),max-height .38s cubic-bezier(.32,.72,0,1)}
-.pgc-modal.open .pgc-box{transition:transform .5s var(--sp2),max-height .38s cubic-bezier(.32,.72,0,1)}
-.pgc-ov,.pgc-chat{transition:transform .35s var(--e),visibility 0s .35s,height .38s cubic-bezier(.32,.72,0,1),top .38s cubic-bezier(.32,.72,0,1)}
-.pgc-ov.open,.pgc-chat.open{transition:transform .45s var(--sp2),visibility 0s,height .38s cubic-bezier(.32,.72,0,1),top .38s cubic-bezier(.32,.72,0,1)}
+::view-transition-old(root){animation-duration:120ms;animation-timing-function:cubic-bezier(.55,0,1,.45)}
+::view-transition-new(root){animation-duration:160ms;animation-timing-function:cubic-bezier(.32,.72,0,1)}
+/* нажатие: кнопки и значки — 0.96 за 150 мс; широкие строки и карточки — только фон */
+.pgc .pgc-iconb,.pgc .pgc-meb,.pgc .pgc-chip,.pgc .pgc-btn,.pgc .pgc-dots,.pgc .pgc-pen,.pgc .pgc-x,.pgc .pgc-bk,.pgc .pgc-stat,.pgc .pgc-calb,.pgc .pgs-tb,.pgc .pgt-chip,.pgc-fab,.pgc-att,.pgc-cs{transition-duration:var(--tp);transition-timing-function:var(--e)}
+.pgc .pgc-iconb:active,.pgc .pgc-meb:active,.pgc .pgc-chip:active,.pgc .pgc-dots:active,.pgc .pgc-pen:active,.pgc .pgc-x:active,.pgc .pgc-bk:active,.pgc .pgc-calb:active,.pgc .pgs-tb:active,.pgc .pgt-chip:active,.pgc-fab:active,.pgc-att:active,.pgc-cs:active{transform:scale(.96)}
+.pgc .pgc-btn:active{transform:scale(.96);filter:none}
+.pgc-oc,.pgc-lsi,.pgc .pga-opt,.pgc-ev{transition:background-color var(--tp) ease,filter var(--tp) ease}
+.pgc-oc:active,.pgc-lsi:active,.pgc .pga-opt:active{transform:none;background:var(--sel)}
+.pgc-ev:active{transform:none;filter:brightness(.92)}
+.pgc .pgc-mi,.pgc .pgc-cr{transition:background-color var(--tp) ease}
+.pgc-nav a:active .pgc-ic{transform:scale(.95)}
+.pgc-nav a .pgc-ic{transition:transform var(--tp) var(--e)}
+.pgc .pgc-nav a{transition:color var(--tp) ease,background-color var(--tp) ease}
+.pgf-seg input:active+span{transform:scale(.96)}
+/* меню: 160 мс от кнопки (от 0.95, со сдвигом 4 px), уходит за 120 мс */
+.pgc-menu,.pgc-fabm{transform:translateY(-4px) scale(.95);transition:opacity 120ms var(--ein),transform 120ms var(--ein),visibility 0s 120ms}
+.pgc-menu.open,.pgc-fabm.open{transform:none;transition:opacity 160ms var(--e),transform 160ms var(--e),visibility 0s}
+/* всплывающее сообщение: поднимается на 16 px за 240 мс */
+.pgc-toast{transform:translateY(16px);transition:opacity 170ms var(--ein),transform 170ms var(--ein)}
+.pgc-toast.in{transition:opacity 240ms var(--e),transform 240ms var(--e)}
+/* окна (листы снизу): 280 мс вверх, 200 мс вниз до края; фон — на тех же часах */
+.pgc-modal{transition:opacity var(--tout) var(--ein),visibility 0s var(--tout),padding-bottom var(--tout) var(--ein)}
+.pgc-modal.open{transition:opacity var(--tin) var(--e),visibility 0s,padding-bottom var(--tout) var(--ein)}
+html.pgkb-open .pgc-modal.open,html.pgkb-open .pgc-sheet{transition:opacity var(--tin) var(--e),visibility 0s,padding-bottom var(--tin) var(--e)}
+.pgc-box{transition:transform var(--tout) var(--ein),max-height var(--tout) var(--ein)}
+.pgc-modal.open .pgc-box{transition:transform var(--tin) var(--e),max-height var(--tout) var(--ein)}
+html.pgkb-open .pgc-modal.open .pgc-box{transition:transform var(--tin) var(--e),max-height var(--tin) var(--e)}
+.pgc-modal.pgc-full .pgc-mb{transition:padding-bottom var(--tout) var(--ein)}
+html.pgkb-open .pgc-modal.pgc-full .pgc-mb{transition:padding-bottom var(--tin) var(--e)}
+/* экраны поверх (заказ, чат): въезжают справа за 340 мс, уходят тем же путём за 240 мс; высота — с клавиатурой */
+.pgc-ov,.pgc-chat{transition:transform 240ms var(--ein),visibility 0s 240ms,height var(--tout) var(--ein),top var(--tout) var(--ein)}
+.pgc-ov.open,.pgc-chat.open{transition:transform 340ms var(--e),visibility 0s,height var(--tout) var(--ein),top var(--tout) var(--ein)}
+html.kb .pgc-ov.open,html.kb .pgc-chat.open{transition:transform 340ms var(--e),visibility 0s,height var(--tin) var(--e),top var(--tin) var(--e)}
+.pgc-cth{transition:transform 240ms var(--ein),visibility 0s 240ms}
+.pgc-chat.thread .pgc-cth{transition:transform 340ms var(--e),visibility 0s}
 .pgc-ov.drag,.pgc-chat.drag,.pgc-cth.drag{transition:none}
-.pgc-modal.pgc-full .pgc-mb{transition:padding-bottom .38s cubic-bezier(.32,.72,0,1)}
-.pgc .pgc-btn:active,.pgc .pgc-chip:active,.pgc .pgc-iconb:active{transition-duration:.12s}
-@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}body.pgc-body,.pgc-modal,.pgc-box,.pgc-ov,.pgc-chat{transition:none}}
+/* фото на весь экран: 220 мс появляется, 160 мс уходит */
+.pgc-lb{transition:opacity 160ms var(--ein),visibility 0s 160ms}
+.pgc-lb.open{transition:opacity 220ms var(--e)}
+/* нижнее меню и кнопка «+» прячутся вместе с клавиатурой (200 мс) и возвращаются вместе с ней (280 мс) */
+.pgc-nav{transition:transform var(--tin) var(--e),opacity var(--tp) ease}
+.pgc-fab{transition:transform var(--tin) var(--e)}
+html.kb .pgc-nav,html.kb .pgc-fab,html.pgc-lock .pgc-fab{transition:transform var(--tout) var(--ein),opacity var(--tp) ease}
+.pgc-fab svg{transition:transform 250ms var(--eio)}
+/* переключатели и стрелки: на месте, ease-in-out */
+.pgc .pgc-seg button{transition:background-color var(--tp) ease,box-shadow var(--tp) ease}
+.pgc .pgc-sw{transition:background-color 250ms var(--eio)}
+.pgc-sw i{transition:transform 250ms var(--eio),width var(--tp) var(--e)}
+.pgc-chv,details.pgc-srow>summary>.pgc-ic{transition:transform 250ms var(--eio)}
+/* время прогулки: полоса растёт scaleX, точка едет transform-ом (линейно — это само время) */
+.pgc-prog{container-type:inline-size}
+.pgc-pf{width:auto;right:0;transform-origin:left center;transform:scaleX(var(--k,0));transition:transform 1s linear}
+.pgc-pd{left:0;transform:translateX(calc(var(--k,0) * 100cqw));transition:transform 1s linear}
+/* успех (ссылка-приглашение готова и т. п.): кружок от 0.95, без перелёта */
+.pgi-big{animation:pgiPop 280ms var(--e) both}
+@keyframes pgiPop{from{opacity:0;transform:scale(.95)}}
+.pgr-mood span,.pgr-did span{transition-duration:var(--tp)}
+/* смена темы — одним кадром */
+html.pgc-theming *,html.pgc-theming *::before,html.pgc-theming *::after{transition:none!important}
+/* «Уменьшить движение»: всё стоит, кроме индикаторов загрузки */
+@media (prefers-reduced-motion:reduce){
+@view-transition{navigation:none}
+.pgc *,.pgc-modal,.pgc-box,.pgc-ov,.pgc-chat,.pgc-cth,.pgc-menu,.pgc-fabm,.pgc-toast,.pgc-lb,.pgc-nav,.pgc-fab{transition:none!important}
+.pgc *:not(.pgc-spin):not(.pgc-spinner){animation:none!important}
+.pgc .pgc-ptr.spin i{animation:pgRot .7s linear infinite!important}
+}

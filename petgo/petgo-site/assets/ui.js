@@ -156,7 +156,7 @@
     var inn = s.querySelector(".pg-sheet-in");
     if (inn) inn.style.transform = "";
     clearTimeout(sheetT);
-    sheetT = setTimeout(function () { s.hidden = true; }, reduce ? 0 : 420);
+    sheetT = setTimeout(function () { s.hidden = true; }, reduce ? 0 : 220);
   }
   function openSheet(id) {
     var s = $("pg-sheet-" + id);
@@ -224,8 +224,12 @@
       var el = field ? f.elements[field] : null;
       if (el && el.length && !el.tagName) el = el[0];
       var box = el ? (el.closest(".pg-fl") || el.closest(".pg-fs") || el.closest(".pg-consent")) : null;
-      if (box) { box.classList.add("bad"); if (box.scrollIntoView) box.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }); }
-      if (!reduce) { go.classList.remove("shake"); void go.offsetWidth; go.classList.add("shake"); }
+      if (box) {
+        box.classList.add("bad");
+        if (box.scrollIntoView) box.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+        /* 34.4: «качает головой» поле с ошибкой, а не кнопка */
+        if (!reduce) { box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake"); setTimeout(function () { box.classList.remove("shake"); }, 400); }
+      }
     }
     var ph = f.elements.phone;
     if (ph) {
@@ -243,9 +247,9 @@
         f.classList.remove("sending-out"); f.classList.add("sent");
         var h1 = ok.offsetHeight;
         f.style.height = h1 + "px";
-        setTimeout(function () { f.style.height = ""; }, 520);
+        setTimeout(function () { f.style.height = ""; }, 320);
         if (ok.scrollIntoView && !f.closest(".pg-sheet")) ok.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
-      }, reduce ? 0 : 260);
+      }, reduce ? 0 : 180);
     }
     f.addEventListener("submit", function (e) {
       e.preventDefault();
