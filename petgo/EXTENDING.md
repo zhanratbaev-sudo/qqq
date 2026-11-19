@@ -42,12 +42,14 @@ add_action('petgo_ready', function ($api) {   // PetGo загружен; $api �
 | Счётчик у пункта | фильтр `petgo_nav_badge($n, $key)` |
 | Строка в «Настройках» | фильтр `petgo_settings_rows`: `['icon'=>'globe','title'=>'…','sub'=>'…','url'=>'…']` |
 | Формы | `petgo_form_open('my_action')` + `add_action('admin_post_petgo_my_action', …)` с `petgo_guard('admin')` |
+| Заголовок своей страницы | фильтр `petgo_app_title($title, $pg)` (с 35.0) |
+| Строка в окне заказа | фильтр `petgo_order_detail_top($html, $order_id, $admin)` (с 35.0) |
 
 ## Кабинет клиента
 
 | Что | Как |
 |---|---|
-| Блок на главной | фильтр `petgo_cl_home_html($html, $uid)` |
+| Блок на главной | фильтр `petgo_cl_home_html($html, $uid)`; первым в «Для вас» — `petgo_cl_home_first($html, $uid)` (с 35.0) |
 | Строки в «Аккаунте» | фильтр `petgo_cl_account_html($html, $uid)` |
 | Свой лист (окно) | фильтр `petgo_cl_sheets($html, $uid)` + `petgo_cl_sheet('id', 'Заголовок', $html)`; открыть — кнопка `data-k-open="id"` |
 | Данные для JS | фильтр `petgo_cl_cfg($cfg, $uid)` → в браузере `PGK.cfg()` |

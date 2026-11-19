@@ -707,6 +707,10 @@ function petgo_page_clients() {
         if ($src && function_exists('petgo_src_text')) {
             echo '<div class="pgf-row"><span>Источник</span><b>' . esc_html(petgo_src_text((array) $src)) . '</b></div>';
         }
+        /* 35.0: договор — подписан ли, как, скачать PDF и подпись */
+        if (function_exists('petgo_ct_staff_line') && (petgo_ct_ready() || petgo_ct_get($u->ID))) {
+            echo '<div class="pgf-row pgct-row"><span>Договор</span><span>' . petgo_ct_staff_line($u->ID) . '</span></div>';
+        }
         echo '</div>';
         if ($pets) {
             echo '<div class="pgcl-pets">';

@@ -470,6 +470,7 @@
       f.hidden = true; $(".pgk-done", f.parentNode).hidden = false; f.reset(); BK.touched = false;
       var sc = f.closest(".pgk-sc"); if (sc) sc.scrollTop = 0;
       CL.booked = true;
+      ctAfterBook(f);
     }); }).catch(netErr(f));
   });
 
@@ -1092,6 +1093,186 @@
     K = null; CL.box = null;
   }
 
+  /* ============================================================
+     35.0 ДОГОВОР: подпись через eGov mobile (QR-подписание SIGEX) или галочкой в кабинете.
+     На телефоне договор готовится заранее, пока клиент читает, — тогда одно нажатие сразу открывает eGov mobile.
+     ============================================================ */
+  var CT = { run: 0, pre: null, prep: 0, busy: false, t: 0 };
+  var EGOV_I = '<svg class="pg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18.5c2.5 0 3.5-2 4.5-4.5s1.6-5.5 3-5.5c1.6 0 .4 4.4 1.8 4.4 1.1 0 1.6-2.4 2.9-2.4 1 0 1.1 1.6 2.1 1.6.6 0 1.1-.4 1.7-1.1"/><path d="M4 21h16"/></svg>';
+  function ctMob() { return !!(W.matchMedia && matchMedia("(pointer: coarse)").matches) && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || ""); }
+  function ctForm() { return $("[data-k-ctform]"); }
+  function ctVals(f) { return { name: f.elements.name.value.replace(/\s+/g, " ").trim(), vet: f.elements.vet.checked ? "1" : "0", photo: f.elements.photo.checked ? "1" : "0" }; }
+  function ctKey(v) { return v.name + "|" + v.vet + "|" + v.photo; }
+  function ctNameOk(n) { return n.length >= 5 && n.indexOf(" ") > 0 && !/\d/.test(n); }
+  function ctBtn(b, on) {
+    if (!b) return;
+    clearTimeout(b._bt);
+    if (on) { b.disabled = true; b._bt = setTimeout(function () { b.classList.add("busy"); }, 300); }
+    else { b.classList.remove("busy"); b.disabled = false; }
+  }
+  function rj(r) { if (!r.ok) { var e = new Error("http"); e.status = r.status; throw e; } return r.json(); }
+  /* запросы к eGov через SIGEX: при обрыве связи (телефон ушёл в eGov mobile) повторяем */
+  function ctRetry(fn, run) {
+    var n = 0, t0 = Date.now();
+    return new Promise(function (ok, bad) {
+      (function go() {
+        if (run !== CT.run) return;
+        fn().then(ok).catch(function (e) {
+          var st = e && e.status;
+          if (run !== CT.run) return;
+          if ((st && st < 500 && st !== 408 && st !== 429) || ++n > 40 || Date.now() - t0 > 15 * 60000) { bad(e); return; }
+          setTimeout(go, D.hidden ? 2500 : 1500);
+        });
+      })();
+    });
+  }
+  function ctSigex(doc) {
+    return fetch(doc.sigex + "/api/egovQr", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description: doc.title.ru }), cache: "no-store" }).then(rj).then(function (q) {
+      if (!q || q.message || !q.dataURL || !q.signURL) { var e = new Error("sigex"); e.msg = q && q.message; throw e; }
+      return q;
+    });
+  }
+  /* телефон: готовим договор и сеанс eGov заранее (без отправки данных), чтобы кнопка сразу открыла приложение */
+  function ctPrep() {
+    clearTimeout(CT.t);
+    var f = ctForm();
+    if (!f || f.hidden || CT.busy || !ctMob() || !K || !K.ct) return;
+    var v = ctVals(f), key = ctKey(v);
+    if (!ctNameOk(v.name)) return;
+    if (CT.pre && CT.pre.key === key && Date.now() - CT.pre.at < 150000) return;
+    var my = ++CT.prep;
+    CT.pre = null;
+    api("ct_doc", v).then(function (j) {
+      if (my !== CT.prep || !j.ok) return;
+      return ctSigex(j).then(function (q) { if (my === CT.prep) CT.pre = { key: key, at: Date.now(), doc: j, q: q }; });
+    }).catch(function () {});
+  }
+  function ctOpen() {
+    var s = kOpen("ct"); if (!s) return;
+    var f = ctForm();
+    if (f && !f.hidden) setTimeout(ctPrep, 400);
+  }
+  function ctBack(msg) {
+    CT.run++; CT.busy = false;
+    var root = $("[data-k-ctroot]"), w = root && $("[data-k-ct-wait]", root), f = ctForm();
+    if (w) { w.hidden = true; w.innerHTML = ""; }
+    if (f) { f.hidden = false; formErr(f, msg || ""); ctBtn($("[data-k-ct-egov]", f), false); }
+    CT.pre = null;
+    if (msg) setTimeout(ctPrep, 600);
+  }
+  function ctDone(h, st) {
+    var root = $("[data-k-ctroot]"); if (!root) return;
+    CT.run++; CT.busy = false; CT.pre = null;
+    var old = $("[data-k-ct-done]", root); if (old) old.remove();
+    root.insertAdjacentHTML("afterbegin", h);
+    var f = ctForm(), w = $("[data-k-ct-wait]", root);
+    if (f) f.hidden = true;
+    if (w) { w.hidden = true; w.innerHTML = ""; }
+    root.setAttribute("data-st", st);
+    if (K && K.ct) K.ct.st = st;
+    qa("[data-k-ctcard], [data-k-ctbook]").forEach(function (c) { c.remove(); });
+    var dt = new Date(), dd = ("0" + dt.getDate()).slice(-2) + "." + ("0" + (dt.getMonth() + 1)).slice(-2) + "." + dt.getFullYear();
+    qa("[data-k-ct-st]").forEach(function (x) { x.textContent = T(st === "egov" ? "Подписан через eGov" : "Подписан в кабинете") + " · " + dd; x.classList.add("ok"); });
+    var sc = root.closest(".pgk-sc"); if (sc) sc.scrollTop = 0;
+    if (navigator.vibrate) try { navigator.vibrate(30); } catch (x) {}
+    /* лист закрыли, пока шла подпись, — сообщаем отдельно */
+    var sh = root.closest(".pgk-sheet"); if (sh && !sh.classList.contains("on")) toast(T("Договор подписан"));
+  }
+  function ctClick(b) {
+    var f = ctForm(); if (!f) return;
+    var v = ctVals(f);
+    formErr(f, "");
+    if (!ctNameOk(v.name)) { formErr(f, T("Укажите фамилию и имя, как в документе."), "name"); return; }
+    if (!f.elements.agree.checked) { formErr(f, T("Отметьте, что прочитали договор и согласны."), "agree"); return; }
+    ctBtn(b, true);
+    v.agree = "1";
+    api("ct_click", v).then(function (j) {
+      ctBtn(b, false);
+      if (!j.ok) { formErr(f, j.msg || "", j.field); return; }
+      ctDone(j.h, j.st);
+    }).catch(function () { ctBtn(b, false); formErr(f, T("Не получилось — проверьте интернет.")); });
+  }
+  function ctEgov(b) {
+    var f = ctForm(); if (!f) return;
+    var v = ctVals(f), key = ctKey(v), mob = ctMob();
+    formErr(f, "");
+    if (!ctNameOk(v.name)) { formErr(f, T("Укажите фамилию и имя, как в документе."), "name"); return; }
+    /* договор уже готов — открываем eGov mobile этим же нажатием */
+    if (mob && CT.pre && CT.pre.key === key && Date.now() - CT.pre.at < 150000) { var p = CT.pre; CT.pre = null; ctWait(p.q, p.doc, true); return; }
+    var run = ++CT.run;
+    CT.busy = true; CT.prep++;
+    ctBtn(b, true);
+    api("ct_doc", v).then(function (j) {
+      if (!j.ok) { var e = new Error("doc"); e.msg = j.msg; e.field = j.field; throw e; }
+      return ctSigex(j).then(function (q) { return { doc: j, q: q }; });
+    }).then(function (r) {
+      if (run !== CT.run) return;
+      ctBtn(b, false);
+      ctWait(r.q, r.doc, false);
+    }).catch(function (e) {
+      if (run !== CT.run) return;
+      CT.busy = false; ctBtn(b, false);
+      formErr(f, (e && e.field && e.msg) || (e && e.msg && e.message === "doc" ? e.msg : T("eGov сейчас не отвечает. Попробуйте ещё раз или подпишите без eGov.")), e && e.field);
+    });
+  }
+  /* ждём подпись: телефон — кнопка eGov mobile, компьютер — QR-код для eGov mobile */
+  function ctWait(q, doc, launch) {
+    var root = $("[data-k-ctroot]"), w = $("[data-k-ct-wait]", root), f = ctForm(), mob = ctMob(), run = ++CT.run;
+    CT.busy = true;
+    var qr = '<div class="pgk-ctw-qr"><img src="data:image/gif;base64,' + esc(q.qrCode || "") + '" alt="QR"></div>';
+    w.innerHTML = '<div class="pgk-ctw' + (mob ? " mob" : "") + '">' +
+      (mob ? '<span class="pgk-ct-ic pgk-ctw-ic">' + EGOV_I + "</span><b>" + esc(T("Подпишите в eGov mobile")) + "</b><p>" + esc(T("Откроется eGov mobile с договором. Подпишите его и вернитесь сюда — договор сохранится сам.")) + '</p><a class="pg-b pgk-btn pgk-btn-p pgk-ctw-go" data-ext data-k-ctgo href="' + esc(q.eGovMobileLaunchLink || "#") + '">' + EGOV_I + esc(T("Открыть eGov mobile")) + "</a>" +
+          (q.eGovBusinessLaunchLink ? '<a class="pg-b pgk-link" data-ext data-k-ctgo href="' + esc(q.eGovBusinessLaunchLink) + '">' + esc(T("Открыть eGov Business")) + "</a>" : "") +
+          '<details class="pgk-ctw-alt"><summary>' + esc(T("Подписать с другого телефона")) + "</summary>" + qr + "</details>"
+        : qr + "<b>" + esc(T("Отсканируйте QR-код в eGov mobile")) + '</b><ol class="pgk-ctw-steps"><li>' + esc(T("Откройте eGov mobile на телефоне")) + "</li><li>" + esc(T("Нажмите значок QR-сканера")) + "</li><li>" + esc(T("Наведите камеру на код и подпишите договор")) + "</li></ol>") +
+      '<p class="pgk-ctw-st" data-k-ctw-st><i class="pg-spin" aria-hidden="true"></i><span>' + esc(T("Ждём подпись…")) + '</span></p><button type="button" class="pg-b pgk-link" data-k-ct-cancel>' + esc(T("Отмена")) + "</button></div>";
+    f.hidden = true; w.hidden = false;
+    var sc = root.closest(".pgk-sc"); if (sc) sc.scrollTop = 0;
+    var st = $("[data-k-ctw-st] span", w);
+    var body = JSON.stringify({ signMethod: "CMS_WITH_DATA", version: 1, documentsToSign: [{ id: 1, nameRu: doc.title.ru, nameKz: doc.title.kk, nameEn: doc.title.en, meta: doc.meta, document: { file: { mime: "@file/pdf", data: doc.b64 } } }] });
+    /* договор уходит в eGov сразу; телефон заберёт его, когда клиент откроет eGov mobile */
+    ctRetry(function () { return fetch(q.dataURL, { method: "POST", headers: { "Content-Type": "application/json" }, body: body, cache: "no-store" }).then(rj); }, run).then(function (r) {
+      if (run !== CT.run) return;
+      if (r && r.message) { var e = new Error("sigex"); e.msg = r.message; throw e; }
+      w.classList.add("got"); st.textContent = T("Договор открыт в eGov mobile — подпишите его там");
+      return ctRetry(function () { return fetch(q.signURL, { cache: "no-store" }).then(rj); }, run);
+    }).then(function (r) {
+      if (run !== CT.run || !r) return;
+      if (r.status === "CANCELED") { var e1 = new Error("cancel"); e1.msg = T("Подпись отменена в eGov mobile."); throw e1; }
+      var x = r.documentsToSign && r.documentsToSign[0], cms = x && x.document && x.document.file && x.document.file.data;
+      if (!cms) { var e2 = new Error("nosig"); e2.msg = T("Подпись не получена. Попробуйте ещё раз."); throw e2; }
+      st.textContent = T("Проверяем подпись…");
+      return api("ct_egov", { cms: cms }).then(function (j) {
+        if (run !== CT.run) return;
+        if (!j.ok) { var e3 = new Error("srv"); e3.msg = j.msg; throw e3; }
+        ctDone(j.h, j.st);
+      });
+    }).catch(function (e) {
+      if (run !== CT.run) return;
+      ctBack((e && e.msg && e.message !== "sigex") ? e.msg : (e && e.status && e.status < 500 ? T("Время на подпись вышло. Нажмите «Подписать через eGov» ещё раз.") : T("Связь с eGov прервалась. Нажмите «Подписать через eGov» ещё раз.")));
+    });
+    /* телефон: открываем eGov mobile (данные уже отправляются) */
+    if (launch && q.eGovMobileLaunchLink) setTimeout(function () { if (run === CT.run) location.href = q.eGovMobileLaunchLink; }, 260);
+  }
+  /* поменяли имя или решения — договор на телефоне подготовим заново */
+  ["input", "change"].forEach(function (ev) {
+    D.addEventListener(ev, function (e) {
+      var t = e.target;
+      if (!t || !t.closest || !t.closest("[data-k-ctform]") || !/^(name|vet|photo)$/.test(t.name || "")) return;
+      CT.pre = null; CT.prep++; clearTimeout(CT.t); CT.t = setTimeout(ctPrep, 800);
+    });
+  });
+  /* первая заявка отправлена, договор ещё не подписан — предлагаем подписать */
+  function ctAfterBook(f) {
+    if (!K || !K.ct || !K.ct.on || K.ct.st) return;
+    var dn = $(".pgk-done", f.parentNode); if (!dn || $("[data-k-ctbook]", dn)) return;
+    var bd = $("[data-k-bookdone]", dn);
+    var box = D.createElement("div");
+    box.className = "pgk-ctbook"; box.setAttribute("data-k-ctbook", "");
+    box.innerHTML = "<b>" + esc(T("Остался один шаг — договор")) + "</b><p>" + esc(T("Подпишите его один раз — через eGov или прямо в кабинете. Он действует для всех заказов.")) + '</p><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-ct>' + EGOV_I + esc(T("Подписать договор")) + "</button>";
+    if (bd) { bd.classList.remove("pgk-btn-p"); bd.classList.add("pgk-btn-s"); dn.insertBefore(box, bd); } else dn.appendChild(box);
+  }
+
   /* ---------- все нажатия — одним обработчиком ---------- */
   D.addEventListener("click", function (e) {
     var t = e.target, b;
@@ -1116,6 +1297,11 @@
       return;
     }
     if ((b = t.closest("[data-k-order]"))) { e.preventDefault(); orderSheet(+b.getAttribute("data-k-order")); return; }
+    if ((b = t.closest("[data-k-ct-egov]"))) { e.preventDefault(); ctEgov(b); return; }
+    if ((b = t.closest("[data-k-ct-click]"))) { e.preventDefault(); ctClick(b); return; }
+    if ((b = t.closest("[data-k-ct-cancel]"))) { e.preventDefault(); ctBack(""); return; }
+    if ((b = t.closest("[data-k-ct-redo]"))) { e.preventDefault(); var cf = ctForm(), cd = $("[data-k-ct-done]"); if (cf) { cf.hidden = false; if (cd) cd.hidden = true; var ag = $(".pgk-ct-agree", cf), ab = $("[data-k-ct-click]", cf); if (ag) ag.hidden = true; if (ab) ab.hidden = true; } setTimeout(ctPrep, 300); return; }
+    if ((b = t.closest("[data-k-ct]"))) { e.preventDefault(); ctOpen(); return; }
     if ((b = t.closest("[data-k-pet]"))) { e.preventDefault(); petSheet(+b.getAttribute("data-k-pet")); return; }
     if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
     if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }

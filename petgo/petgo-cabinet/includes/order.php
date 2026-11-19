@@ -113,6 +113,8 @@ function petgo_order_detail($id, $admin) {
         $h .= '<span class="pgc-cd" data-k="s" data-ts="' . $ts . '"></span>';
     }
     $h .= '</div></div>' . ($admin ? '<button type="button" class="pgc-pen" aria-label="' . esc_attr(petgo_t('edit')) . '">' . petgo_ic('edit') . '</button>' : '') . '</div>';
+    /* 35.0: строки других плагинов под шапкой заказа (например, «Договор подписан») */
+    $h .= (string) apply_filters('petgo_order_detail_top', '', $id, $admin);
     if (petgo_o($id, 'comment')) {
         $h .= '<div class="pgc-note">' . nl2br(esc_html(petgo_o($id, 'comment'))) . '</div>';
     }

@@ -166,6 +166,11 @@ function petgo_bottom_nav($adm) {
 function petgo_page_title($adm) {
     list($items, $cur) = petgo_nav_data($adm);
     $pg = petgo_cur_pg();
+    /* 35.0: заголовок страницы плагина, которой нет в меню (например, «Договор») */
+    $t = (string) apply_filters('petgo_app_title', '', $pg);
+    if ($t !== '') {
+        return $t;
+    }
     if ($adm && isset($items[$pg])) {
         return $items[$pg][0];
     }
