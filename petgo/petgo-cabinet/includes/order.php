@@ -71,11 +71,18 @@ function petgo_worker_actions($id) {
     $ph  = (string) get_post_meta((int) petgo_o($id, 'pet'), '_pf_phone', true);
     $h   = '';
     if ($st === 'assigned') {
-        $h .= '<div class="pgc-tip">' . esc_html(petgo_t('tip_loc')) . '</div>' . petgo_form_open('arrive') . '<input type="hidden" name="order" value="' . $id . '"><input type="hidden" name="lat" value=""><input type="hidden" name="lng" value=""><input type="hidden" name="acc" value=""><button type="button" class="pgc-btn pgc-arrive">' . petgo_ic('pinf') . esc_html(petgo_t('arrived_btn')) . '</button></form>';
+        $h .= '<div class="pgc-tip">' . esc_html(petgo_t('tip_loc')) . '</div>';
+        if ($sv !== 'walk' && function_exists('petgo_qr_block')) {
+            /* 34.7: визит — хозяин дома: QR; нет дома — «Я на месте» с местоположением */
+            $h .= petgo_qr_block($id, 'arrive');
+        } else {
+            $h .= petgo_form_open('arrive') . '<input type="hidden" name="order" value="' . $id . '"><input type="hidden" name="lat" value=""><input type="hidden" name="lng" value=""><input type="hidden" name="acc" value=""><button type="button" class="pgc-btn pgc-arrive">' . petgo_ic('pinf') . esc_html(petgo_t('arrived_btn')) . '</button></form>';
+        }
     } elseif ($st === 'arrived') {
         $h .= '<div class="pgc-tip">' . esc_html(petgo_t($sv === 'walk' ? 'tip_walk' : 'tip_visit')) . '</div>';
         if ($sv === 'walk') {
-            $h .= petgo_btn_form('pick', array('order' => $id), petgo_t('picked_btn'), 'pgc-btn', petgo_t('q_pick'));
+            /* 34.7: забрал собаку — QR хозяина или «хозяина нет дома» (с местоположением) */
+            $h .= function_exists('petgo_qr_block') ? petgo_qr_block($id, 'pick') : petgo_btn_form('pick', array('order' => $id), petgo_t('picked_btn'), 'pgc-btn', petgo_t('q_pick'));
         } else {
             $h .= petgo_trk_worker_block($id) . petgo_finish_form($id, 'visit_end_btn');
         }

@@ -431,6 +431,7 @@ function petgo_app_cfg($adm) {
     $L = array(
         'h' => petgo_t('h'), 'm' => petgo_t('m'), 'left' => petgo_t('left'), 'late' => petgo_t('late'), 'ret' => petgo_t('to_return'), 'up' => petgo_t('time_up'),
         'locating' => petgo_t('locating'), 'arrived' => petgo_t('arrived_btn'), 'noloc' => petgo_t('noloc'), 'denied' => petgo_t('locdenied'),
+        'qr_cam' => petgo_t('qr_cam'), 'qr_no_cam' => petgo_t('qr_no_cam'), 'qr_wrong' => petgo_t('qr_wrong'), 'qr_js' => petgo_asset_url('vendor/jsqr.min.js'),
         'offline' => petgo_t('offline'), 'offline_act' => petgo_t('offline_act'), 'neterr' => petgo_t('neterr'), 'short' => petgo_t('why_short'),
         'push_on' => petgo_t('push_on'), 'push_off' => petgo_t('push_off'), 'push_den' => petgo_t('push_den'), 'push_na' => petgo_t('push_na'), 'push_ios_s' => petgo_t('push_ios_s'), 'push_err' => petgo_t('push_err'),
         'chat' => petgo_t('chat'), 'none' => petgo_t('c_none'), 'to' => petgo_t('c_to'), 'expl' => petgo_t('c_expl'), 'c_late' => petgo_t('c_late'), 'err' => petgo_t('c_err'),
@@ -485,6 +486,10 @@ function petgo_render_app() {
         petgo_fab();
     }
     petgo_push_sheet();
+    /* 34.7: сканер QR-кода хозяина (камера на весь экран) */
+    if (function_exists('petgo_qr_scanner_html')) {
+        echo petgo_qr_scanner_html();
+    }
     echo '<div class="pgc-toasts" id="pgc-toasts" aria-live="polite"></div>';
     echo '<script type="application/json" id="pgc-cfg">' . wp_json_encode(petgo_app_cfg($adm), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
     echo '</div>';

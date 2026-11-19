@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 34.6.0
+ * Version: 34.7.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.6.0');
+define('PETGO_VER', '34.7.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -230,7 +230,8 @@ function petgo_dict() {
         'o_yes' => array('Да', 'Иә', 'Yes', '是'),
         'o_no' => array('Нет', 'Жоқ', 'No', '否'),
     );
-    $D = array_merge($D, petgo_dict_more(), function_exists('petgo_dict_v34') ? petgo_dict_v34() : array());
+    /* 34.7: строки других модулей и плагинов — фильтр petgo_app_dict ('ключ' => [ru, kk, en, zh]) */
+    $D = array_merge($D, petgo_dict_more(), function_exists('petgo_dict_v34') ? petgo_dict_v34() : array(), (array) apply_filters('petgo_app_dict', array()));
     return $D;
 }
 
@@ -1051,6 +1052,10 @@ function petgo_h_arrive() {
     if (!is_numeric($lat) || !is_numeric($lng) || abs((float) $lat) > 90 || abs((float) $lng) > 180) {
         petgo_fail('err_loc');
     }
+    /* 34.7: визит — хозяин дома и показал QR (необязательно); место отправляется хозяину в любом случае */
+    if (petgo_o($oid, 'service') !== 'walk' && function_exists('petgo_qr_confirm') && (petgo_p('qr') !== '' || petgo_p('noqr') === '1')) {
+        petgo_qr_confirm($oid, true);
+    }
     update_post_meta($oid, '_lat', round((float) $lat, 6));
     update_post_meta($oid, '_lng', round((float) $lng, 6));
     update_post_meta($oid, '_acc', (int) petgo_p('acc'));
@@ -1072,6 +1077,10 @@ function petgo_h_pick() {
     $oid = (int) petgo_p('order');
     if (!petgo_order_of_nanny($oid, get_current_user_id()) || petgo_o($oid, 'status') !== 'arrived' || petgo_o($oid, 'service') !== 'walk') {
         petgo_fail('err_na');
+    }
+    /* 34.7: передачу подтверждает QR хозяина; хозяина нет дома — «без QR» с местоположением */
+    if (function_exists('petgo_qr_confirm')) {
+        petgo_qr_confirm($oid);
     }
     update_post_meta($oid, '_picked_at', time());
     update_post_meta($oid, '_status', 'picked');
@@ -1174,6 +1183,7 @@ function petgo_ic($n) {
         'check'    => '<path d="M5 12.5l4.5 4.5L19 7"/>',
         'undo'     => '<path d="M4 9h11a5 5 0 0 1 0 10H8M4 9l4-4M4 9l4 4"/>',
         'x'        => '<path d="M6 6l12 12M18 6L6 18"/>',
+        'qr'       => '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h3v3M20.5 14v.01M14 20.5h3M20.5 17.5v3h-3"/>',
         'phone'    => '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
         'msg'      => '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
         'pin'      => '<path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
@@ -1752,6 +1762,8 @@ require_once __DIR__ . '/includes/track.php';
 require_once __DIR__ . '/includes/i18n-v34.php';
 /* 34.5: API для новых плагинов PetGo — подключаются сами, остальные плагины обновлять не нужно */
 require_once __DIR__ . '/includes/api.php';
+/* 34.7: QR-код передачи питомца (няня сканирует у хозяина) */
+require_once __DIR__ . '/includes/qr.php';
 
 /* ============================================================
    11. ЖИВОЕ ОБНОВЛЕНИЕ: «ревизия» данных меняется при любой правке, телефон раз в 20 секунд спрашивает одно число

@@ -670,9 +670,10 @@ function petgo_ajax_chat() {
         $max  = 0;
         foreach ($rows as $r) {
             $a  = (int) $r->user_id ? get_userdata((int) $r->user_id) : false;
-            $s  = (int) $r->subject_id ? get_userdata((int) $r->subject_id) : false;
+            /* 34.7: у уведомлений кабинета клиента (оценка, место няни) subject — номер заказа, а не сотрудник */
+            $s  = ((int) $r->subject_id && !in_array($r->kind, array('rv', 'loc', 'ai'), true)) ? get_userdata((int) $r->subject_id) : false;
             $max = max($max, (int) $r->id);
-            $msgs[] = array('id' => (int) $r->id, 'ts' => (int) $r->ts, 'u' => (int) $r->user_id, 'n' => (int) $r->user_id ? ($a ? $a->display_name : '—') : 'PetGo',
+            $msgs[] = array('id' => (int) $r->id, 'ts' => (int) $r->ts, 'u' => (int) $r->user_id, 'n' => (int) $r->user_id ? ($a ? $a->display_name : '—') : ($r->kind === 'ai' ? 'Помощник PetGo' : 'petgo.kz'),
                 'av' => $a ? petgo_user_avatar_url($a->ID) : '', 'me' => (int) $r->user_id === $uid, 'k' => $r->kind, 'h' => petgo_msg_html($r->body),
                 'p' => petgo_media($r->photo), 't' => petgo_fmt((int) $r->ts), 'tm' => wp_date('H:i', (int) $r->ts, petgo_tz()), 'd' => wp_date('Y-m-d', (int) $r->ts, petgo_tz()), 'dl' => petgo_day_label((int) $r->ts), 's' => (int) $r->subject_id, 'sn' => $s ? $s->display_name : '');
         }

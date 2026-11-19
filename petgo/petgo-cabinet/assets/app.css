@@ -1107,3 +1107,27 @@ html.pgc-theming *,html.pgc-theming *::before,html.pgc-theming *::after{transiti
 .pgc *:not(.pgc-spin):not(.pgc-spinner){animation:none!important}
 .pgc .pgc-ptr.spin i{animation:pgRot .7s linear infinite!important}
 }
+/* ============================================================
+   34.7 QR-КОД ХОЗЯИНА: кнопки няни и сканер на весь экран
+   ============================================================ */
+.pgq{display:flex;flex-direction:column;gap:10px}
+.pgq-f{display:flex;flex-direction:column;gap:10px;margin:0}
+.pgq .pgc-btn{width:100%}
+.pgq-tip{margin:0;font-size:13px;line-height:1.4;color:var(--mu);text-align:center}
+.pgq-ov{position:fixed;inset:0;z-index:97;background:#000;color:#fff;opacity:0;transition:opacity 200ms var(--ein)}
+.pgq-ov.on{opacity:1;transition:opacity 280ms var(--e)}
+.pgq-ov[hidden]{display:none}
+.pgq-ov video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pgq-shade{display:none}
+.pgq-frame{position:absolute;left:50%;top:42%;width:250px;height:250px;margin:-125px 0 0 -125px;border-radius:28px;box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+.pgq-frame i{position:absolute;width:44px;height:44px;border:4px solid #fff;border-radius:6px}
+.pgq-frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}.pgq-frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.pgq-frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}.pgq-frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.pgc .pgq-x,.pgq-ov .pgq-x{position:absolute;top:calc(var(--sat) + 10px);left:12px;z-index:2;color:#fff;background-color:rgba(60,60,60,.55)}
+.pgq-bot{position:absolute;left:0;right:0;bottom:0;padding:16px 16px calc(var(--sab) + 16px);display:flex;flex-direction:column;gap:12px;background:linear-gradient(transparent,rgba(0,0,0,.7) 30%)}
+.pgq-bot p{margin:0;text-align:center;font-size:16px;font-weight:600}
+.pgq-man{display:flex;gap:8px;margin:0}
+.pgq-man input{flex:1;min-width:0;min-height:50px;padding:0 16px;border:0;border-radius:14px;background:rgba(255,255,255,.14);color:#fff;font-size:20px;letter-spacing:.2em;text-align:center;outline:0}
+.pgq-man input::placeholder{color:rgba(255,255,255,.6);letter-spacing:0;font-size:15px}
+.pgq-man .pgc-btn{flex:none}
+@media (prefers-reduced-motion:reduce){.pgq-ov{transition:none}}

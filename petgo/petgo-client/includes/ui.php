@@ -150,6 +150,7 @@ function petgo_cl_dashboard() {
         'leaflet' => array('css' => petgo_asset_url('leaflet/leaflet.css'), 'js' => petgo_asset_url('leaflet/leaflet.js')),
         'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
         'tr' => petgo_cl_js_dict(),
+        'qrjs' => petgo_asset_url('vendor/qrcode.min.js'),
     );
     /* 34.5: плагины добавляют свои данные для скриптов кабинета (window.PGK.cfg) */
     $cfg = (array) apply_filters('petgo_cl_cfg', $cfg, $uid);
@@ -218,6 +219,8 @@ function petgo_cl_dashboard() {
     $rv .= '</div><div class="pgk-list"><label class="pgk-f pgk-fa"><span>' . esc_html($L('Как всё прошло?')) . '</span><textarea name="text" rows="4" maxlength="1500" placeholder="' . esc_attr($L('Что понравилось, что можно сделать лучше')) . '"></textarea></label></div><p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Отправить отзыв')) . '</span><i class="pg-spin" aria-hidden="true"></i></button><button type="button" class="pg-b pgk-link" data-k-rvlater>' . esc_html($L('Позже')) . '</button></form>';
     $h .= petgo_cl_sheet('review', $L('Оцените няню'), $rv);
     $h .= petgo_cl_sheet('post', '', '<article class="pgk-post" data-k-post-body></article>', '', 'pgk-sheet-tall');
+    /* 34.7: заказ — QR-код для няни появляется, когда нажимаешь на заказ */
+    $h .= petgo_cl_sheet('order', $L('Заказ'), '<div class="pgk-ord" data-k-order-body><div class="pgk-map-load"><i class="pg-spin"></i></div></div>');
     /* 34.5: листы других плагинов: petgo_cl_sheet('id', 'Заголовок', $html) — открываются кнопкой data-k-open="id" */
     $h .= (string) apply_filters('petgo_cl_sheets', '', $uid);
     $h .= '<div class="pgk-lb" data-k-lb hidden><button type="button" class="pg-b pgk-x" data-k-lbx aria-label="' . esc_attr($L('Закрыть')) . '">' . petgo_cl_icon('x') . '</button><img alt=""><span></span></div>';
@@ -236,7 +239,7 @@ function petgo_cl_upcoming_html($uid) {
     foreach ($up as $o) {
         $ts  = (int) petgo_o($o->ID, 'ts');
         $ost = petgo_o($o->ID, 'status');
-        $h  .= '<button type="button" class="pg-b pgk-row pgk-uprow" data-k-tab="walks" data-k-order="' . (int) $o->ID . '"><span class="pgk-date"><b>' . esc_html(wp_date('d', $ts, petgo_tz())) . '</b><small>' . esc_html(wp_date('H:i', $ts, petgo_tz())) . '</small></span><span class="pgk-row-t"><b>' . esc_html(petgo_pet_name($o->ID) . ' · ' . petgo_cl_svc_label(petgo_o($o->ID, 'service'))) . '</b><small class="pgk-st st-' . esc_attr($ost) . '"><i></i><span>' . esc_html(petgo_cl_status_label($ost) . (petgo_nanny_label($o->ID) !== '' ? ' · ' . petgo_nanny_label($o->ID) : '')) . '</span></small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button>';
+        $h  .= '<button type="button" class="pg-b pgk-row pgk-uprow" data-k-order="' . (int) $o->ID . '"><span class="pgk-date"><b>' . esc_html(wp_date('d', $ts, petgo_tz())) . '</b><small>' . esc_html(wp_date('H:i', $ts, petgo_tz())) . '</small></span><span class="pgk-row-t"><b>' . esc_html(petgo_pet_name($o->ID) . ' · ' . petgo_cl_svc_label(petgo_o($o->ID, 'service'))) . '</b><small class="pgk-st st-' . esc_attr($ost) . '"><i></i><span>' . esc_html(petgo_cl_status_label($ost) . (petgo_nanny_label($o->ID) !== '' ? ' · ' . petgo_nanny_label($o->ID) : '')) . '</span></small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button>';
     }
     return $h . '</div>';
 }
@@ -357,6 +360,10 @@ function petgo_rep_html($oid) {
     return $h;
 }
 
+function petgo_cl_qr_icon() {
+    return '<svg class="pg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h3v3M20.5 14v.01M14 20.5h3M20.5 17.5v3h-3"/></svg>';
+}
+
 /* одна прогулка (визит) */
 function petgo_cl_walk_item($id) {
     $L   = 'petgo_site_l';
@@ -396,6 +403,11 @@ function petgo_cl_walk_item($id) {
         }
     } elseif (in_array($st, array('arrived', 'picked'), true)) {
         $acts .= '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-tab="map" data-k-focus="' . $pid . '">' . petgo_cl_icon('map') . esc_html($L('Смотреть на карте')) . '</button>';
+    }
+    /* 34.7: пока няня не забрала питомца (не пришла на визит) — QR-код для неё */
+    $walk = petgo_o($id, 'service') === 'walk';
+    if ($st === 'new' || $st === 'assigned' || ($walk && $st === 'arrived')) {
+        $acts .= '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-order="' . (int) $id . '">' . petgo_cl_qr_icon() . esc_html($L('QR-код для няни')) . '</button>';
     }
     return $h . ($acts !== '' ? '<div class="pgk-wacts">' . $acts . '</div>' : '') . '</article>';
 }
@@ -462,7 +474,9 @@ function petgo_cl_js_dict() {
     foreach (array('Сейчас', 'мин', 'ч', 'Последнее место', 'Фото', 'обновлено', 'только что', 'назад', 'Маршрут появится здесь, когда няня начнёт прогулку.', 'Сохранено', 'Не получилось — проверьте интернет.',
         'Новый питомец', 'Анкета питомца', 'Няня', 'Прогулка', 'Прогулки', 'Все места', 'Отправлено', 'Отзыв для няни %s', 'Сохранить', 'Блог', 'ещё', 'Дома',
         'Сегодня', 'Завтра', 'Любая свободная', 'Свободна', 'Занята в это время', 'Выберите питомца.', 'Выберите день и время.', 'Примерно', 'за неделю', 'Цену подтвердит менеджер', 'Помощник PetGo', 'печатает…', 'Оценить няню', 'Менеджер',
-        'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря', 'Нет нянь в списке — подберёт менеджер', 'Вчера', 'дней', 'Вы записаны', 'Ваш отзыв', 'Спасибо за оценку') as $s) {
+        'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря', 'Нет нянь в списке — подберёт менеджер', 'Вчера', 'дней', 'Вы записаны', 'Ваш отзыв', 'Спасибо за оценку',
+        'Дайте няне отсканировать QR-код, когда она забирает питомца.', 'Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.',
+        'Код для няни', 'Действует до', 'Няня ещё не назначена', 'Где сейчас', 'Заказ', 'мин', 'QR-код для няни', 'Передача подтверждена QR-кодом', 'Без QR — место отмечено на карте', 'Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.') as $s) {
         $o[$s] = petgo_site_l($s);
     }
     return $o;

@@ -12,7 +12,7 @@
   --k-r: 14px;
   /* кривые и длительности движения — одни на весь кабинет */
   --k-out: cubic-bezier(.32, .72, 0, 1); --k-in: cubic-bezier(.55, 0, 1, .45); --k-io: cubic-bezier(.77, 0, .175, 1); --k-e: var(--k-out);
-  --k-feed: #E7E4D2; --k-feed-card: #FFFEF8;
+  --k-feed: #E7E4D2; --k-feed-card: #FFFEF8; --k-kb: #E9E7D8; --k-kbf: #FFFEF8;
   --k-press: 150ms; --k-sheet-in: 280ms; --k-sheet-out: 200ms; --k-pop-in: 240ms; --k-pop-out: 170ms; --k-move: 250ms;
   --k-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --sab: env(safe-area-inset-bottom, 0px); --sat: env(safe-area-inset-top, 0px);
@@ -21,7 +21,7 @@ html.pgk-dark .pgk, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pg
   --k-bg: #000; --k-card: #1C1C1E; --k-card2: #2C2C2E; --k-tx: #F2F2F7; --k-mu: #8E8E93; --k-mu2: #5A5A5F;
   --k-line: rgba(255, 255, 255, .1); --k-fill: rgba(255, 255, 255, .07); --k-fill2: rgba(255, 255, 255, .12);
   --k-acc: #0E7A64; --k-acc-tx: #fff; --k-acci: #4CC38A;
-  --k-feed: #141416; --k-feed-card: #242427;
+  --k-feed: #141416; --k-feed-card: #242427; --k-kb: #1C1C1E; --k-kbf: #2C2C2E;
   --k-ok: #4CC38A; --k-ok-bg: rgba(76, 195, 138, .15); --k-warn: #F0B04D; --k-warn-bg: rgba(240, 176, 77, .15); --k-err: #FF6B5E; --k-err-bg: rgba(255, 107, 94, .14);
 }
 
@@ -355,8 +355,9 @@ html.pgkb-open .pg-layer .pgk-tabbar { transform: translateY(110%); transition: 
 /* ---------- чат: всегда прижат вниз, сообщения появляются плавно ---------- */
 .pg-layer .pgk-sheet-chat .pgk-sc { display: flex; padding: 0; overflow: hidden; }
 .pgk-chat { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.pgk-msgs { flex: 1; min-height: 0; display: flex; flex-direction: column-reverse; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.pgk-msgs-in { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px 12px; }
+/* 34.7: лента — обычная колонка, вниз её прижимает скрипт (одинаково надёжно на iPhone и Android) */
+.pgk-msgs { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.pgk-msgs-in { display: flex; flex-direction: column; gap: 4px; margin-top: auto; padding: 8px 12px 12px; }
 .pgk-chat-hi { margin: 12px 0; padding: 18px; border-radius: var(--k-r); background: var(--k-card); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .pgk-chat-hi b { font-size: 17px; } .pgk-chat-hi p { margin: 0; font-size: 15px; color: var(--k-mu); }
 .pgk-day-l { align-self: center; margin: 10px 0 4px; font-size: 12px; font-weight: 600; color: var(--k-mu); }
@@ -384,9 +385,11 @@ html.pgkb-open .pg-layer .pgk-tabbar { transform: translateY(110%); transition: 
 .pgk-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--k-mu); animation: pgkDots 1.2s ease-in-out infinite; } .pgk-typing i:nth-child(2) { animation-delay: .15s; } .pgk-typing i:nth-child(3) { animation-delay: .3s; }
 .pgk-typing span { margin-left: 6px; }
 @keyframes pgkDots { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
-.pgk-cf { flex: none; display: flex; align-items: flex-end; gap: 8px; margin: 0; padding: 8px 10px calc(10px + var(--sab)); background: var(--k-card); border-top: .5px solid var(--k-line); }
-.pg-layer.kb-open .pgk-cf { padding-bottom: 8px; }
-.pgk-cf textarea { flex: 1; min-width: 0; min-height: 38px; max-height: 140px; margin: 0; padding: 8px 14px; border: .5px solid var(--k-line); border-radius: 19px; outline: 0; resize: none; background: var(--k-bg); color: var(--k-tx); font: 400 16px/1.35 var(--k-font); }
+/* 34.7: поле ввода — скруглено сверху, снизу прямое и в цвет клавиатуры: с ней складывается в один блок */
+.pgk-cf { flex: none; display: flex; align-items: flex-end; gap: 8px; margin: 6px 0 0; padding: 10px 12px calc(12px + var(--sab)); background: var(--k-kb); border-radius: 22px 22px 0 0; box-shadow: 0 -.5px 0 var(--k-line); }
+.pg-layer.kb-open .pgk-cf { padding-bottom: 10px; }
+html.pgkb-open:has(#pgk-chat.on) .pgkb { box-shadow: none; }
+.pgk-cf textarea { flex: 1; min-width: 0; min-height: 40px; max-height: 140px; margin: 0; padding: 9px 15px; border: 0; border-radius: 20px; outline: 0; resize: none; background: var(--k-bg); color: var(--k-tx); font: 400 16px/1.35 var(--k-font); }
 .pgk-clip.pg-b.pg-b, .pgk-send.pg-b.pg-b { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; position: relative; transition: transform var(--k-press) var(--k-out), opacity var(--k-press) ease; }
 .pgk-clip.pg-b.pg-b { background: none; color: var(--k-mu); }
 .pgk-cf.has-ph .pgk-clip.pg-b.pg-b { color: var(--k-acci); }
@@ -521,3 +524,31 @@ html.pgk-dark .pgk-bcard.pg-b.pg-b:active { box-shadow: inset 0 0 0 100vmax rgba
 /* отзыв уже оставлен — в уведомлении вместо кнопки звёзды */
 .pgk-n .pgk-myrv { justify-content: center; margin-top: 8px; }
 .pgk-badge.st-expired { background: var(--k-fill); color: var(--k-mu); }
+
+/* ============================================================
+   34.7 ЧАТ: при открытии всё внутри проявляется из прозрачности и размытия в чёткость;
+   уведомления — как SMS от petgo.kz (слева, с логотипом)
+   ============================================================ */
+.pg-layer .pgk-sheet-chat .pgk-sc, .pg-layer .pgk-sheet-chat .pgk-sht { opacity: 0; filter: blur(6px); transition: opacity 150ms var(--k-in), filter 150ms var(--k-in); }
+.pg-layer .pgk-sheet-chat.on .pgk-sc, .pg-layer .pgk-sheet-chat.on .pgk-sht { opacity: 1; filter: blur(0); transition: opacity 420ms var(--k-out) 100ms, filter 420ms var(--k-out) 100ms; }
+.pgk-cf textarea { background: var(--k-kbf); }
+.pgk-m-logo { background: var(--k-acc); color: #fff; }
+.pgk-m-logo svg { width: 17px; height: 17px; }
+.pgk-m-pg .pgk-m-b small { color: var(--k-acci); }
+.pgk-m-pg .pgk-btn, .pgk-m-pg .pgk-myrv { margin: 8px 0 2px; }
+.pgk-m-pg .pgk-myrv { justify-content: flex-start; }
+/* ============================================================
+   34.7 ЗАКАЗ: QR-код для няни (белая карточка в любой теме — камера читает уверенно)
+   ============================================================ */
+.pgk-ord { display: flex; flex-direction: column; gap: 14px; padding-bottom: 6px; }
+.pgk-ord .pgk-map-load { position: static; min-height: 220px; }
+.pgk-ord-h { display: flex; align-items: center; gap: 12px; }
+.pgk-ord-h > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pgk-ord-h b { font-size: 17px; } .pgk-ord-h small { font-size: 14px; color: var(--k-mu); }
+.pgk-qr { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 18px 16px 16px; border-radius: 22px; background: #fff; color: #0F2B27; animation: pgkPop var(--k-sheet-in) var(--k-out) both; }
+.pgk-qr-img { width: min(240px, 70vw); aspect-ratio: 1; margin-bottom: 8px; }
+.pgk-qr-img svg { display: block; width: 100%; height: 100%; }
+.pgk-qr small { font-size: 13px; color: #5f7471; }
+.pgk-qr-code { font-size: 30px; font-weight: 700; letter-spacing: .14em; font-variant-numeric: tabular-nums; }
+.pgk-qr-tip { margin: 0; padding: 0 4px; text-align: center; font-size: 15px; line-height: 1.45; color: var(--k-mu); }
+.pgk-qr-tip b { display: block; margin-bottom: 4px; font-size: 16px; color: var(--k-tx); }

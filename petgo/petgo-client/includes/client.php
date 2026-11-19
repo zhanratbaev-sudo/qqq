@@ -257,6 +257,28 @@ function petgo_cl_ajax() {
         }
         petgo_cl_json(true, $out);
     }
+    /* 34.7: заказ — подробности и QR-код для няни (действует 24 часа, потом сам меняется) */
+    if ($op === 'order') {
+        $oid = (int) petgo_p('order');
+        if (get_post_type($oid) !== 'petgo_order' || !petgo_cl_owns($uid, (int) petgo_o($oid, 'pet'))) {
+            petgo_cl_json(false, array('msg' => $L('Нет доступа.')));
+        }
+        $st   = petgo_o($oid, 'status');
+        $walk = petgo_o($oid, 'service') === 'walk';
+        $ts   = (int) petgo_o($oid, 'ts');
+        $pid  = (int) petgo_o($oid, 'pet');
+        $show = function_exists('petgo_qr') && ($st === 'new' || $st === 'assigned' || ($walk && $st === 'arrived'));
+        $q    = $show ? petgo_qr($oid) : null;
+        $nid  = (int) petgo_o($oid, 'nanny');
+        $out  = array(
+            'id' => $oid, 'pet' => get_the_title($pid), 'pid' => $pid, 'av' => petgo_pet_avatar_url($pid), 'svc' => petgo_cl_svc_label(petgo_o($oid, 'service')),
+            'when' => wp_date('d.m · H:i', $ts, petgo_tz()), 'dur' => max(1, (int) petgo_o($oid, 'dur')), 'st' => $st, 'stl' => petgo_cl_status_label($st),
+            'nn' => petgo_nanny_label($oid), 'nav' => $nid ? petgo_user_avatar_url($nid) : '', 'walk' => $walk,
+            'qr' => $q ? array('url' => petgo_qr_url($oid, $q), 'code' => substr($q['code'], 0, 3) . ' ' . substr($q['code'], 3), 'exp' => wp_date('d.m · H:i', (int) $q['exp'], petgo_tz())) : null,
+            'by' => (string) get_post_meta($oid, '_hand_by', true),
+        );
+        petgo_cl_json(true, $out);
+    }
     if ($op === 'walks' && function_exists('petgo_cl_walks_html')) {
         petgo_cl_json(true, array('h' => petgo_cl_walks_html($uid), 'wk' => petgo_cl_walks_sig($uid)));
     }
@@ -275,7 +297,7 @@ function petgo_cl_ajax() {
             $a     = (int) $r->user_id ? get_userdata((int) $r->user_id) : false;
             $me    = (int) $r->user_id === $uid;
             $max   = max($max, (int) $r->id);
-            $out[] = array('id' => (int) $r->id, 'me' => $me, 'k' => (string) $r->kind, 's' => (int) $r->subject_id, 'rv' => ($r->kind === 'rv' && (int) $r->subject_id && function_exists('petgo_rv_by_order') && petgo_rv_by_order((int) $r->subject_id)) ? (int) petgo_rv_by_order((int) $r->subject_id)->rating : 0, 'n' => $me ? '' : ($a ? $a->display_name : petgo_site_l($r->kind === 'ai' ? 'Помощник PetGo' : 'PetGo')), 'av' => (!$me && $a) ? petgo_user_avatar_url($a->ID) : '',
+            $out[] = array('id' => (int) $r->id, 'me' => $me, 'k' => (string) $r->kind, 's' => (int) $r->subject_id, 'pid' => $r->kind === 'loc' ? (int) petgo_o((int) $r->subject_id, 'pet') : 0, 'rv' => ($r->kind === 'rv' && (int) $r->subject_id && function_exists('petgo_rv_by_order') && petgo_rv_by_order((int) $r->subject_id)) ? (int) petgo_rv_by_order((int) $r->subject_id)->rating : 0, 'n' => $me ? '' : ($a ? $a->display_name : petgo_site_l($r->kind === 'ai' ? 'Помощник PetGo' : 'PetGo')), 'av' => (!$me && $a) ? petgo_user_avatar_url($a->ID) : '',
                 'h' => petgo_msg_html($r->body), 'p' => $r->photo !== '' ? petgo_media($r->photo) : '', 'tm' => wp_date('H:i', (int) $r->ts, petgo_tz()), 'dl' => wp_date('d.m.Y', (int) $r->ts, petgo_tz()));
         }
         if ($max) {

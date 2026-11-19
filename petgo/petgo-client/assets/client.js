@@ -23,6 +23,7 @@
     check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', "pg-i pgk-ok"),
     users: svg('<circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c0-3.4 2.7-5.4 6-5.4s6 2 6 5.4"/><circle cx="16.6" cy="9.3" r="2.6"/><path d="M16.8 14.2c2.6.2 4.4 2 4.4 4.8"/>')
   };
+  var LOGO = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12.3c-2.7 0-4.8 2.1-4.8 4 0 1.7 1.4 2.4 2.8 2 .9-.3 1.4-.6 2-.6s1.1.3 2 .6c1.4.4 2.8-.3 2.8-2 0-1.9-2.1-4-4.8-4z"/><ellipse cx="6.6" cy="10" rx="1.5" ry="2"/><ellipse cx="9.9" cy="6.5" rx="1.5" ry="2.1"/><ellipse cx="14.1" cy="6.5" rx="1.5" ry="2.1"/><ellipse cx="17.4" cy="10" rx="1.5" ry="2"/></svg>';
   var CL = { box: null, tab: "home", timer: 0, chatT: 0, lastMsg: 0, chatOpen: false, scroll: {}, day: "" };
 
   /* ---------- переключатели (как в iPhone): плашка едет к выбранному ---------- */
@@ -193,7 +194,7 @@
       api("review", { order: f.elements.order.value, rating: rate, text: f.elements.text.value }).then(function (j) { busyEnd(f, function () {
         if (!j.ok) { formErr(f, j.msg || ""); return; }
         qa('[data-k-review="' + f.elements.order.value + '"]').forEach(function (b) {
-          if (b.closest(".pgk-n")) { b.outerHTML = '<span class="pgk-myrv">' + stars(rate) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>"; return; }
+          if (b.closest(".pgk-n, .pgk-m-pg")) { b.outerHTML = '<span class="pgk-myrv">' + stars(rate) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>"; return; }
           var st = ""; for (var i = 1; i <= 5; i++) st += i <= rate ? ICON.starOn : ICON.star;
           var w = b.closest(".pgk-wacts");
           b.remove();
@@ -467,13 +468,30 @@
      ============================================================ */
   function msgsBox() { return $("[data-k-msgs]"); }
   function msgsIn() { return $("[data-k-msgs-in]"); }
-  function nearBottom() { var b = msgsBox(); return !b || Math.abs(b.scrollTop) < 80; }
-  function toBottom(smooth) { var b = msgsBox(); if (b) b.scrollTo({ top: 0, behavior: smooth && !reduce ? "smooth" : "auto" }); }
+  function nearBottom() { var b = msgsBox(); return !b || b.scrollHeight - b.scrollTop - b.clientHeight < 80; }
+  /* 34.7: лента всегда тянется вниз — клавиатура, новые сообщения, «печатает…» не уводят её наверх */
+  function toBottom(smooth) {
+    var b = msgsBox(); if (!b) return;
+    CL.stick = true; CL.pinUntil = Date.now() + 450;
+    if (smooth && !reduce) b.scrollTo({ top: b.scrollHeight, behavior: "smooth" }); else b.scrollTop = b.scrollHeight;
+  }
+  function pinSetup() {
+    var b = msgsBox(), inn = msgsIn();
+    if (!b || b._pin) return;
+    b._pin = 1; CL.stick = true;
+    b.addEventListener("scroll", function () { if (Date.now() > (CL.pinUntil || 0)) CL.stick = nearBottom(); }, { passive: true });
+    var pin = function () { if (CL.stick) b.scrollTop = b.scrollHeight; };
+    if (W.ResizeObserver) { var ro = new ResizeObserver(pin); ro.observe(b); if (inn) ro.observe(inn); }
+    W.addEventListener("resize", pin);
+    W.addEventListener("pgkb", function () { var t0 = Date.now(); (function f() { pin(); if (Date.now() - t0 < 420) requestAnimationFrame(f); })(); });
+  }
   function msgHtml(m, anim, i) {
     var cls = anim ? " new" : "", st = anim && i ? ' style="animation-delay:' + Math.min(i, 5) * 40 + 'ms"' : "";
-    if (m.k === "sys" || m.k === "rv") {
-      return '<div class="pgk-n' + cls + '" data-id="' + m.id + '"' + st + ">" + (m.h ? "<p>" + m.h + "</p>" : "") +
-        (m.k === "rv" && m.s ? (m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>") : "") + "<small>" + esc(m.tm) + "</small></div>";
+    if (m.k === "sys" || m.k === "rv" || m.k === "loc") {
+      var act = "";
+      if (m.k === "rv" && m.s) act = m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>";
+      if (m.k === "loc" && m.pid) act = '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-tab="map" data-k-focus="' + m.pid + '">' + svg('<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>') + esc(T("Где сейчас")) + "</button>";
+      return '<div class="pgk-m pgk-m-pg' + cls + '" data-id="' + m.id + '"' + st + '><span class="pgk-m-av pgk-m-logo">' + LOGO + '</span><div class="pgk-m-b"><small>petgo.kz</small>' + (m.h ? "<p>" + m.h + "</p>" : "") + act + "<time>" + esc(m.tm) + "</time></div></div>";
     }
     return '<div class="pgk-m' + (m.me ? " me" : "") + cls + '" data-id="' + m.id + '"' + st + ">" + (!m.me ? '<span class="pgk-m-av">' + (m.av ? '<img src="' + esc(m.av) + '" alt="">' : "<b>" + esc((m.n || "P").charAt(0)) + "</b>") + "</span>" : "") +
       '<div class="pgk-m-b">' + (!m.me && m.n ? "<small>" + esc(m.n) + "</small>" : "") + (m.p ? '<button type="button" class="pg-b pgk-m-ph" data-k-photo="' + esc(m.p) + '"><img src="' + esc(m.p) + '" alt="" loading="lazy"></button>' : "") + (m.h ? "<p>" + m.h + "</p>" : "") + "<time>" + esc(m.tm) + "</time></div></div>";
@@ -496,7 +514,7 @@
     loading = api("msgs", { after: CL.lastMsg }).then(function (j) {
       loading = null;
       if (!j.ok || !j.msgs || !j.msgs.length) return;
-      var stick = first || nearBottom(), html = "", k = 0;
+      var stick = first || CL.stick !== false || nearBottom(), html = "", k = 0;
       j.msgs.forEach(function (m) {
         if (m.id <= CL.lastMsg || inn.querySelector('[data-id="' + m.id + '"]')) return;
         CL.lastMsg = Math.max(CL.lastMsg, m.id);
@@ -519,6 +537,7 @@
     var s = kOpen("chat");
     if (!s) return;
     CL.chatOpen = true;
+    pinSetup();
     toBottom(false);
     loadMsgs();
     clearInterval(CL.chatT);
@@ -576,6 +595,37 @@
     });
   }
   function unread(n) { qa("[data-k-unread]").forEach(function (b) { b.textContent = n; b.hidden = !n; }); }
+
+  /* ============================================================
+     34.7 ЗАКАЗ И QR-КОД ДЛЯ НЯНИ: появляется, когда нажимаешь на заказ; код действует 24 часа
+     ============================================================ */
+  function qrLib() { return W.qrcode ? Promise.resolve() : new Promise(function (ok, no) { var s = D.createElement("script"); s.src = K.qrjs; s.onload = ok; s.onerror = no; D.head.appendChild(s); }); }
+  function qrSvg(text) {
+    var q = W.qrcode(0, "M"); q.addData(text); q.make();
+    var n = q.getModuleCount(), m = 3, sz = n + m * 2, d = "";
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += "M" + (c + m) + " " + (r + m) + "h1v1h-1z";
+    return '<svg viewBox="0 0 ' + sz + " " + sz + '" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="' + sz + '" height="' + sz + '" fill="#fff"/><path d="' + d + '" fill="#0F2B27"/></svg>';
+  }
+  function orderSheet(id) {
+    var s = kOpen("order"); if (!s) return;
+    var box = $("[data-k-order-body]", s);
+    box.innerHTML = '<div class="pgk-map-load"><i class="pg-spin"></i></div>';
+    Promise.all([api("order", { order: id }), qrLib().catch(function () {})]).then(function (r) {
+      var o = r[0];
+      if (!o || !o.ok) { box.innerHTML = '<p class="pgk-note">' + esc((o && o.msg) || T("Не получилось — проверьте интернет.")) + "</p>"; return; }
+      var tt = $("[data-k-sht]", s); if (tt) tt.textContent = o.pet + " · " + o.svc;
+      var h = '<div class="pgk-ord-h">' + avHtml({ av: o.av, name: o.pet }, "md") + '<div><b>' + esc(o.when) + "</b><small>" + esc(o.dur + " " + T("мин")) + '</small></div><span class="pgk-badge st-' + esc(o.st) + '">' + esc(o.stl) + "</span></div>";
+      if (o.qr && W.qrcode) {
+        h += '<div class="pgk-qr"><div class="pgk-qr-img">' + qrSvg(o.qr.url) + '</div><small>' + esc(T("Код для няни")) + '</small><b class="pgk-qr-code">' + esc(o.qr.code) + "</b><small>" + esc(T("Действует до")) + " " + esc(o.qr.exp) + "</small></div>";
+        h += '<p class="pgk-qr-tip"><b>' + esc(T(o.walk ? "Дайте няне отсканировать QR-код, когда она забирает питомца." : "Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.")) + "</b>" + (o.walk ? " " + esc(T("Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.")) : "") + "</p>";
+      } else if (o.by) {
+        h += '<p class="pgk-qr-tip">' + esc(T(o.by === "qr" ? "Передача подтверждена QR-кодом" : "Без QR — место отмечено на карте")) + "</p>";
+      }
+      h += '<div class="pgk-list"><div class="pgk-row pgk-nrow">' + (o.nn ? avHtml({ av: o.nav, name: o.nn }) + '<span class="pgk-row-t"><b>' + esc(o.nn) + "</b><small>" + esc(T("Няня")) + "</small></span>" : '<span class="pgk-nany">' + ICON.users + '</span><span class="pgk-row-t"><b>' + esc(T("Няня ещё не назначена")) + "</b></span>") + "</div></div>";
+      if (o.st === "arrived" || o.st === "picked") h += '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-go" data-k-tab="map" data-k-focus="' + o.pid + '">' + esc(T("Где сейчас")) + "</button>";
+      box.innerHTML = h;
+    }).catch(function () { box.innerHTML = '<p class="pgk-note">' + esc(T("Не получилось — проверьте интернет.")) + "</p>"; });
+  }
 
   /* ---------- живое состояние питомцев ---------- */
   function applyPets(pets) {
@@ -964,6 +1014,7 @@
       tab(b.getAttribute("data-k-tab"), o);
       return;
     }
+    if ((b = t.closest("[data-k-order]"))) { e.preventDefault(); orderSheet(+b.getAttribute("data-k-order")); return; }
     if ((b = t.closest("[data-k-pet]"))) { e.preventDefault(); petSheet(+b.getAttribute("data-k-pet")); return; }
     if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
     if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }

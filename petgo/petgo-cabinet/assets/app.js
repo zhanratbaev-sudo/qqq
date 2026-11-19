@@ -227,8 +227,9 @@
 		tick();
 		applyTheme();
 		if ($("pgc-calapp")) Cal.init();
-		var u = new URL(location.href), o = parseInt(u.searchParams.get("o") || "0", 10);
-		if (o) { u.searchParams.delete("o"); history.replaceState(history.state, "", u.href); Ov.open(o, "", true); }
+		var u = new URL(location.href), o = parseInt(u.searchParams.get("o") || "0", 10), qc = u.searchParams.get("qr");
+		if (qc) u.searchParams.delete("qr");
+		if (o) { u.searchParams.delete("o"); history.replaceState(history.state, "", u.href); Ov.open(o, "", true); if (qc) QR.fromUrl(o, qc); }
 		var ch = u.searchParams.get("c");
 		if (ch) { u.searchParams.delete("c"); history.replaceState(history.state, "", u.href); Chat.auto(ch); }
 		setTimeout(measure, 0);
@@ -341,6 +342,7 @@
 	function onSubmit(e) {
 		var f = e.target;
 		if (!f || f.tagName !== "FORM" || e.defaultPrevented) return;
+		if (f.id === "pgq-man") { e.preventDefault(); QR.manual(f.querySelector("input").value); return; }
 		if (f.id === "pgc-lform") { login(e, f); return; }
 		if (f.id === "pgc-mform") { mlogin(e, f); return; }
 		var act = f.getAttribute("action") || "";
@@ -458,6 +460,11 @@
 		if (b) { e.preventDefault(); logout(b.href); return; }
 		b = t.closest(".pgc-arrive");
 		if (b) { e.preventDefault(); arrive(b); return; }
+		b = t.closest("[data-qr-scan]");
+		if (b) { e.preventDefault(); QR.open(b.getAttribute("data-qr-scan")); return; }
+		b = t.closest("[data-qr-noqr]");
+		if (b) { e.preventDefault(); QR.noqr(b.getAttribute("data-qr-noqr"), b); return; }
+		if (t.closest("[data-qr-close]")) { e.preventDefault(); QR.close(); return; }
 		b = t.closest(".pgc-whyb");
 		if (b) {
 			e.preventDefault();
@@ -522,6 +529,113 @@
 			submitForm(f);
 		}, function () { alert(L.denied); b.disabled = false; b.innerHTML = txt; }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
 	}
+
+	/* ---------- 34.7: QR-код хозяина — няня сканирует, когда забирает питомца (или приходит на визит) ---------- */
+	var QR = (function () {
+		var ov, vid, msg, stream = null, timer = 0, form = null, det = null, cv = null;
+		function els() { ov = $("pgq-ov"); vid = $("pgq-v"); msg = $("pgq-msg"); return !!ov; }
+		function lib() { return W.jsQR ? Promise.resolve() : new Promise(function (ok, no) { var s = D.createElement("script"); s.src = L.qr_js; s.onload = ok; s.onerror = no; D.head.appendChild(s); }); }
+		function parse(t) {
+			t = String(t || "");
+			var m = t.match(/[?&]qr=(\d{6})/), o = t.match(/[?&]o=(\d+)/), d = t.replace(/\D/g, "");
+			return { code: m ? m[1] : (d.length === 6 ? d : ""), order: o ? +o[1] : 0 };
+		}
+		function formOf(id) { return D.querySelector('[data-qr-form="' + id + '"]'); }
+		function open(id) {
+			form = formOf(id);
+			if (!form || !els()) return;
+			ov.hidden = false; void ov.offsetWidth; ov.classList.add("on"); R.classList.add("pgc-lock");
+			msg.textContent = L.qr_cam;
+			start();
+		}
+		function stop() {
+			clearTimeout(timer);
+			if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+			if (vid) vid.srcObject = null;
+		}
+		function close() {
+			stop();
+			if (!ov) return;
+			ov.classList.remove("on"); R.classList.remove("pgc-lock");
+			setTimeout(function () { if (!ov.classList.contains("on")) ov.hidden = true; }, 220);
+		}
+		function start() {
+			if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { noCam(); return; }
+			navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (s) {
+				if (!ov.classList.contains("on")) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
+				stream = s; vid.srcObject = s; vid.play().catch(function () {});
+				det = null;
+				if ("BarcodeDetector" in W) { try { det = new W.BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { det = null; } }
+				(det ? Promise.resolve() : lib()).then(scan, noCam);
+			}).catch(noCam);
+		}
+		/* камеры нет или не разрешили — 6 цифр под QR-кодом */
+		function noCam() {
+			stop();
+			msg.textContent = L.qr_no_cam;
+			var i = $("pgq-man") && $("pgq-man").querySelector("input");
+			if (i) setTimeout(function () { i.focus(); }, 250);
+		}
+		function scan() {
+			if (!stream) return;
+			if (vid.readyState < 2) { timer = setTimeout(scan, 150); return; }
+			var p;
+			if (det) p = det.detect(vid).then(function (r) { return r && r[0] ? r[0].rawValue : ""; });
+			else {
+				cv = cv || D.createElement("canvas");
+				var w = vid.videoWidth, h = vid.videoHeight, k = Math.min(1, 720 / Math.max(w, h));
+				cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+				var c = cv.getContext("2d", { willReadFrequently: true });
+				c.drawImage(vid, 0, 0, cv.width, cv.height);
+				var q = W.jsQR(c.getImageData(0, 0, cv.width, cv.height).data, cv.width, cv.height, { inversionAttempts: "dontInvert" });
+				p = Promise.resolve(q ? q.data : "");
+			}
+			p.then(function (t) { if (t) found(t); else timer = setTimeout(scan, 160); }, function () { timer = setTimeout(scan, 300); });
+		}
+		function found(t) {
+			var x = parse(t), id = +form.getAttribute("data-qr-form");
+			if (x.order && x.order !== id) { msg.textContent = L.qr_wrong; timer = setTimeout(scan, 1500); return; }
+			if (!x.code) { timer = setTimeout(scan, 300); return; }
+			if (navigator.vibrate) navigator.vibrate(30);
+			send(x.code);
+		}
+		/* код есть — берём место (если телефон даст за 8 с) и подтверждаем */
+		function send(code) {
+			stop();
+			if (msg) msg.textContent = L.locating;
+			form.qr.value = code; form.noqr.value = "";
+			geo(false, function () { close(); submitForm(form); }, function () {});
+		}
+		function geo(must, ok, fail) {
+			if (!navigator.geolocation) { if (must) { alert(L.noloc); fail(); } else ok(); return; }
+			navigator.geolocation.getCurrentPosition(function (p) {
+				form.lat.value = p.coords.latitude; form.lng.value = p.coords.longitude; form.acc.value = Math.round(p.coords.accuracy); ok();
+			}, function () { if (must) { alert(L.denied); fail(); } else ok(); }, { enableHighAccuracy: true, timeout: must ? 20000 : 8000, maximumAge: 30000 });
+		}
+		/* хозяина нет дома: без QR, место — обязательно */
+		function noqr(id, b) {
+			form = formOf(id);
+			if (!form) return;
+			var q = b.getAttribute("data-q");
+			if (q && !confirm(q)) return;
+			form.qr.value = ""; form.noqr.value = "1";
+			var txt = b.innerHTML;
+			b.disabled = true; b.textContent = L.locating;
+			geo(true, function () { b.disabled = false; b.innerHTML = txt; submitForm(form); }, function () { b.disabled = false; b.innerHTML = txt; });
+		}
+		function manual(v) { var x = parse(v); if (x.code && form) send(x.code); else if (msg) msg.textContent = L.qr_no_cam; }
+		/* QR отсканировали обычной камерой телефона — открылась ссылка ?o=…&qr=… : подтверждаем сразу */
+		function fromUrl(o, c) {
+			if (!o || !c) return;
+			var n = 0;
+			(function wait() {
+				var f = formOf(o);
+				if (f) { form = f; send(c); return; }
+				if (++n < 40) setTimeout(wait, 250);
+			})();
+		}
+		return { open: open, close: close, noqr: noqr, manual: manual, fromUrl: fromUrl };
+	})();
 
 	/* ---------- выход: стираем сохранённые данные с телефона ---------- */
 	function logout(href) {

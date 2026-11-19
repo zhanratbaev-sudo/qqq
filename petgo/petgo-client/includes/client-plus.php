@@ -48,9 +48,17 @@ function petgo_cl_order_event($oid, $ev) {
     if ($ev === 'assigned') {
         petgo_cl_sys($uid, sprintf('Подтверждено: %s для %s, %s. Няня — %s.', mb_strtolower($w['svc']), $w['pet'], $w['when'], $w['nn']));
     } elseif ($ev === 'arrived') {
-        petgo_cl_sys($uid, sprintf('Няня %s пришла к %s.', $w['nn'], $w['pet']));
+        /* 34.7: визит — как передали ключ/питомца (QR или «хозяина не было») и место няни */
+        $by = (string) get_post_meta($oid, '_hand_by', true);
+        if (!$w['walk'] && $by !== '') {
+            petgo_cl_sys($uid, sprintf('Визит начался: няня %s на месте (%s).', $w['nn'], $w['pet']) . ($by === 'qr' ? ' Подтверждено вашим QR-кодом.' : ' Вас не было дома — место няни отмечено на карте.'), 'loc', $oid);
+        } else {
+            petgo_cl_sys($uid, sprintf('Няня %s пришла к %s.', $w['nn'], $w['pet']));
+        }
     } elseif ($ev === 'picked') {
-        petgo_cl_sys($uid, sprintf('%s гуляет с няней %s. Смотрите на карте, где они сейчас.', $w['pet'], $w['nn']));
+        /* 34.7: «Нуржан забрал Бублика» — как SMS от petgo.kz, с местом на карте */
+        $by = (string) get_post_meta($oid, '_hand_by', true);
+        petgo_cl_sys($uid, sprintf('Прогулка началась: %s и няня %s.', $w['pet'], $w['nn']) . ($by === 'qr' ? ' Передача подтверждена вашим QR-кодом.' : ($by === 'noqr' ? ' Вас не было дома — место, где няня забрала питомца, отмечено на карте.' : '')) . ' Следите за прогулкой на карте.', 'loc', $oid);
     } elseif ($ev === 'done') {
         $rep = petgo_rep_text($oid);
         petgo_cl_sys($uid, sprintf('%s с %s завершён(а).%s Оцените, пожалуйста, няню %s.', $w['walk'] ? 'Выгул' : 'Визит', $w['pet'], $rep !== '' ? ' Отчёт: ' . $rep . '.' : '', $w['nn']), 'rv', $oid);
