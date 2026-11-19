@@ -50,8 +50,9 @@ function petgo_qr_ok($oid, $raw) {
     return $code !== '' && is_array($q) && !empty($q['code']) && (int) $q['exp'] >= time() && hash_equals((string) $q['code'], $code);
 }
 
-/* подтверждение передачи: QR или «хозяина нет дома» (тогда обязательно место). Возвращает 'qr' или 'noqr' */
-function petgo_qr_confirm($oid, $need_loc_always = false) {
+/* проверка: QR или «хозяина нет дома» (тогда обязательно место). Ничего не меняет — только проверяет.
+   Возвращает array(how => 'qr'|'noqr', lat, lng, acc) или сразу показывает няне ошибку */
+function petgo_qr_check($oid, $need_loc_always = false) {
     $raw  = (string) petgo_p('qr');
     $noqr = petgo_p('noqr') === '1';
     $lat  = petgo_p('lat');
@@ -59,7 +60,7 @@ function petgo_qr_confirm($oid, $need_loc_always = false) {
     $loc  = is_numeric($lat) && is_numeric($lng) && abs((float) $lat) <= 90 && abs((float) $lng) <= 180;
     if ($raw !== '') {
         /* перебор кодов не пройдёт: после 5 ошибок за 10 минут — только «без QR» */
-        $fk = 'petgo_qrf_' . (int) $oid;
+        $fk    = 'petgo_qrf_' . (int) $oid;
         $fails = (int) get_transient($fk);
         if ($fails >= 5 || !petgo_qr_ok($oid, $raw)) {
             set_transient($fk, $fails + 1, 10 * MINUTE_IN_SECONDS);
@@ -77,19 +78,28 @@ function petgo_qr_confirm($oid, $need_loc_always = false) {
     if ($need_loc_always && !$loc) {
         petgo_fail('err_loc');
     }
-    if ($loc) {
-        update_post_meta($oid, '_hand_lat', round((float) $lat, 6));
-        update_post_meta($oid, '_hand_lng', round((float) $lng, 6));
-        /* место передачи — первая точка на карте хозяина */
+    return array('how' => $how, 'lat' => $loc ? round((float) $lat, 6) : null, 'lng' => $loc ? round((float) $lng, 6) : null, 'acc' => (int) petgo_p('acc'));
+}
+
+/* записать: как прошла передача ('hand' — забрала/пришла, 'back' — вернула/ушла), место — на карту хозяина; код погашен */
+function petgo_qr_commit($oid, $r, $what = 'hand') {
+    if ($r['lat'] !== null) {
+        update_post_meta($oid, '_' . $what . '_lat', $r['lat']);
+        update_post_meta($oid, '_' . $what . '_lng', $r['lng']);
         if (function_exists('petgo_trk_add')) {
-            petgo_trk_add($oid, (float) $lat, (float) $lng, (int) petgo_p('acc'));
+            petgo_trk_add($oid, (float) $r['lat'], (float) $r['lng'], (int) $r['acc']);
         }
     }
-    update_post_meta($oid, '_hand_by', $how);
-    update_post_meta($oid, '_hand_at', time());
-    /* код использован — следующий раз будет новый */
+    update_post_meta($oid, '_' . $what . '_by', $r['how']);
+    update_post_meta($oid, '_' . $what . '_at', time());
+    /* код использован — следующий раз хозяин увидит новый */
     delete_post_meta($oid, '_qr');
-    return $how;
+    return $r['how'];
+}
+
+/* забрала / пришла: проверить и сразу записать */
+function petgo_qr_confirm($oid, $need_loc_always = false) {
+    return petgo_qr_commit($oid, petgo_qr_check($oid, $need_loc_always), 'hand');
 }
 
 /* кнопки няни: «Сканировать QR хозяина» и «Хозяина нет дома — без QR» + скрытая форма */
@@ -129,6 +139,24 @@ add_filter('petgo_app_dict', function ($d) {
         'qr_bad'    => array('QR-код не подходит к этому заказу или устарел. Попросите хозяина открыть заказ в кабинете ещё раз.', 'QR-код бұл тапсырысқа сәйкес емес немесе ескірген. Иесінен тапсырысты қайта ашуды сұраңыз.', 'The QR doesn’t match this booking or has expired. Ask the owner to open the booking again.', '二维码与此订单不符或已过期，请主人重新打开订单。'),
         'qr_need'   => array('Отсканируйте QR хозяина или отметьте «Хозяина нет дома».', 'Иесінің QR-ын сканерлеңіз немесе «Иесі үйде жоқ» деп белгілеңіз.', 'Scan the owner’s QR or mark “Owner not home”.', '请扫描主人的二维码，或选择“主人不在”。'),
         'qr_by_qr'  => array('по QR', 'QR бойынша', 'by QR', '扫码确认'),
+        'qr_back'   => array('Вернул(а) — сканировать QR хозяина', 'Қайтардым — иесінің QR-ын сканерлеу', 'Returned — scan the owner’s QR', '已送回——扫描主人二维码'),
+        'qr_back_v' => array('Ухожу — сканировать QR хозяина', 'Кетіп барамын — иесінің QR-ын сканерлеу', 'Leaving — scan the owner’s QR', '离开——扫描主人二维码'),
+        'qr_back_no' => array('Хозяина нет дома — завершить без QR', 'Иесі үйде жоқ — QR-сыз аяқтау', 'Owner not home — finish without QR', '主人不在——不扫码完成'),
+        'qr_back_tip' => array('По QR заказ завершится сразу. Без QR — после подтверждения администратора. Фото обязательно.', 'QR арқылы тапсырыс бірден аяқталады. QR-сыз — әкімші растағаннан кейін. Фото міндетті.', 'With the QR the booking completes at once. Without it, after an admin confirms. A photo is required.', '扫码后订单立即完成；不扫码需管理员确认。必须拍照。'),
+        'qr_q_back_no' => array('Хозяина нет дома? Завершим без QR — заказ подтвердит администратор. Хозяину отправим ваше местоположение.', 'Иесі үйде жоқ па? QR-сыз аяқтаймыз — тапсырысты әкімші растайды. Иесіне орныңызды жібереміз.', 'Owner not home? We’ll finish without QR — an admin will confirm. Your location goes to the owner.', '主人不在？将不扫码完成，由管理员确认，并把您的位置发送给主人。'),
+        'qr_wait_adm' => array('Завершено без QR — ждёт подтверждения администратора', 'QR-сыз аяқталды — әкімшінің растауын күтуде', 'Finished without QR — waiting for an admin to confirm', '未扫码完成——等待管理员确认'),
+        'qr_done_qr' => array('Завершено по QR хозяина', 'Иесінің QR-ы бойынша аяқталды', 'Completed with the owner’s QR', '已通过主人二维码完成'),
         'qr_by_no'  => array('без QR (хозяина не было)', 'QR-сыз (иесі болмады)', 'without QR (owner away)', '未扫码（主人不在）'),
     ));
 });
+
+/* завершение: фото и отчёт няни + QR хозяина (сразу завершено) или «хозяина нет дома» (подтвердит администратор) */
+function petgo_qr_finish_form($id, $walk) {
+    $h  = petgo_form_open('finish', 'enctype="multipart/form-data" class="pgc-finish pgq-f" data-qr-form="' . (int) $id . '" data-qr-finish="1"') . '<input type="hidden" name="order" value="' . (int) $id . '"><input type="hidden" name="qr" value=""><input type="hidden" name="noqr" value=""><input type="hidden" name="lat" value=""><input type="hidden" name="lng" value=""><input type="hidden" name="acc" value="">';
+    $h .= (function_exists('petgo_rep_fields') ? petgo_rep_fields($id) : '');
+    $h .= '<label class="pgc-shot"><input class="pgc-vh" type="file" name="photo" accept="image/*" capture="environment" required data-preview><span class="pgc-shot-in"><svg class="pgc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>' . esc_html(petgo_t('tip_photo')) . '</span></span></label>';
+    $h .= '<div class="pgq"><button type="button" class="pgc-btn wide pgq-scan" data-qr-scan="' . (int) $id . '">' . petgo_ic('qr') . esc_html(petgo_t($walk ? 'qr_back' : 'qr_back_v')) . '</button>';
+    $h .= '<button type="button" class="pgc-btn sec wide pgq-noqr" data-qr-noqr="' . (int) $id . '" data-q="' . esc_attr(petgo_t('qr_q_back_no')) . '">' . petgo_ic('pinf') . esc_html(petgo_t('qr_back_no')) . '</button>';
+    $h .= '<p class="pgq-tip">' . esc_html(petgo_t('qr_back_tip')) . '</p></div></form>';
+    return $h;
+}

@@ -532,7 +532,38 @@
 
 	/* ---------- 34.7: QR-код хозяина — няня сканирует, когда забирает питомца (или приходит на визит) ---------- */
 	var QR = (function () {
-		var ov, vid, msg, stream = null, timer = 0, form = null, det = null, cv = null;
+		var ov, vid, msg, stream = null, timer = 0, form = null, det = null, cv = null, AC = null;
+		/* 34.8: короткий громкий сигнал при сканировании (как системный «дзынь»); звук разрешается нажатием на кнопку */
+		function unlock() {
+			try { AC = AC || new (W.AudioContext || W.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); } catch (e) { AC = null; }
+		}
+		function beep() {
+			if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
+			if (!AC) return;
+			try {
+				var t = AC.currentTime + 0.01;
+				[[1318.5, 0], [1760, 0.12]].forEach(function (n) {
+					var o = AC.createOscillator(), g = AC.createGain();
+					o.type = "sine"; o.frequency.value = n[0];
+					g.gain.setValueAtTime(0.0001, t + n[1]);
+					g.gain.exponentialRampToValueAtTime(0.7, t + n[1] + 0.012);
+					g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.17);
+					o.connect(g); g.connect(AC.destination);
+					o.start(t + n[1]); o.stop(t + n[1] + 0.19);
+				});
+			} catch (e) {}
+		}
+		/* завершение: без фото нельзя — сначала фото, потом QR */
+		function ready(f) {
+			if (!f.hasAttribute("data-qr-finish")) return true;
+			var ph = f.querySelector('input[type=file][name=photo]');
+			if (ph && !(ph.files && ph.files.length)) {
+				toast(L.photo_need, true);
+				var lb = ph.closest("label"); if (lb && lb.scrollIntoView) lb.scrollIntoView({ block: "center", behavior: "smooth" });
+				return false;
+			}
+			return true;
+		}
 		function els() { ov = $("pgq-ov"); vid = $("pgq-v"); msg = $("pgq-msg"); return !!ov; }
 		function lib() { return W.jsQR ? Promise.resolve() : new Promise(function (ok, no) { var s = D.createElement("script"); s.src = L.qr_js; s.onload = ok; s.onerror = no; D.head.appendChild(s); }); }
 		function parse(t) {
@@ -543,7 +574,8 @@
 		function formOf(id) { return D.querySelector('[data-qr-form="' + id + '"]'); }
 		function open(id) {
 			form = formOf(id);
-			if (!form || !els()) return;
+			if (!form || !els() || !ready(form)) return;
+			unlock();
 			ov.hidden = false; void ov.offsetWidth; ov.classList.add("on"); R.classList.add("pgc-lock");
 			msg.textContent = L.qr_cam;
 			start();
@@ -596,7 +628,7 @@
 			var x = parse(t), id = +form.getAttribute("data-qr-form");
 			if (x.order && x.order !== id) { msg.textContent = L.qr_wrong; timer = setTimeout(scan, 1500); return; }
 			if (!x.code) { timer = setTimeout(scan, 300); return; }
-			if (navigator.vibrate) navigator.vibrate(30);
+			beep();
 			send(x.code);
 		}
 		/* код есть — берём место (если телефон даст за 8 с) и подтверждаем */
@@ -615,7 +647,7 @@
 		/* хозяина нет дома: без QR, место — обязательно */
 		function noqr(id, b) {
 			form = formOf(id);
-			if (!form) return;
+			if (!form || !ready(form)) return;
 			var q = b.getAttribute("data-q");
 			if (q && !confirm(q)) return;
 			form.qr.value = ""; form.noqr.value = "1";
@@ -623,14 +655,21 @@
 			b.disabled = true; b.textContent = L.locating;
 			geo(true, function () { b.disabled = false; b.innerHTML = txt; submitForm(form); }, function () { b.disabled = false; b.innerHTML = txt; });
 		}
-		function manual(v) { var x = parse(v); if (x.code && form) send(x.code); else if (msg) msg.textContent = L.qr_no_cam; }
+		function manual(v) { var x = parse(v); if (x.code && form) { beep(); send(x.code); } else if (msg) msg.textContent = L.qr_no_cam; }
 		/* QR отсканировали обычной камерой телефона — открылась ссылка ?o=…&qr=… : подтверждаем сразу */
 		function fromUrl(o, c) {
 			if (!o || !c) return;
 			var n = 0;
 			(function wait() {
 				var f = formOf(o);
-				if (f) { form = f; send(c); return; }
+				if (f) {
+					form = f;
+					if (ready(f)) { send(c); return; }
+					/* завершение без фото нельзя: как только няня сфотографирует — подтвердим этим же кодом */
+					var ph = f.querySelector('input[type=file][name=photo]');
+					if (ph) ph.addEventListener("change", function once() { ph.removeEventListener("change", once); form = f; if (ready(f)) send(c); });
+					return;
+				}
 				if (++n < 40) setTimeout(wait, 250);
 			})();
 		}

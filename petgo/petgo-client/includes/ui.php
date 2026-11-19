@@ -314,7 +314,7 @@ function petgo_cl_petpage($pid, $s) {
     $h   = '<div class="pgk-pp"><label class="pgk-pp-av' . ($s['live'] ? ' live' : '') . '">' . petgo_cl_av($s['av'], $s['name']) . '<input type="file" accept="image/*" class="pgw-vh" data-k-petav="' . (int) $pid . '"><i class="pgk-cam">' . petgo_cl_icon('camera') . '</i></label>';
     $h  .= '<b>' . esc_html($s['name']) . '</b><small>' . esc_html(implode(' · ', $sub)) . '</small></div>';
     $h  .= '<div class="pgk-pp-acts"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-book="walk" data-k-bpet="' . (int) $pid . '">' . petgo_cp_icon('calendar') . esc_html($L('Заказать')) . '</button><button type="button" class="pg-b pgk-btn pgk-btn-s" data-k-pet="' . (int) $pid . '">' . petgo_cl_icon('edit') . esc_html($L('Анкета')) . '</button></div>';
-    $h  .= '<div class="pgk-list"><button type="button" class="pg-b pgk-row" data-k-tab="map" data-k-focus="' . (int) $pid . '"><span class="pgk-row-i">' . petgo_cl_icon('map') . '</span><span class="pgk-row-t"><b>' . esc_html($L('Где сейчас')) . '</b><small class="pgk-st st-' . esc_attr($s['st']) . '"><i></i><span>' . ($s['hi'] !== '' && $s['live'] ? esc_html($s['hi']) . ' ' : '') . esc_html($s['text']) . '</span></small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button></div>';
+    $h  .= '<div class="pgk-list"><button type="button" class="pg-b pgk-row" data-k-tab="map" data-k-focus="' . (int) $pid . '"><span class="pgk-row-i">' . petgo_cl_icon('map') . '</span><span class="pgk-row-t"><b>' . esc_html($L('Где сейчас')) . '</b><small class="pgk-st st-' . esc_attr($s['st']) . '" data-k-st="' . (int) $pid . '"><i></i><span>' . ($s['hi'] !== '' && $s['live'] ? esc_html($s['hi']) . ' ' : '') . esc_html($s['text']) . '</span></small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button></div>';
     $ph = array_reverse(petgo_photos($pid));
     if ($ph) {
         $h .= '<h4 class="pgk-gt">' . esc_html($L('Фото')) . ' · ' . count($ph) . '</h4><div class="pgk-grid">';
@@ -406,7 +406,7 @@ function petgo_cl_walk_item($id) {
     }
     /* 34.7: пока няня не забрала питомца (не пришла на визит) — QR-код для неё */
     $walk = petgo_o($id, 'service') === 'walk';
-    if ($st === 'new' || $st === 'assigned' || ($walk && $st === 'arrived')) {
+    if (in_array($st, array('new', 'assigned', 'arrived'), true) || ($walk && $st === 'picked')) {
         $acts .= '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-order="' . (int) $id . '">' . petgo_cl_qr_icon() . esc_html($L('QR-код для няни')) . '</button>';
     }
     return $h . ($acts !== '' ? '<div class="pgk-wacts">' . $acts . '</div>' : '') . '</article>';
@@ -476,7 +476,8 @@ function petgo_cl_js_dict() {
         'Сегодня', 'Завтра', 'Любая свободная', 'Свободна', 'Занята в это время', 'Выберите питомца.', 'Выберите день и время.', 'Примерно', 'за неделю', 'Цену подтвердит менеджер', 'Помощник PetGo', 'печатает…', 'Оценить няню', 'Менеджер',
         'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря', 'Нет нянь в списке — подберёт менеджер', 'Вчера', 'дней', 'Вы записаны', 'Ваш отзыв', 'Спасибо за оценку',
         'Дайте няне отсканировать QR-код, когда она забирает питомца.', 'Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.',
-        'Код для няни', 'Действует до', 'Няня ещё не назначена', 'Где сейчас', 'Заказ', 'мин', 'QR-код для няни', 'Передача подтверждена QR-кодом', 'Без QR — место отмечено на карте', 'Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.') as $s) {
+        'Код для няни', 'Действует до', 'Няня ещё не назначена', 'Где сейчас', 'Заказ', 'мин', 'QR-код для няни', 'Передача подтверждена QR-кодом', 'Без QR — место отмечено на карте', 'Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.',
+        'Дайте няне отсканировать QR-код, когда она вернёт питомца.', 'Дайте няне отсканировать QR-код, когда она будет уходить.', 'Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор.', 'Питомец дома — подтверждено QR-кодом', 'Питомец дома — ждёт подтверждения администратора') as $s) {
         $o[$s] = petgo_site_l($s);
     }
     return $o;

@@ -280,6 +280,14 @@
     body.innerHTML = ""; body.appendChild(D.importNode(tpl.content, true));
     if (tt) tt.textContent = p ? p.name : "";
     var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
+    /* 34.8: сразу — то, что было при загрузке; через мгновение — свежее состояние (няня уже вернула питомца и т. п.) */
+    api("petpage", { pet: pid }).then(function (j) {
+      if (!j.ok || !j.h || !s.classList.contains("on")) return;
+      var y = sc ? sc.scrollTop : 0;
+      body.innerHTML = j.h;
+      if (sc) sc.scrollTop = y;
+      var tp = D.getElementById("pgk-pp-" + pid); if (tp) tp.innerHTML = j.h;
+    }).catch(function () {});
   }
   function avHtml(p, cls) { return '<span class="pgk-av' + (cls ? " " + cls : "") + '">' + (p && p.av ? '<img src="' + esc(p.av) + '" alt="">' : "<b>" + esc(((p && (p.name || "")) || "?").charAt(0).toUpperCase()) + "</b>") + "</span>"; }
 
@@ -617,7 +625,15 @@
       var h = '<div class="pgk-ord-h">' + avHtml({ av: o.av, name: o.pet }, "md") + '<div><b>' + esc(o.when) + "</b><small>" + esc(o.dur + " " + T("мин")) + '</small></div><span class="pgk-badge st-' + esc(o.st) + '">' + esc(o.stl) + "</span></div>";
       if (o.qr && W.qrcode) {
         h += '<div class="pgk-qr"><div class="pgk-qr-img">' + qrSvg(o.qr.url) + '</div><small>' + esc(T("Код для няни")) + '</small><b class="pgk-qr-code">' + esc(o.qr.code) + "</b><small>" + esc(T("Действует до")) + " " + esc(o.qr.exp) + "</small></div>";
-        h += '<p class="pgk-qr-tip"><b>' + esc(T(o.walk ? "Дайте няне отсканировать QR-код, когда она забирает питомца." : "Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.")) + "</b>" + (o.walk ? " " + esc(T("Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.")) : "") + "</p>";
+        var tip = {
+          pick: ["Дайте няне отсканировать QR-код, когда она забирает питомца.", "Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте."],
+          back: ["Дайте няне отсканировать QR-код, когда она вернёт питомца.", "Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор."],
+          arrive: ["Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.", ""],
+          leave: ["Дайте няне отсканировать QR-код, когда она будет уходить.", "Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор."]
+        }[o.phase] || ["", ""];
+        h += '<p class="pgk-qr-tip"><b>' + esc(T(tip[0])) + "</b>" + (tip[1] ? " " + esc(T(tip[1])) : "") + "</p>";
+      } else if (o.back) {
+        h += '<p class="pgk-qr-tip">' + esc(T(o.back === "qr" ? "Питомец дома — подтверждено QR-кодом" : "Питомец дома — ждёт подтверждения администратора")) + "</p>";
       } else if (o.by) {
         h += '<p class="pgk-qr-tip">' + esc(T(o.by === "qr" ? "Передача подтверждена QR-кодом" : "Без QR — место отмечено на карте")) + "</p>";
       }
@@ -718,6 +734,7 @@
           map = Lf.map(el, { zoomControl: false, attributionControl: false, tap: true, zoomSnap: 0.5 }).setView([43.2389, 76.8897], 12);
           Lf.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, className: "pgk-tiles", crossOrigin: true }).addTo(map);
           grp = Lf.layerGroup().addTo(map);
+          map.on("zoomend", function () { if (MapK.zoomed) MapK.zoomed(); });
           return "© OpenStreetMap";
         });
       },
@@ -735,6 +752,7 @@
         else if (pts.length > 1) map.fitBounds(Lf.latLngBounds(pts), { paddingTopLeft: [p[3], p[0]], paddingBottomRight: [p[1], p[2]], maxZoom: 17, animate: !reduce });
       },
       resize: function () { map.invalidateSize(); },
+      zoom: function () { return map.getZoom(); },
       theme: function () {}
     };
   }
@@ -764,6 +782,7 @@
         return ready.then(function () {
           g = W.google.maps;
           map = new g.Map(el, { center: { lat: 43.2389, lng: 76.8897 }, zoom: 12, disableDefaultUI: true, clickableIcons: false, gestureHandling: "greedy", keyboardShortcuts: false, backgroundColor: dark() ? "#161616" : "#f1efe3", styles: GSTYLE[dark() ? "dark" : "light"] });
+          map.addListener("zoom_changed", function () { if (MapK.zoomed) MapK.zoomed(); });
           Ov = function (pt, html, o) { this.pt = new g.LatLng(pt[0], pt[1]); this.html = html; this.o = o; this.setMap(map); };
           Ov.prototype = new g.OverlayView();
           Ov.prototype.onAdd = function () {
@@ -788,11 +807,12 @@
         else if (pts.length > 1) { var b = new g.LatLngBounds(); pts.forEach(function (x) { b.extend({ lat: x[0], lng: x[1] }); }); map.fitBounds(b, { top: p[0], right: p[1], bottom: p[2], left: p[3] }); }
       },
       resize: function () {},
+      zoom: function () { return map ? map.getZoom() : 14; },
       theme: function () { if (map) map.setOptions({ styles: GSTYLE[dark() ? "dark" : "light"], backgroundColor: dark() ? "#161616" : "#f1efe3" }); }
     };
   }
   var MapK = (function () {
-    var E = null, hist = null, mode = "now", focus = 0, walk = 0, starting = null, fitted = false, pts = [];
+    var E = null, hist = null, mode = "now", focus = 0, walk = 0, starting = null, fitted = false, pts = [], zt = 0;
     var COLORS = ["#0E7A64", "#E58A2B", "#3F7CAC", "#C2557A", "#6E9F2E", "#8A5CC2"];
     function color(pid) { var ids = (K.pets || []).map(function (p) { return p.id; }), i = ids.indexOf(pid); return COLORS[(i < 0 ? 0 : i) % COLORS.length]; }
     function ago(ts) { if (!ts) return ""; var s = Math.max(0, Math.round(Date.now() / 1000 - ts)); return s < 45 ? T("только что") : Math.round(s / 60) + " " + T("мин") + " " + T("назад"); }
@@ -800,7 +820,25 @@
       var bub = lv ? (p.hi ? "<em>" + esc(p.hi) + "</em> " : "") + esc(p.text) : esc(p.name);
       return '<div class="pgk-mk pgk-pm' + (lv ? " live" : "") + '" style="--c:' + color(p.id) + '"><i class="pgk-pm-ring"></i>' + avHtml(p, "pgk-pm-av") + '<span class="pgk-pm-bub">' + bub + "</span></div>";
     }
-    function photoMk(u) { return '<div class="pgk-mk pgk-phm"><img src="' + esc(u) + '" alt="" loading="lazy"></div>'; }
+    function photoMk(u, off) { return '<div class="pgk-mk pgk-phm"' + (off ? ' style="--dx:' + off[0] + "px;--dy:" + off[1] + 'px"' : "") + '><img src="' + esc(u) + '" alt="" loading="lazy"></div>'; }
+    /* 34.8: фото в одном месте раскладываются рядом (в пикселях экрана при текущем масштабе), но не уезжают далеко */
+    function spread(list) {
+      var z = E && E.zoom ? E.zoom() : 15, sc = 256 * Math.pow(2, z), put = [], BOX = 62;
+      return list.map(function (ph) {
+        var la = Math.max(-85, Math.min(85, ph.lat)) * Math.PI / 180;
+        var x = (ph.lng + 180) / 360 * sc, y = (1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2 * sc;
+        var tries = [[0, 0]];
+        for (var r = 1; r <= 3; r++) for (var a = 0; a < 8; a++) tries.push([Math.round(Math.cos(a * Math.PI / 4 + r * 0.4) * r * BOX * 0.95), Math.round(Math.sin(a * Math.PI / 4 + r * 0.4) * r * BOX * 0.95)]);
+        var best = tries[0];
+        for (var i = 0; i < tries.length; i++) {
+          var cx = x + tries[i][0], cy = y + tries[i][1], free = true;
+          for (var k = 0; k < put.length; k++) if (Math.abs(put[k][0] - cx) < BOX && Math.abs(put[k][1] - cy) < BOX) { free = false; break; }
+          if (free) { best = tries[i]; break; }
+        }
+        put.push([x + best[0], y + best[1]]);
+        return best;
+      });
+    }
     function dotMk(c) { return '<i class="pgk-mk pgk-dot" style="--c:' + c + '"></i>'; }
     function card(html) { var c = $("[data-k-mcard]"); if (!c) return; if (c._h === html) return; c._h = html; c.hidden = !html; if (html) c.innerHTML = html; }
     function shown(pid) { return !focus || focus === pid; }
@@ -834,7 +872,8 @@
               E.html(line[0], dotMk(color(p.id)), {});
               pts = pts.concat(line);
             }
-            (p.photos || []).forEach(function (ph) { if (ph.lat != null) E.html([ph.lat, ph.lng], photoMk(ph.u), { z: 200, click: function () { lightbox(ph.u, p.name + " · " + ph.t); } }); });
+            var lp = (p.photos || []).filter(function (ph) { return ph.lat != null; }), lo = spread(lp);
+            lp.forEach(function (ph, i) { E.html([ph.lat, ph.lng], photoMk(ph.u, lo[i]), { z: 200, click: function () { lightbox(ph.u, p.name + " · " + ph.t); } }); });
             E.html(p.pos, petMk(p, true), { z: 1000, click: pick });
             pts.push(p.pos);
             c = liveCard(p);
@@ -868,10 +907,10 @@
         });
         card(any ? '<div class="pgk-mc"><span class="pgk-mc-i">' + ICON.route + "</span><div><b>" + esc(T("Прогулки")) + ": " + n + "</b><small>" + esc(T("Все места")) + "</small></div></div>" : "");
       } else if (mode === "photos" && hist) {
-        hist.photos.forEach(function (ph) {
-          if (!shown(ph.pet)) return;
+        var hp = hist.photos.filter(function (ph) { return shown(ph.pet); }), ho = spread(hp);
+        hp.forEach(function (ph, i) {
           any = true;
-          E.html([ph.lat, ph.lng], photoMk(ph.u), { click: function () { lightbox(ph.u, ((petOf(ph.pet) || {}).name || "") + " · " + ph.d); } });
+          E.html([ph.lat, ph.lng], photoMk(ph.u, ho[i]), { click: function () { lightbox(ph.u, ((petOf(ph.pet) || {}).name || "") + " · " + ph.d); } });
           pts.push([ph.lat, ph.lng]);
         });
         card("");
@@ -933,6 +972,8 @@
       mode: function (m) { mode = m; walk = 0; fitted = false; draw(); },
       focus: function (id) { focus = focus === id ? 0 : id; fitted = false; draw(); },
       theme: function () { if (E) { E.theme(); draw(); } },
+      /* масштаб изменился — фото раскладываются заново, чтобы снова не наезжать друг на друга */
+      zoomed: function () { if (E && (mode === "photos" || mode === "now")) { clearTimeout(zt); zt = setTimeout(draw, 80); } },
       reset: function () { E = null; starting = null; hist = null; focus = 0; walk = 0; mode = "now"; fitted = false; }
     };
   })();

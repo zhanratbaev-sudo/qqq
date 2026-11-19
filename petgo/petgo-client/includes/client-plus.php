@@ -60,8 +60,10 @@ function petgo_cl_order_event($oid, $ev) {
         $by = (string) get_post_meta($oid, '_hand_by', true);
         petgo_cl_sys($uid, sprintf('Прогулка началась: %s и няня %s.', $w['pet'], $w['nn']) . ($by === 'qr' ? ' Передача подтверждена вашим QR-кодом.' : ($by === 'noqr' ? ' Вас не было дома — место, где няня забрала питомца, отмечено на карте.' : '')) . ' Следите за прогулкой на карте.', 'loc', $oid);
     } elseif ($ev === 'done') {
-        $rep = petgo_rep_text($oid);
-        petgo_cl_sys($uid, sprintf('%s с %s завершён(а).%s Оцените, пожалуйста, няню %s.', $w['walk'] ? 'Выгул' : 'Визит', $w['pet'], $rep !== '' ? ' Отчёт: ' . $rep . '.' : '', $w['nn']), 'rv', $oid);
+        $rep  = petgo_rep_text($oid);
+        $back = (string) get_post_meta($oid, '_back_by', true);
+        /* 34.8: «Выгул завершён: Мурка дома» — и как подтвердили (QR хозяина или без QR — тогда подтвердит администратор) */
+        petgo_cl_sys($uid, sprintf('%s завершён: %s дома.', $w['walk'] ? 'Выгул' : 'Визит', $w['pet']) . ($back === 'qr' ? ' Подтверждено вашим QR-кодом.' : ($back === 'noqr' ? ' Вас не было дома — няня отметила место на карте, заказ подтвердит администратор.' : '')) . ($rep !== '' ? ' Отчёт: ' . $rep . '.' : '') . sprintf(' Оцените, пожалуйста, няню %s.', $w['nn']), 'rv', $oid);
     } elseif ($ev === 'cancelled') {
         petgo_cl_sys($uid, sprintf('%s для %s на %s отменён. Напишите нам, если нужно выбрать другое время.', $w['svc'], $w['pet'], $w['when']));
     }

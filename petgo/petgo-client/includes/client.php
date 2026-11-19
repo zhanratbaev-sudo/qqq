@@ -267,7 +267,9 @@ function petgo_cl_ajax() {
         $walk = petgo_o($oid, 'service') === 'walk';
         $ts   = (int) petgo_o($oid, 'ts');
         $pid  = (int) petgo_o($oid, 'pet');
-        $show = function_exists('petgo_qr') && ($st === 'new' || $st === 'assigned' || ($walk && $st === 'arrived'));
+        /* 34.8: QR нужен дважды — когда няня забирает (приходит) и когда возвращает (уходит) */
+        $phase = $walk ? (in_array($st, array('new', 'assigned', 'arrived'), true) ? 'pick' : ($st === 'picked' ? 'back' : '')) : (in_array($st, array('new', 'assigned'), true) ? 'arrive' : ($st === 'arrived' ? 'leave' : ''));
+        $show = function_exists('petgo_qr') && $phase !== '';
         $q    = $show ? petgo_qr($oid) : null;
         $nid  = (int) petgo_o($oid, 'nanny');
         $out  = array(
@@ -275,9 +277,17 @@ function petgo_cl_ajax() {
             'when' => wp_date('d.m · H:i', $ts, petgo_tz()), 'dur' => max(1, (int) petgo_o($oid, 'dur')), 'st' => $st, 'stl' => petgo_cl_status_label($st),
             'nn' => petgo_nanny_label($oid), 'nav' => $nid ? petgo_user_avatar_url($nid) : '', 'walk' => $walk,
             'qr' => $q ? array('url' => petgo_qr_url($oid, $q), 'code' => substr($q['code'], 0, 3) . ' ' . substr($q['code'], 3), 'exp' => wp_date('d.m · H:i', (int) $q['exp'], petgo_tz())) : null,
-            'by' => (string) get_post_meta($oid, '_hand_by', true),
+            'by' => (string) get_post_meta($oid, '_hand_by', true), 'back' => (string) get_post_meta($oid, '_back_by', true), 'phase' => $phase,
         );
         petgo_cl_json(true, $out);
+    }
+    /* 34.8: страница питомца — всегда свежая (идёт прогулка, уже дома, отчёты) */
+    if ($op === 'petpage' && function_exists('petgo_cl_petpage')) {
+        $pid = (int) petgo_p('pet');
+        if (!petgo_cl_owns($uid, $pid)) {
+            petgo_cl_json(false, array('msg' => $L('Нет доступа.')));
+        }
+        petgo_cl_json(true, array('h' => petgo_cl_petpage($pid, petgo_cl_pet_state($pid))));
     }
     if ($op === 'walks' && function_exists('petgo_cl_walks_html')) {
         petgo_cl_json(true, array('h' => petgo_cl_walks_html($uid), 'wk' => petgo_cl_walks_sig($uid)));
@@ -463,6 +473,11 @@ function petgo_cl_pet_state($pid) {
     foreach ($os as $o) {
         $st = petgo_o($o->ID, 'status');
         if ($st === 'arrived' || $st === 'picked') {
+            /* 34.8: заказ «завис» (няня не завершила, прошло больше 6 часов после конца) — питомец не «гуляет» вечно */
+            $end = (int) petgo_o($o->ID, 'ts') + max(30, (int) petgo_o($o->ID, 'dur')) * MINUTE_IN_SECONDS;
+            if ($end + 6 * HOUR_IN_SECONDS < $now) {
+                continue;
+            }
             $act = $o->ID;
             break;
         }
