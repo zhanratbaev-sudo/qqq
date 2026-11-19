@@ -18,6 +18,7 @@
   function svg(d, cls) { return '<svg class="' + (cls || "pg-i") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>"; }
   var STAR = '<path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.8l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>';
   var ICON = {
+    qr: '<svg class="pg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h3v3M20.5 14v.01M14 20.5h3M20.5 17.5v3h-3"/></svg>',
     route: svg('<circle cx="6" cy="18.5" r="2"/><circle cx="18" cy="5.5" r="2"/><path d="M8 18.5h8a3.3 3.3 0 0 0 0-6.6H8a3.3 3.3 0 0 1 0-6.6h8"/>'),
     star: svg(STAR), starOn: svg(STAR, "pg-i on"),
     check: svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', "pg-i pgk-ok"),
@@ -99,6 +100,7 @@
       s.classList.remove("on"); s.inert = true;
       var inn = $(".pgk-sin", s); if (inn) inn.style.transform = "";
       if (s.id === "pgk-chat") { CL.chatOpen = false; clearInterval(CL.chatT); }
+      if (s.id === "pgk-order") ordStop();
       if (s.id === "pgk-review" && CL.rvAuto) { var o = $("[data-k-rvform]", s); if (o && o.elements.order.value && !CL.rvSent) api("rv_skip", { order: o.elements.order.value }).catch(function () {}); CL.rvAuto = false; }
       (function (x) { setTimeout(function () { if (!x.classList.contains("on")) x.hidden = true; }, reduce ? 0 : 230); })(s);
     } while (all && stack.length);
@@ -614,16 +616,48 @@
     for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += "M" + (c + m) + " " + (r + m) + "h1v1h-1z";
     return '<svg viewBox="0 0 ' + sz + " " + sz + '" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="' + sz + '" height="' + sz + '" fill="#fff"/><path d="' + d + '" fill="#0F2B27"/></svg>';
   }
+  /* 34.9: галочка как на сайте после отправки формы — круг появляется, галочка дорисовывается */
+  function okSvg() { return '<svg class="pgk-ok-svg" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="36"/><path d="M24 41.5l11 11L57 29"/></svg>'; }
+  /* что случилось с заказом: «back» — вернули (визит закончен), «pick» — забрали (няня пришла), "" — ещё ничего */
+  function ordDone(o) {
+    if (o.back || o.st === "done" || o.st === "confirmed") return "back";
+    if (o.by || (o.walk && o.st === "picked")) return "pick";
+    return "";
+  }
+  function ordOk(o, k, live) {
+    var t, sub = [], h;
+    if (k === "back") {
+      t = o.walk ? T("%s дома").replace("%s", o.pet) : T("Визит завершён");
+      if (o.back_at) sub.push((o.walk ? T("Вернули в") : T("Няня ушла в")) + " " + o.back_at);
+      sub.push(T(o.back === "noqr" ? "ждёт подтверждения администратора" : (o.back === "qr" ? "подтверждено QR-кодом" : (o.st === "confirmed" ? "подтверждено" : "ждёт подтверждения администратора"))));
+    } else {
+      t = o.walk ? T("Прогулка началась") : T("Няня пришла");
+      sub.push(o.walk ? T("%s и няня %s").replace("%s", o.pet).replace("%s", o.nn || "") : (o.nn || ""));
+      if (o.hand_at) sub.push(o.hand_at);
+      sub.push(T(o.by === "noqr" ? "без QR — место отмечено на карте" : "подтверждено QR-кодом"));
+    }
+    h = '<div class="pgk-okv' + (live ? " in" : "") + '" role="status">' + okSvg() + "<b>" + esc(t) + "</b><p>" + esc(sub.filter(Boolean).join(" · ")) + "</p>" +
+      /* забрали — QR для возврата уже новый, его можно открыть отсюда */
+      (k === "pick" && o.qr ? '<button type="button" class="pg-b pgk-btn pgk-okqr" data-k-order="' + o.id + '">' + ICON.qr + esc(T(o.walk ? "QR-код для возврата" : "QR-код, когда няня уходит")) + "</button>" : "") + "</div>";
+    if (k === "back" && (o.rep || o.rph)) {
+      h += '<div class="pgk-okrep' + (live ? " in" : "") + '"><b>' + esc(T("Отчёт няни")) + "</b>" + (o.rep || "") + (o.rph ? '<button type="button" class="pgk-okph" data-k-photo="' + esc(o.rph) + '"><img src="' + esc(o.rph) + '" alt="" decoding="async"></button>' : "") + "</div>";
+    }
+    return h;
+  }
+  function ordStop() { clearTimeout(CL.ordT); CL.ordT = 0; CL.ord = null; }
   function orderSheet(id) {
     var s = kOpen("order"); if (!s) return;
     var box = $("[data-k-order-body]", s);
+    ordStop();
     box.innerHTML = '<div class="pgk-map-load"><i class="pg-spin"></i></div>';
-    Promise.all([api("order", { order: id }), qrLib().catch(function () {})]).then(function (r) {
-      var o = r[0];
-      if (!o || !o.ok) { box.innerHTML = '<p class="pgk-note">' + esc((o && o.msg) || T("Не получилось — проверьте интернет.")) + "</p>"; return; }
+    function render(o, live) {
       var tt = $("[data-k-sht]", s); if (tt) tt.textContent = o.pet + " · " + o.svc;
       var h = '<div class="pgk-ord-h">' + avHtml({ av: o.av, name: o.pet }, "md") + '<div><b>' + esc(o.when) + "</b><small>" + esc(o.dur + " " + T("мин")) + '</small></div><span class="pgk-badge st-' + esc(o.st) + '">' + esc(o.stl) + "</span></div>";
-      if (o.qr && W.qrcode) {
+      var k = ordDone(o);
+      if (live) {
+        /* няня только что отсканировала: вместо QR — галочка (и отчёт, если вернули) */
+        h += ordOk(o, live, true);
+      } else if (o.qr && W.qrcode) {
         h += '<div class="pgk-qr"><div class="pgk-qr-img">' + qrSvg(o.qr.url) + '</div><small>' + esc(T("Код для няни")) + '</small><b class="pgk-qr-code">' + esc(o.qr.code) + "</b><small>" + esc(T("Действует до")) + " " + esc(o.qr.exp) + "</small></div>";
         var tip = {
           pick: ["Дайте няне отсканировать QR-код, когда она забирает питомца.", "Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте."],
@@ -632,14 +666,40 @@
           leave: ["Дайте няне отсканировать QR-код, когда она будет уходить.", "Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор."]
         }[o.phase] || ["", ""];
         h += '<p class="pgk-qr-tip"><b>' + esc(T(tip[0])) + "</b>" + (tip[1] ? " " + esc(T(tip[1])) : "") + "</p>";
-      } else if (o.back) {
-        h += '<p class="pgk-qr-tip">' + esc(T(o.back === "qr" ? "Питомец дома — подтверждено QR-кодом" : "Питомец дома — ждёт подтверждения администратора")) + "</p>";
+      } else if (k === "back") {
+        h += ordOk(o, "back", false);
       } else if (o.by) {
         h += '<p class="pgk-qr-tip">' + esc(T(o.by === "qr" ? "Передача подтверждена QR-кодом" : "Без QR — место отмечено на карте")) + "</p>";
       }
       h += '<div class="pgk-list"><div class="pgk-row pgk-nrow">' + (o.nn ? avHtml({ av: o.nav, name: o.nn }) + '<span class="pgk-row-t"><b>' + esc(o.nn) + "</b><small>" + esc(T("Няня")) + "</small></span>" : '<span class="pgk-nany">' + ICON.users + '</span><span class="pgk-row-t"><b>' + esc(T("Няня ещё не назначена")) + "</b></span>") + "</div></div>";
       if (o.st === "arrived" || o.st === "picked") h += '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-go" data-k-tab="map" data-k-focus="' + o.pid + '">' + esc(T("Где сейчас")) + "</button>";
       box.innerHTML = h;
+    }
+    /* пока на экране QR — раз в 2 секунды спрашиваем, не отсканировала ли няня */
+    function watch(o0) {
+      var was = ordDone(o0), my = CL.ord = { id: id };
+      function poll() {
+        if (CL.ord !== my) return;
+        if (!s.classList.contains("on")) { ordStop(); return; }
+        if (D.hidden) { CL.ordT = setTimeout(poll, 2000); return; }
+        api("order", { order: id }).then(function (o) {
+          if (CL.ord !== my || !o || !o.ok) return;
+          var now = ordDone(o);
+          if (now && now !== was) {
+            var q = $(".pgk-qr", box), tp = $(".pgk-qr-tip", box);
+            var show = function () { if (CL.ord === my) { render(o, now); if (now === "back" || !o.qr) ordStop(); else { was = now; o0 = o; } refresh(); } };
+            if (q && !reduce) { q.classList.add("out"); if (tp) tp.classList.add("out"); setTimeout(show, 160); } else show();
+            if (now === "back" || !o.qr) return;
+          }
+        }).catch(function () {}).then(function () { if (CL.ord === my) CL.ordT = setTimeout(poll, 2000); });
+      }
+      CL.ordT = setTimeout(poll, 2000);
+    }
+    Promise.all([api("order", { order: id }), qrLib().catch(function () {})]).then(function (r) {
+      var o = r[0];
+      if (!o || !o.ok) { box.innerHTML = '<p class="pgk-note">' + esc((o && o.msg) || T("Не получилось — проверьте интернет.")) + "</p>"; return; }
+      render(o, "");
+      if (o.qr) watch(o);
     }).catch(function () { box.innerHTML = '<p class="pgk-note">' + esc(T("Не получилось — проверьте интернет.")) + "</p>"; });
   }
 

@@ -115,20 +115,26 @@
 
 	/* ---------- обратный отсчёт и линия времени ---------- */
 	function fm(a) { var h = Math.floor(a / 3600), m = Math.floor(a % 3600 / 60); return (h ? h + " " + L.h + " " : "") + m + " " + L.m; }
+	/* 34.9: когда данные на экране последний раз подтвердил сервер. Сохранённая копия страницы или заказа (открылась мгновенно,
+	   свежая ещё в пути) может показывать уже завершённый заказ как идущий — тогда «Опоздание» не рисуем, пока не придут свежие данные */
+	var seen = 0;
+	function fresh() { seen = Date.now(); tick(); }
+	function stale(e) { return !!(e.closest && e.closest(".pgc-old")) || (navigator.onLine && Date.now() - seen > 90000); }
 	function tick() {
 		var n = Math.floor(Date.now() / 1000);
 		qa(".pgc-cd").forEach(function (e) {
 			var df = (+e.getAttribute("data-ts")) - n, k = e.getAttribute("data-k");
+			if (df < 0 && stale(e)) { e.textContent = ""; e.classList.remove("late"); return; }
 			if (k === "e") e.textContent = df >= 0 ? L.ret + " " + fm(df) : L.up;
 			else e.textContent = df >= 0 ? L.left + " " + fm(df) : L.late + " " + fm(-df);
 			e.classList.toggle("late", df < 0);
 		});
-		qa(".pgc-wa").forEach(function (e) { e.classList.toggle("hot", (+e.getAttribute("data-end")) - n <= 1200); });
+		qa(".pgc-wa").forEach(function (e) { e.classList.toggle("hot", (+e.getAttribute("data-end")) - n <= 1200 && !stale(e)); });
 		qa(".pgc-prog").forEach(function (p) {
 			var s = +p.getAttribute("data-s"), en = +p.getAttribute("data-e"), k = Math.max(0, Math.min(1, (n - s) / (en - s)));
 			/* 34.4: полоса и точка двигаются transform-ом (scaleX и сдвиг), а не шириной и left */
 			p.style.setProperty("--k", k.toFixed(4));
-			p.classList.toggle("late", n > en);
+			p.classList.toggle("late", n > en && !stale(p));
 		});
 	}
 
@@ -266,13 +272,14 @@
 		var shown = false;
 		return (plain ? cacheGet(key) : Promise.resolve(null)).then(function (html) {
 			if (seq !== busyNav) return;
-			if (html) shown = apply(parse(html), html, {});
+			if (html) { seen = 0; shown = apply(parse(html), html, {}); }
 			else loading();
-			return fetchPage(u).then(function (fresh) {
+			return fetchPage(u).then(function (fr) {
 				if (seq !== busyNav) return;
-				if (plain) cachePut(key, fresh);
-				if (!shown || rawOf(fresh) !== curRaw) apply(parse(fresh), fresh, { keep: shown });
-				else CFG = readCfg(parse(fresh));
+				if (plain) cachePut(key, fr);
+				seen = Date.now();
+				if (!shown || rawOf(fr) !== curRaw) apply(parse(fr), fr, { keep: shown });
+				else { CFG = readCfg(parse(fr)); tick(); }
 				online(true);
 			}).catch(function (e) {
 				if (seq !== busyNav || (e && e.message === "auth")) return;
@@ -289,8 +296,9 @@
 		var u = location.href;
 		return fetchPage(u).then(function (html) {
 			if (isPlain(u)) cachePut(cleanKey(u), html);
+			seen = Date.now();
 			if (rawOf(html) !== curRaw) apply(parse(html), html, { keep: true });
-			else { CFG = readCfg(parse(html)); }
+			else { CFG = readCfg(parse(html)); tick(); }
 			online(true);
 		}).catch(function () { online(false); }).then(function () { refreshing = false; });
 	}
@@ -692,16 +700,21 @@
 			cur = +id;
 			T.textContent = name || "";
 			B.innerHTML = '<div class="pgc-load"><i class="pgc-spin"></i></div>';
+			B.classList.remove("pgc-old");
 			if (quiet) { O.style.transition = "none"; }
 			O.classList.add("open"); O.setAttribute("aria-hidden", "false");
 			if (quiet) { void O.offsetWidth; O.style.transition = ""; }
 			lockSync();
 			var key = CFG.page + (CFG.page.indexOf("?") > -1 ? "&" : "?") + "pgc_cache=order-" + cur;
-			cacheGet(key).then(function (c) { if (c && cur === +id) { var d = JSON.parse(c); T.textContent = d.t; render(d.h); } });
+			/* сохранённая копия заказа — сразу, но с пометкой «старая» (без «Опоздания»); свежая её заменит и уже не будет перекрыта копией */
+			var got = false;
+			cacheGet(key).then(function (c) { if (c && cur === +id && !got) { var d = JSON.parse(c); T.textContent = d.t; B.classList.add("pgc-old"); render(d.h); } });
 			post({ action: "petgo_order", n: CFG.no, id: cur }).then(function (d) {
 				if (cur !== +id) return;
 				if (!d.ok) { close(); return; }
+				got = true;
 				T.textContent = d.t;
+				B.classList.remove("pgc-old");
 				render(d.h);
 				cachePut(key, JSON.stringify({ t: d.t, h: d.h }));
 			}).catch(function () { if (B.querySelector(".pgc-load")) B.innerHTML = '<div class="pgc-emptyst"><p>' + esc(L.offline) + "</p></div>"; });
@@ -1471,6 +1484,8 @@
 		});
 		if (!root || !root.getAttribute("data-role")) return;
 		CFG = readCfg(); L = CFG.L || {};
+		/* страница только что с сервера — данные свежие; из памяти телефона — ждём подтверждения */
+		if (Math.floor(Date.now() / 1000) - (CFG.t || 0) <= 15) seen = Date.now();
 		var html = "<!doctype html>" + R.outerHTML;
 		curRaw = rawOf(html);
 		vp();
@@ -1493,7 +1508,7 @@
 		/* лёгкая проверка изменений: одно число раз в 40 секунд, только когда приложение на экране */
 		var hid = 0;
 		setInterval(liveTick, 40000);
-		D.addEventListener("visibilitychange", function () { if (D.hidden) hid = Date.now(); else { liveTick(); if (hid && Date.now() - hid > 120000 && canAuto()) refresh(); } });
+		D.addEventListener("visibilitychange", function () { if (D.hidden) hid = Date.now(); else { tick(); liveTick(); if (hid && Date.now() - hid > 120000 && canAuto()) refresh(); } });
 		sw().then(function () { setTimeout(askPush, 700); pushUI(); setTimeout(warm, 2500); });
 	}
 	function liveTick() {
@@ -1502,6 +1517,7 @@
 			if (!d.ok) { if (d.m === "403") hardReload(); return; }
 			Chat.badge(d.n);
 			if (d.v !== root.getAttribute("data-v")) { if (canAuto()) refresh(); else pending = true; }
+			else fresh();
 			online(true);
 		}).catch(function () { });
 	}

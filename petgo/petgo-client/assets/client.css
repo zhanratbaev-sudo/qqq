@@ -553,3 +553,28 @@ html.pgk-dark .pgk-bcard.pg-b.pg-b:active { box-shadow: inset 0 0 0 100vmax rgba
 .pgk-qr-code { font-size: 30px; font-weight: 700; letter-spacing: .14em; font-variant-numeric: tabular-nums; }
 .pgk-qr-tip { margin: 0; padding: 0 4px; text-align: center; font-size: 15px; line-height: 1.45; color: var(--k-mu); }
 .pgk-qr-tip b { display: block; margin-bottom: 4px; font-size: 16px; color: var(--k-tx); }
+/* 34.9: няня отсканировала — QR уходит (ease-in, быстрее), появляется галочка как на сайте после отправки формы */
+.pgk-qr.out, .pgk-qr-tip.out { animation: none; opacity: 0; transform: scale(.96); filter: blur(4px); transition: opacity var(--k-pop-out) var(--k-in), transform var(--k-pop-out) var(--k-in), filter var(--k-pop-out) var(--k-in); }
+.pgk-okv { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 16px 18px; border-radius: 22px; background: var(--k-ok-bg); text-align: center; }
+.pgk-ok-svg { width: 84px; height: 84px; fill: none; stroke-linecap: round; stroke-linejoin: round; overflow: visible; margin-bottom: 4px; }
+.pgk-ok-svg circle { fill: var(--k-ok); }
+.pgk-ok-svg path { stroke: #fff; stroke-width: 6.5; }
+.pgk-okv b { font-size: 22px; font-weight: 700; line-height: 1.2; letter-spacing: -.02em; color: var(--k-tx); }
+.pgk-okv p { margin: 0; max-width: 320px; font-size: 15px; line-height: 1.4; color: var(--k-mu); }
+.pgk-okv .pgk-okqr.pg-b.pg-b { margin-top: 8px; min-height: 44px; padding: 0 18px 0 14px; gap: 8px; font-size: 15px; border-radius: 999px; background: var(--k-card); color: var(--k-tx); box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
+.pgk-okv .pgk-okqr .pg-i { width: 20px; height: 20px; }
+.pgk-okv.in .pgk-ok-svg circle { transform-box: fill-box; transform-origin: center; animation: pgkOkPop 320ms cubic-bezier(.34, 1.56, .64, 1) both; }
+.pgk-okv.in .pgk-ok-svg path { stroke-dasharray: 52; stroke-dashoffset: 52; animation: pgkOkDraw 300ms 160ms var(--k-out) forwards; }
+.pgk-okv.in b, .pgk-okv.in p, .pgk-okv.in .pgk-okqr { animation: pgkOkUp 280ms 260ms var(--k-out) both; }
+.pgk-okrep { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px 16px; border-radius: 22px; background: var(--k-fill); }
+.pgk-okrep > b { font-size: 16px; }
+.pgk-okrep .pgk-rep { margin-top: 6px; }
+.pgk-okrep .pgk-rep-m, .pgk-okrep .pgk-rep-d { background: var(--k-card); }
+.pgk-okrep .pgk-rep-n { margin: 8px 0 0; font-size: 15px; line-height: 1.4; }
+.pgk-okph { display: block; margin: 12px 0 0; padding: 0; border: 0; background: none; cursor: zoom-in; align-self: flex-start; }
+.pgk-okph img { display: block; max-width: 100%; max-height: 260px; width: auto; height: auto; border-radius: 14px; }
+.pgk-okrep.in { animation: pgkOkUp 280ms 380ms var(--k-out) both; }
+@keyframes pgkOkPop { from { transform: scale(0); opacity: 0; } }
+@keyframes pgkOkDraw { to { stroke-dashoffset: 0; } }
+@keyframes pgkOkUp { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .pgk-okv.in .pgk-ok-svg circle, .pgk-okv.in b, .pgk-okv.in p, .pgk-okv.in .pgk-okqr, .pgk-okrep.in { animation: none; } .pgk-okv.in .pgk-ok-svg path { animation: none; stroke-dashoffset: 0; } }

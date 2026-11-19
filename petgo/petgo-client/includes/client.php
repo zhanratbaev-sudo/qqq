@@ -279,6 +279,16 @@ function petgo_cl_ajax() {
             'qr' => $q ? array('url' => petgo_qr_url($oid, $q), 'code' => substr($q['code'], 0, 3) . ' ' . substr($q['code'], 3), 'exp' => wp_date('d.m · H:i', (int) $q['exp'], petgo_tz())) : null,
             'by' => (string) get_post_meta($oid, '_hand_by', true), 'back' => (string) get_post_meta($oid, '_back_by', true), 'phase' => $phase,
         );
+        /* 34.9: когда передали и когда вернули — кабинет сам меняет QR на галочку; при возврате — отчёт няни и фото */
+        $ha = (int) get_post_meta($oid, '_hand_at', true);
+        $ba = (int) get_post_meta($oid, '_back_at', true);
+        $out['hand_at'] = $ha ? wp_date('H:i', $ha, petgo_tz()) : '';
+        $out['back_at'] = $ba ? wp_date('H:i', $ba, petgo_tz()) : (in_array($st, array('done', 'confirmed'), true) && petgo_o($oid, 'done_at') ? wp_date('H:i', (int) petgo_o($oid, 'done_at'), petgo_tz()) : '');
+        if (in_array($st, array('done', 'confirmed'), true)) {
+            $out['rep'] = function_exists('petgo_rep_html') ? petgo_rep_html($oid) : '';
+            $rp = petgo_o($oid, 'rphoto');
+            $out['rph'] = (is_array($rp) && !empty($rp['url'])) ? petgo_media($rp['url']) : '';
+        }
         petgo_cl_json(true, $out);
     }
     /* 34.8: страница питомца — всегда свежая (идёт прогулка, уже дома, отчёты) */

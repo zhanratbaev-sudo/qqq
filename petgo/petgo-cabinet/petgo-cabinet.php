@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 34.8.0
+ * Version: 34.9.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '34.8.0');
+define('PETGO_VER', '34.9.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -1133,6 +1133,10 @@ function petgo_h_finish() {
             update_post_meta($pid, '_avatar', array('url' => $r['url'], 'file' => ''));
         }
     }
+    /* 34.2: отчёт няни (настроение, что сделано); 34.9 — до смены статуса: клиент видит галочку сразу с отчётом */
+    if (function_exists('petgo_rep_save')) {
+        petgo_rep_save($oid);
+    }
     $auto = false;
     if ($qrr) {
         petgo_qr_commit($oid, $qrr, 'back');
@@ -1144,10 +1148,7 @@ function petgo_h_finish() {
     if ($auto) {
         update_post_meta($oid, '_confirmed_at', time());
     }
-    /* 34.2: отчёт няни (настроение, что сделано) и уведомление клиенту «Оцените няню» */
-    if (function_exists('petgo_rep_save')) {
-        petgo_rep_save($oid);
-    }
+    /* уведомление клиенту «Оцените няню» */
     do_action('petgo_order_event', $oid, 'done');
     petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), $auto ? 'Заказ завершён по QR' : ($qrr ? 'Завершён без QR — подтвердите' : 'Заказ завершён'), petgo_pet_name($oid) . ' · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'orders', 'o' => $oid)));
     petgo_flash(petgo_t($auto ? 'qr_done_qr' : ($qrr ? 'qr_wait_adm' : 'ok_finished')));
