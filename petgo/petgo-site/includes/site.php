@@ -461,7 +461,7 @@ function petgo_site_layer($page) {
     $h .= '<a href="' . esc_url(petgo_site_url('home')) . '"' . $cur('home') . '>' . petgo_site_icon('home') . '<span>' . esc_html($pgs['home']['name']) . '</span></a>';
     $h .= '<a href="' . esc_url(petgo_site_url('nannies')) . '"' . $cur('nannies') . '>' . petgo_site_icon('nanny') . '<span>' . esc_html($pgs['nannies']['name']) . '</span></a>';
     if ($ai) {
-        $h .= '<button type="button" class="pg-b pg-dock-ai" data-chat aria-haspopup="dialog" aria-controls="pga-chat"><i>' . petgo_site_icon('spark') . '</i><span>' . esc_html($l('Помощник')) . '</span></button>';
+        $h .= '<button type="button" class="pg-b pg-dock-ai" data-chat aria-haspopup="dialog" aria-controls="pga-chat"><i>' . petgo_site_icon('chat') . '</i><span>' . esc_html($l('Помощник')) . '</span></button>';
     }
     $h .= '<a href="' . esc_url(petgo_site_url('reviews')) . '"' . $cur('reviews') . '>' . petgo_site_icon('star') . '<span>' . esc_html($pgs['reviews']['name']) . '</span></a>';
     $h .= '<a href="' . esc_url(petgo_site_url('account')) . '"' . $cur('account') . '>' . petgo_site_icon('user') . '<span>' . esc_html($pgs['account']['name']) . '</span></a>';

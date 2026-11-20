@@ -35,9 +35,11 @@
     ".pgkb .pgkb-k.alt{background:var(--pgkb-alt);color:#fff;font-weight:600;transform:scale(1.4) translateY(-16px);position:relative;z-index:2}" +
     ".pgkb-num{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:420px;margin:0 auto;padding:0 6px}.pgkb-num .pgkb-k{height:52px;font-size:25px}" +
     /* сайт: цвета PetGo, матовое стекло */
-    ".pgkb--site{--pgkb-bg:#E9E7D8;--pgkb-line:rgba(2,76,70,.14);--pgkb-key:#FFFEF8;--pgkb-key2:#CFCDBC;--pgkb-keysh:rgba(2,76,70,.28);--pgkb-ink:#024C46;--pgkb-mu:rgba(2,76,70,.65);--pgkb-fill:rgba(2,76,70,.1);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C;--pgkb-down:#D6D4C3}" +
+    ".pgkb--site{--pgkb-bg:#E7E6E1;--pgkb-line:rgba(27,33,31,.09);--pgkb-key:#fff;--pgkb-key2:#CBCAC4;--pgkb-keysh:rgba(27,33,31,.22);--pgkb-ink:#1B211F;--pgkb-mu:rgba(27,33,31,.6);--pgkb-fill:rgba(27,33,31,.07);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C;--pgkb-down:#D3D2CC}" +
     /* сайт в тёмной теме (кабинет клиента) — тёмная клавиатура */
-    ".pgk-dark .pgkb--site{--pgkb-bg:#1C1C1E;--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#4A4A4D;--pgkb-key2:#2E2E31;--pgkb-keysh:rgba(0,0,0,.6);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.6);--pgkb-fill:rgba(255,255,255,.12);--pgkb-ac:#0E7A64;--pgkb-on:#fff;--pgkb-alt:#F0B04D;--pgkb-down:#6A6A6E}" +
+    /* 36.0: в кабинете клиента — нейтральная клавиатура под новую палитру (светлая серая, тёмная графитовая) */
+    ".pgk-on .pgkb--site{--pgkb-bg:#E4E5E2;--pgkb-line:rgba(23,26,25,.08);--pgkb-key:#fff;--pgkb-key2:#C8CAC6;--pgkb-keysh:rgba(23,26,25,.22);--pgkb-ink:#171A19;--pgkb-mu:rgba(23,26,25,.6);--pgkb-fill:rgba(23,26,25,.07);--pgkb-ac:#024C46;--pgkb-on:#fff;--pgkb-alt:#E8A33C;--pgkb-down:#D2D4D0}" +
+    ".pgk-dark .pgkb--site{--pgkb-bg:#1C1D1E;--pgkb-line:rgba(237,237,236,.08);--pgkb-key:#46484A;--pgkb-key2:#2D2F30;--pgkb-keysh:rgba(0,0,0,.55);--pgkb-ink:#EDEDEC;--pgkb-mu:rgba(237,237,236,.6);--pgkb-fill:rgba(237,237,236,.1);--pgkb-ac:#EDEDEC;--pgkb-on:#121313;--pgkb-alt:#E0A84C;--pgkb-down:#66696B}" +
     ".pgk-dark .pgkb--site .pgkb-done{color:#4CC38A}" +
     /* приложение: светлая и тёмная темы приложения */
     ".pgkb--app{--pgkb-down:#B4B8BF;--pgkb-bg:#D1D4D9;--pgkb-line:rgba(0,0,0,.08);--pgkb-key:#fff;--pgkb-key2:rgba(171,177,186,.9);--pgkb-keysh:rgba(0,0,0,.3);--pgkb-ink:#000;--pgkb-mu:rgba(60,60,67,.7);--pgkb-fill:rgba(13,124,109,.12);--pgkb-ac:var(--ac,#0d7c6d);--pgkb-on:#fff;--pgkb-alt:#ff9f0a}" +

@@ -119,6 +119,8 @@ add_filter('petgo_site_dict_more', function ($d) {
         'Нет дома? Няня отметит без QR — вы увидите её на карте' => array('Үйде жоқсыз ба? Күтуші QR-сыз белгілейді — оны картадан көресіз', 'Not home? The sitter will confirm without QR and you’ll see her on the map'),
         'Нет дома? Няня завершит без QR, заказ подтвердит менеджер' => array('Үйде жоқсыз ба? Күтуші QR-сыз аяқтайды, тапсырысты менеджер растайды', 'Not home? The sitter will finish without QR and the manager will confirm'),
         'Камера не сработала — няня введёт эти цифры' => array('Камера істемесе — күтуші осы цифрларды енгізеді', 'If the camera fails, the sitter types these digits'),
+        'Оценить' => array('Бағалау', 'Rate'),
+        'Заказать выгул или визит' => array('Серуенге не келуге тапсырыс беру', 'Book a walk or visit'),
         '%s дома' => array('%s үйде', '%s is home'),
         'Визит завершён' => array('Келу аяқталды', 'Visit finished'),
         'Вернули в' => array('Қайтарылған уақыты', 'Returned at'),

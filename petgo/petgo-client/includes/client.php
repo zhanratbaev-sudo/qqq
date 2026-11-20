@@ -481,7 +481,8 @@ function petgo_cl_ajax() {
 function petgo_cl_pet_state($pid) {
     $now = time();
     $sp  = (string) get_post_meta($pid, '_pf_species', true);
-    $hi  = $sp === 'cat' ? 'Мяу!' : ($sp === 'dog' ? 'Гав!' : '');
+    /* 36.0: без «Мяу!» и «Гав!» в статусе — коротко и спокойно */
+    $hi  = '';
     $os  = petgo_orders(array('numberposts' => 20, 'meta_query' => array('relation' => 'AND', array('key' => '_pet', 'value' => (int) $pid),
         array('key' => '_status', 'value' => array('assigned', 'arrived', 'picked'), 'compare' => 'IN'))));
     $act = null;
