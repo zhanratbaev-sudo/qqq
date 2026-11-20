@@ -218,6 +218,17 @@
     qa("[data-auth-p]", box).forEach(function (p) { var on = p.getAttribute("data-auth-p") === to; p.classList.toggle("on", on); p.inert = !on; });
   }
 
+  /* ---------- прокрутка: на телефоне кабинет прокручивается внутри себя (страница браузера стоит на месте) ---------- */
+  function scroller() {
+    var p = D.getElementById("pg");
+    return (p && D.documentElement.classList.contains("pgk-on") && W.matchMedia && matchMedia("(max-width: 860px)").matches) ? p : null;
+  }
+  function scrollY() { var sc = scroller(); return sc ? sc.scrollTop : W.scrollY; }
+  function scrollToY(y, smooth) {
+    var sc = scroller(), o = { top: y, behavior: smooth && !reduce ? "smooth" : "auto" };
+    if (sc) sc.scrollTo(o); else W.scrollTo(o);
+  }
+
   /* ---------- вкладки ---------- */
   var TABS = ["home", "map", "walks", "acc"];
   function tab(to, opts) {
@@ -226,17 +237,17 @@
     var from = CL.tab;
     if (from === to && !opts.force) {
       /* нажали на открытую вкладку — наверх, как в iPhone */
-      if (!opts.keep) W.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+      if (!opts.keep || opts.bar) scrollToY(0, true);
       if (to === "map") MapK.show(opts);
       return;
     }
-    CL.scroll[from] = W.scrollY;
+    CL.scroll[from] = scrollY();
     CL.tab = to;
     CL.box.setAttribute("data-tab", to);
     qa(".pgk-pane", CL.box).forEach(function (p) { p.classList.toggle("on", p.getAttribute("data-pane") === to); });
     qa(".pgk-tabbar [data-k-tab]").forEach(function (b) { var on = b.getAttribute("data-k-tab") === to; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
     try { history.replaceState(history.state, "", "#" + to); sessionStorage.setItem("pgk_tab", to); } catch (x) {}
-    W.scrollTo(0, opts.keep ? (CL.scroll[to] || 0) : 0);
+    scrollToY(opts.keep ? (CL.scroll[to] || 0) : 0, false);
     if (to === "map") MapK.show(opts);
     sgAll(CL.box);
     live();
@@ -1292,7 +1303,7 @@
       var o = {};
       if (b.hasAttribute("data-k-focus")) o.focus = +b.getAttribute("data-k-focus");
       if (b.hasAttribute("data-k-walk")) o.walk = +b.getAttribute("data-k-walk");
-      if (b.closest(".pgk-tabbar")) o.keep = true;
+      if (b.closest(".pgk-tabbar")) { o.keep = true; o.bar = true; }
       tab(b.getAttribute("data-k-tab"), o);
       return;
     }

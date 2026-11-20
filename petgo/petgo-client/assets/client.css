@@ -40,7 +40,7 @@ html.pgk-dark .pg-layer .pg-nav-logo svg circle { fill: #0E7A64; }
 html.pgk-dark .pg-layer .pg-nav-logo svg g[stroke] { stroke: #F2F2F7; }
 html.pgk-lock, html.pgk-lock body { overflow: hidden; }
 
-.pgk { position: relative; min-height: 100vh; min-height: 100dvh; padding: calc(var(--sat) + 6px) 0 calc(var(--sab) + 92px); color: var(--k-tx); font-family: var(--k-font); font-size: 17px; line-height: 1.35; letter-spacing: -.01em; }
+.pgk { position: relative; min-height: 100vh; min-height: var(--app-h, 100vh); padding: calc(var(--sat) + 6px) 0 calc(var(--sab) + 92px); color: var(--k-tx); font-family: var(--k-font); font-size: 17px; line-height: 1.35; letter-spacing: -.01em; }
 @media (min-width: 861px) { .pgk { padding-top: calc(var(--sat) + 96px); } }
 .pgk .pg-wrap { max-width: 760px; padding: 0 16px; }
 .pgk [hidden], .pgk-sheet [hidden], .pgk-auth [hidden], .pgk-tabbar [hidden] { display: none !important; }
@@ -271,14 +271,14 @@ html.pgkb-open .pg-layer .pgk-tabbar { transform: translateY(110%); transition: 
 .pg-layer .pgk-sheet[hidden] { display: none; }
 .pg-layer .pgk-sbg { position: absolute; inset: 0; background: rgba(0, 0, 0, .4); opacity: 0; transition: opacity var(--k-sheet-out) var(--k-in); }
 .pg-layer .pgk-sheet.on .pgk-sbg { opacity: 1; transition: opacity var(--k-sheet-in) var(--k-out); }
-.pg-layer .pgk-sin { position: relative; display: flex; flex-direction: column; width: min(640px, 100%); max-height: calc(100dvh - var(--sat) - 10px); border-radius: 14px 14px 0 0; overflow: hidden; background: var(--k-bg); transform: translateY(100%); transition: transform var(--k-sheet-out) var(--k-in), max-height var(--k-sheet-out) var(--k-in), height var(--k-sheet-out) var(--k-in), margin-bottom var(--k-sheet-out) var(--k-in); will-change: transform; }
-@media (min-width: 680px) { .pg-layer .pgk-sin { margin-bottom: 20px; border-radius: 16px; max-height: calc(100dvh - 60px); } }
+.pg-layer .pgk-sin { position: relative; display: flex; flex-direction: column; width: min(640px, 100%); max-height: calc(100vh - var(--sat) - 10px); max-height: calc(var(--app-h, 100vh) - var(--sat) - 10px); border-radius: 14px 14px 0 0; overflow: hidden; background: var(--k-bg); transform: translateY(100%); transition: transform var(--k-sheet-out) var(--k-in), max-height var(--k-sheet-out) var(--k-in), height var(--k-sheet-out) var(--k-in), margin-bottom var(--k-sheet-out) var(--k-in); will-change: transform; }
+@media (min-width: 680px) { .pg-layer .pgk-sin { margin-bottom: 20px; border-radius: 16px; max-height: calc(var(--app-h, 100vh) - 60px); } }
 /* размер листа меняется только вместе с клавиатурой — те же часы и кривая, что у неё (280 мс вверх, 200 мс вниз) */
 .pg-layer .pgk-sheet.on .pgk-sin { transform: none; transition: transform var(--k-sheet-in) var(--k-out), max-height var(--k-sheet-out) var(--k-in), height var(--k-sheet-out) var(--k-in), margin-bottom var(--k-sheet-out) var(--k-in); }
 .pg-layer.kb-open .pgk-sheet.on .pgk-sin { transition: transform var(--k-sheet-in) var(--k-out), max-height var(--k-sheet-in) var(--k-out), height var(--k-sheet-in) var(--k-out), margin-bottom var(--k-sheet-in) var(--k-out); }
 .pg-layer .pgk-sheet.drag .pgk-sin { transition: none; }
-.pg-layer .pgk-sheet-tall .pgk-sin { height: calc(100dvh - var(--sat) - 10px); }
-@media (min-width: 680px) { .pg-layer .pgk-sheet-tall .pgk-sin { height: calc(100dvh - 60px); } }
+.pg-layer .pgk-sheet-tall .pgk-sin { height: calc(100vh - var(--sat) - 10px); height: calc(var(--app-h, 100vh) - var(--sat) - 10px); }
+@media (min-width: 680px) { .pg-layer .pgk-sheet-tall .pgk-sin { height: calc(var(--app-h, 100vh) - 60px); } }
 .pg-layer .pgk-sh { flex: none; position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 18px 12px 8px 16px; touch-action: none; }
 .pg-layer .pgk-grab { position: absolute; left: 50%; top: 6px; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--k-mu2); }
 .pg-layer .pgk-sht { flex: 1; min-width: 0; padding-top: 4px; }
@@ -288,8 +288,8 @@ html.pgkb-open .pg-layer .pgk-tabbar { transform: translateY(110%); transition: 
 .pg-layer .pgk-x .pg-i { width: 15px; height: 15px; stroke-width: 2.6; }
 .pg-layer .pgk-sc { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 6px 16px calc(20px + var(--sab)); }
 /* клавиатура PetGo открыта — лист плавно поднимается над ней */
-.pg-layer.kb-open .pgk-sin { margin-bottom: var(--kb, 0px); max-height: calc(100dvh - var(--kb, 0px) - var(--sat) - 10px); border-radius: 14px; }
-.pg-layer.kb-open .pgk-sheet-tall .pgk-sin { height: calc(100dvh - var(--kb, 0px) - var(--sat) - 10px); }
+.pg-layer.kb-open .pgk-sin { margin-bottom: var(--kb, 0px); max-height: calc(var(--app-h, 100vh) - var(--kb, 0px) - var(--sat) - 10px); border-radius: 14px; }
+.pg-layer.kb-open .pgk-sheet-tall .pgk-sin { height: calc(var(--app-h, 100vh) - var(--kb, 0px) - var(--sat) - 10px); }
 .pg-layer.kb-open .pgk-sc { padding-bottom: 16px; }
 .pg-layer .pgk-sheet .pgw-card { box-shadow: none; }
 .pgk-done { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 12px 12px; text-align: center; }
@@ -410,7 +410,7 @@ html.pgkb-open:has(#pgk-chat.on) .pgkb { box-shadow: none; }
 .pgk-post-t { font-size: 17px; line-height: 1.55; }
 
 /* ---------- карта ---------- */
-.pgk-mapw { position: relative; height: calc(100dvh - var(--sat) - var(--sab) - 170px); min-height: 360px; margin: 4px 16px 0; border-radius: var(--k-r); overflow: hidden; background: var(--k-card); isolation: isolate; }
+.pgk-mapw { position: relative; height: calc(100vh - var(--sat) - var(--sab) - 170px); height: calc(var(--app-h, 100vh) - var(--sat) - var(--sab) - 170px); min-height: 360px; margin: 4px 16px 0; border-radius: var(--k-r); overflow: hidden; background: var(--k-card); isolation: isolate; }
 @media (min-width: 861px) { .pgk-mapw { max-width: 728px; margin: 4px auto 0; height: min(640px, calc(100vh - 300px)); } }
 .pgk-map { position: absolute; inset: 0; z-index: 0; background: #EFEDE2; }
 html.pgk-dark .pgk-map { background: #141414; }
@@ -661,3 +661,15 @@ html.pgk-dark .pgk-bcard.pg-b.pg-b:active { box-shadow: inset 0 0 0 100vmax rgba
 .pgk-ctbook .pgk-btn.pg-b.pg-b { width: 100%; margin-top: 6px; }
 .pgk-done .pgk-ctbook + .pgk-btn { margin-top: 4px; }
 @media (prefers-reduced-motion: reduce) { .pgk-ctcard, .pgk-ctw, .pgk-ctbook, .pgk-ct-txt[open] .pgk-ct-doc { animation: none; } }
+
+/* ============================================================
+   35.0.2 КАБИНЕТ НА ТЕЛЕФОНЕ КАК ПРИЛОЖЕНИЕ
+   Страница браузера больше не прокручивается — прокручивается только содержимое кабинета.
+   Поэтому Safari и Chrome не прячут и не показывают свои панели при прокрутке: нижнее меню всегда на месте
+   и целиком видно, листы и клавиатура PetGo всегда помещаются в экран.
+   Высота экрана — --app-h (считает скрипт по настоящей видимой высоте; работает и там, где нет dvh).
+   ============================================================ */
+@media (max-width: 860px) {
+  html.pgk-on, html.pgk-on body.pg-body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  html.pgk-on body.pg-body > .pg { position: fixed; top: 0; right: 0; bottom: 0; left: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scroll-behavior: auto; }
+}
