@@ -44,6 +44,7 @@ add_action('petgo_ready', function ($api) {   // PetGo загружен; $api �
 | Формы | `petgo_form_open('my_action')` + `add_action('admin_post_petgo_my_action', …)` с `petgo_guard('admin')` |
 | Заголовок своей страницы | фильтр `petgo_app_title($title, $pg)` (с 35.0) |
 | Строка в окне заказа | фильтр `petgo_order_detail_top($html, $order_id, $admin)` (с 35.0) |
+| Напоминание на главной приложения | фильтр `petgo_admin_home_top($html)` (с 35.0.1) |
 
 ## Кабинет клиента
 

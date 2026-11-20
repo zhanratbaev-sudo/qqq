@@ -259,10 +259,10 @@ function pgs_page() {
     /* 6. журнал */
     $kf = isset($_GET['k']) ? sanitize_key(wp_unslash($_GET['k'])) : '';
     $lim = isset($_GET['n']) ? min(500, max(50, (int) $_GET['n'])) : 60;
-    $where = $kf === 'attacks' ? "kind IN ('" . implode("','", array_map('esc_sql', $AK)) . "')" : ($kf === 'logins' ? "kind IN ('login','login_fail','brute','device')" : ($kf !== '' && isset($K[$kf]) ? $wpdb->prepare('kind = %s', $kf) : "kind <> 'login'"));
+    $where = $kf === 'attacks' ? "kind IN ('" . implode("','", array_map('esc_sql', $AK)) . "')" : ($kf === 'logins' ? "kind IN ('login','login_fail','brute','device')" : ($kf !== '' && isset($K[$kf]) ? $wpdb->prepare('kind = %s', $kf) : "kind NOT IN ('login','admin')"));
     $ev = $wpdb->get_results("SELECT * FROM $tb WHERE $where ORDER BY id DESC LIMIT " . (int) $lim); // phpcs:ignore
     echo '<div class="pgc-card" id="pgs-ev"><b>Журнал</b><div class="pgc-chips pgs-chips">';
-    foreach (array('' => 'Все', 'attacks' => 'Атаки', 'logins' => 'Входы', 'files' => 'Файлы', 'block' => 'Блокировки') as $k => $l) {
+    foreach (array('' => 'Все', 'attacks' => 'Атаки', 'logins' => 'Входы', 'files' => 'Файлы', 'block' => 'Блокировки', 'admin' => 'Действия') as $k => $l) {
         echo '<a class="pgc-chip' . ($kf === $k ? ' on' : '') . '" href="' . esc_url(petgo_page_url($k === '' ? array('pg' => 'shield') : array('pg' => 'shield', 'k' => $k))) . '#pgs-ev">' . esc_html($l) . '</a>';
     }
     echo '</div>';
@@ -312,7 +312,13 @@ function pgs_page() {
 
     /* 8. сеансы сотрудников */
     echo '<div class="pgc-card"><b>Сеансы сотрудников</b><p class="mu">Телефон сотрудника потерян или вход с чужого устройства — завершите его сеансы: приложение попросит войти заново.</p><div class="pgs-users">';
-    $users = function_exists('petgo_staff_users') ? petgo_staff_users() : get_users(array('role__in' => array('administrator')));
+    $users = get_users(array('role__in' => array('administrator')));
+    $ids   = wp_list_pluck($users, 'ID');
+    foreach (function_exists('petgo_staff_users') ? petgo_staff_users() : array() as $su) {
+        if (!in_array($su->ID, $ids, true)) {
+            $users[] = $su;
+        }
+    }
     foreach ($users as $u) {
         $ses = class_exists('WP_Session_Tokens') ? count(WP_Session_Tokens::get_instance($u->ID)->get_all()) : 0;
         $ll  = get_user_meta($u->ID, 'pgs_last', true);
@@ -334,7 +340,7 @@ function pgs_page() {
         return '<label class="pgc-ck"><input type="checkbox" name="' . esc_attr($k) . '" value="1"' . ($on ? ' checked' : '') . '> <span>' . esc_html($label) . '</span></label>';
     };
     echo petgo_form_open('pgs_save') . '<div class="pgc-card"><b>Настройки</b><div class="pgf-list">';
-    echo '<label class="pgf-row"><span>Режим</span><select name="mode"><option value="protect"' . selected($cfg['mode'], 'protect', false) . '>Защищать (блокировать)</option><option value="watch"' . selected($cfg['mode'], 'watch', false) . '>Только наблюдать</option></select></label>';
+    echo '<label class="pgf-row"><span>Режим</span><select name="mode"><option value="protect"' . selected($cfg['mode'], 'protect', false) . '>Защищать</option><option value="watch"' . selected($cfg['mode'], 'watch', false) . '>Наблюдать</option></select></label>';
     echo $num('login_max', 'Неверных паролей', 3, 50, 'С одного адреса — после этого вход для него закрывается.');
     echo $num('login_win', 'За минут', 5, 120, 'Окно, в котором считаются неверные пароли.');
     echo $num('block_min', 'Закрыть на минут', 5, 10080, 'На сколько закрывать адрес взломщика.');
@@ -354,7 +360,7 @@ function pgs_page() {
 
 function pgs_css() {
     return '.pgs .pgc-card{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}.pgs .pgc-card>b{font-size:17px}.pgs .mu{margin:0}'
-        . '.pgs-hero{flex-direction:row!important;align-items:center;gap:14px!important}.pgs-hero>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pgs-hero b{font-size:20px}.pgs-hero small{color:var(--mu)}'
+        . '.pgs-hero{flex-direction:row!important;flex-wrap:wrap;align-items:center;gap:14px!important}.pgs-hero .pgs-inl{flex:1 1 100%}.pgs-hero .pgs-inl .pgc-btn{width:100%}@media(min-width:760px){.pgs-hero .pgs-inl{flex:none}.pgs-hero .pgs-inl .pgc-btn{width:auto}}.pgs-hero>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pgs-hero b{font-size:20px}.pgs-hero small{color:var(--mu)}'
         . '.pgs-shield{flex:none;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--oks);color:var(--ok)}.pgs-shield svg{width:28px;height:28px}.pgs-hero.warn .pgs-shield{background:var(--wns);color:var(--wn)}.pgs-hero.bad .pgs-shield{background:var(--ers);color:var(--er)}'
         . '.pgs-inl{margin:0}.pgs-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}@media(min-width:760px){.pgs-tiles{grid-template-columns:repeat(4,1fr)}}.pgs-tiles div{padding:14px;border-radius:var(--r,18px);background:var(--cd)}.pgs-tiles b{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}.pgs-tiles small{color:var(--mu);font-size:13px}'
         . '.pgs-bars{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:140px}.pgs-bar{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}.pgs-bar i{display:block;width:100%;max-width:22px;border-radius:5px 5px 2px 2px;background:var(--ac);opacity:.75}.pgs-bar.today i{opacity:1}.pgs-bar em{font-style:normal;font-size:10.5px;color:var(--mu);font-variant-numeric:tabular-nums}.pgs-bar span{font-size:11px;color:var(--mu)}'

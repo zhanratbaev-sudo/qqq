@@ -258,6 +258,18 @@ add_action('wp_login_failed', function ($login, $err = null) {
     }
     $who = $u ? $u->user_login : (mb_strlen((string) $login) > 3 ? mb_substr((string) $login, 0, 2) . '***' : '***');
     pgs_log('login_fail', 1, 'Логин: ' . $who . ($u ? '' : ' (нет такого)'));
+    /* подбор пароля к одному логину с разных адресов (распределённая атака) — записываем и сообщаем */
+    if ($u) {
+        $k   = 'pgs_ul_' . md5($u->user_login);
+        $ips = get_transient($k);
+        $ips = is_array($ips) ? $ips : array();
+        $ips[md5($ip)] = 1;
+        set_transient($k, $ips, 15 * MINUTE_IN_SECONDS);
+        if (count($ips) === 5) {
+            pgs_log('brute', 2, 'Подбор пароля к логину ' . $u->user_login . ' с 5 разных адресов за 15 мин');
+            pgs_alert('brute' . $u->ID, 'Защита: подбирают пароль', 'К логину ' . $u->user_login . ' — с разных адресов. Вход из чужих сетей для него закрыт; владелец входит как обычно.', true);
+        }
+    }
     $n   = pgs_count('lf' . $ip, max(1, (int) pgs_cfg()['login_win']) * MINUTE_IN_SECONDS);
     if ($n >= max(3, (int) pgs_cfg()['login_max'])) {
         pgs_log('brute', 2, $n . ' неудачных входов за ' . (int) pgs_cfg()['login_win'] . ' мин');

@@ -142,11 +142,42 @@ function petgo_media_probe() {
 /* ---------- 2. вход ---------- */
 add_filter('authenticate', 'petgo_auth_user_lock', 31, 2);
 function petgo_auth_user_lock($user, $login) {
-    if ($login && (int) get_transient('petgo_u_' . md5(strtolower((string) $login))) >= 8) {
+    /* 35.0.1: много неверных паролей к одному логину закрывает вход только для «чужих» сетей —
+       сам человек из своей обычной сети (дом, телефон) войти может; иначе любой мог бы запереть чужой кабинет */
+    if ($login && (int) get_transient('petgo_u_' . md5(strtolower((string) $login))) >= 8 && !petgo_known_net((string) $login)) {
         return new WP_Error('petgo_locked', 'Too many attempts. Wait 15 minutes.');
     }
     return $user;
 }
+
+/* сеть посетителя: первые три числа адреса (IPv4) или первые четыре группы (IPv6) */
+function petgo_net_key() {
+    $ip  = petgo_ip();
+    $net = strpos($ip, ':') !== false ? implode(':', array_slice(explode(':', $ip), 0, 4)) : implode('.', array_slice(explode('.', $ip), 0, 3));
+    return substr(md5($net . wp_salt('auth')), 0, 12);
+}
+
+function petgo_known_net($login) {
+    $u = get_user_by('login', $login);
+    if (!$u && is_email($login)) {
+        $u = get_user_by('email', $login);
+    }
+    $n = $u ? get_user_meta($u->ID, 'petgo_nets', true) : array();
+    return is_array($n) && in_array(petgo_net_key(), $n, true);
+}
+
+/* успешный вход — запоминаем сеть (последние 12) */
+add_action('wp_login', function ($login, $user) {
+    if (!($user instanceof WP_User)) {
+        return;
+    }
+    $n = get_user_meta($user->ID, 'petgo_nets', true);
+    $n = is_array($n) ? $n : array();
+    $k = petgo_net_key();
+    $n = array_values(array_diff($n, array($k)));
+    array_unshift($n, $k);
+    update_user_meta($user->ID, 'petgo_nets', array_slice($n, 0, 12));
+}, 10, 2);
 
 add_action('wp_login_failed', function ($login) {
     if ($login) {
