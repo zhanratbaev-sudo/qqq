@@ -245,9 +245,7 @@ function pgs_block($ip, $min, $scope, $why, $manual = false) {
     }
     update_option('pgs_blocks', $b, true);
     $id = pgs_log('block', 2, ($scope === 'site' ? 'Закрыт весь сайт' : 'Закрыт вход') . ' на ' . (int) $min . ' мин: ' . $why, null, $ip);
-    if (!$manual) {
-        pgs_alert('block', 'Защита: адрес заблокирован', pgs_ip_mask($ip) . ' · ' . $why . ' · ' . ($scope === 'site' ? 'весь сайт' : 'вход') . ' на ' . (int) $min . ' мин');
-    }
+    /* 36.0: о блокировке не уведомляем — это обычная работа защиты; список закрытых адресов — в «Защите» */
     do_action('pgs_blocked', $ip, $scope, $why, $id);
     return true;
 }

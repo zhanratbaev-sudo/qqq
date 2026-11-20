@@ -237,7 +237,10 @@ function petgo_rv_send() {
     }
     petgo_audit('review_new', 'order=' . $oid . ' rating=' . $rating, 0);
     petgo_bump();
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Новый отзыв', $name . ': ' . $rating . ' из 5', petgo_page_url(array('pg' => 'reviews')));
+    /* 36.0: хороший отзыв — в утреннюю сводку; плохой (3 и ниже) — сразу, чтобы успеть связаться с клиентом */
+    if ((int) $rating <= 3) {
+        petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Плохой отзыв: ' . $rating . ' из 5', $name, petgo_page_url(array('pg' => 'reviews')));
+    }
     wp_send_json(array('ok' => true));
 }
 

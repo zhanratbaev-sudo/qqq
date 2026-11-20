@@ -158,7 +158,7 @@ function petgo_cl_reg() {
     if ($src) {
         update_user_meta($uid, 'petgo_src', $src);
     }
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Новый клиент на сайте', $name . ' · ' . $phone . ($linked ? ' · питомцев: ' . $linked : '') . ($src ? ' · ' . petgo_src_text($src) : ''), petgo_page_url(array('pg' => 'clients')));
+    /* 36.0: новый клиент — без отдельного уведомления, он в утренней сводке и в «Клиентах» */
     if (function_exists('petgo_event')) {
         petgo_event('sign_up', array('user' => (int) $uid));
     }
@@ -254,7 +254,10 @@ function petgo_cl_ajax() {
         if (function_exists('petgo_cl_upcoming_html')) {
             $out['up'] = petgo_cl_upcoming_html($uid);
             $out['wk'] = petgo_cl_walks_sig($uid);
+            $out['now'] = petgo_cl_now_html($uid);
         }
+        /* 36.0: няня у двери → у клиента сам открывается QR; пока идёт заказ — обновление чаще */
+        $out = array_merge($out, petgo_cl_door_state($uid));
         petgo_cl_json(true, $out);
     }
     /* 34.7: заказ — подробности и QR-код для няни (действует 24 часа, потом сам меняется) */
@@ -446,7 +449,10 @@ function petgo_cl_ajax() {
         }
         petgo_audit('review_new', 'order=' . $oid . ' rating=' . $rating . ' client=' . $uid, $uid);
         petgo_bump();
-        petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Новый отзыв из кабинета', $u->display_name . ': ' . $rating . ' из 5 · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'reviews')));
+        /* 36.0: уведомление — только о плохом отзыве (3 и ниже), остальные — в утренней сводке */
+        if ((int) $rating <= 3) {
+            petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Плохой отзыв: ' . $rating . ' из 5', $u->display_name . ': ' . $rating . ' из 5 · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'reviews')));
+        }
         petgo_cl_json(true, array('msg' => $L('Спасибо за отзыв!')));
     }
     if ($op === 'join') {
@@ -543,6 +549,25 @@ function petgo_cl_pet_state($pid) {
         $o['next'] = (int) petgo_o($next, 'ts');
     }
     return $o;
+}
+
+/* 36.0: у каких заказов няня сейчас у двери (QR ещё не отсканирован) и идёт ли заказ (чаще обновлять) */
+function petgo_cl_door_state($uid) {
+    $door = array();
+    $soon = false;
+    foreach (petgo_cl_upcoming($uid, 12) as $o) {
+        $st  = petgo_o($o->ID, 'status');
+        $ts  = (int) petgo_o($o->ID, 'ts');
+        $end = $ts + max(30, (int) petgo_o($o->ID, 'dur')) * MINUTE_IN_SECONDS;
+        if (in_array($st, array('arrived', 'picked'), true) || ($st === 'assigned' && $ts - 90 * MINUTE_IN_SECONDS <= time() && $end + 2 * HOUR_IN_SECONDS >= time())) {
+            $soon = true;
+        }
+        $d = function_exists('petgo_door_open') ? petgo_door_open($o->ID) : null;
+        if ($d) {
+            $door[] = array('id' => (int) $o->ID, 'ph' => (string) $d['ph'], 't' => (int) $d['t']);
+        }
+    }
+    return array('door' => $door, 'soon' => $soon ? 1 : 0);
 }
 
 function petgo_cl_pets_state($uid) {

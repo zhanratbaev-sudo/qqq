@@ -580,12 +580,19 @@
 			return { code: m ? m[1] : (d.length === 6 ? d : ""), order: o ? +o[1] : 0 };
 		}
 		function formOf(id) { return D.querySelector('[data-qr-form="' + id + '"]'); }
+		/* 36.0: «няня у двери» — у клиента QR-код открывается сам на весь экран */
+		function door(id) {
+			if (!id || (door["t" + id] && Date.now() - door["t" + id] < 60000)) return;
+			door["t" + id] = Date.now();
+			post({ action: "petgo_door", n: CFG.no, id: id }).catch(function () {});
+		}
 		function open(id) {
 			form = formOf(id);
 			if (!form || !els() || !ready(form)) return;
 			unlock();
+			door(id);
 			ov.hidden = false; void ov.offsetWidth; ov.classList.add("on"); R.classList.add("pgc-lock");
-			msg.textContent = L.qr_cam;
+			msg.textContent = L.qr_door || L.qr_cam;
 			start();
 		}
 		function stop() {
@@ -681,8 +688,13 @@
 				if (++n < 40) setTimeout(wait, 250);
 			})();
 		}
-		return { open: open, close: close, noqr: noqr, manual: manual, fromUrl: fromUrl };
+		return { open: open, close: close, noqr: noqr, manual: manual, fromUrl: fromUrl, door: door };
 	})();
+	/* 36.0: няня прикрепила фото в конце прогулки — она у двери: у клиента заранее открывается QR для возврата */
+	D.addEventListener("change", function (e) {
+		var t = e.target, f = t && t.name === "photo" && t.closest ? t.closest("[data-qr-finish]") : null;
+		if (f && t.files && t.files.length) QR.door(f.getAttribute("data-qr-form"));
+	}, true);
 
 	/* ---------- выход: стираем сохранённые данные с телефона ---------- */
 	function logout(href) {

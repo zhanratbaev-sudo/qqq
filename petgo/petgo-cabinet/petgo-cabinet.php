@@ -1061,6 +1061,10 @@ function petgo_h_arrive() {
     update_post_meta($oid, '_acc', (int) petgo_p('acc'));
     update_post_meta($oid, '_arrived_at', time());
     update_post_meta($oid, '_status', 'arrived');
+    /* 36.0: выгул — няня у двери, у клиента сам открывается QR для передачи питомца */
+    if (petgo_o($oid, 'service') === 'walk' && function_exists('petgo_door')) {
+        petgo_door($oid);
+    }
     do_action('petgo_order_event', $oid, 'arrived');
     petgo_flash(petgo_t('ok_arrived'));
     $late = petgo_late_min($oid);
@@ -1150,7 +1154,10 @@ function petgo_h_finish() {
     }
     /* уведомление клиенту «Оцените няню» */
     do_action('petgo_order_event', $oid, 'done');
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), $auto ? 'Заказ завершён по QR' : ($qrr ? 'Завершён без QR — подтвердите' : 'Заказ завершён'), petgo_pet_name($oid) . ' · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'orders', 'o' => $oid)));
+    /* 36.0: уведомление — только если нужно действие (подтвердить заказ); по QR заказ закрыт сам — без уведомления, он попадёт в утреннюю сводку */
+    if (!$auto) {
+        petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ($qrr ? 'Завершён без QR — подтвердите' : 'Заказ завершён'), petgo_pet_name($oid) . ' · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'orders', 'o' => $oid)));
+    }
     petgo_flash(petgo_t($auto ? 'qr_done_qr' : ($qrr ? 'qr_wait_adm' : 'ok_finished')));
     petgo_back('orders', array('o' => $oid));
 }
@@ -1770,6 +1777,7 @@ require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/people.php';
 require_once __DIR__ . '/includes/petform.php';
 require_once __DIR__ . '/includes/track.php';
+require_once __DIR__ . '/includes/digest.php';
 /* 34.3: сайт и кабинет клиента — отдельные плагины «PetGo Сайт» и «PetGo Клиент» (их можно обновлять по одному) */
 require_once __DIR__ . '/includes/i18n-v34.php';
 /* 34.5: API для новых плагинов PetGo — подключаются сами, остальные плагины обновлять не нужно */

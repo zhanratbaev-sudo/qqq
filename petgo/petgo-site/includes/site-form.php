@@ -257,7 +257,7 @@ function petgo_pf_send() {
             $fail($L('Не получилось сохранить. Попробуйте ещё раз.'));
         }
         if (!(int) petgo_p('pet_id')) {
-            petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Клиент добавил питомца', $d['title'] . ' · ' . $d['owner'], petgo_page_url(array('pg' => 'pets')));
+            /* 36.0: клиент добавил питомца — без уведомления (видно в «Питомцах»), это не требует действий */
         }
         wp_send_json(array('ok' => true, 'pet' => $pid));
     }

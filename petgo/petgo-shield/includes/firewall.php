@@ -152,7 +152,7 @@ function pgs_hit($kind, $info, $strike = true) {
     if ($strike) {
         pgs_strike($ip, pgs_kinds()[$kind][0]);
     }
-    pgs_alert('attack', 'Защита: отражена атака', pgs_kinds()[$kind][0] . ' · ' . pgs_ip_mask($ip) . ' · ' . mb_substr($info, 0, 80));
+    /* 36.0: об отражённой атаке не уведомляем — она заблокирована сама; видно в «Защите» */
     pgs_deny($kind, $id);
 }
 

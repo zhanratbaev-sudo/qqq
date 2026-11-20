@@ -657,27 +657,29 @@
     return h;
   }
   function ordStop() { clearTimeout(CL.ordT); CL.ordT = 0; CL.ord = null; }
-  function orderSheet(id) {
+  function orderSheet(id, auto) {
     var s = kOpen("order"); if (!s) return;
     var box = $("[data-k-order-body]", s);
     ordStop();
+    CL.ordId = id;
+    box.classList.toggle("auto", !!auto);
     box.innerHTML = '<div class="pgk-map-load"><i class="pg-spin"></i></div>';
     function render(o, live) {
       var tt = $("[data-k-sht]", s); if (tt) tt.textContent = o.pet + " · " + o.svc;
-      var h = '<div class="pgk-ord-h">' + avHtml({ av: o.av, name: o.pet }, "md") + '<div><b>' + esc(o.when) + "</b><small>" + esc(o.dur + " " + T("мин")) + '</small></div><span class="pgk-badge st-' + esc(o.st) + '">' + esc(o.stl) + "</span></div>";
+      var head = '<div class="pgk-ord-h">' + avHtml({ av: o.av, name: o.pet }, "md") + '<div><b>' + esc(o.when) + "</b><small>" + esc(o.dur + " " + T("мин")) + '</small></div><span class="pgk-badge st-' + esc(o.st) + '">' + esc(o.stl) + "</span></div>";
+      var h = head;
       var k = ordDone(o);
       if (live) {
         /* няня только что отсканировала: вместо QR — галочка (и отчёт, если вернули) */
         h += ordOk(o, live, true);
       } else if (o.qr && W.qrcode) {
-        h += '<div class="pgk-qr"><div class="pgk-qr-img">' + qrSvg(o.qr.url) + '</div><small>' + esc(T("Код для няни")) + '</small><b class="pgk-qr-code">' + esc(o.qr.code) + "</b><small>" + esc(T("Действует до")) + " " + esc(o.qr.exp) + "</small></div>";
-        var tip = {
-          pick: ["Дайте няне отсканировать QR-код, когда она забирает питомца.", "Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте."],
-          back: ["Дайте няне отсканировать QR-код, когда она вернёт питомца.", "Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор."],
-          arrive: ["Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.", ""],
-          leave: ["Дайте няне отсканировать QR-код, когда она будет уходить.", "Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор."]
-        }[o.phase] || ["", ""];
-        h += '<p class="pgk-qr-tip"><b>' + esc(T(tip[0])) + "</b>" + (tip[1] ? " " + esc(T(tip[1])) : "") + "</p>";
+        /* 36.0: QR — первым и крупно; одна короткая подсказка; подробности заказа ниже */
+        var when = { pick: "Когда няня забирает питомца", back: "Когда няня возвращает питомца", arrive: "Когда няня приходит", leave: "Когда няня уходит" }[o.phase] || "";
+        var away = { pick: "Нет дома? Няня отметит без QR — вы увидите её на карте", arrive: "Нет дома? Няня отметит без QR — вы увидите её на карте", back: "Нет дома? Няня завершит без QR, заказ подтвердит менеджер", leave: "Нет дома? Няня завершит без QR, заказ подтвердит менеджер" }[o.phase] || "";
+        h = '<div class="pgk-qrhead"><b>' + esc(T("Покажите QR-код няне")) + "</b>" + (when ? "<small>" + esc(T(when)) + "</small>" : "") + "</div>";
+        h += '<div class="pgk-qr"><div class="pgk-qr-img">' + qrSvg(o.qr.url) + '</div><b class="pgk-qr-code">' + esc(o.qr.code) + "</b><small>" + esc(T("Камера не сработала — няня введёт эти цифры")) + "</small></div>";
+        if (away) h += '<p class="pgk-qr-tip">' + esc(T(away)) + "</p>";
+        h += head;
       } else if (k === "back") {
         h += ordOk(o, "back", false);
       } else if (o.by) {
@@ -742,11 +744,33 @@
     }
     if (CL.tab === "map") MapK.now();
   }
+  /* 36.0: няня у двери — QR-код открывается сам, на весь лист, один раз на каждый приход и возврат */
+  function doorSeen(k) {
+    try { return (JSON.parse(sessionStorage.getItem("pgk_door") || "[]")).indexOf(k) > -1; } catch (e) { return !!(CL.doorSeen || {})[k]; }
+  }
+  function doorMark(k) {
+    CL.doorSeen = CL.doorSeen || {}; CL.doorSeen[k] = 1;
+    try { var a = JSON.parse(sessionStorage.getItem("pgk_door") || "[]"); a.push(k); sessionStorage.setItem("pgk_door", JSON.stringify(a.slice(-30))); } catch (e) {}
+  }
+  function doorCheck(list) {
+    if (!K || !list || !list.length || !D.getElementById("pgk")) return;
+    var d = list[0];
+    list.forEach(function (x) { if (x.t > d.t) d = x; });
+    var k = d.id + ":" + d.ph + ":" + d.t;
+    if (doorSeen(k)) return;
+    doorMark(k);
+    var os = D.getElementById("pgk-order");
+    if (!(os && os.classList.contains("on") && CL.ordId === d.id)) { if (stack.length) kClose(true); }
+    orderSheet(d.id, true);
+    if (navigator.vibrate) try { navigator.vibrate([90, 60, 90]); } catch (x) {}
+  }
   function live() {
     clearTimeout(CL.timer);
     if (!K || !D.getElementById("pgk")) return;
     var anyLive = (K.pets || []).some(function (p) { return p.live; });
     var wait = CL.tab === "map" ? (anyLive ? 8000 : 30000) : (anyLive ? 15000 : 45000);
+    /* идёт заказ (няня едет, пришла, гуляют) — проверяем каждые 5 секунд, чтобы QR открылся сразу */
+    if (CL.soon) wait = Math.min(wait, 5000);
     CL.timer = setTimeout(function () {
       if (D.hidden) { live(); return; }
       refresh().then(live);
@@ -760,6 +784,10 @@
     refreshing = api("live").then(function (j) {
       if (!j.ok) return;
       applyPets(j.pets); unread(CL.chatOpen ? 0 : (j.u || 0));
+      CL.soon = !!j.soon;
+      var nw = $("[data-k-now]");
+      if (nw && typeof j.now === "string" && nw._h !== j.now && nw.innerHTML !== j.now) { nw._h = j.now; nw.innerHTML = j.now; }
+      doorCheck(j.door);
       var up = $("[data-k-up]");
       if (up && typeof j.up === "string" && up._h !== j.up && up.innerHTML !== j.up) { up._h = j.up; up.innerHTML = j.up; }
       var wk = $("[data-k-walks]");
@@ -1082,7 +1110,10 @@
     try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "home"; } catch (x) { t = "home"; }
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });
     requestAnimationFrame(function () { sgAll(); });
+    CL.soon = !!K.soon;
     live();
+    /* няня уже у двери, когда клиент открыл кабинет — QR сразу на экране */
+    if (K.door && K.door.length) setTimeout(function () { doorCheck(K.door); }, 450);
     /* прогулка завершилась — кабинет сам предлагает оценить няню (один раз) */
     if (K.rv) {
       var seen = ""; try { seen = sessionStorage.getItem("pgk_rv") || ""; } catch (x) {}

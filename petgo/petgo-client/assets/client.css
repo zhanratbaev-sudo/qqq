@@ -673,3 +673,29 @@ html.pgk-dark .pgk-bcard.pg-b.pg-b:active { box-shadow: inset 0 0 0 100vmax rgba
   html.pgk-on, html.pgk-on body.pg-body { height: 100%; overflow: hidden; overscroll-behavior: none; }
   html.pgk-on body.pg-body > .pg { position: fixed; top: 0; right: 0; bottom: 0; left: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; scroll-behavior: auto; }
 }
+
+/* ============================================================
+   36.0 «СЕЙЧАС» И QR НА ВЕСЬ ЛИСТ
+   ============================================================ */
+.pgk-nowbox:empty { display: none; }
+.pgk-nowbox:not(:empty) + .pgk-live { display: none !important; }
+.pgk-now { display: flex; flex-direction: column; gap: 16px; margin: 4px 0 16px; padding: 16px; animation: pgkIn var(--k-sheet-in) var(--k-out) both; }
+.pgk-now-h { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pgk-now-h > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pgk-now-h b { font-size: 20px; font-weight: 600; line-height: 1.2; letter-spacing: -.01em; }
+.pgk-now-h small { font-size: 15px; color: var(--k-mu); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pgk-now-h .pgk-av { width: 48px; height: 48px; font-size: 19px; }
+.pgk-now-b { display: grid; gap: 8px; }
+.pgk-now-b .pgk-btn.pg-b.pg-b { width: 100%; min-height: 52px; font-size: 17px; }
+.pgk-now-b .pgk-btn .pg-i { width: 22px; height: 22px; }
+.pgk-now.hot { background: var(--k-acc); color: var(--k-acc-tx); }
+.pgk-now.hot .pgk-now-h small { color: rgba(255, 255, 255, .8); }
+.pgk-now.hot .pgk-btn-p.pg-b.pg-b { background: #fff; color: #0F2B27; }
+.pgk-qrhead { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 8px 0; text-align: center; }
+.pgk-qrhead b { font-size: 24px; font-weight: 600; letter-spacing: -.015em; line-height: 1.2; }
+.pgk-qrhead small { font-size: 15px; color: var(--k-mu); }
+.pgk-ord .pgk-qr { padding: 20px 16px 16px; }
+.pgk-ord .pgk-qr-img { width: min(300px, 76vw); }
+.pgk-ord .pgk-qr-code { font-size: 32px; }
+.pgk-ord .pgk-qr small { text-align: center; }
+.pgk-ord.auto .pgk-qrhead b { font-size: 26px; }

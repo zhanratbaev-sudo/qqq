@@ -93,7 +93,8 @@ function petgo_cl_upcoming($uid, $n = 3) {
         $st = petgo_o($o->ID, 'status');
         $ts = (int) petgo_o($o->ID, 'ts');
         $end = $ts + max(30, (int) petgo_o($o->ID, 'dur')) * MINUTE_IN_SECONDS;
-        if (in_array($st, array('arrived', 'picked'), true) || ($st === 'assigned' && $end > time() - HOUR_IN_SECONDS) || ($st === 'new' && $ts > time() - 30 * MINUTE_IN_SECONDS)) {
+        /* 36.0: «идёт сейчас», но конец был больше 6 часов назад — няня забыла завершить; это уже не «ближайшие» */
+        if ((in_array($st, array('arrived', 'picked'), true) && $end + 6 * HOUR_IN_SECONDS > time()) || ($st === 'assigned' && $end > time() - HOUR_IN_SECONDS) || ($st === 'new' && $ts > time() - 30 * MINUTE_IN_SECONDS)) {
             $out[] = $o;
         }
     }
@@ -152,6 +153,8 @@ function petgo_cl_dashboard() {
         'tr' => petgo_cl_js_dict(),
         'qrjs' => petgo_asset_url('vendor/qrcode.min.js'),
     );
+    /* 36.0: няня у двери — QR открывается сам сразу при входе в кабинет */
+    $cfg = array_merge($cfg, petgo_cl_door_state($uid));
     /* 34.5: плагины добавляют свои данные для скриптов кабинета (window.PGK.cfg) */
     $cfg = (array) apply_filters('petgo_cl_cfg', $cfg, $uid);
     $h  = '<div class="pgk" id="pgk" data-tab="home">';
@@ -160,6 +163,8 @@ function petgo_cl_dashboard() {
     /* ГЛАВНАЯ */
     $h .= '<section class="pgk-pane on" data-pane="home"><div class="pg-wrap">';
     $h .= '<header class="pgk-hd"><div><small>' . esc_html($L('Здравствуйте,')) . '</small><h1>' . esc_html($first[0]) . '</h1></div><button type="button" class="pg-b pgk-hd-av" data-k-tab="acc" aria-label="' . esc_attr($L('Аккаунт')) . '">' . petgo_cl_av(petgo_user_avatar_url($uid), $u->display_name) . '</button></header>';
+    /* 36.0: «Сейчас» — самое важное одной карточкой (обновляется само) */
+    $h .= '<div class="pgk-nowbox" data-k-now>' . petgo_cl_now_html($uid) . '</div>';
     $h .= '<button type="button" class="pg-b pgk-live" data-k-tab="map"' . ($live ? '' : ' hidden') . '><span class="pgk-live-av">' . petgo_cl_av($live ? $live['av'] : '', $live ? $live['name'] : '') . '</span><span class="pgk-live-t"><b data-k-live-name>' . esc_html($live ? $live['name'] : '') . '</b><span data-k-live-text>' . esc_html($live ? $live['text'] : '') . '</span></span><span class="pgk-live-go">' . esc_html($L('На карте')) . petgo_cl_icon('right') . '</span></button>';
     $h .= '<div class="pgk-order"><button type="button" class="pg-b pgk-btn pgk-btn-p pgk-order-main" data-k-book="walk">' . petgo_cl_icon('route') . esc_html($L('Заказать выгул')) . '</button><div class="pgk-order-2"><button type="button" class="pg-b pgk-btn pgk-btn-s" data-k-book="visit">' . esc_html($L('Визит домой')) . '</button><button type="button" class="pg-b pgk-btn pgk-btn-s" data-k-book="week">' . esc_html($L('Неделя визитов')) . '</button></div></div>';
     $h .= '<h2 class="pgk-h2">' . esc_html($L('Питомцы')) . '</h2><div class="pgk-list pgk-pets">';
@@ -227,6 +232,86 @@ function petgo_cl_dashboard() {
     $h .= '<div class="pgk-lb" data-k-lb hidden><button type="button" class="pg-b pgk-x" data-k-lbx aria-label="' . esc_attr($L('Закрыть')) . '">' . petgo_cl_icon('x') . '</button><img alt=""><span></span></div>';
     $h .= '<div class="pgk-toast" data-k-toast role="status" aria-live="polite"></div>';
     return $h . '</div>';
+}
+
+/* ============================================================
+   36.0 «СЕЙЧАС»: одна карточка с самым важным заказом и одной большой кнопкой.
+   Няня пришла — «Показать QR-код»; гуляют — «Где сейчас»; скоро прогулка — «QR-код для няни».
+   ============================================================ */
+function petgo_cl_now_order($uid) {
+    $best = null;
+    $rank = 0;
+    foreach (petgo_cl_upcoming($uid, 12) as $o) {
+        $st  = petgo_o($o->ID, 'status');
+        $ts  = (int) petgo_o($o->ID, 'ts');
+        $end = $ts + max(30, (int) petgo_o($o->ID, 'dur')) * MINUTE_IN_SECONDS;
+        $r   = 0;
+        if (function_exists('petgo_door_open') && petgo_door_open($o->ID)) {
+            $r = 5;
+        } elseif ($st === 'arrived') {
+            $r = 4;
+        } elseif ($st === 'picked') {
+            $r = 3;
+        } elseif ($st === 'assigned' && $ts - 3 * HOUR_IN_SECONDS <= time() && $end + HOUR_IN_SECONDS >= time()) {
+            $r = 2;
+        }
+        if ($r > $rank) {
+            $rank = $r;
+            $best = $o;
+        }
+    }
+    return $best;
+}
+
+function petgo_cl_now_html($uid) {
+    $o = petgo_cl_now_order($uid);
+    if (!$o) {
+        return '';
+    }
+    $L    = 'petgo_site_l';
+    $id   = (int) $o->ID;
+    $st   = petgo_o($id, 'status');
+    $walk = petgo_o($id, 'service') === 'walk';
+    $pid  = (int) petgo_o($id, 'pet');
+    $pn   = petgo_cl_title($pid);
+    $nn   = petgo_nanny_label($id);
+    $nid  = (int) petgo_o($id, 'nanny');
+    $ts   = (int) petgo_o($id, 'ts');
+    $end  = $ts + max(30, (int) petgo_o($id, 'dur')) * MINUTE_IN_SECONDS;
+    $door = function_exists('petgo_door_open') ? petgo_door_open($id) : null;
+    $qrb  = function ($t, $cls = 'pgk-btn-p') use ($id) {
+        return '<button type="button" class="pg-b pgk-btn ' . $cls . ' pgk-now-qr" data-k-order="' . $id . '">' . petgo_cl_qr_icon() . esc_html($t) . '</button>';
+    };
+    if ($door || $st === 'arrived' && $walk) {
+        $back  = $door && in_array($door['ph'], array('back', 'leave'), true);
+        $title = $back ? ($walk ? $L('Няня привела питомца') : $L('Няня уходит')) : $L('Няня пришла');
+        $sub   = $nn . ' · ' . $pn;
+        $btn   = $qrb($L('Показать QR-код няне'));
+        $cls   = 'hot';
+    } elseif ($st === 'picked') {
+        $title = petgo_site_lf('%s гуляет', $pn);
+        $sub   = ($nn !== '' ? petgo_site_lf('с няней %s', $nn) . ' · ' : '') . petgo_site_lf('до %s', wp_date('H:i', $end, petgo_tz()));
+        $btn   = '<button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-tab="map" data-k-focus="' . $pid . '">' . petgo_cl_icon('map') . esc_html($L('Где сейчас')) . '</button>' . $qrb($L('QR-код для возврата'), 'pgk-btn-s');
+        $cls   = 'live';
+    } elseif ($st === 'arrived') {
+        $title = $L('Няня у питомца');
+        $sub   = $nn . ' · ' . petgo_site_lf('до %s', wp_date('H:i', $end, petgo_tz()));
+        $btn   = $qrb($L('QR-код, когда няня уходит'), 'pgk-btn-s');
+        $cls   = 'live';
+    } else {
+        $day   = wp_date('Y-m-d', $ts, petgo_tz()) === wp_date('Y-m-d', time(), petgo_tz()) ? $L('Сегодня') : $L('Завтра');
+        $title = $day . ' ' . wp_date('H:i', $ts, petgo_tz());
+        $sub   = $pn . ' · ' . petgo_cl_svc_label(petgo_o($id, 'service')) . ($nn !== '' ? ' · ' . petgo_site_lf('няня %s', $nn) : '');
+        $btn   = $qrb($L('QR-код для няни'));
+        $cls   = '';
+    }
+    $av = $nid ? petgo_cl_av(petgo_user_avatar_url($nid), $nn) : petgo_cl_av(petgo_pet_avatar_url($pid), $pn);
+    return '<section class="pgk-card pgk-now ' . $cls . '" data-k-now-id="' . $id . '"><div class="pgk-now-h">' . $av . '<div><b>' . esc_html($title) . '</b><small>' . esc_html($sub) . '</small></div></div><div class="pgk-now-b">' . $btn . '</div></section>';
+}
+
+function petgo_cl_title($pid) {
+    $t = get_the_title($pid);
+    return $t !== '' ? $t : '—';
 }
 
 /* ближайшие заказы на главной (ждут подтверждения, подтверждены, идут сейчас) */
@@ -478,6 +563,7 @@ function petgo_cl_js_dict() {
         'пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря', 'Нет нянь в списке — подберёт менеджер', 'Вчера', 'дней', 'Вы записаны', 'Ваш отзыв', 'Спасибо за оценку',
         'Дайте няне отсканировать QR-код, когда она забирает питомца.', 'Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.',
         'Укажите фамилию и имя, как в документе.', 'Отметьте, что прочитали договор и согласны.', 'Договор подписан', 'Подписан через eGov', 'Подписан в кабинете', 'Слишком много попыток. Попробуйте позже.', 'eGov сейчас не отвечает. Попробуйте ещё раз или подпишите без eGov.', 'Подпишите в eGov mobile', 'Откроется eGov mobile с договором. Подпишите его и вернитесь сюда — договор сохранится сам.', 'Открыть eGov mobile', 'Открыть eGov Business', 'Подписать с другого телефона', 'Отсканируйте QR-код в eGov mobile', 'Откройте eGov mobile на телефоне', 'Нажмите значок QR-сканера', 'Наведите камеру на код и подпишите договор', 'Ждём подпись…', 'Отмена', 'Договор открыт в eGov mobile — подпишите его там', 'Подпись отменена в eGov mobile.', 'Проверяем подпись…', 'Время на подпись вышло. Нажмите «Подписать через eGov» ещё раз.', 'Связь с eGov прервалась. Нажмите «Подписать через eGov» ещё раз.', 'Остался один шаг — договор', 'Подпишите его один раз — через eGov или прямо в кабинете. Он действует для всех заказов.', 'Подписать договор',
+        'Покажите QR-код няне', 'Когда няня забирает питомца', 'Когда няня возвращает питомца', 'Когда няня приходит', 'Когда няня уходит', 'Нет дома? Няня отметит без QR — вы увидите её на карте', 'Нет дома? Няня завершит без QR, заказ подтвердит менеджер', 'Камера не сработала — няня введёт эти цифры',
         '%s дома', 'Визит завершён', 'Вернули в', 'Няня ушла в', 'ждёт подтверждения администратора', 'подтверждено QR-кодом', 'подтверждено', 'Прогулка началась', 'Няня пришла', '%s и няня %s', 'без QR — место отмечено на карте', 'Отчёт няни', 'QR-код для возврата', 'QR-код, когда няня уходит',
         'Код для няни', 'Действует до', 'Няня ещё не назначена', 'Где сейчас', 'Заказ', 'мин', 'QR-код для няни', 'Передача подтверждена QR-кодом', 'Без QR — место отмечено на карте', 'Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.',
         'Дайте няне отсканировать QR-код, когда она вернёт питомца.', 'Дайте няне отсканировать QR-код, когда она будет уходить.', 'Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор.', 'Питомец дома — подтверждено QR-кодом', 'Питомец дома — ждёт подтверждения администратора') as $s) {

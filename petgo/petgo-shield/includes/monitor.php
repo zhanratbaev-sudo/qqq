@@ -361,7 +361,9 @@ add_action('pgs_digest', function () {
         }
     }
     $warn = count((array) get_option('pgs_files_bad', array())) + count((array) get_option('pgs_up_bad', array()));
-    if (!$att && !$warn && empty($s['login_fail'])) {
+    /* 36.0: сводка защиты — только когда есть что делать (изменены файлы, вирус, подбор пароля к одному логину);
+       обычные отражённые атаки — в разделе «Защита», без уведомлений */
+    if (!$warn && empty($s['files']) && empty($s['malware']) && empty($s['brute'])) {
         return;
     }
     $body = $att ? 'Отражено атак: ' . $att . ' (' . implode(', ', $p) . ').' : 'Атак не было.';

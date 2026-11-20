@@ -160,3 +160,53 @@ function petgo_qr_finish_form($id, $walk) {
     $h .= '<p class="pgq-tip">' . esc_html(petgo_t('qr_back_tip')) . '</p></div></form>';
     return $h;
 }
+
+/* ============================================================
+   36.0 «НЯНЯ У ДВЕРИ»: у клиента QR-код открывается сам, на весь экран.
+   Сигнал ставится, когда няня отметила «Пришла» на выгул, открыла сканер QR или прикрепила фото в конце.
+   Кабинет клиента видит его при обновлении (раз в несколько секунд, пока идёт заказ) и показывает «Покажите QR няне».
+   ============================================================ */
+function petgo_door_phase($oid) {
+    $st   = petgo_o($oid, 'status');
+    $walk = petgo_o($oid, 'service') === 'walk';
+    if ($walk) {
+        return in_array($st, array('assigned', 'arrived'), true) ? 'pick' : ($st === 'picked' ? 'back' : '');
+    }
+    return $st === 'assigned' ? 'arrive' : ($st === 'arrived' ? 'leave' : '');
+}
+
+function petgo_door($oid) {
+    $ph = petgo_door_phase($oid);
+    if ($ph === '') {
+        return '';
+    }
+    $old = get_post_meta($oid, '_door', true);
+    /* тот же этап недавно уже отмечен — время не трогаем, чтобы у клиента QR не открывался повторно */
+    if (!is_array($old) || $old['ph'] !== $ph || time() - (int) $old['t'] > 10 * MINUTE_IN_SECONDS) {
+        update_post_meta($oid, '_door', array('t' => time(), 'ph' => $ph));
+    }
+    return $ph;
+}
+
+/* у двери и QR ещё не отсканирован (этап не закрыт) */
+function petgo_door_open($oid) {
+    $d = get_post_meta($oid, '_door', true);
+    if (!is_array($d) || time() - (int) $d['t'] > 20 * MINUTE_IN_SECONDS) {
+        return null;
+    }
+    return petgo_door_phase($oid) === $d['ph'] ? $d : null;
+}
+
+add_action('wp_ajax_petgo_door', function () {
+    check_ajax_referer('petgo_ord', 'n');
+    $oid = isset($_POST['id']) ? (int) $_POST['id'] : 0;
+    if (!$oid || get_post_type($oid) !== 'petgo_order' || !petgo_order_of_nanny($oid, get_current_user_id())) {
+        wp_send_json(array('ok' => false));
+    }
+    wp_send_json(array('ok' => true, 'ph' => petgo_door($oid)));
+});
+
+add_filter('petgo_app_dict', function ($d) {
+    $d['qr_door'] = array('У клиента QR-код уже открыт на экране — попросите показать телефон', 'Клиенттің экранында QR-код ашық — телефонды көрсетуді сұраңыз', 'The QR code is already open on the owner’s screen — ask them to show the phone', '二维码已在主人屏幕上打开——请对方出示手机');
+    return $d;
+});
