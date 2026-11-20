@@ -251,6 +251,8 @@ function petgo_admin_home() {
     $on = $g('arrived') + $g('picked');
     $rq = petgo_req_new_count();
     $ou = petgo_page_url(array('pg' => 'orders'));
+    /* 35.0.1: важные напоминания от плагинов (например, «Договор выключен — заполните реквизиты») */
+    echo (string) apply_filters('petgo_admin_home_top', '');
     echo '<div class="pgc-stats">';
     echo petgo_stat_tile(petgo_t('st_today'), (string) $today, petgo_t('st_inprog') . ': ' . $on, 'pri wide', petgo_page_url(array('pg' => 'cal')), 'cal');
     echo petgo_stat_tile(petgo_t('st_unassigned'), (string) $g('new'), '', $g('new') ? 'warn' : '', $ou, 'user');

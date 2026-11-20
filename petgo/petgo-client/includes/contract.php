@@ -752,8 +752,19 @@ add_filter('petgo_settings_rows', function ($rows) {
     }
     return $rows;
 });
+/* главная приложения: договор ещё не включён — видно сразу, одна кнопка до настроек */
+add_filter('petgo_admin_home_top', function ($h) {
+    if (petgo_ct_ready() || !function_exists('petgo_can') || !petgo_can('admin')) {
+        return $h;
+    }
+    $c   = petgo_ct_cfg();
+    $why = $c['on'] !== '1' ? 'Договор выключен в настройках.' : 'Не заполнены реквизиты исполнителя (ФИО, ИИН, адрес) — без них клиенты договор не видят.';
+    return $h . '<a class="pgc-card pgct-warn" href="' . esc_url(petgo_page_url(array('pg' => 'contract'))) . '" data-close-nav><span class="pgct-wi">!</span><span class="pgct-wt"><b>Договор с клиентами не показывается</b><small>' . esc_html($why) . '</small></span><span class="pgc-btn sm">Заполнить</span></a>'
+        . '<style>.pgct-warn{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px 16px;text-decoration:none;color:inherit;box-shadow:inset 0 0 0 1.5px var(--wn,#E8A33C)}.pgct-wi{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--wn,#E8A33C);color:#fff}.pgct-wt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pgct-wt b{color:var(--tx)}.pgct-wt small{color:var(--mu);line-height:1.35}</style>';
+});
+
 add_filter('petgo_app_title', function ($t, $pg) {
-    return $pg === 'contract' ? 'Договор с клиентами' : $t;
+    return $pg === 'contract' ? 'Договор' : $t;
 }, 10, 2);
 add_filter('petgo_app_page', function ($done, $pg) {
     if ($done || $pg !== 'contract') {
@@ -788,6 +799,9 @@ function petgo_ct_page() {
     };
     echo '<style>.pgct .pgc-card{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}.pgct .pgc-card>b{font-size:17px}.pgct .pgf-list{margin:0}.pgct ul{margin:0;padding-left:18px;color:var(--mu);font-size:14px;line-height:1.5}.pgct-n{display:flex;gap:10px}.pgct-n div{flex:1;padding:12px;border-radius:14px;background:var(--so)}.pgct-n b{display:block;font-size:24px}.pgct-n small{color:var(--mu)}.pgct-save{position:sticky;bottom:calc(var(--sab) + 12px);z-index:5}.pgct .pgf-row select{border:0;background:none;font:inherit;color:inherit;text-align:right}</style>';
     echo '<div class="pgct">';
+    if (!petgo_ct_ready()) {
+        echo '<div class="pgc-card pgct-warn" style="cursor:default;flex-direction:row;margin-bottom:14px"><span class="pgct-wi">!</span><span class="pgct-wt"><b>Клиенты пока не видят договор</b><small>Заполните ниже ФИО, ИИН и адрес, оставьте галочку «Предлагать договор клиентам» и нажмите «Сохранить». Договор сразу появится у клиентов в «Для вас».</small></span></div><style>.pgct-warn{display:flex;align-items:center;gap:12px;padding:14px 16px;box-shadow:inset 0 0 0 1.5px var(--wn,#E8A33C)}.pgct-wi{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--wn,#E8A33C);color:#fff}.pgct-wt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pgct-wt small{color:var(--mu);line-height:1.35}</style>';
+    }
     echo '<div class="pgc-card"><b>Подписано</b><div class="pgct-n"><div><b>' . (int) $n['egov'] . '</b><small>через eGov (ЭЦП)</small></div><div><b>' . (int) $n['click'] . '</b><small>в кабинете, без eGov</small></div></div>';
     echo '<p class="mu">Договор каждого клиента — в «Клиентах» и в окне заказа: PDF и файл подписи .cms.</p></div>';
     echo petgo_form_open('ct_save');
