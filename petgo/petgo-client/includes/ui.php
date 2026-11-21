@@ -40,11 +40,11 @@ function petgo_cl_row($icon, $text, $attrs, $tag = 'button', $right = '') {
 /* ============================================================
    ГОСТЬ: вход, регистрация, «забыли пароль»
    ============================================================ */
-function petgo_cl_guest() {
+function petgo_cl_guest($app = false) {
     $L   = 'petgo_site_l';
     $hp  = '<div class="pg-hp" aria-hidden="true"><input type="text" name="pgr_web" tabindex="-1" autocomplete="off"></div><input type="hidden" name="lang" value="' . esc_attr(petgo_site_lang()) . '">';
     $eye = '<button type="button" class="pg-b pgk-eye" data-eye aria-label="' . esc_attr($L('Показать пароль')) . '">' . petgo_cl_icon('eye') . '</button>';
-    $h   = '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><div class="pgk-auth">';
+    $h   = '<div class="pgk-auth">';
     $h  .= '<div class="pgk-sg pgk-auth-sg" role="tablist"><i class="pgk-sgi" aria-hidden="true"></i><button type="button" class="pg-b on" data-auth="in" role="tab" aria-selected="true">' . esc_html($L('Вход')) . '</button><button type="button" class="pg-b" data-auth="up" role="tab" aria-selected="false">' . esc_html($L('Регистрация')) . '</button></div>';
     $h  .= '<div class="pgk-auth-pages">';
     $h  .= '<form class="pgk-form pgk-auth-p on" data-auth-p="in" data-op="petgo_cl_login" novalidate><div class="pgk-auth-in">' . $hp . '<div class="pgk-list">' . petgo_cl_field('login', $L('Логин'), 'text', '', ' autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="' . esc_attr($L('или номер телефона')) . '" required') . '<label class="pgk-f"><span>' . esc_html($L('Пароль')) . '</span><input type="password" name="pass" autocomplete="current-password" required>' . $eye . '</label></div>';
@@ -55,11 +55,22 @@ function petgo_cl_guest() {
     $h  .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Создать кабинет')) . '</span><i class="pg-spin" aria-hidden="true"></i></button><p class="pgk-note">' . esc_html($L('Питомцы, которых мы уже знаем по вашему номеру, появятся в кабинете сами.')) . '</p></div></form>';
     $h  .= '</div></div>';
     $h  .= '<div class="pgk-list pgk-auth-alt">' . petgo_cl_row('paw', $L('Зарегистрировать питомца без аккаунта'), 'data-sheet="pet"') . petgo_cl_row('key', $L('Вход для сотрудников'), 'data-ext href="' . esc_url(petgo_page_url()) . '"', 'a') . '</div>';
-    $h  .= '</div></section>';
     $f   = '<form class="pgk-form" data-op="petgo_cl_forgot" novalidate>' . $hp . '<p class="pgk-note pgk-note-l">' . esc_html($L('Пароль восстанавливает менеджер: оставьте номер — мы проверим, что это вы, и пришлём новый пароль.')) . '</p><div class="pgk-list">' . petgo_cl_field('phone', $L('Телефон'), 'tel', '', ' inputmode="tel" maxlength="20" placeholder="+7 700 000 00 00" required') . petgo_cl_field('who', $L('Имя'), 'text', '', ' maxlength="80" placeholder="' . esc_attr($L('или логин')) . '"') . '</div>';
     $f  .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Написать менеджеру')) . '</span><i class="pg-spin" aria-hidden="true"></i></button></form>';
     $f  .= '<div class="pgk-done" hidden><span class="pgk-done-i">' . petgo_cl_icon('check') . '</span><b>' . esc_html($L('Менеджер уже знает')) . '</b><p>' . esc_html($L('Скоро свяжемся с вами. Можно сразу написать нам в WhatsApp:')) . '</p><a class="pg-b pgk-btn pgk-btn-s" data-wa target="_blank" rel="noopener" href="https://wa.me/' . esc_attr(petgo_site_wa()) . '">' . petgo_cl_icon('chat') . 'WhatsApp</a></div>';
-    return $h . petgo_cl_sheet('forgot', $L('Восстановить доступ'), $f);
+    $h  .= petgo_cl_sheet('forgot', $L('Восстановить доступ'), $f);
+    return $app ? $h : '<section class="pg-sec pg-sec-tight"><div class="pg-wrap">' . $h . '</div></section>';
+}
+
+/* 36.1: «My PetGo» — вход и регистрация отдельным экраном приложения: без меню, подвала и кнопок сайта,
+   в теме телефона (тёмная — чёрный экран, как в кабинете). Сюда же попадает клиент после «Выйти». */
+function petgo_cl_gate() {
+    $L = 'petgo_site_l';
+    $h  = '<div class="pgk pgk-gate" id="pgk-gate"><div class="pgk-gate-in">';
+    $h .= '<div class="pgk-gate-top"><span class="pgk-gate-ic"><img src="' . esc_url(petgo_asset('icon-192.png')) . '" alt="" width="76" height="76"></span><h1>My PetGo</h1><p>' . esc_html($L('Прогулки, фото и отчёты о вашем питомце')) . '</p></div>';
+    $h .= petgo_cl_guest(true);
+    $h .= '<div class="pgk-gate-foot"><a href="' . esc_url(petgo_site_url('home')) . '">' . esc_html($L('Сайт PetGo')) . '</a>' . petgo_site_lang_switch('pgk-gate-lang') . '</div>';
+    return $h . '</div></div>';
 }
 
 /* ============================================================
@@ -162,8 +173,10 @@ function petgo_cl_dashboard() {
 
     /* ГЛАВНАЯ */
     $h .= '<section class="pgk-pane on" data-pane="home"><div class="pg-wrap">';
-    /* 36.0: шапка — знак PetGo и ваш аватар (без приветствия: имя и так в «Аккаунте») */
-    $h .= '<header class="pgk-hd pgk-hd-home"><a class="pgk-brand" href="' . esc_url(petgo_site_url('home')) . '" aria-label="PetGo">' . (function_exists('petgo_site_logo') ? petgo_site_logo() : 'PetGo') . '</a><button type="button" class="pg-b pgk-hd-av" data-k-tab="acc" aria-label="' . esc_attr($L('Аккаунт')) . '">' . petgo_cl_av(petgo_user_avatar_url($uid), $u->display_name) . '</button></header>';
+    /* 36.1: «Доброе утро, Айгерим» — по времени суток (скрипт уточняет по часам телефона) */
+    $hr = (int) wp_date('G', time(), petgo_tz());
+    $hi = $hr >= 5 && $hr < 12 ? 'Доброе утро,' : ($hr >= 12 && $hr < 17 ? 'Добрый день,' : ($hr >= 17 && $hr < 23 ? 'Добрый вечер,' : 'Доброй ночи,'));
+    $h .= '<header class="pgk-hd"><div><small data-k-hello>' . esc_html($L($hi)) . '</small><h1>' . esc_html($first[0]) . '</h1></div><button type="button" class="pg-b pgk-hd-av" data-k-tab="acc" aria-label="' . esc_attr($L('Аккаунт')) . '">' . petgo_cl_av(petgo_user_avatar_url($uid), $u->display_name) . '</button></header>';
     /* 36.0: «Сейчас» — самое важное одной карточкой (обновляется само) */
     $h .= '<div class="pgk-nowbox" data-k-now>' . petgo_cl_now_html($uid) . '</div>';
     $h .= '<button type="button" class="pg-b pgk-live" data-k-tab="map"' . ($live ? '' : ' hidden') . '><span class="pgk-live-av">' . petgo_cl_av($live ? $live['av'] : '', $live ? $live['name'] : '') . '</span><span class="pgk-live-t"><b data-k-live-name>' . esc_html($live ? $live['name'] : '') . '</b><span data-k-live-text>' . esc_html($live ? $live['text'] : '') . '</span></span><span class="pgk-live-go">' . esc_html($L('На карте')) . petgo_cl_icon('right') . '</span></button>';
@@ -573,6 +586,7 @@ function petgo_cl_js_dict() {
         'Дайте няне отсканировать QR-код, когда она забирает питомца.', 'Дайте няне отсканировать QR-код, когда она придёт. Если вас не будет дома — няня отметит приход без QR, а вы увидите её место на карте.',
         'Укажите фамилию и имя, как в документе.', 'Отметьте, что прочитали договор и согласны.', 'Договор подписан', 'Подписан через eGov', 'Подписан в кабинете', 'Слишком много попыток. Попробуйте позже.', 'eGov сейчас не отвечает. Попробуйте ещё раз или подпишите без eGov.', 'Подпишите в eGov mobile', 'Откроется eGov mobile с договором. Подпишите его и вернитесь сюда — договор сохранится сам.', 'Открыть eGov mobile', 'Открыть eGov Business', 'Подписать с другого телефона', 'Отсканируйте QR-код в eGov mobile', 'Откройте eGov mobile на телефоне', 'Нажмите значок QR-сканера', 'Наведите камеру на код и подпишите договор', 'Ждём подпись…', 'Отмена', 'Договор открыт в eGov mobile — подпишите его там', 'Подпись отменена в eGov mobile.', 'Проверяем подпись…', 'Время на подпись вышло. Нажмите «Подписать через eGov» ещё раз.', 'Связь с eGov прервалась. Нажмите «Подписать через eGov» ещё раз.', 'Остался один шаг — договор', 'Подпишите его один раз — через eGov или прямо в кабинете. Он действует для всех заказов.', 'Подписать договор',
         'Покажите QR-код няне', 'Когда няня забирает питомца', 'Когда няня возвращает питомца', 'Когда няня приходит', 'Когда няня уходит', 'Нет дома? Няня отметит без QR — вы увидите её на карте', 'Нет дома? Няня завершит без QR, заказ подтвердит менеджер', 'Камера не сработала — няня введёт эти цифры',
+        'Доброе утро,', 'Добрый день,', 'Добрый вечер,', 'Доброй ночи,',
         '%s дома', 'Визит завершён', 'Вернули в', 'Няня ушла в', 'ждёт подтверждения администратора', 'подтверждено QR-кодом', 'подтверждено', 'Прогулка началась', 'Няня пришла', '%s и няня %s', 'без QR — место отмечено на карте', 'Отчёт няни', 'QR-код для возврата', 'QR-код, когда няня уходит',
         'Код для няни', 'Действует до', 'Няня ещё не назначена', 'Где сейчас', 'Заказ', 'мин', 'QR-код для няни', 'Передача подтверждена QR-кодом', 'Без QR — место отмечено на карте', 'Если вас не будет дома, няня заберёт питомца без QR, а вы увидите её место на карте.',
         'Дайте няне отсканировать QR-код, когда она вернёт питомца.', 'Дайте няне отсканировать QR-код, когда она будет уходить.', 'Если вас не будет дома, няня завершит без QR, а заказ подтвердит администратор.', 'Питомец дома — подтверждено QR-кодом', 'Питомец дома — ждёт подтверждения администратора') as $s) {

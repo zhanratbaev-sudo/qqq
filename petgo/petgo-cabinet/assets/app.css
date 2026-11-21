@@ -5,7 +5,7 @@
 --ac:#0d7c6d;--ac2:#0a6a5d;--acs:rgba(13,124,109,.12);--on:#fff;--acb:#0d7c6d;
 --ok:#248a3d;--okf:#34c759;--oks:rgba(52,199,89,.15);--wn:#c45c00;--wns:rgba(255,141,40,.16);--er:#d70015;--erf:#ff383c;--ers:rgba(255,56,60,.12);--in2:#0068d6;--ins:rgba(0,136,255,.12);
 --sh:none;--sh2:0 10px 40px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.06);
---r:24px;--rg:34px;--e:cubic-bezier(.32,.72,0,1);--sp:cubic-bezier(.32,.72,0,1);--sp2:cubic-bezier(.32,.72,0,1);--ein:cubic-bezier(.55,0,1,.45);--eio:cubic-bezier(.77,0,.175,1);--tp:150ms;--tin:280ms;--tout:200ms;
+--r:24px;--rg:34px;--e:cubic-bezier(.32,.72,0,1);--sp:cubic-bezier(.32,.72,0,1);--sp2:cubic-bezier(.32,.72,0,1);--ein:cubic-bezier(.25,.8,.35,1);--eio:cubic-bezier(.77,0,.175,1);--tp:150ms;--tin:280ms;--tout:200ms;
 --toph:64px;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
 /* Liquid Glass: --gt 0 = тонированное … 1 = прозрачное (ползунок в настройках задаёт --gu) */
 --gt:var(--gu,.5);

@@ -48,14 +48,14 @@
     var root = D.documentElement;
     /* цвета меняются одним кадром: на время смены переходы выключены */
     if (user) { root.classList.add("pgk-theming"); requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.remove("pgk-theming"); }); }); }
-    var t = themeGet(), on = !!D.getElementById("pgk") && (t === "dark" || (t === "auto" && !!(mq && mq.matches)));
+    var t = themeGet(), on = !!(D.getElementById("pgk") || D.getElementById("pgk-gate")) && (t === "dark" || (t === "auto" && !!(mq && mq.matches)));
     D.documentElement.classList.toggle("pgk-dark", on);
     var m = $('meta[name="theme-color"]'); if (m) m.setAttribute("content", on ? "#000000" : "#F2F0E3");
     qa("[data-k-theme]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-k-theme") === t); });
     sgMove($(".pgk-theme"));
     MapK.theme();
   }
-  if (mq && mq.addEventListener) mq.addEventListener("change", function () { if (K) themeApply(); });
+  if (mq && mq.addEventListener) mq.addEventListener("change", function () { if (K || D.getElementById("pgk-gate")) themeApply(); });
 
   /* ---------- запросы ---------- */
   function post(data, files) {
@@ -1086,6 +1086,8 @@
     var ly = D.getElementById("pg-layer"), fs = D.getElementById("pgk-forgot");
     if (fs && ly && fs.parentNode !== ly) ly.appendChild(fs);
     qa('input[type="tel"]', guest).concat(fs ? qa('input[type="tel"]', fs) : []).forEach(phoneMask);
+    /* 36.1: экран входа «My PetGo» — отдельно от сайта, в теме телефона */
+    if (D.getElementById("pgk-gate")) { D.documentElement.classList.add("pgk-on", "pgk-gate-on"); themeApply(); }
     requestAnimationFrame(function () { authSeg(guest, "in"); });
   }
   function initCabinet() {
@@ -1111,6 +1113,9 @@
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });
     requestAnimationFrame(function () { sgAll(); });
     CL.soon = !!K.soon;
+    /* приветствие по часам телефона */
+    var hel = $("[data-k-hello]");
+    if (hel) { var hr = new Date().getHours(); hel.textContent = T(hr >= 5 && hr < 12 ? "Доброе утро," : hr >= 12 && hr < 17 ? "Добрый день," : hr >= 17 && hr < 23 ? "Добрый вечер," : "Доброй ночи,"); }
     live();
     /* няня уже у двери, когда клиент открыл кабинет — QR сразу на экране */
     if (K.door && K.door.length) setTimeout(function () { doorCheck(K.door); }, 450);
@@ -1127,11 +1132,12 @@
     }
   }
   function leaveCabinet() {
-    if (D.getElementById("pgk")) return;
+    if (D.getElementById("pgk") || D.getElementById("pgk-gate")) return;
     clearTimeout(CL.timer); clearInterval(CL.chatT);
     qa("#pg-layer > .pgk-tabbar, #pg-layer > .pgk-sheet, #pg-layer > .pgk-lb, #pg-layer > .pgk-toast").forEach(function (x) { x.remove(); });
     stack = [];
-    D.documentElement.classList.remove("pgk-on", "pgk-lock", "pgk-dark");
+    D.documentElement.classList.remove("pgk-on", "pgk-lock", "pgk-dark", "pgk-gate-on");
+    var tc = $('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", "#FBF9E8");
     K = null; CL.box = null;
   }
 

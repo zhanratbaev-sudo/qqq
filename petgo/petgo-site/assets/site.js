@@ -279,10 +279,11 @@
     $("pg-list").addEventListener("click", function (e) {
       var th = e.target.closest(".pg-thumb");
       if (th) { e.stopPropagation(); openPhotos(+th.getAttribute("data-r"), +th.getAttribute("data-p")); return; }
+      /* 36.1: отзыв не открывается отдельным экраном — длинный раскрывается прямо здесь */
       var card = e.target.closest(".pg-rcard");
-      if (card) openReviews(+card.getAttribute("data-i"));
+      if (card) rvToggle(card);
     });
-    $("pg-list").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList.contains("pg-rcard")) openReviews(+e.target.getAttribute("data-i")); });
+    $("pg-list").addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList.contains("pg-rcard")) rvToggle(e.target); });
   }
 
   /* плавное появление блоков; анимации рисунков идут только на экране */
@@ -324,7 +325,23 @@
     return html + "</div>";
   }
   function plural(n, f) { var m = n % 100, k = n % 10; return (m > 10 && m < 20) ? f[2] : (k === 1 ? f[0] : (k >= 2 && k <= 4 ? f[1] : f[2])); }
-  function checkClamp() { qa(".pg-rcard").forEach(function (card) { var t = card.querySelector(".pg-rcard__text"); card.querySelector(".pg-rmore").classList.toggle("hide", t.scrollHeight <= t.clientHeight + 1); }); }
+  /* 36.1: на странице «Отзывы» все отзывы открыты целиком; на главной длинный раскрывается нажатием */
+  function rvAll() { var l = $("pg-list"); return !!(l && !(+l.getAttribute("data-limit"))); }
+  function checkClamp() {
+    if (rvAll()) return;
+    qa(".pg-rcard").forEach(function (card) {
+      if (card.classList.contains("open")) return;
+      var t = card.querySelector(".pg-rcard__text"), long = t.scrollHeight > t.clientHeight + 1;
+      card.classList.toggle("long", long);
+      card.querySelector(".pg-rmore").classList.toggle("hide", !long);
+    });
+  }
+  function rvToggle(card) {
+    if (rvAll() || !(card.classList.contains("long") || card.classList.contains("open"))) return;
+    var open = card.classList.toggle("open"), b = card.querySelector(".pg-rmore");
+    if (b) b.textContent = open ? T("Свернуть") : T("Читать полностью");
+    card.setAttribute("aria-expanded", open ? "true" : "false");
+  }
   function renderReviews() {
     if (!$("pg-list")) return;
     var total = reviews.length, sum = 0, c = [0, 0, 0, 0, 0, 0];
@@ -337,10 +354,11 @@
     for (var i = 5; i >= 1; i--) bars += '<div class="pg-bar">' + i + '<i><b style="width:' + (total ? c[i] / total * 100 : 0) + '%"></b></i></div>';
     $("pg-bars").innerHTML = bars;
     var lim = +$("pg-list").getAttribute("data-limit") || reviews.length;
+    $("pg-list").classList.toggle("pg-rlist-all", rvAll());
     $("pg-list").innerHTML = reviews.slice(0, lim).map(function (x, i) {
       return '<article class="pg-rcard" data-i="' + i + '" tabindex="0">' + thumbs(x, i, 3) +
         '<div class="pg-rcard__head"><span>' + esc(x.n) + "</span><small>" + esc(x.d) + "</small></div>" + stars(x.r) +
-        '<p class="pg-rcard__text">' + esc(x.t) + '</p><button class="pg-b pg-rmore hide" type="button">' + T("читать далее") + '</button></article>';
+        '<p class="pg-rcard__text">' + esc(x.t) + '</p>' + (rvAll() ? "" : '<button class="pg-b pg-rmore hide" type="button">' + T("Читать полностью") + "</button>") + "</article>";
     }).join("");
     checkClamp();
   }

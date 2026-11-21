@@ -461,7 +461,7 @@ function petgo_site_layer($page) {
     $h .= '<a href="' . esc_url(petgo_site_url('home')) . '"' . $cur('home') . '>' . petgo_site_icon('home') . '<span>' . esc_html($pgs['home']['name']) . '</span></a>';
     $h .= '<a href="' . esc_url(petgo_site_url('nannies')) . '"' . $cur('nannies') . '>' . petgo_site_icon('nanny') . '<span>' . esc_html($pgs['nannies']['name']) . '</span></a>';
     if ($ai) {
-        $h .= '<button type="button" class="pg-b pg-dock-ai" data-chat aria-haspopup="dialog" aria-controls="pga-chat"><i>' . petgo_site_icon('chat') . '</i><span>' . esc_html($l('Помощник')) . '</span></button>';
+        $h .= '<button type="button" class="pg-b pg-dock-ai" data-chat aria-haspopup="dialog" aria-controls="pga-chat"><i>' . petgo_site_icon('spark') . '</i><span>' . esc_html($l('Помощник')) . '</span></button>';
     }
     $h .= '<a href="' . esc_url(petgo_site_url('reviews')) . '"' . $cur('reviews') . '>' . petgo_site_icon('star') . '<span>' . esc_html($pgs['reviews']['name']) . '</span></a>';
     $h .= '<a href="' . esc_url(petgo_site_url('account')) . '"' . $cur('account') . '>' . petgo_site_icon('user') . '<span>' . esc_html($pgs['account']['name']) . '</span></a>';
@@ -601,7 +601,6 @@ function petgo_site_b_reviews($limit, $head = true) {
         return '';
     }
     $h  = '<section class="pg-sec" id="pg-reviews"><div class="pg-wrap"><div class="pg-rv-panel pg-rise' . ($limit ? '' : ' pg-rv-all') . '">';
-    $h .= '<i class="pg-rv-blob a" aria-hidden="true"></i><i class="pg-rv-blob b" aria-hidden="true"></i>';
     $h .= '<div class="pg-rv-head">' . ($head ? '<div><h2 class="pg-h">' . esc_html(petgo_site_l('Хозяева доверяют нам своих питомцев')) . '</h2><p class="pg-sub">' . esc_html(petgo_site_l('Настоящие отзывы наших клиентов.')) . '</p></div>' : '');
     $h .= '<div class="pg-summary"><div><div class="pg-summary__big" id="pg-avg"></div><div id="pg-avgStars"></div><div class="pg-summary__count" id="pg-count"></div></div><div class="pg-summary__bars" id="pg-bars"></div></div></div>';
     $h .= '<div class="pg-rlist" id="pg-list" data-limit="' . (int) $limit . '"></div>';
@@ -698,6 +697,10 @@ function petgo_site_content($page, $a = array()) {
             /* без плагина «PetGo Клиент» — регистрация питомца и вход для сотрудников */
             if (!function_exists('petgo_cl_guest')) {
                 return petgo_site_b_title($L('Кабинет'), $L('Зарегистрируйте питомца или войдите как сотрудник PetGo.')) . '<section class="pg-sec pg-sec-tight"><div class="pg-wrap"><div class="pg-grid pg-g2 pg-acc"><button type="button" class="pg-b pg-acc-card pg-rise" data-sheet="pet"><span class="pg-acc-i">' . petgo_site_icon('paw') . '</span><b>' . esc_html($L('Зарегистрировать питомца')) . '</b><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></button><a class="pg-acc-card pg-acc-staff pg-rise" data-ext href="' . esc_url(petgo_page_url()) . '"><span class="pg-acc-i">' . petgo_site_icon('key') . '</span><b>' . esc_html($L('Войти как сотрудник')) . '</b><i class="pg-acc-go">' . petgo_site_icon('right') . '</i></a></div></div></section>';
+            }
+            /* 36.1: «PetGo Клиент» рисует вход отдельным экраном приложения «My PetGo» */
+            if (function_exists('petgo_cl_gate')) {
+                return petgo_cl_gate();
             }
             return petgo_site_b_title($L('Кабинет'), $L('Следите за питомцем на прогулке, смотрите фото и историю, оставляйте отзывы няням.')) . petgo_cl_guest();
         case 'join':

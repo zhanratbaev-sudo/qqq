@@ -9,7 +9,7 @@
   --fill: rgba(2, 76, 70, .07); --fill2: rgba(2, 76, 70, .12); --sep: rgba(2, 76, 70, .12);
   --pad: 16px; --e: cubic-bezier(.32, .72, 0, 1); --spring: cubic-bezier(.32, .72, 0, 1);
   /* 34.4: движение по правилам UX-анимации — появляется ease-out, уходит ease-in, двигается на месте ease-in-out */
-  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.55, 0, 1, .45); --ease-io: cubic-bezier(.77, 0, .175, 1);
+  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.25, .8, .35, 1); --ease-io: cubic-bezier(.77, 0, .175, 1);
   --t-press: 150ms; --t-in: 280ms; --t-out: 200ms; --t-pop-in: 240ms; --t-pop-out: 170ms;
   --sh: 0 1px 2px rgba(2, 76, 70, .04), 0 10px 30px rgba(2, 76, 70, .07);
   /* стекло: матовое — плотный кремовый тон, сильное размытие, светлый ободок */
@@ -813,7 +813,7 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop .6s .15s cubic-bezier(.34,
    ============================================================ */
 html.pg-html { touch-action: pan-x pan-y; }
 .pgw {
-  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.55, 0, 1, .45); --ease-io: cubic-bezier(.77, 0, .175, 1);
+  --ease-out: cubic-bezier(.32, .72, 0, 1); --ease-in: cubic-bezier(.25, .8, .35, 1); --ease-io: cubic-bezier(.77, 0, .175, 1);
   --k-bg: #FBF9E8; --k-card: #FFFEF8; --k-tx: #024C46; --k-mu: #5f8480; --k-fill: rgba(2, 76, 70, .06); --k-fill2: rgba(2, 76, 70, .1); --k-line: rgba(2, 76, 70, .12);
   --k-acc: #024C46; --k-acc-tx: #fff; --k-ok: #1f9d63; --k-ok-bg: rgba(31, 157, 99, .12); --k-warn: #b06b00; --k-warn-bg: rgba(245, 166, 35, .15); --k-err: #c0392b; --k-err-bg: rgba(214, 69, 58, .1);
   --k-sh: 0 0 0 .5px rgba(2, 76, 70, .08), 0 4px 16px rgba(2, 76, 70, .05); --k-r: 22px;
@@ -1055,55 +1055,40 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
 @media (prefers-reduced-motion: reduce) { .pg-layer .pg-net { transition: none; } }
 
 /* ============================================================
-   36.0 ОТДЕЛКА САЙТА (методика unslop, .claude/skills/unslop — Damir Sokolovsky, CC BY 4.0)
-   Направление: спокойный, заботливый, понятный. Мир — алматинский двор и парк с питомцем.
-   Фон — тёплая бумага без цветных пятен; текст — почти чёрный, зелёный PetGo только для действий и знака;
-   яркое — иллюстрации с собакой и котом. Без стекла, без пульсации, без блёсток, не всё «таблетки».
+   36.1 ОТЗЫВЫ — в стиле сайта: кремовый фон, белые карточки как у услуг, без зелёной панели, пятен и стекла.
+   Короткий отзыв без пустого места; длинный раскрывается нажатием прямо в карточке; на странице «Отзывы» все открыты.
    ============================================================ */
-.pg, .pg-layer {
-  --bg: #F8F7F3; --ink: #1B211F; --muted: #5C6461; --line: rgba(27, 33, 31, .09);
-  --fill: rgba(27, 33, 31, .05); --fill2: rgba(27, 33, 31, .08); --sep: rgba(27, 33, 31, .09);
-  --sh: 0 1px 2px rgba(0, 0, 0, .04), 0 8px 24px rgba(0, 0, 0, .05);
-  --g-rgb: 248, 247, 243; --g-a: .92; --g-blur: 16px;
-  --g-rim: inset 0 0 0 .5px rgba(27, 33, 31, .1);
-  --g-sh: 0 6px 20px rgba(0, 0, 0, .07), 0 1px 2px rgba(0, 0, 0, .05);
-  color: var(--ink);
+.pg .pg-rv-panel { padding: 0; border-radius: 0; background: none; color: var(--green); box-shadow: none; overflow: visible; isolation: auto; margin: 0; }
+.pg .pg-rv-panel .pg-h, .pg .pg-rv-panel .pg-sub { color: var(--green); }
+.pg .pg-rv-head { align-items: flex-end; margin-bottom: 20px; }
+.pg .pg-rv-panel .pg-summary { flex: 0 1 380px; padding: 18px 22px; border-radius: 28px; background: #fff; color: var(--green); box-shadow: var(--sh); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.pg .pg-rv-panel .pg-summary .pg-stars .empty, .pg .pg-rv-panel .pg-stars .empty { fill: #ece8cf; stroke: #ece8cf; }
+.pg .pg-rv-panel .pg-bar i { background: var(--fill); }
+.pg .pg-rv-panel .pg-bar b { background: var(--green); }
+.pg .pg-rv-panel .pg-summary__count { opacity: .7; }
+.pg .pg-rv-panel .pg-rlist { display: grid; grid-template-columns: 1fr; gap: 12px; overflow: visible; scroll-snap-type: none; margin: 0; padding: 0; }
+.pg .pg-rv-panel .pg-rcard, .pg .pg-rv-panel .pg-rcard:hover { flex: none; width: auto; min-height: 0; background: #fff; color: var(--green); border-radius: 24px; padding: 18px 20px; box-shadow: var(--sh); -webkit-backdrop-filter: none; backdrop-filter: none; cursor: default; transform: none; }
+.pg .pg-rv-panel .pg-rcard.long { cursor: pointer; }
+.pg .pg-rv-panel .pg-rcard:active { background-color: #fff; }
+.pg .pg-rv-panel .pg-rcard.long:active { background-color: #F7F5EA; }
+.pg .pg-rv-panel .pg-rcard__head small { color: var(--muted); }
+.pg .pg-rv-panel .pg-rcard__text { flex: none; color: var(--green); opacity: .86; -webkit-line-clamp: 5; }
+.pg .pg-rv-panel .pg-rcard.open .pg-rcard__text, .pg .pg-rlist-all .pg-rcard__text { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.pg .pg-rv-panel .pg-b.pg-rmore, .pg .pg-rv-panel .pg-b.pg-rmore:hover, .pg .pg-rv-panel .pg-b.pg-rmore:focus { min-height: 0; margin-top: 8px; padding: 4px 0; background: none; color: var(--green); font-weight: 600; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(2, 76, 70, .35); }
+.pg .pg-rv-panel .pg-b.pg-rmore.hide { display: none; }
+.pg .pg-rv-panel .pg-b.pg-thumb { background: var(--fill); }
+.pg .pg-rv-panel > .pg-btn.pg-btn-glass, .pg .pg-rv-panel > .pg-btn.pg-btn-glass:visited { margin-top: 20px; background: var(--fill); color: var(--green); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+.pg .pg-rv-panel > .pg-btn.pg-btn-glass:hover, .pg .pg-rv-panel > .pg-btn.pg-btn-glass:focus { background: var(--fill2); color: var(--green); }
+/* на телефоне на главной — три отзыва, остальные на странице «Отзывы» */
+@media (max-width: 860px) {
+  .pg .pg-rv-panel { margin: 0; padding: 0; }
+  .pg .pg-rv-panel:not(.pg-rv-all) .pg-rcard:nth-child(n+4) { display: none; }
+  .pg .pg-rv-panel .pg-summary { flex: 1 1 100%; }
 }
-html.pg-html, body.pg-body { background: #F8F7F3; }
-.pg::before { display: none; }
-/* текст: заголовки почти чёрные и не такие жирные, описания — спокойный серый */
-.pg .pg-h { color: var(--ink); font-weight: 600; letter-spacing: -.025em; }
-.pg .pg-h3 { color: var(--ink); font-weight: 600; letter-spacing: -.01em; }
-.pg .pg-sub, .pg .pg-p { color: var(--muted); opacity: 1; letter-spacing: 0; }
-/* кнопки: скруглённые, но не «таблетки»; тени нейтральные и маленькие */
-.pg-btn.pg-btn { border-radius: 14px; }
-.pg-btn.pg-btn.pg-btn-primary, .pg-btn.pg-btn-primary:visited, .pg-btn.pg-btn-wa, .pg-btn.pg-btn-wa:visited { box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
-button.pg-btn.pg-btn-primary:hover, button.pg-btn.pg-btn-primary:focus { box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
-.pg-btn.pg-btn.pg-btn-second, .pg-btn.pg-btn-second:visited { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
-.pg-btn.pg-btn-second:hover, .pg-btn.pg-btn-second:focus { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(27, 33, 31, .18); }
-.pg-layer .pg-nav .pg-btn.pg-btn { box-shadow: none; }
-/* карточки и первый экран: радиусы по размеру, без зелёных теней */
-.pg .pg-card { border-radius: 20px; box-shadow: var(--sh); }
-.pg .pg-hero-stage { border-radius: 28px; box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 16px 40px -20px rgba(0, 0, 0, .25); }
-.pg .pg-hero-glass { border-radius: 20px; background: rgba(248, 247, 243, .96); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 .5px var(--line); }
-.pg .pg-hero-t .pg-h { color: var(--ink); }
-/* скидка — тихая метка, а не зелёная «таблетка» */
-.pg .pg-off { border-radius: 6px; padding: 3px 7px; font-size: 12px; font-weight: 600; background: rgba(2, 76, 70, .1); color: var(--green); }
-/* нижняя панель: помощник — обычная кнопка чата, без свечения и пульсации */
-.pg-layer .pg-dock-ai i { background: var(--green); box-shadow: 0 0 0 4px rgba(var(--g-rgb), 1), 0 6px 14px rgba(0, 0, 0, .14); }
-.pg-layer .pg-dock-ai i::after { display: none; animation: none; }
-.pg-layer .pg-dock-ai i .pg-i { fill: none; stroke-width: 1.8; width: 26px; height: 26px; }
-@media (prefers-reduced-motion: no-preference) { .pg .pg-card:hover { transform: none; } }
-/* шаги «Как это работает»: заголовки — обычный тёмный текст, зелёный только у номера */
-.pg-b.pg-step-h, .pg-b.pg-step-h:hover, .pg-b.pg-step-h:focus { color: var(--ink); }
-.pg .pg-step-h b { font-weight: 600; }
-.pg .pg-step { border-radius: 20px; box-shadow: inset 0 0 0 .5px var(--line); }
-/* компьютер: меню уже наверху — внизу остаётся только круглая кнопка помощника справа */
+/* компьютер: на главной три колонки, на странице «Отзывы» — колонки без пустых мест (разная длина отзывов) */
 @media (min-width: 861px) {
-  .pg-layer .pg-dock { left: auto; right: 24px; bottom: calc(var(--sab) + 24px); width: auto; height: auto; padding: 0; border-radius: 0; background: none; box-shadow: none; transform: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .pg-layer .pg-dock::before, .pg-layer .pg-dock::after, .pg-layer .pg-dock .pg-lens, .pg-layer .pg-dock > a { display: none !important; }
-  .pg-b.pg-dock-ai, .pg-b.pg-dock-ai:hover, .pg-b.pg-dock-ai:focus { flex: none; width: 64px; height: 64px; padding: 0; justify-content: center; }
-  .pg-layer .pg-dock-ai i { position: static; margin: 0; width: 60px; height: 60px; box-shadow: 0 6px 18px rgba(0, 0, 0, .16); }
-  .pg-layer .pg-dock-ai span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  .pg-layer.ai-open .pg-dock, .pg-layer.sheet-open .pg-dock, .pg-layer.kb-open .pg-dock { transform: translateY(130%); }
+  .pg .pg-rv-panel .pg-rlist { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .pg .pg-rv-panel .pg-rlist.pg-rlist-all { display: block; columns: 2; column-gap: 16px; }
+  .pg .pg-rlist-all .pg-rcard { break-inside: avoid; margin-bottom: 16px; display: flex; }
 }
+@media (min-width: 1100px) { .pg .pg-rv-panel .pg-rlist.pg-rlist-all { columns: 3; } }
