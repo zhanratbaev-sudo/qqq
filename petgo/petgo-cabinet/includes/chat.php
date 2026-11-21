@@ -446,6 +446,8 @@ function petgo_chat_push($c, $from, $subj, $body, $photo) {
         $text = '📷 ' . $text;
     }
     petgo_push_notify($to, $title, $text, petgo_page_url(array('c' => (int) $c->id)), 'c' . (int) $c->id);
+    /* 37.0: ответ менеджера клиенту — уведомлением в приложении My PetGo */
+    do_action('petgo_chat_pushed', $c, (int) $from, $to, $text);
 }
 
 /* название, аватар и подпись чата для списка и шапки */

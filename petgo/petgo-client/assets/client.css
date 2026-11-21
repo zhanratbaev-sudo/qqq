@@ -744,3 +744,4 @@ html.pgk-dark .pg-layer .pg-sheet-grab { background: rgba(255, 255, 255, .24); }
 html.pgk-dark .pg-layer .pg-sheet .pg-x { background: rgba(255, 255, 255, .1); color: #F2F2F7; }
 html.pgk-dark .pg-layer .pg-sheet .pg-fg { background: #2C2C2E; }
 html.pgk-dark .pg-layer .pg-sheet .pg-seg { background: rgba(255, 255, 255, .1); }
+.pgk-gate-pp { align-self: center; margin-top: 4px; padding: 8px; font: 400 13px/1.2 var(--k-font); color: var(--k-mu); text-decoration: none; }

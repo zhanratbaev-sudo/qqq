@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- значок уведомлений My PetGo (лапка, одноцветный — как требует Android) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="100" android:viewportHeight="100">
+    <group android:rotation="-18" android:pivotX="24" android:pivotY="44">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M15,44a9,11 0,1 0,18 0a9,11 0,1 0,-18 0z"/>
+    </group>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M30.5,27a9.5,12 0,1 0,19 0a9.5,12 0,1 0,-19 0z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M50.5,27a9.5,12 0,1 0,19 0a9.5,12 0,1 0,-19 0z"/>
+    <group android:rotation="18" android:pivotX="76" android:pivotY="44">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M67,44a9,11 0,1 0,18 0a9,11 0,1 0,-18 0z"/>
+    </group>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M50,50c10,0 17,9 22,17c4,6 3,14 -4,16c-6,2 -11,-1 -18,-1s-12,3 -18,1c-7,-2 -8,-10 -4,-16c5,-8 12,-17 22,-17z"/>
+</vector>

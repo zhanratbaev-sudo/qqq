@@ -83,6 +83,11 @@ function petgo_site_takeover() {
     return $r;
 }
 
+/* 37.0: страница открыта в приложении My PetGo (App Store, Google Play) — там без рекламы и счётчиков */
+function petgo_site_in_app() {
+    return isset($_SERVER['HTTP_USER_AGENT']) && strpos((string) $_SERVER['HTTP_USER_AGENT'], 'MyPetGoApp/') !== false;
+}
+
 /* какую страницу сайта выводим сейчас ('' — никакую, работает тема) */
 function petgo_site_page_now() {
     $r = petgo_site_route();
@@ -172,7 +177,7 @@ function petgo_site_head($page = 'home') {
         $h .= '<script type="application/ld+json">' . wp_json_encode(count($graph) === 1 ? $graph[0] : array('@context' => 'https://schema.org', '@graph' => array_values($graph)), JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . '</script>';
     }
     /* счётчики: код вводит администратор сайта в настройках */
-    if (trim((string) $c['head']) !== '') {
+    if (trim((string) $c['head']) !== '' && !petgo_site_in_app()) {
         $h .= "\n" . $c['head'] . "\n";
     }
     return $h;

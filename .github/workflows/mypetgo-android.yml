@@ -1,0 +1,51 @@
+# My PetGo для Android: подписанный файл .aab для Google Play (и .apk для установки на телефон).
+# Запуск: GitHub → Actions → «My PetGo — Android» → Run workflow. Готовые файлы — внизу страницы запуска (Artifacts).
+# Нужны секреты репозитория (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_B64       — файл mypetgo-upload.jks в base64 (команда: base64 -i mypetgo-upload.jks)
+#   ANDROID_KEYSTORE_PASSWORD  — пароль ключа (из keystore.properties)
+#   GOOGLE_SERVICES_JSON       — (необязательно, для уведомлений) содержимое google-services.json из Firebase
+name: My PetGo — Android
+on:
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: petgo/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Зависимости
+        run: npm ci
+      - name: Ключ подписи и Firebase
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          GSJ: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=petgo\nkeyPassword=%s\n' "$RUNNER_TEMP/upload.jks" "$KS_PASS" "$KS_PASS" > android/keystore.properties
+          if [ -n "$GSJ" ]; then printf '%s' "$GSJ" > android/app/google-services.json; fi
+      - name: Сборка
+        env:
+          PETGO_BUILD: ${{ github.run_number }}
+        run: |
+          node scripts/prepare.mjs && npx cap sync android
+          cd android && ./gradlew bundleRelease assembleRelease --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: my-petgo-android-${{ github.run_number }}
+          path: |
+            petgo/mobile/android/app/build/outputs/bundle/release/app-release.aab
+            petgo/mobile/android/app/build/outputs/apk/release/app-release.apk
+      - name: Убрать ключ
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks" android/keystore.properties

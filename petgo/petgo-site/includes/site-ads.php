@@ -279,8 +279,8 @@ function petgo_ads_head() {
             echo '<meta name="' . esc_attr($n) . '" content="' . esc_attr($c[$k]) . '">';
         }
     }
-    /* сотрудники PetGo, заходя на сайт, статистику не портят */
-    if (function_exists('petgo_role_of') && is_user_logged_in() && petgo_role_of() !== '') {
+    /* сотрудники PetGo, заходя на сайт, статистику не портят; 37.0: в приложении My PetGo счётчиков и рекламы нет */
+    if ((function_exists('petgo_role_of') && is_user_logged_in() && petgo_role_of() !== '') || (function_exists('petgo_site_in_app') && petgo_site_in_app())) {
         return;
     }
     $page = function_exists('petgo_site_page_now') ? petgo_site_page_now() : '';

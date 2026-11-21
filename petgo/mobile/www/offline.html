@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>My PetGo</title>
+<script src="config.js"></script>
+<style>
+  :root { --bg: #F2F0E3; --card: #FFFEF8; --tx: #10302C; --mu: #6E827E; --acc: #024C46; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1C1C1E; --tx: #F2F2F7; --mu: #8E8E93; --acc: #0E7A64; } }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; margin: 0; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px); background: var(--bg); color: var(--tx); font: 17px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; text-align: center; }
+  .ic { width: 76px; height: 76px; border-radius: 22px; background: #024C46; display: grid; place-items: center; }
+  .ic svg { width: 46px; height: 46px; }
+  h1 { margin: 22px 0 8px; font-size: 24px; letter-spacing: -.02em; }
+  p { margin: 0; max-width: 300px; color: var(--mu); }
+  button { margin-top: 28px; min-width: 200px; height: 52px; border: 0; border-radius: 14px; background: var(--acc); color: #fff; font: 600 17px/1 inherit; font-family: inherit; cursor: pointer; transition: transform .15s ease, opacity .15s ease; }
+  button:active { transform: scale(.97); opacity: .9; }
+  button[disabled] { opacity: .6; }
+</style>
+</head>
+<body>
+  <div class="ic" aria-hidden="true"><svg viewBox="0 0 100 100" fill="#FBF6E6"><ellipse cx="24" cy="44" rx="9" ry="11" transform="rotate(-18 24 44)"/><ellipse cx="40" cy="27" rx="9.5" ry="12"/><ellipse cx="60" cy="27" rx="9.5" ry="12"/><ellipse cx="76" cy="44" rx="9" ry="11" transform="rotate(18 76 44)"/><path d="M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z"/></svg></div>
+  <h1 id="t">Нет подключения к интернету</h1>
+  <p id="s">Проверьте мобильный интернет или Wi‑Fi — и нажмите «Повторить».</p>
+  <button type="button" id="b">Повторить</button>
+<script>
+(function () {
+  var L = (navigator.language || "ru").slice(0, 2).toLowerCase();
+  var T = {
+    kk: ["Интернет жоқ", "Мобильді интернетті немесе Wi‑Fi-ды тексеріп, «Қайталау» түймесін басыңыз.", "Қайталау", "Қосылуда…"],
+    en: ["No internet connection", "Check mobile data or Wi‑Fi, then tap “Try again”.", "Try again", "Connecting…"],
+    ru: ["Нет подключения к интернету", "Проверьте мобильный интернет или Wi‑Fi — и нажмите «Повторить».", "Повторить", "Подключаемся…"]
+  }[L === "kk" || L === "kz" ? "kk" : L === "en" ? "en" : "ru"];
+  var b = document.getElementById("b");
+  document.getElementById("t").textContent = T[0];
+  document.getElementById("s").textContent = T[1];
+  b.textContent = T[2];
+  function go() { b.disabled = true; b.textContent = T[3]; location.replace(window.PETGO_URL || "/"); }
+  b.addEventListener("click", go);
+  window.addEventListener("online", go);
+  try { var C = window.Capacitor; if (C && C.Plugins && C.Plugins.SplashScreen) C.Plugins.SplashScreen.hide(); } catch (e) {}
+})();
+</script>
+</body>
+</html>

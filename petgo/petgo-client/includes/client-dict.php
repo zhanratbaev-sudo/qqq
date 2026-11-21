@@ -125,6 +125,8 @@ add_filter('petgo_site_dict_more', function ($d) {
         'Добрый день,' => array('Қайырлы күн,', 'Good afternoon,'),
         'Добрый вечер,' => array('Қайырлы кеш,', 'Good evening,'),
         'Доброй ночи,' => array('Қайырлы түн,', 'Good night,'),
+        'Политика конфиденциальности' => array('Құпиялылық саясаты', 'Privacy policy'),
+        'Уведомления о заказе' => array('Тапсырыс туралы хабарламалар', 'Order notifications'),
         'Прогулки, фото и отчёты о вашем питомце' => array('Серуендер, фото және үй жануарыңыз туралы есептер', 'Walks, photos and reports about your pet'),
         '%s дома' => array('%s үйде', '%s is home'),
         'Визит завершён' => array('Келу аяқталды', 'Visit finished'),

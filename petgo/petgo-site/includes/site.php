@@ -654,7 +654,9 @@ function petgo_site_b_foot() {
     }
     $h .= '<a href="https://wa.me/' . esc_attr(petgo_site_wa()) . '" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+' . esc_attr(petgo_site_phone()) . '">' . esc_html(petgo_site_phone_fmt()) . '</a></nav></div>';
     $h .= petgo_site_lang_switch('pg-foot-lang');
-    return $h . '<div class="pg-foot-bot"><span>© ' . esc_html(wp_date('Y')) . ' PetGo.kz</span><span>' . esc_html(petgo_site_l('Няня для питомцев в Алматы')) . '</span></div></div></footer>';
+    /* 37.0: политика конфиденциальности (страница от «PetGo Клиент») */
+    $pp = isset($pgs['privacy']) ? '<a href="' . esc_url(petgo_site_url('privacy')) . '">' . esc_html($pgs['privacy']['name']) . '</a>' : '';
+    return $h . '<div class="pg-foot-bot"><span>© ' . esc_html(wp_date('Y')) . ' PetGo.kz</span>' . $pp . '<span>' . esc_html(petgo_site_l('Няня для питомцев в Алматы')) . '</span></div></div></footer>';
 }
 
 /* ---------- страницы целиком ---------- */

@@ -244,10 +244,22 @@ function petgo_cp_ops($op, $uid) {
             petgo_rm($a['file']);
         }
         petgo_audit('client_delete', $u->user_login, $uid);
+        /* 37.0: переписка с менеджером и уведомления на телефон удаляются вместе с кабинетом */
+        global $wpdb;
+        $cid = function_exists('petgo_cl_chat') ? petgo_cl_chat($uid, false) : 0;
+        if ($cid) {
+            $wpdb->delete(petgo_tb('msgs'), array('chat_id' => $cid), array('%d'));
+            $wpdb->delete(petgo_tb('members'), array('chat_id' => $cid), array('%d'));
+            $wpdb->delete(petgo_tb('chats'), array('id' => $cid), array('%d'));
+        }
+        delete_user_meta($uid, 'petgo_app_tok');
         require_once ABSPATH . 'wp-admin/includes/user.php';
+        /* заказы и питомцы, созданные из кабинета, остаются у PetGo для отчётности (как обещано на экране):
+           без передачи администратору WordPress удалил бы их вместе с пользователем */
+        $adm = get_users(array('role' => 'administrator', 'number' => 1, 'fields' => 'ID', 'orderby' => 'ID'));
         wp_logout();
-        wp_delete_user($uid);
-        petgo_cl_json(true, array('go' => petgo_site_url('home')));
+        wp_delete_user($uid, $adm ? (int) $adm[0] : null);
+        petgo_cl_json(true, array('go' => petgo_site_url('account')));
     }
 }
 
