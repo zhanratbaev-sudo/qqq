@@ -184,8 +184,6 @@ function petgo_door($oid) {
     /* тот же этап недавно уже отмечен — время не трогаем, чтобы у клиента QR не открывался повторно */
     if (!is_array($old) || $old['ph'] !== $ph || time() - (int) $old['t'] > 10 * MINUTE_IN_SECONDS) {
         update_post_meta($oid, '_door', array('t' => time(), 'ph' => $ph));
-        /* 37.0: клиенту в приложение — «Няня у двери, покажите QR-код» */
-        do_action('petgo_door_set', (int) $oid, $ph);
     }
     return $ph;
 }

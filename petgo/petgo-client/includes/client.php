@@ -60,6 +60,31 @@ add_action('template_redirect', function () {
     }
 }, 1);
 
+/* 36.2: язык клиента — выбранный в кабинете или на сайте запоминается; без ?lang= в адресе сайт и кабинет открываются на нём */
+add_action('init', 'petgo_cl_lang_pref', 1);
+function petgo_cl_lang_pref() {
+    $uid = function_exists('petgo_cl_uid') ? petgo_cl_uid() : 0;
+    if (!$uid || !function_exists('petgo_site_langs')) {
+        return;
+    }
+    $all = petgo_site_langs();
+    $g   = isset($_GET['lang']) ? sanitize_key(wp_unslash($_GET['lang'])) : '';
+    $g   = $g === 'kk' ? 'kz' : $g;
+    if ($g !== '' && isset($all[$g])) {
+        if (get_user_meta($uid, 'petgo_lang', true) !== $g) {
+            update_user_meta($uid, 'petgo_lang', $g);
+        }
+        return;
+    }
+    if (isset($_POST['lang'])) {
+        return;
+    }
+    $m = (string) get_user_meta($uid, 'petgo_lang', true);
+    if ($m !== '' && isset($all[$m])) {
+        petgo_site_lang($m);
+    }
+}
+
 /* клиент остаётся в кабинете полгода */
 add_filter('auth_cookie_expiration', function ($len, $uid) {
     $u = get_userdata((int) $uid);

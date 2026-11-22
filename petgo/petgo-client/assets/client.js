@@ -51,7 +51,6 @@
     var t = themeGet(), on = !!(D.getElementById("pgk") || D.getElementById("pgk-gate")) && (t === "dark" || (t === "auto" && !!(mq && mq.matches)));
     D.documentElement.classList.toggle("pgk-dark", on);
     var m = $('meta[name="theme-color"]'); if (m) m.setAttribute("content", on ? "#000000" : "#F2F0E3");
-    if (typeof appBars === "function") appBars();
     qa("[data-k-theme]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-k-theme") === t); });
     sgMove($(".pgk-theme"));
     MapK.theme();
@@ -671,9 +670,8 @@
       var h = head;
       var k = ordDone(o);
       if (live) {
-        /* няня только что отсканировала: вместо QR — галочка (и отчёт, если вернули); в приложении — лёгкая вибрация */
+        /* няня только что отсканировала: вместо QR — галочка (и отчёт, если вернули) */
         h += ordOk(o, live, true);
-        if (typeof appTap === "function") appTap("SUCCESS");
       } else if (o.qr && W.qrcode) {
         /* 36.0: QR — первым и крупно; одна короткая подсказка; подробности заказа ниже */
         var when = { pick: "Когда няня забирает питомца", back: "Когда няня возвращает питомца", arrive: "Когда няня приходит", leave: "Когда няня уходит" }[o.phase] || "";
@@ -1090,7 +1088,6 @@
     qa('input[type="tel"]', guest).concat(fs ? qa('input[type="tel"]', fs) : []).forEach(phoneMask);
     /* 36.1: экран входа «My PetGo» — отдельно от сайта, в теме телефона */
     if (D.getElementById("pgk-gate")) { D.documentElement.classList.add("pgk-on", "pgk-gate-on"); themeApply(); }
-    appInit();
     requestAnimationFrame(function () { authSeg(guest, "in"); });
   }
   function initCabinet() {
@@ -1120,7 +1117,6 @@
     var hel = $("[data-k-hello]");
     if (hel) { var hr = new Date().getHours(); hel.textContent = T(hr >= 5 && hr < 12 ? "Доброе утро," : hr >= 12 && hr < 17 ? "Добрый день," : hr >= 17 && hr < 23 ? "Добрый вечер," : "Доброй ночи,"); }
     live();
-    appInit();
     /* няня уже у двери, когда клиент открыл кабинет — QR сразу на экране */
     if (K.door && K.door.length) setTimeout(function () { doorCheck(K.door); }, 450);
     /* прогулка завершилась — кабинет сам предлагает оценить няню (один раз) */
@@ -1358,6 +1354,14 @@
     if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
     if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }
     if ((b = t.closest("[data-k-post]"))) { e.preventDefault(); postSheet(b); return; }
+    /* 36.2: язык кабинета — страница открывается на выбранном языке, сайт запоминает выбор */
+    if ((b = t.closest("[data-k-lang]"))) {
+      if (b.classList.contains("on")) return;
+      qa("[data-k-lang]").forEach(function (x) { x.classList.toggle("on", x === b); });
+      sgMove(b.parentNode);
+      var lu = b.getAttribute("data-url"); setTimeout(function () { location.href = lu; }, 180);
+      return;
+    }
     if ((b = t.closest("[data-k-theme]"))) { try { localStorage.setItem("pgk_theme", b.getAttribute("data-k-theme")); } catch (x) {} themeApply(true); return; }
     if ((b = t.closest("[data-k-mmode]"))) { MapK.mode(b.getAttribute("data-k-mmode")); return; }
     if ((b = t.closest("[data-k-mpet]"))) { MapK.focus(+b.getAttribute("data-k-mpet")); return; }
@@ -1416,101 +1420,6 @@
       if (on) authSeg(g, on.getAttribute("data-auth"));
     }, 120);
   });
-
-  /* ============================================================
-     37.0 ПРИЛОЖЕНИЕ MY PETGO (App Store, Google Play): уведомления на телефон, кнопка «Назад» Android,
-     заставка, цвет панели статуса, договор и страницы сайта — во встроенном браузере.
-     В обычном браузере ничего из этого не работает и не мешает.
-     ============================================================ */
-  var CAP = W.Capacitor, APP = !!(CAP && CAP.isNativePlatform && CAP.isNativePlatform());
-  var AppK = { push: 0, back: 0 };
-  function plug(n) { return APP && CAP.Plugins ? CAP.Plugins[n] || null : null; }
-  function appCall(n, m, a) { var p = plug(n); if (!p || !p[m]) return Promise.resolve(null); try { return Promise.resolve(p[m](a || {})).catch(function () { return null; }); } catch (e) { return Promise.resolve(null); } }
-  function appBars() { if (APP) appCall("SystemBars", "setStyle", { style: D.documentElement.classList.contains("pgk-dark") ? "DARK" : "LIGHT" }); }
-  function appBrowse(url) { if (plug("Browser")) appCall("Browser", "open", { url: url, presentationStyle: "popover", toolbarColor: D.documentElement.classList.contains("pgk-dark") ? "#000000" : "#F2F0E3" }); else location.href = url; }
-  function appTap(kind) { if (APP) appCall("Haptics", "notification", { type: kind || "SUCCESS" }); }
-  function appGo(go) {
-    if (!K) return;
-    if (go === "chat") { if (!CL.chatOpen) kOpen("chat"); return; }
-    if (go === "door") { try { sessionStorage.removeItem("pgk_door"); } catch (e) {} refresh(); }
-  }
-  /* уведомления: спрашиваем один раз после входа; ключи на сервере не введены — не спрашиваем зря */
-  function appPush() {
-    var P = plug("PushNotifications");
-    if (!P || !K || !K.app || AppK.push) return;
-    var plat = CAP.getPlatform();
-    if (!K.app[plat] || (plat === "android" && navigator.userAgent.indexOf("; push)") < 0)) return;
-    AppK.push = 1;
-    P.addListener("registration", function (t) {
-      if (!t || !t.value) return;
-      try { localStorage.setItem("pgk_ptok", t.value); } catch (e) {}
-      api("push_reg", { t: t.value, p: plat }).catch(function () {});
-    });
-    P.addListener("pushNotificationActionPerformed", function (a) { appGo(((a && a.notification && a.notification.data) || {}).go); });
-    /* уведомление пришло, пока приложение открыто: сразу обновляем кабинет (QR откроется сам) */
-    P.addListener("pushNotificationReceived", function (n) { var g = ((n && n.data) || {}).go; if (g === "door") appGo("door"); else if (g === "chat") refresh(); });
-    var reg = function () { return appCall("PushNotifications", "register"); };
-    var go = function () {
-      return appCall("PushNotifications", "checkPermissions").then(function (s) {
-        if (!s) return null;
-        if (s.receive === "granted") return reg();
-        if (s.receive === "denied") return null;
-        return appCall("PushNotifications", "requestPermissions").then(function (r) { if (r && r.receive === "granted") return reg(); return null; });
-      });
-    };
-    if (plat === "android") appCall("PushNotifications", "createChannel", { id: "petgo", name: T("Уведомления о заказе"), importance: 5, visibility: 1, sound: "default", vibration: true }).then(go);
-    else go();
-  }
-  function appLogout(href) {
-    var t = ""; try { t = localStorage.getItem("pgk_ptok") || ""; localStorage.removeItem("pgk_ptok"); } catch (e) {}
-    var done = function () { location.href = href; };
-    if (t && K) api("push_unreg", { t: t, p: CAP.getPlatform() }).then(done, done); else done();
-  }
-  function appInit() {
-    if (!APP) return;
-    D.documentElement.classList.add("pgk-app");
-    appCall("SplashScreen", "hide", { fadeOutDuration: 200 });
-    appBars();
-    appPush();
-    if (AppK.back) return;
-    AppK.back = 1;
-    var A = plug("App");
-    if (A) {
-      /* Android: «Назад» закрывает лист, потом возвращает на «Главную», потом сворачивает приложение */
-      A.addListener("backButton", function () {
-        if (stack.length) { kClose(); return; }
-        var ps = $(".pg-sheet.on [data-close]"); if (ps) { ps.click(); return; }
-        if (K && CL.tab && CL.tab !== "home") { tab("home", {}); return; }
-        if (!D.getElementById("pgk") && !D.getElementById("pgk-gate") && history.length > 1) { history.back(); return; }
-        appCall("App", "minimizeApp");
-      });
-      /* вернулись в приложение — свежие статусы сразу, без ожидания */
-      A.addListener("resume", function () { if (K) refresh(); });
-    }
-    D.addEventListener("click", function (e) {
-      var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
-      if (!a) return;
-      var href = a.getAttribute("href") || "";
-      if (a.hasAttribute("data-k-logout")) { e.preventDefault(); e.stopPropagation(); appLogout(a.href); return; }
-      /* договор: браузер внутри приложения не видит вход в кабинет — даём ссылку на 5 минут */
-      if (/[?&]action=petgo_ct_file/.test(href) && K) {
-        e.preventDefault(); e.stopPropagation();
-        api("file_link", { f: /[?&]f=cms/.test(href) ? "cms" : "pdf" }).then(function (j) { if (j && j.url) appBrowse(j.url); });
-        return;
-      }
-      var u; try { u = new URL(a.href, location.href); } catch (x) { return; }
-      if (!/^https?:$/.test(u.protocol)) return;
-      if (u.origin !== location.origin) {
-        /* WhatsApp, eGov, карты — в своих приложениях (Capacitor открывает чужие адреса снаружи) */
-        e.preventDefault(); e.stopPropagation(); location.href = u.href; return;
-      }
-      var acc = ""; try { acc = new URL((C.pages && C.pages.account) || "/lk/", location.href).pathname.replace(/\/+$/, ""); } catch (x) {}
-      var path = u.pathname.replace(/\/+$/, "");
-      if (path === acc || a.hasAttribute("data-lang") || /\/wp-login\.php$|\/wp-admin\//.test(u.pathname)) return;
-      /* остальные страницы сайта (услуги, политика) — во встроенном браузере, кабинет остаётся на месте */
-      e.preventDefault(); e.stopPropagation(); appBrowse(u.href);
-    }, true);
-  }
 
   /* 34.5: для других плагинов — запросы кабинета, сообщения, листы, вкладки и настройки (window.PGK) */
   W.PGK = {

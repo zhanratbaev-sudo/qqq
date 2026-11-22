@@ -12,7 +12,7 @@
   --k-r: 14px;
   /* кривые и длительности движения — одни на весь кабинет */
   --k-out: cubic-bezier(.32, .72, 0, 1); --k-in: cubic-bezier(.25, .8, .35, 1); --k-io: cubic-bezier(.77, 0, .175, 1); --k-e: var(--k-out);
-  --k-feed: #E7E4D2; --k-feed-card: #FFFEF8; --k-kb: #E9E7D8; --k-kbf: #FFFEF8;
+  --k-feed: #ECEADB; --k-feed-card: #FFFEF8; --k-kb: #E9E7D8; --k-kbf: #FFFEF8;
   --k-press: 150ms; --k-sheet-in: 280ms; --k-sheet-out: 200ms; --k-pop-in: 240ms; --k-pop-out: 170ms; --k-move: 250ms;
   --k-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --sab: env(safe-area-inset-bottom, 0px); --sat: env(safe-area-inset-top, 0px);
@@ -744,4 +744,3 @@ html.pgk-dark .pg-layer .pg-sheet-grab { background: rgba(255, 255, 255, .24); }
 html.pgk-dark .pg-layer .pg-sheet .pg-x { background: rgba(255, 255, 255, .1); color: #F2F2F7; }
 html.pgk-dark .pg-layer .pg-sheet .pg-fg { background: #2C2C2E; }
 html.pgk-dark .pg-layer .pg-sheet .pg-seg { background: rgba(255, 255, 255, .1); }
-.pgk-gate-pp { align-self: center; margin-top: 4px; padding: 8px; font: 400 13px/1.2 var(--k-font); color: var(--k-mu); text-decoration: none; }

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 37.0.0
+ * Version: 36.2.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '37.0.0');
+define('PETGO_VER', '36.2.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================

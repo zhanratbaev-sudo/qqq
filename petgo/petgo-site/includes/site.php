@@ -463,7 +463,8 @@ function petgo_site_layer($page) {
     if ($ai) {
         $h .= '<button type="button" class="pg-b pg-dock-ai" data-chat aria-haspopup="dialog" aria-controls="pga-chat"><i>' . petgo_site_icon('spark') . '</i><span>' . esc_html($l('Помощник')) . '</span></button>';
     }
-    $h .= '<a href="' . esc_url(petgo_site_url('reviews')) . '"' . $cur('reviews') . '>' . petgo_site_icon('star') . '<span>' . esc_html($pgs['reviews']['name']) . '</span></a>';
+    /* 36.2: место «Отзывы» в нижнем меню может занять раздел другого плагина (например, «Магазин») */
+    $h .= (string) apply_filters('petgo_site_dock_item', '<a href="' . esc_url(petgo_site_url('reviews')) . '"' . $cur('reviews') . '>' . petgo_site_icon('star') . '<span>' . esc_html($pgs['reviews']['name']) . '</span></a>', 'reviews', $page);
     $h .= '<a href="' . esc_url(petgo_site_url('account')) . '"' . $cur('account') . '>' . petgo_site_icon('user') . '<span>' . esc_html($pgs['account']['name']) . '</span></a>';
     $h .= '</nav>';
 
@@ -654,9 +655,7 @@ function petgo_site_b_foot() {
     }
     $h .= '<a href="https://wa.me/' . esc_attr(petgo_site_wa()) . '" target="_blank" rel="noopener">WhatsApp</a><a href="tel:+' . esc_attr(petgo_site_phone()) . '">' . esc_html(petgo_site_phone_fmt()) . '</a></nav></div>';
     $h .= petgo_site_lang_switch('pg-foot-lang');
-    /* 37.0: политика конфиденциальности (страница от «PetGo Клиент») */
-    $pp = isset($pgs['privacy']) ? '<a href="' . esc_url(petgo_site_url('privacy')) . '">' . esc_html($pgs['privacy']['name']) . '</a>' : '';
-    return $h . '<div class="pg-foot-bot"><span>© ' . esc_html(wp_date('Y')) . ' PetGo.kz</span>' . $pp . '<span>' . esc_html(petgo_site_l('Няня для питомцев в Алматы')) . '</span></div></div></footer>';
+    return $h . '<div class="pg-foot-bot"><span>© ' . esc_html(wp_date('Y')) . ' PetGo.kz</span><span>' . esc_html(petgo_site_l('Няня для питомцев в Алматы')) . '</span></div></div></footer>';
 }
 
 /* ---------- страницы целиком ---------- */

@@ -325,9 +325,6 @@ function petgo_cl_sys($uid, $body, $kind = 'sys', $subj = 0) {
         return $dup;
     }
     $wpdb->insert(petgo_tb('msgs'), array('chat_id' => $cid, 'user_id' => 0, 'subject_id' => (int) $subj, 'kind' => $kind, 'body' => $body, 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
-    $mid = (int) $wpdb->insert_id;
     petgo_bump();
-    /* 37.0: приложение My PetGo присылает это клиенту уведомлением на телефон */
-    do_action('petgo_cl_sys_msg', (int) $uid, $body, $kind, (int) $subj, $mid);
-    return $mid;
+    return (int) $wpdb->insert_id;
 }

@@ -54,9 +54,7 @@ function petgo_cl_guest($app = false) {
     $h  .= '<label class="pgk-check"><input type="checkbox" name="consent" value="1"><i aria-hidden="true">' . petgo_cl_icon('check') . '</i><span>' . esc_html($L('Согласен на обработку персональных данных')) . '</span></label>';
     $h  .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Создать кабинет')) . '</span><i class="pg-spin" aria-hidden="true"></i></button><p class="pgk-note">' . esc_html($L('Питомцы, которых мы уже знаем по вашему номеру, появятся в кабинете сами.')) . '</p></div></form>';
     $h  .= '</div></div>';
-    /* 37.0: в приложении My PetGo (для клиентов) входа для сотрудников нет — у них своё приложение */
-    $staff = function_exists('petgo_cl_in_app') && petgo_cl_in_app() ? '' : petgo_cl_row('key', $L('Вход для сотрудников'), 'data-ext href="' . esc_url(petgo_page_url()) . '"', 'a');
-    $h  .= '<div class="pgk-list pgk-auth-alt">' . petgo_cl_row('paw', $L('Зарегистрировать питомца без аккаунта'), 'data-sheet="pet"') . $staff . '</div>';
+    $h  .= '<div class="pgk-list pgk-auth-alt">' . petgo_cl_row('paw', $L('Зарегистрировать питомца без аккаунта'), 'data-sheet="pet"') . petgo_cl_row('key', $L('Вход для сотрудников'), 'data-ext href="' . esc_url(petgo_page_url()) . '"', 'a') . '</div>';
     $f   = '<form class="pgk-form" data-op="petgo_cl_forgot" novalidate>' . $hp . '<p class="pgk-note pgk-note-l">' . esc_html($L('Пароль восстанавливает менеджер: оставьте номер — мы проверим, что это вы, и пришлём новый пароль.')) . '</p><div class="pgk-list">' . petgo_cl_field('phone', $L('Телефон'), 'tel', '', ' inputmode="tel" maxlength="20" placeholder="+7 700 000 00 00" required') . petgo_cl_field('who', $L('Имя'), 'text', '', ' maxlength="80" placeholder="' . esc_attr($L('или логин')) . '"') . '</div>';
     $f  .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Написать менеджеру')) . '</span><i class="pg-spin" aria-hidden="true"></i></button></form>';
     $f  .= '<div class="pgk-done" hidden><span class="pgk-done-i">' . petgo_cl_icon('check') . '</span><b>' . esc_html($L('Менеджер уже знает')) . '</b><p>' . esc_html($L('Скоро свяжемся с вами. Можно сразу написать нам в WhatsApp:')) . '</p><a class="pg-b pgk-btn pgk-btn-s" data-wa target="_blank" rel="noopener" href="https://wa.me/' . esc_attr(petgo_site_wa()) . '">' . petgo_cl_icon('chat') . 'WhatsApp</a></div>';
@@ -72,10 +70,6 @@ function petgo_cl_gate() {
     $h .= '<div class="pgk-gate-top"><span class="pgk-gate-ic"><img src="' . esc_url(petgo_asset('icon-192.png')) . '" alt="" width="76" height="76"></span><h1>My PetGo</h1><p>' . esc_html($L('Прогулки, фото и отчёты о вашем питомце')) . '</p></div>';
     $h .= petgo_cl_guest(true);
     $h .= '<div class="pgk-gate-foot"><a href="' . esc_url(petgo_site_url('home')) . '">' . esc_html($L('Сайт PetGo')) . '</a>' . petgo_site_lang_switch('pgk-gate-lang') . '</div>';
-    $pp = petgo_site_pages();
-    if (isset($pp['privacy'])) {
-        $h .= '<a class="pgk-gate-pp" href="' . esc_url(petgo_site_url('privacy')) . '">' . esc_html($L('Политика конфиденциальности')) . '</a>';
-    }
     return $h . '</div></div>';
 }
 
@@ -575,11 +569,16 @@ function petgo_cl_account_html($u, $un = 0) {
         $h .= '<button type="button" class="pg-b" data-k-theme="' . $k . '">' . esc_html($L($t)) . '</button>';
     }
     $h .= '</div>';
+    /* 36.2: язык кабинета — запоминается, при следующем входе кабинет откроется на нём же */
+    $h .= '<h4 class="pgk-gt">' . esc_html($L('Язык')) . '</h4><div class="pgk-sg pgk-lang" role="radiogroup"><i class="pgk-sgi" aria-hidden="true"></i>';
+    foreach (petgo_site_langs() as $k => $v) {
+        $h .= '<button type="button" class="pg-b' . ($k === petgo_site_lang() ? ' on' : '') . '" data-k-lang="' . esc_attr($k) . '" data-url="' . esc_url($k === 'ru' ? add_query_arg('lang', 'ru', petgo_site_url('account', 'ru')) : petgo_site_url('account', $k)) . '" lang="' . esc_attr($v[2]) . '">' . esc_html($v[1]) . '</button>';
+    }
+    $h .= '</div>';
     $h .= '<h4 class="pgk-gt">' . esc_html($L('Данные')) . '</h4><form class="pgk-form" data-k-op="profile" novalidate><div class="pgk-list">' . petgo_cl_field('name', $L('Имя'), 'text', $u->display_name, ' maxlength="60" autocomplete="name" required') . petgo_cl_field('phone', $L('Телефон'), 'tel', petgo_site_phone_fmt((string) get_user_meta($u->ID, 'petgo_phone', true)), ' maxlength="20" inputmode="tel" required') . petgo_cl_field('email', $L('Почта'), 'email', $em, ' maxlength="100" placeholder="' . esc_attr($L('необязательно')) . '" autocomplete="email"') . '</div>';
     $h .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Сохранить')) . '</span><i class="pg-spin" aria-hidden="true"></i></button></form>';
     $h .= '<h4 class="pgk-gt">' . esc_html($L('Безопасность')) . '</h4><details class="pgk-list pgk-more-d"><summary class="pgk-row"><span class="pgk-row-i">' . petgo_cl_icon('key') . '</span><span class="pgk-row-t">' . esc_html($L('Сменить пароль')) . '</span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</summary><form class="pgk-form pgk-in" data-k-op="pass" novalidate><div class="pgk-list"><label class="pgk-f"><span>' . esc_html($L('Старый')) . '</span><input type="password" name="old" autocomplete="current-password" required></label><label class="pgk-f"><span>' . esc_html($L('Новый')) . '</span><input type="password" name="new" autocomplete="new-password" minlength="8" placeholder="' . esc_attr($L('не короче 8 символов')) . '" required></label></div><p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-s pgk-go"><span>' . esc_html($L('Изменить пароль')) . '</span><i class="pg-spin" aria-hidden="true"></i></button><p class="pgk-note">' . esc_html($L('После смены пароля вход на других телефонах закроется.')) . '</p></form></details>';
-    $pp  = petgo_site_pages();
-    $h .= '<div class="pgk-list">' . petgo_cl_row('home', $L('Сайт PetGo'), 'href="' . esc_url(petgo_site_url('home')) . '"', 'a') . (isset($pp['privacy']) ? petgo_cl_row('shield', $L('Политика конфиденциальности'), 'href="' . esc_url(petgo_site_url('privacy')) . '"', 'a') : '') . '<a class="pgk-row pgk-red" data-k-logout data-ext href="' . esc_url(wp_logout_url(petgo_site_url('account'))) . '"><span class="pgk-row-i">' . petgo_cl_icon('logout') . '</span><span class="pgk-row-t">' . esc_html($L('Выйти')) . '</span></a></div>';
+    $h .= '<div class="pgk-list">' . petgo_cl_row('home', $L('Сайт PetGo'), 'href="' . esc_url(petgo_site_url('home')) . '"', 'a') . '<a class="pgk-row pgk-red" data-ext href="' . esc_url(wp_logout_url(petgo_site_url('account'))) . '"><span class="pgk-row-i">' . petgo_cl_icon('logout') . '</span><span class="pgk-row-t">' . esc_html($L('Выйти')) . '</span></a></div>';
     $h .= '<details class="pgk-list pgk-more-d"><summary class="pgk-row pgk-red"><span class="pgk-row-i">' . petgo_cp_icon('trash') . '</span><span class="pgk-row-t">' . esc_html($L('Удалить кабинет')) . '</span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</summary><form class="pgk-form pgk-in" data-k-op="del_acc" novalidate><p class="pgk-note pgk-note-l">' . esc_html($L('Кабинет и ваши данные входа будут удалены. История заказов останется у нас для отчётности.')) . '</p><div class="pgk-list"><label class="pgk-f"><span>' . esc_html($L('Пароль')) . '</span><input type="password" name="pass" autocomplete="current-password" required></label></div><p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-s pgk-go pgk-red"><span>' . esc_html($L('Удалить навсегда')) . '</span><i class="pg-spin" aria-hidden="true"></i></button></form></details>';
     return $h;
 }

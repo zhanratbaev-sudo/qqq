@@ -195,7 +195,7 @@ function petgo_site_lang_switch($cls = '', $menu = false) {
     $L   = petgo_site_langs();
     $url = (is_ssl() ? 'https://' : 'http://') . (isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '') . (isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/');
     $a   = function ($k, $v) use ($url, $cur) {
-        return '<a href="' . esc_url(petgo_site_lang_url($url, $k)) . '" hreflang="' . esc_attr($v[2]) . '" lang="' . esc_attr($v[2]) . '" data-lang="' . esc_attr($k) . '" title="' . esc_attr($v[1]) . '"' . ($k === $cur ? ' class="on" aria-current="true"' : '') . '>' . esc_html($v[0]) . '</a>';
+        return '<a href="' . esc_url($k === 'ru' ? add_query_arg('lang', 'ru', petgo_site_lang_url($url, 'ru')) : petgo_site_lang_url($url, $k)) . '" hreflang="' . esc_attr($v[2]) . '" lang="' . esc_attr($v[2]) . '" data-lang="' . esc_attr($k) . '" title="' . esc_attr($v[1]) . '"' . ($k === $cur ? ' class="on" aria-current="true"' : '') . '>' . esc_html($v[0]) . '</a>';
     };
     $h = '<div class="pg-langs' . ($cls !== '' ? ' ' . esc_attr($cls) : '') . '" role="group" aria-label="' . esc_attr(petgo_site_l('Язык')) . '">';
     if (!$menu) {

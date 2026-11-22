@@ -60,6 +60,7 @@ function petgo_svg($d, $cls = 'pgc-ic') {
 function petgo_icon($n) {
     static $P = array(
         'home'     => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
+        'bag'      => '<path d="M5 8h14l-1 12.2a1 1 0 0 1-1 .8H7a1 1 0 0 1-1-.8L5 8Z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/>',
         'orders'   => '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/>',
         'cal'      => '<rect x="3" y="4.5" width="18" height="16.5" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2"/>',
         'requests' => '<path d="M4 4h16v12H8l-4 4z"/><path d="M8 9h8M8 12.5h5"/>',
@@ -95,7 +96,8 @@ function petgo_icon($n) {
         'glass'    => '<rect x="3" y="7" width="14" height="14" rx="4"/><path d="M8 3h9a4 4 0 0 1 4 4v9"/><path d="M7 11.5c1-1 2.2-1.5 3.5-1.5"/>',
         'clock'    => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     );
-    return isset($P[$n]) ? petgo_svg($P[$n]) : '';
+    /* 36.2: значки других плагинов (например, «PetGo Магазин» — сумка) */
+    return isset($P[$n]) ? petgo_svg($P[$n]) : (string) apply_filters('petgo_icon_svg', '', $n);
 }
 
 function petgo_greeting() {
