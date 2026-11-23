@@ -1,16 +1,16 @@
 {
   "name": "saty-guesthouse-tax-presentation",
   "private": true,
-  "version": "1.0.0",
-  "description": "Tax Burden Analysis and Pricing-Tax Proposals for a Small Guesthouse in Saty Village, Kazakhstan (Nguyen Xuan Mai)",
+  "version": "2.0.0",
+  "description": "Tax Burden Analysis and Pricing–Tax Proposals for a Small Guesthouse in Saty Village, Kazakhstan — Nguyen Xuan Mai",
   "scripts": {
-    "build": "node build.js"
+    "assets": "node tools/make_assets.js",
+    "pdf": "node tools/export_pdf.js",
+    "build": "bash tools/export.sh",
+    "shots": "node tools/shoot.js shots"
   },
   "dependencies": {
-    "pptxgenjs": "^4.0.1",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "react-icons": "^5.7.0",
-    "sharp": "^0.35.5"
+    "playwright": "^1.49.0",
+    "sharp": "^0.34.0"
   }
 }

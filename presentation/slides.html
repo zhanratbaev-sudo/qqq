@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saty Guesthouse Tax Analysis</title>
+<!--
+  Tax Burden Analysis and Pricing–Tax Proposals for a Small Guesthouse in Saty Village, Kazakhstan
+  Student: Nguyen Xuan Mai · Tourism Business / Taxation · 2026
+
+  Source of the deck. 9 slides, each a 1920×1080 <section class="slide">.
+  - Open index.html (or slides.html#present) to present: ← → / Space / PageUp/PageDown, F = fullscreen.
+  - Open slides.html without the hash to see every slide stacked (this is what the PDF/PPTX export reads).
+
+  Colour rationale: the palette is sampled from alpenglow at Kolsai Lakes at dawn — blush sky, rose-lit
+  peaks, plum shadows on the spruce slopes, and a muted sage from the forest as the one complementary hue.
+  Low chroma (oklch C ≈ 0.02–0.12) keeps it soft and print-like rather than candy-pink.
+  Fonts: Cambria (headings) + Calibri (body) ship with Microsoft Office, so the exported PPTX keeps the
+  exact layout; Caladea / Carlito are their metric-identical open fallbacks used when rendering on Linux.
+-->
+<style>
+  :root {
+    --paper:   #FFF8F8;  /* oklch .985 .008  10  — page */
+    --petal:   #FCEEF1;  /* oklch .955 .020   0  — soft panels */
+    --blush:   #F6DCE3;  /* oklch .910 .038   0  — tints, tracks */
+    --rose-200:#EDC2CF;  /* borders, quiet fills */
+    --rose:    #D58CA3;  /* accent fills (large shapes only) */
+    --rose-600:#B5607E;  /* accent text ≥ 24px */
+    --berry:   #8C3A5B;  /* headings, key numbers, dark fills */
+    --plum:    #4E2338;  /* dark slides */
+    --ink:     #432C37;  /* body text, 11:1 on paper */
+    --ink-2:   #6F5260;  /* secondary text, 6:1 on paper */
+    --sage-50: #EEF3EF;
+    --sage:    #A9C1B1;
+    --sage-700:#4F6E5C;  /* complementary text */
+    --cream:   #FFF3EC;
+    --head: Cambria, Caladea, "Times New Roman", serif;
+    --body: Calibri, Carlito, "Segoe UI", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: #E9DDE1; }
+  body { font-family: var(--body); color: var(--ink); background: #E9DDE1; }
+
+  .slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; margin: 0 auto 40px; }
+  .slide > .bg { position: absolute; inset: 0; background: var(--paper); }
+  .slide > .bg.dark { background: var(--plum); }
+  .abs { position: absolute; }
+
+  h1, h2, h3, .serif { font-family: var(--head); font-weight: 700; }
+  .title { position: absolute; left: 112px; top: 76px; width: 1700px; font-size: 64px; line-height: 1.1; color: var(--berry); letter-spacing: -0.5px; }
+  .lede  { position: absolute; left: 112px; top: 166px; width: 1700px; font-size: 30px; line-height: 1.3; color: var(--ink-2); }
+  .foot  { position: absolute; left: 112px; bottom: 34px; font-size: 17px; color: var(--ink-2); }
+  .src   { position: absolute; right: 112px; bottom: 34px; font-size: 17px; color: var(--ink-2); text-align: right; }
+
+  .panel { position: absolute; background: #FFFFFF; border: 1.5px solid var(--rose-200); border-radius: 28px; box-shadow: 0 10px 30px rgba(140, 58, 91, 0.08); }
+  .tint  { position: absolute; background: var(--petal); border-radius: 28px; }
+  .sage-tint { position: absolute; background: var(--sage-50); border-radius: 28px; }
+  .h3 { font-family: var(--head); font-weight: 700; font-size: 34px; color: var(--berry); }
+  .body { font-size: 26px; line-height: 1.38; color: var(--ink); }
+  .small { font-size: 22px; line-height: 1.35; color: var(--ink-2); }
+  .label { font-size: 20px; color: var(--rose-600); font-weight: 700; }
+  .num-dot { width: 48px; height: 48px; border-radius: 24px; background: var(--blush); color: var(--berry); font-family: var(--head); font-weight: 700; font-size: 26px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .row { display: flex; gap: 22px; align-items: flex-start; }
+
+  /* ---------- presenter mode (slides.html#present) ---------- */
+  body.present { overflow: hidden; background: #2C1621; }
+  body.present .slide { position: absolute; left: 50%; top: 50%; margin: 0; transform-origin: 0 0; display: none; }
+  body.present .slide.on { display: block; }
+  .pager { display: none; }
+  body.present .pager { display: block; position: fixed; right: 22px; bottom: 16px; font: 15px var(--body); color: #E9C9D3; opacity: .75; }
+
+  @media print {
+    @page { size: 1920px 1080px; margin: 0; }
+    html, body { background: none; }
+    .slide { margin: 0; break-after: page; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ 1 · Cover ═══════════════ -->
+<section class="slide" data-title="Cover">
+  <div class="bg"></div>
+  <div class="abs" style="left:1210px; top:-150px; width:900px; height:900px; border-radius:450px; background:var(--petal);"></div>
+  <div class="abs" style="left:1500px; top:840px; width:340px; height:340px; border-radius:170px; background:var(--blush);"></div>
+  <img class="abs" src="assets/kolsai-arch.png" alt="Illustration: dawn over a mountain lake near Saty, Northern Tien Shan" style="left:1080px; top:80px; width:744px; height:920px;">
+
+  <p class="abs" style="left:112px; top:118px; font-size:26px; color:var(--rose-600); font-weight:700;">Tourism Business / Taxation · Analytical report, 2026</p>
+  <h1 class="abs" style="left:112px; top:176px; width:900px; font-size:74px; line-height:1.08; color:var(--berry); letter-spacing:-1px;">Tax Burden Analysis and<br>Pricing–Tax Proposals for a<br>Small Guesthouse in<br>Kazakhstan</h1>
+  <p class="abs serif" style="left:112px; top:520px; width:900px; font-size:36px; font-style:italic; font-weight:400; color:var(--rose-600);">Comparison with international tourism taxes</p>
+
+  <div class="abs" style="left:112px; top:640px; width:880px; display:grid; grid-template-columns: 440px 440px; row-gap:30px;">
+    <div><p class="label">Destination</p><p class="body">Saty Village, Almaty Region</p></div>
+    <div><p class="label">Enterprise</p><p class="body">Small guesthouse, 10 rooms</p></div>
+    <div><p class="label">Course</p><p class="body">Tourism Business / Taxation</p></div>
+    <div><p class="label">Academic year</p><p class="body">2026</p></div>
+  </div>
+  <div class="tint" style="left:112px; top:870px; width:880px; height:120px;"></div>
+  <p class="abs" style="left:150px; top:896px; font-size:22px; color:var(--ink-2);">Presented by</p>
+  <p class="abs serif" style="left:150px; top:926px; font-size:42px; color:var(--berry);">Nguyen Xuan Mai</p>
+  <p class="abs" style="left:1080px; top:1018px; width:744px; text-align:center; font-size:17px; color:var(--ink-2);">Illustration: dawn over Kolsai Lakes, Northern Tien Shan</p>
+</section>
+
+<!-- ═══════════════ 2 · Enterprise profile ═══════════════ -->
+<section class="slide" data-title="Enterprise profile">
+  <div class="bg"></div>
+  <h1 class="title">Enterprise Profile and Research Objectives</h1>
+  <p class="lede">Saty village is the accommodation base for tourists visiting Kolsai Lakes and Kaindy Lake.</p>
+
+  <!-- left: the guesthouse -->
+  <p class="h3 abs" style="left:112px; top:262px;">The guesthouse at a glance</p>
+  <div class="abs" style="left:112px; top:326px; width:520px; display:grid; grid-template-columns:repeat(5, 92px); gap:15px;">
+    <div style="height:70px; border-radius:14px; background:var(--rose);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--rose);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--rose);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--rose);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush); position:relative; overflow:hidden;"><div style="position:absolute; left:0; top:0; width:46px; height:70px; background:var(--rose);"></div></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush);"></div>
+    <div style="height:70px; border-radius:14px; background:var(--blush);"></div>
+  </div>
+  <p class="abs small" style="left:660px; top:330px; width:300px;"><span class="serif" style="font-size:52px; color:var(--berry); line-height:1;">45%</span><br>average occupancy: about 4.5 of 10 rooms sold each night</p>
+
+  <div class="abs" style="left:112px; top:520px; width:860px; font-size:25px; line-height:1.3;">
+    <div style="display:grid; grid-template-columns: 300px 560px; row-gap:14px;">
+      <p style="color:var(--ink-2);">Average room price</p><p><b>25,000 KZT</b> per night</p>
+      <p style="color:var(--ink-2);">Operating period</p><p>365 days a year</p>
+      <p style="color:var(--ink-2);">Location</p><p>Saty village, Almaty Region</p>
+      <p style="color:var(--ink-2);">Target customers</p><p>Domestic and international tourists</p>
+    </div>
+  </div>
+
+  <!-- map strip -->
+  <div class="panel" style="left:112px; top:780px; width:860px; height:220px;"></div>
+  <svg class="abs" style="left:112px; top:780px;" width="860" height="220" viewBox="0 0 860 220">
+    <path d="M500 196 L580 120 L640 165 L700 100 L770 165 L812 135 L836 156 L836 196 Z" fill="#F6DCE3"/>
+    <path d="M70 120 C 230 95, 380 70, 590 72" fill="none" stroke="#8C3A5B" stroke-width="3" stroke-dasharray="10 9"/>
+    <path d="M598 80 L560 150" stroke="#B5607E" stroke-width="2.5"/>
+    <path d="M606 80 L700 150" stroke="#B5607E" stroke-width="2.5"/>
+    <circle cx="70" cy="120" r="11" fill="#6F5260" stroke="#fff" stroke-width="3"/>
+    <circle cx="600" cy="72" r="14" fill="#8C3A5B" stroke="#fff" stroke-width="3"/>
+    <circle cx="560" cy="155" r="10" fill="#D58CA3" stroke="#fff" stroke-width="3"/>
+    <circle cx="700" cy="155" r="10" fill="#D58CA3" stroke="#fff" stroke-width="3"/>
+    <text x="70" y="160" font-family="Calibri, Carlito, sans-serif" font-size="22" fill="#432C37" text-anchor="middle">Almaty</text>
+    <text x="625" y="62" font-family="Calibri, Carlito, sans-serif" font-size="24" font-weight="700" fill="#8C3A5B">Saty village</text>
+    <text x="545" y="192" font-family="Calibri, Carlito, sans-serif" font-size="20" fill="#432C37" text-anchor="end">Kolsai Lakes</text>
+    <text x="718" y="192" font-family="Calibri, Carlito, sans-serif" font-size="20" fill="#432C37">Kaindy Lake</text>
+    <text x="300" y="70" font-family="Calibri, Carlito, sans-serif" font-size="19" fill="#6F5260" text-anchor="middle" font-style="italic">road east into the Tien Shan</text>
+    <text x="24" y="36" font-family="Calibri, Carlito, sans-serif" font-size="17" fill="#6F5260">Location · schematic, not to scale</text>
+  </svg>
+
+  <!-- right: objectives -->
+  <p class="h3 abs" style="left:1060px; top:262px;">Research objectives</p>
+  <div class="abs" style="left:1060px; top:326px; width:750px; display:flex; flex-direction:column; gap:20px;">
+    <div class="row"><div class="num-dot">1</div><p class="body">Identify the applicable taxes under Kazakhstan’s 2026 Tax Code.</p></div>
+    <div class="row"><div class="num-dot">2</div><p class="body">Compare the general and simplified taxation regimes.</p></div>
+    <div class="row"><div class="num-dot">3</div><p class="body">Evaluate how VAT influences accommodation prices and demand.</p></div>
+    <div class="row"><div class="num-dot">4</div><p class="body">Examine international tourism taxation practices.</p></div>
+    <div class="row"><div class="num-dot">5</div><p class="body">Develop recommendations for the enterprise and the sector.</p></div>
+  </div>
+  <div class="abs" style="left:1060px; top:780px; width:750px; height:220px; background:var(--berry); border-radius:28px;"></div>
+  <p class="abs" style="left:1108px; top:812px; font-size:22px; color:#F6DCE3; font-weight:700;">Key research question</p>
+  <p class="abs serif" style="left:1108px; top:850px; width:660px; font-size:34px; line-height:1.25; font-style:italic; font-weight:400; color:#FFFFFF;">How can a small rural guesthouse keep competitive prices while fulfilling its tax obligations?</p>
+  <p class="foot">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+</section>
+
+<!-- ═══════════════ 3 · Legal framework ═══════════════ -->
+<section class="slide" data-title="Legal framework">
+  <div class="bg"></div>
+  <h1 class="title">Legal Framework: Tax Obligations in Kazakhstan (2026)</h1>
+  <p class="lede">Tax Code of the Republic of Kazakhstan No. 214-VIII of 18 July 2025, in force from 1 January 2026.</p>
+
+  <!-- grouped obligations -->
+  <div class="panel" style="left:112px; top:262px; width:500px; height:330px;"></div>
+  <p class="abs label" style="left:152px; top:292px;">Income taxes</p>
+  <div class="abs" style="left:152px; top:332px; width:430px;">
+    <p class="serif" style="font-size:52px; color:var(--berry); line-height:1.05;">20%</p>
+    <p class="body" style="margin-bottom:16px;">Corporate income tax (CIT), legal entities</p>
+    <p class="serif" style="font-size:52px; color:var(--berry); line-height:1.05;">10%</p>
+    <p class="body">Individual income tax (PIT), with a higher 15% bracket</p>
+  </div>
+
+  <div class="panel" style="left:642px; top:262px; width:500px; height:330px;"></div>
+  <p class="abs label" style="left:682px; top:292px;">Consumption and payroll</p>
+  <div class="abs" style="left:682px; top:332px; width:430px;">
+    <p class="serif" style="font-size:52px; color:var(--berry); line-height:1.05;">16%</p>
+    <p class="body" style="margin-bottom:16px;">Value added tax (VAT)</p>
+    <p class="serif" style="font-size:52px; color:var(--berry); line-height:1.05;">6%</p>
+    <p class="body">Social tax, plus pension and social contributions at statutory rates</p>
+  </div>
+
+  <div class="panel" style="left:112px; top:622px; width:1030px; height:200px;"></div>
+  <p class="abs label" style="left:152px; top:652px;">Asset-based taxes</p>
+  <div class="abs" style="left:152px; top:696px; width:960px; display:grid; grid-template-columns: 310px 310px 310px; column-gap:20px;">
+    <div><p class="body"><b>Property tax</b></p><p class="small">depends on taxable property</p></div>
+    <div><p class="body"><b>Land tax</b></p><p class="small">depends on land characteristics</p></div>
+    <div><p class="body"><b>Transport tax</b></p><p class="small">depends on registered vehicles</p></div>
+  </div>
+
+  <div class="tint" style="left:112px; top:852px; width:1030px; height:140px;"></div>
+  <p class="abs body" style="left:152px; top:872px; width:960px;"><b style="color:var(--berry);">Legal form decides the income tax.</b> An individual entrepreneur pays PIT, a legal entity pays CIT. Our model assumes an individual entrepreneur, so it uses PIT.</p>
+
+  <!-- what changed -->
+  <p class="h3 abs" style="left:1222px; top:262px;">What changed in 2026</p>
+  <div class="abs" style="left:1222px; top:330px; width:590px; display:flex; flex-direction:column; gap:26px;">
+    <div><p class="serif" style="font-size:44px; color:var(--berry);">12% → 16%</p><p class="body">Standard VAT rate increased</p></div>
+    <div><p class="serif" style="font-size:44px; color:var(--berry);">10,000 MCI</p><p class="body">Mandatory VAT registration threshold, ≈ 43.25 M KZT</p></div>
+    <div><p class="serif" style="font-size:44px; color:var(--berry);">4% of revenue</p><p class="body">Simplified declaration regime, subject to eligibility</p></div>
+    <div><p class="serif" style="font-size:44px; color:var(--sage-700);">No VAT, no social tax</p><p class="body">for simplified-regime businesses, under applicable conditions</p></div>
+  </div>
+  <p class="foot">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+  <p class="src">Sources: Tax Code of Kazakhstan (2025), Art. 503, 557, 726; State Revenue Committee</p>
+</section>
+
+<!-- ═══════════════ 4 · Financial model ═══════════════ -->
+<section class="slide" data-title="Financial model">
+  <div class="bg"></div>
+  <h1 class="title">Financial Model and Tax Burden Calculation</h1>
+  <p class="lede">At a 29.4% profit margin the general regime gives the lower income tax. The simplified regime only wins above a 40% margin.</p>
+
+  <!-- revenue equation -->
+  <div class="abs" style="left:112px; top:262px; width:1696px; display:flex; align-items:center; gap:18px;">
+    <div class="tint" style="position:relative; padding:18px 28px; border-radius:22px;"><p class="serif" style="font-size:44px; color:var(--berry); line-height:1;">10</p><p class="small">rooms</p></div>
+    <p class="serif" style="font-size:40px; color:var(--rose-600);">×</p>
+    <div class="tint" style="position:relative; padding:18px 28px; border-radius:22px;"><p class="serif" style="font-size:44px; color:var(--berry); line-height:1;">365</p><p class="small">days</p></div>
+    <p class="serif" style="font-size:40px; color:var(--rose-600);">×</p>
+    <div class="tint" style="position:relative; padding:18px 28px; border-radius:22px;"><p class="serif" style="font-size:44px; color:var(--berry); line-height:1;">45%</p><p class="small">occupancy</p></div>
+    <p class="serif" style="font-size:40px; color:var(--rose-600);">×</p>
+    <div class="tint" style="position:relative; padding:18px 28px; border-radius:22px;"><p class="serif" style="font-size:44px; color:var(--berry); line-height:1;">25,000</p><p class="small">KZT per night</p></div>
+    <p class="serif" style="font-size:40px; color:var(--rose-600);">=</p>
+    <div style="position:relative; padding:18px 30px; border-radius:22px; background:var(--berry);"><p class="serif" style="font-size:44px; color:#FFFFFF; line-height:1;">41,062,500</p><p style="font-size:22px; color:#F6DCE3;">KZT revenue per year</p></div>
+  </div>
+  <p class="abs body" style="left:112px; top:410px; width:1696px;">Revenue 41,062,500 − operating expenses 29,000,000 = <b style="color:var(--berry);">profit 12,062,500 KZT</b>, a 29.4% margin.</p>
+
+  <!-- comparison table -->
+  <div class="panel" style="left:112px; top:486px; width:860px; height:420px;"></div>
+  <div class="abs" style="left:146px; top:510px; width:792px; font-size:25px;">
+    <div style="display:grid; grid-template-columns: 272px 260px 260px; row-gap:0;">
+      <p style="padding:12px 0; color:var(--ink-2);"></p>
+      <p class="serif" style="padding:12px 0; font-size:28px; color:var(--berry);">General</p>
+      <p class="serif" style="padding:12px 0; font-size:28px; color:var(--rose-600);">Simplified</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Tax base</p>
+      <p style="padding:12px 0;">Taxable profit</p>
+      <p style="padding:12px 0;">Revenue</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Assumed rate</p>
+      <p style="padding:12px 0;">10% PIT</p>
+      <p style="padding:12px 0;">4%</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Income tax</p>
+      <p style="padding:12px 0;"><b style="color:var(--berry);">1,206,250 KZT</b></p>
+      <p style="padding:12px 0;"><b>1,642,500 KZT</b></p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Tax ÷ revenue</p>
+      <p style="padding:12px 0;">2.94%</p>
+      <p style="padding:12px 0;">4.00%</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Tax ÷ profit</p>
+      <p style="padding:12px 0;">10.00%</p>
+      <p style="padding:12px 0;">13.62%</p>
+    </div>
+  </div>
+
+  <!-- break-even chart -->
+  <div class="panel" style="left:1012px; top:486px; width:796px; height:420px;"></div>
+  <svg class="abs" style="left:1012px; top:486px;" width="796" height="420" viewBox="0 0 796 420">
+    <!-- axes: x 0–60% margin → 90..760 ; y 0–2.6 M → 340..60 -->
+    <rect x="90" y="60" width="447" height="280" fill="#EEF3EF"/>
+    <line x1="90" y1="340" x2="760" y2="340" stroke="#EDC2CF" stroke-width="2"/>
+    <g font-family="Calibri, Carlito, sans-serif" font-size="18" fill="#6F5260">
+      <text x="90" y="368" text-anchor="middle">0%</text>
+      <text x="313" y="368" text-anchor="middle">20%</text>
+      <text x="537" y="368" text-anchor="middle">40%</text>
+      <text x="760" y="368" text-anchor="middle">60%</text>
+      <text x="425" y="398" text-anchor="middle">profit margin</text>
+      <text x="80" y="345" text-anchor="end">0</text>
+      <text x="80" y="237" text-anchor="end">1 M</text>
+      <text x="80" y="130" text-anchor="end">2 M</text>
+    </g>
+    <line x1="90" y1="232" x2="760" y2="232" stroke="#F6DCE3" stroke-width="1.5"/>
+    <line x1="90" y1="125" x2="760" y2="125" stroke="#F6DCE3" stroke-width="1.5"/>
+    <!-- simplified: flat 1.6425 M → y = 340 - 1.6425/2.6*280 = 163 -->
+    <line x1="90" y1="163" x2="760" y2="163" stroke="#D58CA3" stroke-width="5" stroke-linecap="round"/>
+    <!-- general: 0.10*m*41.06M ; at 60% = 2.464 M → y = 75 -->
+    <line x1="90" y1="340" x2="760" y2="75" stroke="#8C3A5B" stroke-width="5" stroke-linecap="round"/>
+    <line x1="537" y1="60" x2="537" y2="340" stroke="#8C3A5B" stroke-width="1.5" stroke-dasharray="6 6"/>
+    <!-- our guesthouse at 29.4% → x = 90 + 29.4/60*670 = 418 ; general 1.206 M → y = 210 -->
+    <line x1="418" y1="163" x2="418" y2="340" stroke="#432C37" stroke-width="1.5" stroke-dasharray="3 5"/>
+    <circle cx="418" cy="210" r="10" fill="#8C3A5B" stroke="#fff" stroke-width="3"/>
+    <circle cx="418" cy="163" r="10" fill="#D58CA3" stroke="#fff" stroke-width="3"/>
+    <g font-family="Calibri, Carlito, sans-serif" font-size="20">
+      <text x="104" y="40" fill="#432C37" font-weight="700">Annual income tax, KZT</text>
+      <text x="104" y="152" fill="#B5607E" font-weight="700">Simplified 4% of revenue</text>
+      <text x="640" y="222" fill="#8C3A5B" font-weight="700">General 10%</text>
+      <text x="548" y="290" fill="#8C3A5B">break-even 40%</text>
+      <text x="434" y="246" fill="#432C37" font-weight="700">our 29.4%</text>
+      <text x="104" y="88" fill="#4F6E5C">general regime cheaper</text>
+    </g>
+  </svg>
+
+  <p class="abs body" style="left:112px; top:932px; width:1696px;"><b style="color:var(--berry);">Initial finding:</b> the general regime saves 436,250 KZT a year, although the simplified regime may cut administrative costs and some payments.</p>
+  <p class="foot">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+  <p class="src">Income tax only. Payroll taxes, social payments and VAT are excluded.</p>
+</section>
+
+<!-- ═══════════════ 5 · VAT ═══════════════ -->
+<section class="slide" data-title="VAT">
+  <div class="bg"></div>
+  <h1 class="title">VAT and Its Impact on Accommodation Prices</h1>
+  <p class="lede">If the guesthouse is VAT-registered and keeps its 25,000 KZT pre-tax price, the move from 12% to 16% raises the room price by 3.57%.</p>
+
+  <!-- price bars -->
+  <p class="h3 abs" style="left:112px; top:262px;">Final room price per night</p>
+  <!-- scale: 29,000 KZT = 860 px  → 25,000 = 741, 3,000 = 89, 4,000 = 119 -->
+  <p class="abs label" style="left:112px; top:332px;">With 12% VAT</p>
+  <div class="abs" style="left:112px; top:366px; width:741px; height:76px; background:var(--berry); border-radius:16px 0 0 16px;"></div>
+  <div class="abs" style="left:853px; top:366px; width:89px; height:76px; background:var(--rose); border-radius:0 16px 16px 0;"></div>
+  <p class="abs" style="left:140px; top:386px; font-size:26px; color:#FFFFFF;">25,000 base</p>
+  <p class="abs" style="left:962px; top:378px; font-family:var(--head); font-weight:700; font-size:40px; color:var(--ink);">28,000</p>
+  <p class="abs small" style="left:853px; top:450px; width:200px;">+3,000 VAT</p>
+
+  <p class="abs label" style="left:112px; top:510px;">With 16% VAT</p>
+  <div class="abs" style="left:112px; top:544px; width:741px; height:76px; background:var(--berry); border-radius:16px 0 0 16px;"></div>
+  <div class="abs" style="left:853px; top:544px; width:119px; height:76px; background:var(--rose); border-radius:0 16px 16px 0;"></div>
+  <p class="abs" style="left:140px; top:564px; font-size:26px; color:#FFFFFF;">25,000 base</p>
+  <p class="abs" style="left:992px; top:556px; font-family:var(--head); font-weight:700; font-size:40px; color:var(--berry);">29,000</p>
+  <p class="abs small" style="left:853px; top:628px; width:200px;">+4,000 VAT</p>
+
+  <div class="abs" style="left:112px; top:700px; width:1060px; display:grid; grid-template-columns: 340px 340px 340px; column-gap:20px;">
+    <div class="tint" style="position:relative; padding:24px 28px;"><p class="serif" style="font-size:46px; color:var(--berry); line-height:1.05;">+1,000</p><p class="small">KZT extra per night</p></div>
+    <div class="tint" style="position:relative; padding:24px 28px;"><p class="serif" style="font-size:46px; color:var(--berry); line-height:1.05;">+3.57%</p><p class="small">price increase</p></div>
+    <div class="tint" style="position:relative; padding:24px 28px;"><p class="serif" style="font-size:46px; color:var(--berry); line-height:1.05;">+2,000</p><p class="small">KZT for a two-night stay</p></div>
+  </div>
+
+  <!-- demand effect -->
+  <div class="panel" style="left:1232px; top:262px; width:576px; height:400px;"></div>
+  <p class="abs label" style="left:1276px; top:296px;">Estimated effect on demand</p>
+  <p class="abs serif" style="left:1272px; top:334px; font-size:116px; line-height:1; color:var(--berry);">−4.28%</p>
+  <p class="abs body" style="left:1276px; top:470px; width:500px;">= price elasticity −1.2 × price rise 3.57%. Under this assumption, demand could fall by about 4.3%.</p>
+  <div class="abs" style="left:1232px; top:690px; width:576px; height:180px; background:var(--berry); border-radius:28px;"></div>
+  <p class="abs" style="left:1276px; top:718px; width:500px; font-size:26px; line-height:1.35; color:#FFFFFF;"><b style="color:#F6DCE3;">Key finding:</b> higher VAT weakens price competitiveness, especially for small providers serving price-sensitive tourists.</p>
+
+  <!-- threshold -->
+  <div class="sage-tint" style="left:112px; top:896px; width:1696px; height:110px;"></div>
+  <p class="abs" style="left:150px; top:914px; width:760px; font-size:23px; line-height:1.3; color:var(--ink);"><b style="color:var(--sage-700);">Qualification:</b> our 41.06 M KZT turnover is below the 43.25 M KZT mandatory VAT threshold. This scenario applies only if the guesthouse registers or grows.</p>
+  <!-- gauge: 0–46 M → 960..1770 (810 px); 41.06 → 723 px ; 43.25 → 762 px -->
+  <div class="abs" style="left:960px; top:950px; width:810px; height:22px; background:#FFFFFF; border-radius:11px;"></div>
+  <div class="abs" style="left:960px; top:950px; width:723px; height:22px; background:var(--sage-700); border-radius:11px;"></div>
+  <div class="abs" style="left:1720px; top:938px; width:4px; height:46px; background:var(--berry);"></div>
+  <p class="abs" style="left:960px; top:910px; font-size:19px; color:var(--sage-700); font-weight:700;">Revenue 41.06 M</p>
+  <p class="abs" style="left:1500px; top:910px; width:300px; text-align:right; font-size:19px; color:var(--berry); font-weight:700;">Threshold 43.25 M</p>
+  <p class="abs" style="left:960px; top:978px; font-size:18px; color:var(--ink-2);">Occupancy above ≈ 47.4% would trigger registration</p>
+  <p class="foot" style="bottom:22px; font-size:16px;">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+</section>
+
+<!-- ═══════════════ 6 · International comparison ═══════════════ -->
+<section class="slide" data-title="International comparison">
+  <div class="bg"></div>
+  <h1 class="title">International Comparison of Tourism Taxes</h1>
+  <p class="lede">Bhutan funds sustainability, Japan funds national infrastructure, and France funds local destinations.</p>
+
+  <!-- journey strip -->
+  <div class="abs" style="left:112px; top:282px; width:1696px; height:6px; background:var(--blush); border-radius:3px;"></div>
+  <div class="abs" style="left:376px; top:271px; width:28px; height:28px; border-radius:14px; background:var(--berry);"></div>
+  <div class="abs" style="left:948px; top:271px; width:28px; height:28px; border-radius:14px; background:var(--berry);"></div>
+  <div class="abs" style="left:1520px; top:271px; width:28px; height:28px; border-radius:14px; background:var(--berry);"></div>
+  <p class="abs small" style="left:112px; top:244px;">Arrival</p>
+  <p class="abs small" style="left:1700px; top:244px; width:108px; text-align:right;">Departure</p>
+
+  <!-- three cards -->
+  <div class="panel" style="left:112px; top:330px; width:556px; height:650px;"></div>
+  <div class="panel" style="left:684px; top:330px; width:556px; height:650px;"></div>
+  <div class="panel" style="left:1256px; top:330px; width:552px; height:650px;"></div>
+
+  <div class="abs" style="left:156px; top:366px; width:468px;">
+    <p class="label">Collected during the stay</p>
+    <p class="serif" style="font-size:52px; color:var(--berry); margin-top:6px;">Bhutan</p>
+    <p class="small">Sustainable Development Fee</p>
+    <div style="margin-top:22px; padding:20px 24px; background:var(--petal); border-radius:20px;"><p class="serif" style="font-size:48px; color:var(--berry); line-height:1.05;">USD 100</p><p class="small">per person per night</p></div>
+    <p class="body" style="margin-top:22px;">Funds conservation, infrastructure, healthcare and education.</p>
+    <p class="body" style="margin-top:12px;">High-value, low-impact model: a two-night stay costs USD 200 more per adult.</p>
+  </div>
+  <div class="abs" style="left:728px; top:366px; width:468px;">
+    <p class="label">Collected by the accommodation</p>
+    <p class="serif" style="font-size:52px; color:var(--berry); margin-top:6px;">France</p>
+    <p class="small">Taxe de séjour (tourist tax)</p>
+    <div style="margin-top:22px; padding:20px 24px; background:var(--petal); border-radius:20px;"><p class="serif" style="font-size:48px; color:var(--berry); line-height:1.05;">Set locally</p><p class="small">by accommodation type and municipality</p></div>
+    <p class="body" style="margin-top:22px;">Charged to guests in eligible accommodation.</p>
+    <p class="body" style="margin-top:12px;">Municipalities use it as a local tourism revenue instrument.</p>
+  </div>
+  <div class="abs" style="left:1300px; top:366px; width:464px;">
+    <p class="label">Collected on departure</p>
+    <p class="serif" style="font-size:52px; color:var(--berry); margin-top:6px;">Japan</p>
+    <p class="small">International Tourist Tax</p>
+    <div style="margin-top:22px; padding:20px 24px; background:var(--petal); border-radius:20px;"><p class="serif" style="font-size:48px; color:var(--berry); line-height:1.05;">JPY 3,000</p><p class="small">per departure, up from JPY 1,000 (July 2026)</p></div>
+    <p class="body" style="margin-top:22px;">Paid through airlines and shipping companies.</p>
+    <p class="body" style="margin-top:12px;">Funds visitor infrastructure, crowd management and tourism development.</p>
+  </div>
+  <p class="abs" style="left:156px; top:884px; width:468px; padding:14px 0; text-align:center; border-radius:30px; background:var(--blush); font-size:23px; color:var(--berry);"><b>Focus:</b> sustainability</p>
+  <p class="abs" style="left:728px; top:884px; width:468px; padding:14px 0; text-align:center; border-radius:30px; background:var(--blush); font-size:23px; color:var(--berry);"><b>Focus:</b> local destination financing</p>
+  <p class="abs" style="left:1300px; top:884px; width:464px; padding:14px 0; text-align:center; border-radius:30px; background:var(--blush); font-size:23px; color:var(--berry);"><b>Focus:</b> national infrastructure</p>
+  <p class="foot" style="bottom:22px; font-size:16px;">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+  <p class="src" style="bottom:22px; font-size:16px;">Sources: Bhutan Department of Tourism; Japan National Tax Agency; French Government</p>
+</section>
+
+<!-- ═══════════════ 7 · Kazakhstan tourist contribution ═══════════════ -->
+<section class="slide" data-title="Tourist contribution">
+  <div class="bg"></div>
+  <h1 class="title">Kazakhstan’s Tourist Contribution: Experience and Lessons</h1>
+  <p class="lede">The 2022–2023 contribution for foreign visitors excluded guesthouses, so our Saty guesthouse would not charge it.</p>
+
+  <!-- timeline -->
+  <div class="abs" style="left:250px; top:326px; width:330px; height:4px; background:var(--rose-200);"></div>
+  <div class="abs" style="left:112px; top:258px; width:140px; height:140px; border-radius:70px; background:#FFFFFF; border:3px solid var(--rose);"></div>
+  <p class="abs serif" style="left:112px; top:298px; width:140px; text-align:center; font-size:48px; color:var(--berry);">0%</p>
+  <div class="abs" style="left:580px; top:258px; width:140px; height:140px; border-radius:70px; background:var(--berry);"></div>
+  <p class="abs serif" style="left:580px; top:298px; width:140px; text-align:center; font-size:44px; color:#FFFFFF;">≤ 5%</p>
+  <p class="abs body" style="left:112px; top:414px; width:380px;"><b>2022</b><br>introduced at a 0% rate</p>
+  <p class="abs body" style="left:580px; top:414px; width:400px;"><b>From 2023</b><br>up to 5% of accommodation cost</p>
+
+  <div class="abs" style="left:112px; top:540px; width:900px; display:flex; flex-direction:column; gap:12px;">
+    <div class="row" style="align-items:center;"><div style="width:12px; height:12px; border-radius:6px; background:var(--rose); flex:none;"></div><p class="body">Charged to foreign visitors in accommodation facilities</p></div>
+    <div class="row" style="align-items:center;"><div style="width:12px; height:12px; border-radius:6px; background:var(--rose); flex:none;"></div><p class="body">Rate set locally and charged per day of stay</p></div>
+    <div class="row" style="align-items:center;"><div style="width:12px; height:12px; border-radius:6px; background:var(--rose); flex:none;"></div><p class="body">Collected separately from the accommodation price</p></div>
+  </div>
+  <div class="sage-tint" style="left:112px; top:720px; width:900px; height:150px;"></div>
+  <p class="abs body" style="left:152px; top:744px; width:830px;"><b style="color:var(--sage-700);">Exemption under the 2023 rules:</b> hostels, guesthouses and rental accommodation were excluded, so our guesthouse would not be subject to it.</p>
+
+  <!-- calculation -->
+  <div class="panel" style="left:1092px; top:258px; width:716px; height:612px;"></div>
+  <p class="abs h3" style="left:1136px; top:290px;">For comparison: a hotel stay</p>
+  <div class="abs" style="left:1136px; top:356px; width:628px; font-size:26px;">
+    <div style="display:grid; grid-template-columns: 360px 268px;">
+      <p style="padding:12px 0; color:var(--ink-2);">Price per night</p>
+      <p style="padding:12px 0; text-align:right;">25,000 KZT</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Nights</p>
+      <p style="padding:12px 0; text-align:right;">2</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Accommodation</p>
+      <p style="padding:12px 0; text-align:right;">50,000 KZT</p>
+      <div style="grid-column:1 / -1; height:2px; background:var(--rose-200);"></div>
+      <p style="padding:12px 0; color:var(--ink-2);">Contribution at 5%</p>
+      <p style="padding:12px 0; text-align:right;"><b style="color:var(--berry);">2,500 KZT</b></p>
+    </div>
+  </div>
+  <!-- bill bar: 52,500 = 628 px → 50,000 = 598, 2,500 = 30 -->
+  <p class="abs body" style="left:1136px; top:648px;"><b>The guest pays 52,500 KZT</b></p>
+  <div class="abs" style="left:1136px; top:700px; width:598px; height:64px; background:var(--berry); border-radius:14px 0 0 14px;"></div>
+  <div class="abs" style="left:1734px; top:700px; width:30px; height:64px; background:var(--rose); border-radius:0 14px 14px 0;"></div>
+  <p class="abs" style="left:1162px; top:716px; font-size:24px; color:#FFFFFF;">Accommodation 95.2%</p>
+  <p class="abs small" style="left:1136px; top:782px; width:628px;">Contribution 2,500 KZT, 4.8% of the bill</p>
+
+  <!-- lessons -->
+  <p class="abs label" style="left:112px; top:902px;">Lessons for Kazakhstan</p>
+  <div class="abs" style="left:112px; top:940px; width:1696px; display:grid; grid-template-columns: repeat(4, 410px); column-gap:18px;">
+    <div style="background:var(--petal); border-radius:30px; padding:14px 24px;"><p class="small" style="color:var(--ink);">Adds destination revenue</p></div>
+    <div style="background:var(--petal); border-radius:30px; padding:14px 24px;"><p class="small" style="color:var(--ink);">Exemptions protect small firms</p></div>
+    <div style="background:var(--petal); border-radius:30px; padding:14px 24px;"><p class="small" style="color:var(--ink);">Allocation must be transparent</p></div>
+    <div style="background:var(--petal); border-radius:30px; padding:14px 24px;"><p class="small" style="color:var(--ink);">Measure the effect on demand</p></div>
+  </div>
+  <p class="src" style="bottom:12px; font-size:16px;">Source: Government of Kazakhstan (2023), Rules for Payment of Tourist Contributions</p>
+</section>
+
+<!-- ═══════════════ 8 · Recommendations ═══════════════ -->
+<section class="slide" data-title="Recommendations">
+  <div class="bg"></div>
+  <h1 class="title">Recommendations: Enterprise and Tourism Tax Policy</h1>
+  <p class="lede">Practical steps for the guesthouse, and targeted policy options for rural tourism in Kazakhstan.</p>
+
+  <div class="tint" style="left:112px; top:258px; width:836px; height:600px;"></div>
+  <div class="sage-tint" style="left:972px; top:258px; width:836px; height:600px;"></div>
+  <p class="abs h3" style="left:160px; top:292px;">For the guesthouse</p>
+  <p class="abs h3" style="left:1020px; top:292px; color:var(--sage-700);">For Kazakhstan</p>
+
+  <div class="abs" style="left:160px; top:366px; width:740px; display:flex; flex-direction:column; gap:34px;">
+    <div class="row"><div class="num-dot" style="background:#FFFFFF;">1</div><div><p class="body" style="font-size:28px;"><b style="color:var(--berry);">Choose the tax regime from real numbers</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Compare actual profitability, administrative costs and eligibility before choosing general or simplified.</p></div></div>
+    <div class="row"><div class="num-dot" style="background:#FFFFFF;">2</div><div><p class="body" style="font-size:28px;"><b style="color:var(--berry);">Price transparently</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Show guests the room price, any VAT and every additional charge clearly.</p></div></div>
+    <div class="row"><div class="num-dot" style="background:#FFFFFF;">3</div><div><p class="body" style="font-size:28px;"><b style="color:var(--berry);">Plan finances ahead</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Track occupancy, costs and turnover to anticipate new obligations, such as the VAT threshold.</p></div></div>
+  </div>
+  <div class="abs" style="left:1020px; top:366px; width:740px; display:flex; flex-direction:column; gap:34px;">
+    <div class="row"><div class="num-dot" style="background:#FFFFFF; color:var(--sage-700);">1</div><div><p class="body" style="font-size:28px;"><b style="color:var(--sage-700);">Support small rural tourism businesses</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Targeted tax incentives for eligible small accommodation providers in rural destinations.</p></div></div>
+    <div class="row"><div class="num-dot" style="background:#FFFFFF; color:var(--sage-700);">2</div><div><p class="body" style="font-size:28px;"><b style="color:var(--sage-700);">Report how tourism revenue is spent</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Annual reports on infrastructure, waste management and environmental conservation.</p></div></div>
+    <div class="row"><div class="num-dot" style="background:#FFFFFF; color:var(--sage-700);">3</div><div><p class="body" style="font-size:28px;"><b style="color:var(--sage-700);">Introduce destination-based financing</b></p><p class="body" style="color:var(--ink-2); font-size:25px;">Local visitor contributions in sensitive areas, with exemptions for vulnerable groups and small businesses.</p></div></div>
+  </div>
+
+  <p class="abs label" style="left:112px; top:886px;">Expected effects</p>
+  <div class="abs" style="left:112px; top:924px; width:1696px; display:grid; grid-template-columns: repeat(5, 325px); column-gap:18px;">
+    <p class="small" style="background:#FFFFFF; border:1.5px solid var(--rose-200); border-radius:30px; padding:13px 22px; color:var(--ink); text-align:center;">Sustainable SMEs</p>
+    <p class="small" style="background:#FFFFFF; border:1.5px solid var(--rose-200); border-radius:30px; padding:13px 22px; color:var(--ink); text-align:center;">Transparent pricing</p>
+    <p class="small" style="background:#FFFFFF; border:1.5px solid var(--rose-200); border-radius:30px; padding:13px 22px; color:var(--ink); text-align:center;">Better infrastructure</p>
+    <p class="small" style="background:#FFFFFF; border:1.5px solid var(--rose-200); border-radius:30px; padding:13px 22px; color:var(--ink); text-align:center;">Protected environment</p>
+    <p class="small" style="background:#FFFFFF; border:1.5px solid var(--rose-200); border-radius:30px; padding:13px 22px; color:var(--ink); text-align:center;">Competitive rural tourism</p>
+  </div>
+  <p class="foot" style="bottom:22px; font-size:16px;">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+</section>
+
+<!-- ═══════════════ 9 · Conclusion ═══════════════ -->
+<section class="slide" data-title="Conclusion">
+  <div class="bg dark"></div>
+  <div class="abs" style="left:-240px; top:900px; width:560px; height:560px; border-radius:280px; background:#5C2C44;"></div>
+  <h1 class="abs" style="left:112px; top:84px; font-size:72px; color:#FCEEF1;">Conclusion</h1>
+  <p class="abs" style="left:112px; top:184px; width:960px; font-size:28px; line-height:1.35; color:#EBC7D3;">Taxation directly shapes the financial performance and competitiveness of small tourism enterprises.</p>
+
+  <div class="abs" style="left:112px; top:300px; width:960px; display:flex; flex-direction:column; gap:28px;">
+    <div class="row"><div class="num-dot" style="background:#7A3A59; color:#FCEEF1;">1</div><p class="body" style="color:#FCEEF1;">Choose the tax regime by profitability, eligibility and total burden, not by the nominal rate alone.</p></div>
+    <div class="row"><div class="num-dot" style="background:#7A3A59; color:#FCEEF1;">2</div><p class="body" style="color:#FCEEF1;">Raising VAT from 12% to 16% can lift room prices and may reduce tourist demand.</p></div>
+    <div class="row"><div class="num-dot" style="background:#7A3A59; color:#FCEEF1;">3</div><p class="body" style="color:#FCEEF1;">Tourism contributions support sustainable development when revenue is allocated transparently.</p></div>
+  </div>
+  <p class="abs serif" style="left:112px; top:690px; width:940px; font-size:40px; line-height:1.25; font-style:italic; font-weight:400; color:#F2B9CB;">“Tourism taxation should not simply raise revenue. It should balance business competitiveness, affordable travel and sustainable destinations.”</p>
+
+  <div class="abs" style="left:1150px; top:84px; width:658px; height:916px; background:#FFF8F8; border-radius:28px;"></div>
+  <p class="abs h3" style="left:1196px; top:118px;">Selected references</p>
+  <ol class="abs" style="left:1196px; top:180px; width:580px; font-size:22px; line-height:1.3; color:var(--ink); list-style:none; padding-left:0; display:flex; flex-direction:column; gap:24px;">
+    <li>1.&nbsp; Republic of Kazakhstan (2025). Tax Code No. 214-VIII.</li>
+    <li>2.&nbsp; OECD (2014). Taxation and Tourism. OECD Tourism Trends and Policies.</li>
+    <li>3.&nbsp; Gooroochurn, N., &amp; Sinclair, M. T. (2005). Economics of tourism taxation: Evidence from Mauritius. Annals of Tourism Research, 32(2), 478–498.</li>
+    <li>4.&nbsp; Stabler, M. J., Papatheodorou, A., &amp; Sinclair, M. T. (2010). The Economics of Tourism. Routledge.</li>
+    <li>5.&nbsp; State Revenue Committee of Kazakhstan (2026).</li>
+    <li>6.&nbsp; Bhutan Department of Tourism (2026).</li>
+    <li>7.&nbsp; Japan National Tax Agency (2026).</li>
+    <li>8.&nbsp; Japan Tourism Agency (2026).</li>
+    <li>9.&nbsp; French Government (2026). Tourist Tax Regulations.</li>
+    <li>10.&nbsp; Government of Kazakhstan (2023). Rules for Payment of Tourist Contributions for Foreign Visitors.</li>
+  </ol>
+  <p class="foot" style="color:#D9AFBE;">Nguyen Xuan Mai · Saty guesthouse tax analysis</p>
+</section>
+
+<div class="pager" id="pager"></div>
+<script>
+(() => {
+  if (location.hash !== '#present') return;
+  document.body.classList.add('present');
+  const slides = [...document.querySelectorAll('.slide')];
+  const pager = document.getElementById('pager');
+  let i = 0;
+  try { i = Math.min(slides.length - 1, Math.max(0, parseInt(localStorage.getItem('saty-deck-pos') || '0', 10))); } catch (e) {}
+  const fit = () => {
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    slides.forEach(s => { s.style.transform = `scale(${k}) translate(-50%, -50%)`; s.style.transformOrigin = '0 0'; s.style.left = '50%'; s.style.top = '50%'; s.style.transform = `translate(-50%, -50%) scale(${k})`; s.style.transformOrigin = 'center'; });
+  };
+  const show = (n) => {
+    i = Math.min(slides.length - 1, Math.max(0, n));
+    slides.forEach((s, j) => s.classList.toggle('on', j === i));
+    pager.textContent = `${i + 1} / ${slides.length}`;
+    try { localStorage.setItem('saty-deck-pos', String(i)); } catch (e) {}
+  };
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+    if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+  });
+  addEventListener('click', (e) => show(e.clientX > innerWidth / 3 ? i + 1 : i - 1));
+  addEventListener('resize', fit);
+  fit(); show(i);
+})();
+</script>
+</body>
+</html>
