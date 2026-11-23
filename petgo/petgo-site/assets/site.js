@@ -231,7 +231,7 @@
     qa(".pg-dot", box).forEach(function (d) { d.addEventListener("click", function () { go(+d.getAttribute("data-i")); start(); }); });
     /* листание пальцем */
     box.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; }, { passive: true });
-    box.addEventListener("touchend", function (e) { var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40 && n > 1) { go(cur + (dx < 0 ? 1 : -1)); start(); } }, { passive: true });
+    box.addEventListener("touchend", function (e) { if (window.matchMedia && matchMedia("(max-width: 860px)").matches && box.closest(".pg-cards")) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40 && n > 1) { go(cur + (dx < 0 ? 1 : -1)); start(); } }, { passive: true });
     go(0);
     start();
   }
@@ -252,6 +252,22 @@
     });
   });
   indNow();
+  /* 38.0: на телефоне услуги листаются вбок — точки показывают, сколько их и где вы */
+  (function () {
+    if (!cards) return;
+    var dots = svc.querySelector(".pg-svc-dots");
+    if (!dots) { dots = document.createElement("div"); dots.className = "pg-svc-dots"; dots.setAttribute("aria-hidden", "true"); cards.parentNode.insertBefore(dots, cards.nextSibling); }
+    function vis() { return qa(".pg-card", cards).filter(function (c) { return c.offsetParent !== null; }); }
+    function paint() {
+      var v = vis(), x = cards.scrollLeft, w = v[0] ? v[0].offsetWidth + 12 : 1, i = Math.round(x / w);
+      if (dots.children.length !== v.length) { var h = ""; for (var k = 0; k < v.length; k++) h += "<i></i>"; dots.innerHTML = v.length > 1 ? h : ""; }
+      qa("i", dots).forEach(function (d, k) { d.classList.toggle("on", k === Math.min(i, v.length - 1)); });
+    }
+    var raf = 0;
+    cards.addEventListener("scroll", function () { if (!raf) raf = requestAnimationFrame(function () { raf = 0; paint(); }); }, { passive: true });
+    qa(".pg-pet").forEach(function (b) { b.addEventListener("click", function () { cards.scrollLeft = 0; setTimeout(paint, 30); }); });
+    paint();
+  })();
 
   /* БЛОК 4: как это работает — шаги сменяются каждые 6 секунд, пока блок на экране */
   (function () {

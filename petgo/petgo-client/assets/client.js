@@ -244,13 +244,117 @@
     CL.scroll[from] = scrollY();
     CL.tab = to;
     CL.box.setAttribute("data-tab", to);
-    qa(".pgk-pane", CL.box).forEach(function (p) { p.classList.toggle("on", p.getAttribute("data-pane") === to); });
+    /* 38.0: новый экран въезжает с той стороны, куда переключаете (после свайпа он уже на месте) */
+    var dir = TABS.indexOf(to) > TABS.indexOf(from) ? "l" : "r";
+    qa(".pgk-pane", CL.box).forEach(function (p) {
+      var on = p.getAttribute("data-pane") === to;
+      p.classList.toggle("on", on);
+      p.classList.remove("pgk-in-l", "pgk-in-r", "pgk-peek");
+      p.style.transform = "";
+      if (on && from && !opts.force && !opts.swipe && !reduce) { void p.offsetWidth; p.classList.add("pgk-in-" + dir); setTimeout(function () { p.classList.remove("pgk-in-l", "pgk-in-r"); }, 480); }
+    });
     qa(".pgk-tabbar [data-k-tab]").forEach(function (b) { var on = b.getAttribute("data-k-tab") === to; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
     try { history.replaceState(history.state, "", "#" + to); sessionStorage.setItem("pgk_tab", to); } catch (x) {}
     scrollToY(opts.keep ? (CL.scroll[to] || 0) : 0, false);
     if (to === "map") MapK.show(opts);
     sgAll(CL.box);
+    lensMove(!!opts.force);
+    topTitle(); onScrollTop();
     live();
+  }
+
+  /* ============================================================
+     38.0 СТИЛЬ iPHONE: «капля» под выбранной вкладкой, верхняя панель при прокрутке, листание вкладок свайпом
+     ============================================================ */
+  function lensMove(instant) {
+    var bar = $(".pgk-tabbar"), l = bar && $(".pgk-tlens", bar), b = bar && $(".pg-b.on[data-k-tab]", bar);
+    if (!l) return;
+    if (!b || !b.offsetWidth) { l.classList.remove("on"); return; }
+    var tr = "translateX(" + b.offsetLeft + "px)";
+    if (instant || !l.classList.contains("on")) l.style.transition = "none";
+    else if (l.style.transform && l.style.transform !== tr) { l.classList.remove("mv"); void l.offsetWidth; l.classList.add("mv"); }
+    l.style.width = b.offsetWidth + "px";
+    l.style.transform = tr;
+    l.classList.add("on");
+    if (l.style.transition === "none") { void l.offsetWidth; l.style.transition = ""; }
+  }
+  var TB = null;
+  function topbar() {
+    if (!TB) { TB = D.createElement("div"); TB.className = "pgk-topbar"; TB.setAttribute("aria-hidden", "true"); TB.innerHTML = "<b></b>"; (D.getElementById("pg-layer") || D.body).appendChild(TB); }
+    return TB;
+  }
+  function topTitle() {
+    if (!CL.box) return;
+    var p = $(".pgk-pane.on", CL.box), h = p && $(".pgk-hd h1", p);
+    $("b", topbar()).textContent = h ? h.textContent : "";
+  }
+  function onScrollTop() { if (K && CL.box) topbar().classList.toggle("on", scrollY() > 64); }
+  function scrollWatch() {
+    var pg = D.getElementById("pg");
+    if (pg && !pg._pgkTop) { pg._pgkTop = 1; pg.addEventListener("scroll", onScrollTop, { passive: true }); }
+    if (!W._pgkTop) { W._pgkTop = 1; W.addEventListener("scroll", onScrollTop, { passive: true }); }
+  }
+  /* свайп влево — следующая вкладка, вправо — предыдущая: экран едет за пальцем, соседний — рядом;
+     не дотянули — пружинкой на место. Карта, поля, переключатели и ленты листаются как обычно. */
+  function swipeInit() {
+    var panes = CL.box && $(".pgk-panes", CL.box);
+    if (!panes || panes._sw || !("ontouchstart" in W)) return;
+    panes._sw = 1;
+    var sx = 0, sy = 0, t0 = 0, on = false, lock = 0, cur = null, nb = null, to = null, w = 0, lastDx = 0;
+    var NO = "input, textarea, select, .leaflet-container, .pgk-map, .pgk-hscroll, .pgk-sg, .pgk-qr, [data-noswipe]";
+    function peek(want) {
+      if (nb) { nb.classList.remove("pgk-peek"); nb.style.transform = ""; nb.style.top = ""; }
+      to = want; nb = want ? $('.pgk-pane[data-pane="' + want + '"]', panes) : null;
+      /* соседний экран — там, где он окажется после переключения (вкладка откроется с начала) */
+      if (nb) { nb.style.top = scrollY() + "px"; nb.classList.add("pgk-peek"); }
+    }
+    function clean() {
+      panes.classList.remove("pgk-drag");
+      [cur, nb].forEach(function (p) { if (p) { p.style.transition = ""; p.style.transform = ""; } });
+      if (nb) { nb.classList.remove("pgk-peek"); nb.style.top = ""; }
+      cur = nb = to = null;
+    }
+    panes.addEventListener("touchstart", function (e) {
+      on = false;
+      if (e.touches.length !== 1 || stack.length || !K) return;
+      var x = e.touches[0].clientX;
+      if (x < 22 || x > W.innerWidth - 22 || (e.target.closest && e.target.closest(NO))) return;
+      sx = x; sy = e.touches[0].clientY; t0 = Date.now(); on = true; lock = 0; lastDx = 0;
+      cur = $(".pgk-pane.on", panes); w = panes.offsetWidth || W.innerWidth;
+    }, { passive: true });
+    panes.addEventListener("touchmove", function (e) {
+      if (!on || !cur) return;
+      var dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+      if (!lock) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; lock = Math.abs(dx) > Math.abs(dy) * 1.3 ? 1 : 2; if (lock === 1) panes.classList.add("pgk-drag"); }
+      if (lock !== 1) return;
+      if (e.cancelable) e.preventDefault();
+      var want = TABS[TABS.indexOf(CL.tab) + (dx < 0 ? 1 : -1)] || null;
+      if (want !== to) peek(want);
+      var x = to ? dx : dx * .2;
+      lastDx = dx;
+      cur.style.transform = "translate3d(" + x + "px,0,0)";
+      if (nb) nb.style.transform = "translate3d(" + (x + (dx < 0 ? w : -w)) + "px,0,0)";
+    }, { passive: false });
+    function end(e) {
+      if (!on) return;
+      on = false;
+      if (lock !== 1 || !cur) { clean(); return; }
+      var dx = lastDx, v = Math.abs(dx) / Math.max(1, Date.now() - t0), go = to && e.type === "touchend" && (Math.abs(dx) > w * .28 || (Math.abs(dx) > 40 && v > .35));
+      var c = cur, n = nb, target = to, ease = go ? "transform 360ms cubic-bezier(.32, .72, 0, 1)" : "transform 520ms var(--k-spring)";
+      c.style.transition = ease; if (n) n.style.transition = ease;
+      if (go) {
+        c.style.transform = "translate3d(" + (dx < 0 ? -w : w) + "px,0,0)";
+        n.style.transform = "translate3d(0,0,0)";
+        if (navigator.vibrate) { try { navigator.vibrate(6); } catch (x) {} }
+        setTimeout(function () { clean(); tab(target, { swipe: true }); }, 360);
+      } else {
+        c.style.transform = "translate3d(0,0,0)";
+        if (n) n.style.transform = "translate3d(" + (dx < 0 ? w : -w) + "px,0,0)";
+        setTimeout(clean, 520);
+      }
+    }
+    panes.addEventListener("touchend", end, { passive: true });
+    panes.addEventListener("touchcancel", end, { passive: true });
   }
 
   /* ---------- анкета питомца (одна анкета — новые и правка) ---------- */
@@ -1111,7 +1215,8 @@
     var t = (location.hash || "").replace("#", "");
     try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "home"; } catch (x) { t = "home"; }
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });
-    requestAnimationFrame(function () { sgAll(); });
+    requestAnimationFrame(function () { sgAll(); lensMove(true); });
+    topTitle(); scrollWatch(); swipeInit();
     CL.soon = !!K.soon;
     /* приветствие по часам телефона */
     var hel = $("[data-k-hello]");
@@ -1134,7 +1239,8 @@
   function leaveCabinet() {
     if (D.getElementById("pgk") || D.getElementById("pgk-gate")) return;
     clearTimeout(CL.timer); clearInterval(CL.chatT);
-    qa("#pg-layer > .pgk-tabbar, #pg-layer > .pgk-sheet, #pg-layer > .pgk-lb, #pg-layer > .pgk-toast").forEach(function (x) { x.remove(); });
+    qa("#pg-layer > .pgk-tabbar, #pg-layer > .pgk-sheet, #pg-layer > .pgk-lb, #pg-layer > .pgk-toast, #pg-layer > .pgk-topbar").forEach(function (x) { x.remove(); });
+    TB = null;
     stack = [];
     D.documentElement.classList.remove("pgk-on", "pgk-lock", "pgk-dark", "pgk-gate-on");
     var tc = $('meta[name="theme-color"]'); if (tc) tc.setAttribute("content", "#FBF9E8");
@@ -1415,7 +1521,7 @@
   W.addEventListener("resize", function () {
     clearTimeout(rzT);
     rzT = setTimeout(function () {
-      sgAll();
+      sgAll(); lensMove(true);
       var g = $(".pgk-auth"), on = g && $(".pgk-auth-sg .on", g);
       if (on) authSeg(g, on.getAttribute("data-auth"));
     }, 120);

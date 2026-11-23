@@ -1,4 +1,4 @@
-/* PetGo — «жидкое стекло» (Liquid Glass), матовое.
+/* PetGo — «жидкое стекло» (Liquid Glass). 38.0: преломление с радужной каймой по краю, как в dashersw/liquid-glass-js и iOS 26.
    Идея как в dashersw/liquid-glass-js: край стекла преломляет то, что под ним (сильнее к ободку, с усилением в углах),
    плюс размытие и лёгкий тон. Сделано без снимка страницы и WebGL: карта смещения рисуется на canvas под размер
    элемента и подключается как SVG-фильтр в backdrop-filter. Поэтому стекло «живое»: работает при прокрутке,
@@ -69,6 +69,9 @@
     return isNaN(v) ? def : v;
   }
 
+  /* 38.0: как в liquid-glass-js — край стекла преломляет сильнее и слегка раскладывает свет на цвета
+     (красный сдвигается больше синего: тонкая радужная кайма по ободку, как у iOS 26). Включается data-glass-chroma="1" (кабинет клиента). */
+  var M_R = "1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0", M_G = "0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0", M_B = "0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0";
   function build(it) {
     var el = it.el, w = Math.round(el.offsetWidth), h = Math.round(el.offsetHeight);
     if (w < 8 || h < 8 || w * h > 900000) return;
@@ -77,6 +80,7 @@
     var cs = getComputedStyle(el);
     var r = parseFloat(cs.borderTopLeftRadius) || 0;
     var bezel = Math.min(num(el, "bezel", 16), Math.min(w, h) / 2);
+    var chroma = el.getAttribute("data-glass-chroma") === "1" && w * h < 160000;
     var f = it.f;
     if (!f) {
       f = it.f = document.createElementNS(NS, "filter");
@@ -84,23 +88,28 @@
       f.setAttribute("filterUnits", "userSpaceOnUse");
       f.setAttribute("primitiveUnits", "userSpaceOnUse");
       f.setAttribute("color-interpolation-filters", "sRGB");
-      f.innerHTML = '<feImage result="m" preserveAspectRatio="none"/>' +
-        '<feDisplacementMap in="SourceGraphic" in2="m" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
-        '<feGaussianBlur in="d" result="b"/>' +
-        '<feColorMatrix in="b" type="saturate"/>';
+      f.innerHTML = '<feImage result="m" preserveAspectRatio="none" data-k="m"/>' + (chroma
+        ? '<feDisplacementMap in="SourceGraphic" in2="m" xChannelSelector="R" yChannelSelector="G" result="dr" data-k="d" data-f="1"/><feColorMatrix in="dr" type="matrix" values="' + M_R + '" result="r"/>' +
+          '<feDisplacementMap in="SourceGraphic" in2="m" xChannelSelector="R" yChannelSelector="G" result="dg" data-k="d" data-f=".93"/><feColorMatrix in="dg" type="matrix" values="' + M_G + '" result="g"/>' +
+          '<feDisplacementMap in="SourceGraphic" in2="m" xChannelSelector="R" yChannelSelector="G" result="db" data-k="d" data-f=".86"/><feColorMatrix in="db" type="matrix" values="' + M_B + '" result="b"/>' +
+          '<feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen" result="d"/>'
+        : '<feDisplacementMap in="SourceGraphic" in2="m" xChannelSelector="R" yChannelSelector="G" result="d" data-k="d" data-f="1"/>') +
+        '<feGaussianBlur in="d" result="bl" data-k="b"/>' +
+        '<feColorMatrix in="bl" type="saturate" data-k="s"/>';
       host().appendChild(f);
     }
     f.setAttribute("x", "0"); f.setAttribute("y", "0");
     f.setAttribute("width", w); f.setAttribute("height", h);
-    var im = f.childNodes[0];
+    var im = f.querySelector('[data-k="m"]');
     im.setAttribute("x", "0"); im.setAttribute("y", "0");
     im.setAttribute("width", w); im.setAttribute("height", h);
     /* карту рисуем в половинном размере (в 4 раза быстрее), браузер растягивает её сам */
     var q = w * h > 60000 ? 2 : 1;
     im.setAttribute("href", map(Math.round(w / q), Math.round(h / q), r / q, bezel / q));
-    f.childNodes[1].setAttribute("scale", num(el, "scale", 40));
-    f.childNodes[2].setAttribute("stdDeviation", num(el, "blur", 9));
-    f.childNodes[3].setAttribute("values", num(el, "sat", 1.45));
+    var sc = num(el, "scale", 40);
+    Array.prototype.forEach.call(f.querySelectorAll('[data-k="d"]'), function (d) { d.setAttribute("scale", sc * parseFloat(d.getAttribute("data-f"))); });
+    f.querySelector('[data-k="b"]').setAttribute("stdDeviation", num(el, "blur", 9));
+    f.querySelector('[data-k="s"]').setAttribute("values", num(el, "sat", 1.45));
     var v = "url(#" + f.getAttribute("id") + ")";
     el.style.webkitBackdropFilter = v;
     el.style.backdropFilter = v;

@@ -1092,3 +1092,25 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
   .pg .pg-rlist-all .pg-rcard { break-inside: avoid; margin-bottom: 16px; display: flex; }
 }
 @media (min-width: 1100px) { .pg .pg-rv-panel .pg-rlist.pg-rlist-all { columns: 3; } }
+
+/* ============================================================
+   38.0 — сайт короче на телефоне: услуги листаются вбок (одна строка карточек), отступы плотнее,
+   плашки доверия — в одну строку. Цвета, кнопки и блоки — прежние.
+   ============================================================ */
+@media (max-width: 860px) {
+  .pg .pg-sec { padding: 56px 0; }
+  .pg .pg-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -20px; padding: 2px 20px 6px; }
+  .pg .pg-chips::-webkit-scrollbar { display: none; }
+  .pg .pg-chips li { flex: none; }
+  .pg .pg-svc .pg-cards { display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -20px; padding: 6px 20px 24px; scroll-padding: 0 20px; }
+  .pg .pg-svc .pg-cards::-webkit-scrollbar { display: none; }
+  .pg .pg-svc .pg-card { flex: 0 0 86%; max-width: 360px; scroll-snap-align: start; gap: 10px; }
+  .pg .pg-svc .pg-card .pg-ph { aspect-ratio: 16 / 10; height: auto; }
+  .pg .pg-svc .pg-card .pg-p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .pg .pg-svc .pg-card > .pg-list { display: none; }
+  .pg .pg-svc .pg-card > .pg-btn { margin-top: auto; }
+  .pg .pg-svc-dots { display: flex; justify-content: center; gap: 6px; margin-top: -6px; }
+  .pg .pg-svc-dots i { width: 7px; height: 7px; border-radius: 4px; background: rgba(2, 76, 70, .2); transition: width .35s var(--e), background-color .2s; }
+  .pg .pg-svc-dots i.on { width: 22px; background: var(--green); }
+}
+@media (min-width: 861px) { .pg .pg-svc-dots { display: none; } }

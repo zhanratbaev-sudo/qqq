@@ -223,7 +223,8 @@ function petgo_cl_dashboard() {
     $tab = function ($k, $ic, $t, $on = false, $extra = '') use ($L) {
         return '<button type="button" class="pg-b' . ($on ? ' on' : '') . '" ' . ($k === 'chat' ? 'data-k-open="chat"' : 'data-k-tab="' . $k . '"') . '><i>' . petgo_cp_icon($ic) . $extra . '</i><span>' . esc_html($L($t)) . '</span></button>';
     };
-    $h .= '<nav class="pgk-tabbar" aria-label="' . esc_attr($L('Кабинет')) . '">' . $tab('home', 'home', 'Главная', true) . $tab('map', 'map', 'Карта') . $tab('chat', 'chat', 'Менеджер', false, '<em class="pgk-bd" data-k-unread' . ($un ? '' : ' hidden') . '>' . (int) $un . '</em>') . $tab('walks', 'route', 'Прогулки') . $tab('acc', 'user', 'Аккаунт') . '</nav>';
+    /* 38.0: стеклянная капсула (iOS 26) — преломление с радужной каймой по краю и «капля» под выбранной вкладкой */
+    $h .= '<nav class="pgk-tabbar" aria-label="' . esc_attr($L('Кабинет')) . '" data-glass data-glass-bezel="18" data-glass-scale="34" data-glass-blur="6" data-glass-chroma="1"><span class="pgk-tlens" aria-hidden="true"></span>' . $tab('home', 'home', 'Главная', true) . $tab('map', 'map', 'Карта') . $tab('chat', 'chat', 'Менеджер', false, '<em class="pgk-bd" data-k-unread' . ($un ? '' : ' hidden') . '>' . (int) $un . '</em>') . $tab('walks', 'route', 'Прогулки') . $tab('acc', 'user', 'Аккаунт') . '</nav>';
 
     /* листы */
     $h .= petgo_cl_sheet('petp', '', '<div data-k-pp-body></div>', '', 'pgk-sheet-tall');

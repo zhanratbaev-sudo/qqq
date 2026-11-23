@@ -47,6 +47,9 @@
     ".pgkb--app{--pgkb-down:#B4B8BF;--pgkb-bg:#D1D4D9;--pgkb-line:rgba(0,0,0,.08);--pgkb-key:#fff;--pgkb-key2:rgba(171,177,186,.9);--pgkb-keysh:rgba(0,0,0,.3);--pgkb-ink:#000;--pgkb-mu:rgba(60,60,67,.7);--pgkb-fill:rgba(13,124,109,.12);--pgkb-ac:var(--ac,#0d7c6d);--pgkb-on:#fff;--pgkb-alt:#ff9f0a}" +
     ":root.dark .pgkb--app{--pgkb-down:#8A8A8E;--pgkb-bg:#2B2B2E;--pgkb-line:rgba(255,255,255,.08);--pgkb-key:#6b6b6e;--pgkb-key2:#47474a;--pgkb-keysh:rgba(0,0,0,.5);--pgkb-ink:#fff;--pgkb-mu:rgba(235,235,245,.65);--pgkb-fill:rgba(61,190,139,.18);--pgkb-ac:var(--acb,#0E7A64);--pgkb-on:#fff}" +
     ":root.dark .pgkb--app .pgkb-done{color:var(--ac,#3DBE8B)}" +
+    /* 38.0: Caps Lock — чёрточка под стрелкой; трекпад (долгое нажатие на пробел) — буквы гаснут, двигается курсор */
+    ".pgkb .pgkb-k{position:relative}.pgkb .pgkb-k.lock::after{content:'';position:absolute;left:32%;right:32%;bottom:7px;height:2px;border-radius:1px;background:currentColor}" +
+    ".pgkb.tp .pgkb-k{color:transparent!important;transition:color .15s ease}.pgkb.tp .pgkb-pop{display:none}" +
     "@media (min-width:700px){.pgkb .pgkb-k{height:50px}.pgkb-num .pgkb-k{height:56px}}" +
     "@media (prefers-reduced-motion:reduce){.pgkb{transition:none}.pgkb .pgkb-k.down,.pgkb .pgkb-k.alt{transform:none}}";
 
@@ -75,7 +78,7 @@
     el.setAttribute("aria-hidden", "true");
     if (!el.parentNode) (o.host || doc.body).appendChild(el);
 
-    var cur = null, mode = lang, shift = false, held = null, holdT = 0, repT = 0;
+    var cur = null, mode = lang, shift = false, held = null, holdT = 0, repT = 0, capsLock = false, shiftT = 0;
     function sel(f) { try { return f.selectionStart; } catch (e) { return null; } }
     function isNum(f) { var im = f.getAttribute("data-im") || ""; return f.type === "tel" || f.type === "number" || im === "decimal" || im === "numeric" || im === "tel"; }
     function arm(f) {
@@ -133,7 +136,7 @@
         var c = ks[i].getAttribute("data-b"), u = shift ? c.toUpperCase() : c;
         if (ks[i].getAttribute("data-k") !== u) { ks[i].setAttribute("data-k", u); if (!ks[i].classList.contains("alt")) ks[i].textContent = u; }
       }
-      var sh = el.querySelector('[data-a="shift"]'); if (sh) sh.classList.toggle("act", shift);
+      var sh = el.querySelector('[data-a="shift"]'); if (sh) { sh.classList.toggle("act", shift); sh.classList.toggle("lock", capsLock); }
     }
     var padT = 0;
     function measure(zero) {
@@ -180,7 +183,7 @@
         lastSp = t === " " ? now : 0;
       }
       fire(f);
-      var c = caps();
+      var c = capsLock || caps();
       if (c !== shift && mode !== "num" && mode !== "sym") setShift(c);
     }
     var lastSp = 0;
@@ -192,7 +195,7 @@
       else if (s !== e) f.setRangeText("", s, e, "end");
       else if (s > 0) f.setRangeText("", s - 1, s, "end");
       fire(f);
-      var c = caps();
+      var c = capsLock || caps();
       if (c !== shift && mode !== "num" && mode !== "sym") setShift(c);
     }
     function vis(f) { return f.offsetParent !== null || f.getClientRects().length > 0; }
@@ -203,7 +206,14 @@
       return all[i + 1] || null;
     }
     function act(a) {
-      if (a === "shift") { setShift(!shift); }
+      /* Shift: одно нажатие — одна заглавная; два быстрых — Caps Lock (как на iPhone); ещё одно — выключить */
+      if (a === "shift") {
+        var now = Date.now();
+        if (capsLock) { capsLock = false; setShift(false); }
+        else if (shift && now - shiftT < 350) { capsLock = true; setShift(true); }
+        else setShift(!shift);
+        shiftT = now;
+      }
       else if (a === "mode") { mode = mode === "sym" ? lang : "sym"; shift = mode === "sym" ? false : caps(); render(); }
       else if (a === "lang") { lang = nextLang(); store("pgkb_lang", lang); mode = lang; shift = caps(); render(); }
       else if (a === "done") { var f = cur; hide(); if (f) f.blur(); }
@@ -228,7 +238,21 @@
       clearTimeout(holdT); clearInterval(repT);
       if (held) { held.b.classList.remove("down", "alt"); if (held.txt != null) held.b.textContent = held.txt; }
       if (pop) pop.classList.remove("on");
+      el.classList.remove("tp");
       held = null;
+    }
+    /* стереть слово целиком (с пробелами перед ним) */
+    function bsWord() {
+      var f = cur;
+      if (!f) return;
+      var s = sel(f);
+      if (s == null || s !== f.selectionEnd) { bs(); return; }
+      if (s === 0) return;
+      var before = f.value.slice(0, s), m = /\S*\s*$/.exec(before), k = m && m[0].length ? m[0].length : 1;
+      f.setRangeText("", s - k, s, "end");
+      fire(f);
+      var c = capsLock || caps();
+      if (c !== shift && mode !== "num" && mode !== "sym") setShift(c);
     }
     /* 36.2: палец попал между клавишами — берём ближайшую (у системной клавиатуры тоже нет «мёртвых» мест) */
     function keyAt(x, y) {
@@ -247,6 +271,7 @@
     }
     /* нажатие засчитывается: буква — та, что на клавише сейчас (с учётом Shift и долгого нажатия) */
     function commit(h) {
+      if (h.tp) { var c = capsLock || caps(); if (c !== shift) setShift(c); return; }
       if (h.a) { if (h.a !== "bs") act(h.a); return; }
       var ch = h.ch != null ? h.ch : h.b.getAttribute("data-k");
       if (ch != null) ins(ch);
@@ -258,6 +283,9 @@
       pop.style.left = (r.left - er.left + r.width / 2) + "px";
       pop.style.top = (r.top - er.top) + "px";
       pop.style.minWidth = Math.round(r.width * 1.25) + "px";
+      /* размер клавиши — для «ножки» пузыря (iPhone: пузырь вырастает прямо из клавиши) */
+      pop.style.setProperty("--kw", Math.round(r.width) + "px");
+      pop.style.setProperty("--kh", Math.round(r.height) + "px");
       pop.classList.add("on");
     }
     el.addEventListener("mousedown", function (e) { e.preventDefault(); });
@@ -273,7 +301,19 @@
       if (navigator.vibrate) { try { navigator.vibrate(4); } catch (x) {} }
       var a = b.getAttribute("data-a");
       held = { b: b, id: e.pointerId, ch: null, txt: null, a: null };
-      if (a === "bs") { held.a = "bs"; bs(); holdT = setTimeout(function () { repT = setInterval(bs, 60); }, 380); return; }
+      /* «стереть»: удержание — по букве, через ~1,5 с — целыми словами (как на iPhone) */
+      if (a === "bs") { held.a = "bs"; bs(); var nrep = 0; holdT = setTimeout(function () { repT = setInterval(function () { nrep++; if (nrep > 18) { bsWord(); clearInterval(repT); repT = setInterval(bsWord, 140); } else bs(); }, 70); }, 380); return; }
+      /* пробел: долгое нажатие — трекпад, курсор ведётся пальцем по клавиатуре */
+      if (b.classList.contains("space") && cur && cur.setSelectionRange) {
+        held.ch = " ";
+        holdT = setTimeout(function () {
+          if (!held || held.b !== b) return;
+          held.tp = { x: e.clientX, pos: sel(cur) == null ? cur.value.length : sel(cur) };
+          el.classList.add("tp");
+          if (navigator.vibrate) { try { navigator.vibrate(8); } catch (x) {} }
+        }, 450);
+        return;
+      }
       if (a) { held.a = a; return; }
       var ch = b.getAttribute("data-k");
       if (ch == null) return;
@@ -294,6 +334,11 @@
         }, 380);
       }
     });
+    el.addEventListener("pointermove", function (e) {
+      if (!held || held.id !== e.pointerId || !held.tp || !cur) return;
+      var n = Math.round((e.clientX - held.tp.x) / 9), p = Math.max(0, Math.min(cur.value.length, held.tp.pos + n));
+      try { cur.setSelectionRange(p, p); } catch (x) {}
+    });
     function up(e) {
       if (!held || held.id !== e.pointerId) return;
       var h = held;
@@ -306,7 +351,7 @@
     el.addEventListener("pointerleave", function (e) { if (held && e.pointerType === "mouse") stopHold(); });
 
     function show(f) {
-      cur = f;
+      cur = f; capsLock = false;
       mode = isNum(f) ? "num" : (f.type === "email" || f.type === "url" ? "en" : lang);
       shift = caps();
       clearTimeout(hideT);

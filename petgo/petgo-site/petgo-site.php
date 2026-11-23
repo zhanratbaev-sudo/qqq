@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Сайт
  * Description: Сайт PetGo для клиентов: Главная, Услуги и цены, Няни, Отзывы, Кабинет, анкета питомца карточками, заявки, языки RU · KZ · EN. Всё оформление сайта — в этом плагине. Нужен плагин «PetGo Кабинет».
- * Version: 36.2.0
+ * Version: 38.0.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('PETGO_SITE_FILE', __FILE__);
-define('PETGO_SITE_VER', '36.2.0');
+define('PETGO_SITE_VER', '38.0.0');
 
 /* сайт работает поверх базы «PetGo Кабинет»: подключаемся, когда загружены все плагины */
 add_action('plugins_loaded', function () {
