@@ -283,6 +283,10 @@ function petgo_cl_ajax() {
         }
         /* 36.0: няня у двери → у клиента сам открывается QR; пока идёт заказ — обновление чаще */
         $out = array_merge($out, petgo_cl_door_state($uid));
+        /* 38.1: последнее уведомление — точка на колокольчике */
+        if (function_exists('petgo_cl_notif_last')) {
+            $out['nl'] = petgo_cl_notif_last($uid);
+        }
         petgo_cl_json(true, $out);
     }
     /* 34.7: заказ — подробности и QR-код для няни (действует 24 часа, потом сам меняется) */

@@ -172,6 +172,8 @@
     clearTimeout(sheetT);
     s.hidden = false;
     void s.offsetWidth;
+    /* 38.1: лист стал видимым — таблетки переключателей встают под выбранные варианты */
+    qa("form.pg-form", s).forEach(function (f) { if (f.__segs) f.__segs(); });
     s.classList.add("on");
     if (layer) layer.classList.add("sheet-open");
     doc.documentElement.style.overflow = "hidden";
@@ -216,6 +218,28 @@
     function species() { var r = f.querySelector('input[name="species"]:checked'); return r ? r.value : ""; }
     function sync() { f.classList.toggle("oth", species() === "other"); }
     f.addEventListener("change", sync); sync();
+    /* 38.1: переключатели — белая таблетка плавно переезжает к выбранному варианту */
+    var segs = qa(".pg-seg", f);
+    function segMove(sg, instant) {
+      var i = sg.querySelector(".pg-segi"), on = sg.querySelector("input:checked");
+      if (!i) return;
+      var l = on ? on.parentNode : null;
+      if (!l || !l.offsetWidth) { i.style.opacity = "0"; return; }
+      i.style.opacity = "";
+      if (instant) i.style.transition = "none";
+      i.style.width = l.offsetWidth + "px";
+      i.style.transform = "translateX(" + l.offsetLeft + "px)";
+      if (instant) { void i.offsetWidth; i.style.transition = ""; }
+    }
+    segs.forEach(function (sg) {
+      if (!sg.querySelector(".pg-segi")) { var i = doc.createElement("i"); i.className = "pg-segi"; i.setAttribute("aria-hidden", "true"); sg.insertBefore(i, sg.firstChild); }
+      sg.classList.add("js");
+      sg.addEventListener("change", function () { segMove(sg); });
+      segMove(sg, true);
+    });
+    /* лист с формой открывается позже — тогда и ставим таблетку на место */
+    f.__segs = function () { segs.forEach(function (sg) { segMove(sg, true); }); };
+    window.addEventListener("resize", f.__segs);
     function clearErr() { err.hidden = true; qa(".bad", f).forEach(function (x) { x.classList.remove("bad"); }); }
     f.addEventListener("input", function (e) { var l = e.target.closest ? e.target.closest(".bad") : null; if (l) l.classList.remove("bad"); });
     function fail(msg, field) {

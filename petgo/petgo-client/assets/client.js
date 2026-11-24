@@ -50,7 +50,7 @@
     if (user) { root.classList.add("pgk-theming"); requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.remove("pgk-theming"); }); }); }
     var t = themeGet(), on = !!(D.getElementById("pgk") || D.getElementById("pgk-gate")) && (t === "dark" || (t === "auto" && !!(mq && mq.matches)));
     D.documentElement.classList.toggle("pgk-dark", on);
-    var m = $('meta[name="theme-color"]'); if (m) m.setAttribute("content", on ? "#000000" : "#F2F0E3");
+    var m = $('meta[name="theme-color"]'); if (m) m.setAttribute("content", on ? "#0B0D0C" : "#F4F6F3");
     qa("[data-k-theme]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-k-theme") === t); });
     sgMove($(".pgk-theme"));
     MapK.theme();
@@ -185,6 +185,8 @@
           if (!j.ok) { formErr(f, j.msg || "", j.field, $(".pgk-list", f)); return; }
           toast(j.msg || T("Сохранено"));
           if (f.getAttribute("data-k-op") === "pass") { f.reset(); var dt = f.closest("details"); if (dt) dt.open = false; }
+          /* 38.1: личные данные сохранены — имя и телефон в шапке профиля сразу новые, лист закрывается */
+          if (f.getAttribute("data-k-op") === "profile") { var mb = $(".pgk-me-t b"), ms = $(".pgk-me-t small"); if (mb) mb.textContent = d.name; if (ms && d.phone) ms.textContent = d.phone; if (f.closest("#pgk-me")) kClose(); }
         });
       }).catch(netErr(f));
       return;
@@ -230,7 +232,8 @@
   }
 
   /* ---------- вкладки ---------- */
-  var TABS = ["home", "map", "walks", "acc"];
+  /* 38.1: «Мои заказы» открываются из профиля — справа от него */
+  var TABS = ["home", "map", "acc", "walks"];
   function tab(to, opts) {
     if (!CL.box || TABS.indexOf(to) < 0) return;
     opts = opts || {};
@@ -253,7 +256,8 @@
       p.style.transform = "";
       if (on && from && !opts.force && !opts.swipe && !reduce) { void p.offsetWidth; p.classList.add("pgk-in-" + dir); setTimeout(function () { p.classList.remove("pgk-in-l", "pgk-in-r"); }, 480); }
     });
-    qa(".pgk-tabbar [data-k-tab]").forEach(function (b) { var on = b.getAttribute("data-k-tab") === to; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
+    var bt = to === "walks" ? "acc" : to;
+    qa(".pgk-tabbar [data-k-tab]").forEach(function (b) { var on = b.getAttribute("data-k-tab") === bt; b.classList.toggle("on", on); if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
     try { history.replaceState(history.state, "", "#" + to); sessionStorage.setItem("pgk_tab", to); } catch (x) {}
     scrollToY(opts.keep ? (CL.scroll[to] || 0) : 0, false);
     if (to === "map") MapK.show(opts);
@@ -285,8 +289,8 @@
   }
   function topTitle() {
     if (!CL.box) return;
-    var p = $(".pgk-pane.on", CL.box), h = p && $(".pgk-hd h1", p);
-    $("b", topbar()).textContent = h ? h.textContent : "";
+    var p = $(".pgk-pane.on", CL.box), hd = p && $(".pgk-hd", p), h = hd && $("h1", hd);
+    $("b", topbar()).textContent = hd && hd.getAttribute("data-title") ? hd.getAttribute("data-title") : h ? h.textContent : "";
   }
   function onScrollTop() { if (K && CL.box) topbar().classList.toggle("on", scrollY() > 64); }
   function scrollWatch() {
@@ -328,7 +332,7 @@
       if (!lock) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; lock = Math.abs(dx) > Math.abs(dy) * 1.3 ? 1 : 2; if (lock === 1) panes.classList.add("pgk-drag"); }
       if (lock !== 1) return;
       if (e.cancelable) e.preventDefault();
-      var want = TABS[TABS.indexOf(CL.tab) + (dx < 0 ? 1 : -1)] || null;
+      var SW = ["home", "map", "acc"], want = CL.tab === "walks" ? (dx > 0 ? "acc" : null) : SW[SW.indexOf(CL.tab) + (dx < 0 ? 1 : -1)] || null;
       if (want !== to) peek(want);
       var x = to ? dx : dx * .2;
       lastDx = dx;
@@ -474,6 +478,8 @@
     when += " · " + pad(BK.h) + ":" + pad(BK.m) + "–" + pad(Math.floor(en / 60) % 24) + ":" + pad(en % 60);
     if (sv.days > 1) when += " · " + sv.days + " " + T("дней");
     box.innerHTML = "<b>" + esc(when) + "</b>" + (price ? "<strong>≈ " + money(price) + "</strong>" : "<span>" + esc(T("Цену подтвердит менеджер")) + "</span>");
+    /* 38.1: сумма и на кнопке — «Отправить заявку · 3 000 ₸», как в макете */
+    var pe = bpart("price"); if (pe) pe.textContent = price ? " · ≈ " + money(price) : "";
   }
   /* колёса времени: прокручиваются пальцем, колесом мыши, стрелками; выбранное — в середине */
   function wheelBuild() {
@@ -888,6 +894,7 @@
     refreshing = api("live").then(function (j) {
       if (!j.ok) return;
       applyPets(j.pets); unread(CL.chatOpen ? 0 : (j.u || 0));
+      if (j.nl) { K.nlast = j.nl; bell(); }
       CL.soon = !!j.soon;
       var nw = $("[data-k-now]");
       if (nw && typeof j.now === "string" && nw._h !== j.now && nw.innerHTML !== j.now) { nw._h = j.now; nw.innerHTML = j.now; }
@@ -1191,7 +1198,7 @@
     if (fs && ly && fs.parentNode !== ly) ly.appendChild(fs);
     qa('input[type="tel"]', guest).concat(fs ? qa('input[type="tel"]', fs) : []).forEach(phoneMask);
     /* 36.1: экран входа «My PetGo» — отдельно от сайта, в теме телефона */
-    if (D.getElementById("pgk-gate")) { D.documentElement.classList.add("pgk-on", "pgk-gate-on"); themeApply(); }
+    if (D.getElementById("pgk-gate")) { D.documentElement.classList.add("pgk-on", "pgk-gate-on"); themeApply(); arts(); }
     requestAnimationFrame(function () { authSeg(guest, "in"); });
   }
   function initCabinet() {
@@ -1217,6 +1224,7 @@
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });
     requestAnimationFrame(function () { sgAll(); lensMove(true); });
     topTitle(); scrollWatch(); swipeInit();
+    arts(); bell();
     CL.soon = !!K.soon;
     /* приветствие по часам телефона */
     var hel = $("[data-k-hello]");
@@ -1427,11 +1435,148 @@
     if (bd) { bd.classList.remove("pgk-btn-p"); bd.classList.add("pgk-btn-s"); dn.insertBefore(box, bd); } else dn.appendChild(box);
   }
 
+  /* ============================================================
+     38.1 КАБИНЕТ ПО МАКЕТУ: экран приветствия, няни (список, поиск, профиль), избранное, уведомления
+     ============================================================ */
+  var HEART = '<path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10C19.5 15.4 12 20 12 20Z"/>';
+  var WALKI = '<circle cx="13" cy="4.5" r="1.8"/><path d="m9 21 2.2-6.5 2.8 2.5V21M8 10.5l2.5-3.2h3.2l2.5 3 2.3.7M11.2 14.5 12.5 9"/>';
+  var CHATI = '<path d="M12 4.5c4.4 0 8 2.9 8 6.6s-3.6 6.6-8 6.6c-.9 0-1.7-.1-2.5-.3L5.5 19.5l.9-3.3C4.9 15 4 13.2 4 11.1c0-3.7 3.6-6.6 8-6.6z"/>';
+  var VER = '<svg class="pg-i pgk-ver" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="m12 2 2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9-2.5-1.7 1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2Z"/><path d="m8.5 12.2 2.3 2.3 4.7-4.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  /* спящая собака — пустой экран уведомлений */
+  var SLEEP = '<svg class="pgk-sleep" viewBox="0 0 160 110" aria-hidden="true"><ellipse cx="80" cy="96" rx="62" ry="8" fill="currentColor" opacity=".08"/><path d="M30 92c0-22 20-38 50-38s48 14 48 34c0 3-2 5-5 5H35c-3 0-5-.5-5-1z" fill="#E7B46A"/><path d="M96 70c8-2 18 2 22 10" stroke="#C98E43" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="46" cy="74" r="20" fill="#F0C27E"/><path d="M30 62c-6 4-9 14-4 20 3-6 6-12 10-16z" fill="#C98E43"/><path d="M56 58c7 1 12 9 10 16-4-5-7-10-13-12z" fill="#C98E43"/><path d="M38 75q4 3 8 0M50 75q4 3 8 0" stroke="#5B3A1A" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="48" cy="83" rx="4" ry="3" fill="#5B3A1A"/><path d="M118 92c10 0 16-6 14-12" stroke="#E7B46A" stroke-width="7" fill="none" stroke-linecap="round"/><g fill="currentColor" font-family="-apple-system,Segoe UI,sans-serif" font-weight="700" class="pgk-zz"><text x="70" y="40" font-size="14">z</text><text x="84" y="28" font-size="18">z</text><text x="102" y="16" font-size="22">z</text></g></svg>';
+  function nnOf(id) { return (K.nannies || []).filter(function (n) { return n.id === id; })[0]; }
+  function isFav(id) { return (K.fav || []).indexOf(id) > -1; }
+  function nword(n, ru, en, kz) {
+    if (K.lang === "en") return n === 1 ? en[0] : en[1];
+    if (K.lang === "kz") return kz;
+    var a = n % 10, b = n % 100;
+    return ru[a === 1 && b !== 11 ? 0 : a >= 2 && a <= 4 && (b < 10 || b >= 20) ? 1 : 2];
+  }
+  function rvWord(n) { n = +n || 0; return n + " " + nword(n, ["отзыв", "отзыва", "отзывов"], ["review", "reviews"], "пікір"); }
+  function ordWord(n) { n = +n || 0; return n + " " + nword(n, ["заказ", "заказа", "заказов"], ["order", "orders"], "тапсырыс"); }
+  function rateFmt(r) { var x = Number(r).toFixed(1); return K.lang === "en" ? x : x.replace(".", ","); }
+  function nRate(n) { return n.rate ? svg(STAR, "pg-i pgk-star") + "<em>" + esc(rateFmt(n.rate)) + "</em> <small>(" + esc(rvWord(n.rn)) + ")</small>" : "<small>" + esc(T("Новая няня")) + "</small>"; }
+  function ncard(n) {
+    var pr = (K.price || {}).walk || 0;
+    return '<button type="button" class="pg-b pgk-nc" data-k-nanny="' + n.id + '"><span class="pgk-nc-av">' + avHtml({ av: n.img, name: n.name }) + '</span><span class="pgk-nc-b"><b>' + esc(n.name) + VER + "</b>" +
+      '<span class="pgk-nc-r">' + nRate(n) + "</span>" +
+      '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
+      '<i class="pgk-nc-fav' + (isFav(n.id) ? " on" : "") + '" data-k-fav="' + n.id + '" role="button" aria-label="' + esc(T("В избранное")) + '">' + svg(HEART) + "</i></button>";
+  }
+  function emptyBox(icon, title, text) { return '<div class="pgk-empty38">' + icon + "<b>" + esc(title) + "</b>" + (text ? "<p>" + esc(text) + "</p>" : "") + "</div>"; }
+
+  /* «Наши няни»: поиск по имени и описанию, сортировка, избранные */
+  var NS = { sort: "rate", q: "" };
+  function nannies(mode) {
+    var s = kOpen("nannies"); if (!s) return;
+    var q = $("[data-k-nq]", s);
+    NS.q = ""; if (q) q.value = "";
+    NS.sort = mode === "fav" ? "fav" : "rate";
+    $("[data-k-sht]", s).textContent = T(mode === "fav" ? "Избранные няни" : "Наши няни");
+    qa("[data-k-ns]", s).forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-k-ns") === NS.sort); });
+    requestAnimationFrame(function () { sgMove($(".pgk-nsort", s), true); });
+    var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
+    nList();
+    if (mode === "search" && q) setTimeout(function () { q.focus(); }, reduce ? 0 : 300);
+  }
+  function nList() {
+    var box = $("[data-k-nlist]"); if (!box) return;
+    var q = NS.q.toLowerCase().trim(), list = (K.nannies || []).slice(), key = NS.sort === "fav" ? "rate" : NS.sort;
+    if (NS.sort === "fav") list = list.filter(function (n) { return isFav(n.id); });
+    if (q) list = list.filter(function (n) { return (n.name + " " + (n.bio || "")).toLowerCase().indexOf(q) > -1; });
+    list.sort(function (a, b) { return (+b[key] || 0) - (+a[key] || 0) || (+b.rn || 0) - (+a.rn || 0); });
+    box.innerHTML = list.length ? list.map(ncard).join("") : emptyBox('<span class="pgk-empty38-i">' + svg(NS.sort === "fav" && !q ? HEART : '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>') + "</span>", T(NS.sort === "fav" && !q ? "Избранные няни" : "Никого не нашли"), NS.sort === "fav" && !q ? T("Нет избранных нянь — нажмите ♡ на карточке няни.") : "");
+  }
+  /* профиль няни: большое фото, рейтинг, услуги, о себе, отзывы, «Заказать» и «Написать» */
+  function nannyOpen(id) {
+    var n = nnOf(id); if (!n) return;
+    var s = kOpen("nanny"); if (!s) return;
+    var body = $("[data-k-nanny-body]", s), pr = (K.price || {}).walk || 0;
+    var tags = Object.keys(K.svcs || {}).map(function (k) { return "<span>" + esc(K.svcs[k].t) + "</span>"; }).join("");
+    var rv = (n.rv || []).map(function (r) { return '<div class="pgk-nrv"><div class="pgk-nrv-h"><b>' + esc(r.n) + '</b><span class="pgk-nrv-s">' + stars(r.r) + "</span><small>" + esc(r.d) + "</small></div>" + (r.t ? "<p>" + esc(r.t) + "</p>" : "") + "</div>"; }).join("");
+    var meta = [ordWord(n.done), n.since ? T("В PetGo с %s года").replace("%s", n.since) : ""].filter(Boolean);
+    body.innerHTML = '<div class="pgk-np"><div class="pgk-np-ph">' + (n.img ? '<img src="' + esc(n.img) + '" alt="">' : "<b>" + esc(n.name.charAt(0).toUpperCase()) + "</b>") +
+      '<i class="pgk-nc-fav pgk-np-fav' + (isFav(n.id) ? " on" : "") + '" data-k-fav="' + n.id + '" role="button" aria-label="' + esc(T("В избранное")) + '">' + svg(HEART) + "</i></div>" +
+      '<div class="pgk-np-b"><h2>' + esc(n.name) + VER + '</h2><div class="pgk-np-r">' + nRate(n) + "</div>" +
+      '<div class="pgk-np-m">' + meta.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" +
+      '<div class="pgk-np-ok">' + svg('<path d="M12 3.5l7 2.5v5.5c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"/><path d="M9 12l2.2 2.2L15 10.5"/>') + esc(T("Проверена PetGo")) + "</div>" +
+      '<div class="pgk-np-tags">' + tags + "</div>" +
+      (n.bio ? '<h4 class="pgk-gt">' + esc(T("О няне")) + '</h4><p class="pgk-np-bio">' + esc(n.bio) + "</p>" : "") +
+      (rv ? '<h4 class="pgk-gt">' + esc(T("Отзывы")) + '</h4><div class="pgk-nrvs">' + rv + "</div>" : "") + "</div>" +
+      '<div class="pgk-np-go"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nbook="' + n.id + '"><span>' + esc(T("Заказать выгул или визит")) + "</span>" + (pr ? "<em>" + esc(T("от")) + " " + esc(money(pr)) + "</em>" : "") + '</button><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nmsg="' + n.id + '">' + svg(CHATI) + esc(T("Написать")) + "</button></div></div>";
+    var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
+  }
+  function nannyBook(id) {
+    kClose(true);
+    setTimeout(function () { book("walk"); if (nnOf(id) && BK.busy.indexOf(id) < 0) { BK.nanny = id; bkNannies(); } }, reduce ? 0 : 120);
+  }
+  function nannyMsg(id) {
+    var n = nnOf(id);
+    kClose(true);
+    setTimeout(function () {
+      chat();
+      var ta = $("[data-k-send] textarea");
+      if (ta && n && !ta.value) { ta.value = T("Здравствуйте! Хочу заказать няню %s.").replace("%s", n.name); ta.dispatchEvent(new Event("input", { bubbles: true })); }
+    }, reduce ? 0 : 120);
+  }
+  function favToggle(id) {
+    var on = !isFav(id);
+    K.fav = (K.fav || []).filter(function (x) { return x !== id; });
+    if (on) K.fav.push(id);
+    qa('[data-k-fav="' + id + '"]').forEach(function (x) { x.classList.toggle("on", on); x.classList.remove("pop"); if (on && !reduce) { void x.offsetWidth; x.classList.add("pop"); } });
+    toast(T(on ? "Добавлено в избранное" : "Убрано из избранного"));
+    api("fav", { id: id, on: on ? "1" : "0" }).then(function (j) { if (j && j.ok && j.fav) K.fav = j.fav; }).catch(function () {});
+  }
+
+  /* уведомления: сообщения PetGo (заказ подтверждён, няня пришла, отчёт); точка на колокольчике — есть новые */
+  function nSeen() { try { return +localStorage.getItem("pgk_nseen_" + K.uid) || 0; } catch (x) { return 0; } }
+  function bell() { var d = $("[data-k-bell]"); if (d && K) d.hidden = !(K.nlast && K.nlast > nSeen()); }
+  function nIcon(k) {
+    if (k === "rv") return svg(STAR);
+    if (k === "loc") return svg('<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>');
+    return LOGO;
+  }
+  function notifs() {
+    var s = kOpen("notifs"); if (!s) return;
+    var body = $("[data-k-notifs-body]", s);
+    body.innerHTML = '<div class="pgk-map-load"><i class="pg-spin"></i></div>';
+    api("notifs").then(function (j) {
+      var it = (j && j.items) || [], seen = nSeen();
+      if (!it.length) body.innerHTML = emptyBox(SLEEP, T("Пока нет уведомлений"), T("Здесь появятся подтверждения заказов, приход няни и отчёты о прогулках."));
+      else {
+        body.innerHTML = '<div class="pgk-list pgk-nts">' + it.map(function (m, i) {
+          return '<div class="pgk-nt' + (m.id > seen ? " new" : "") + '" style="--i:' + Math.min(i, 8) + '"><span class="pgk-nt-i' + (m.k === "rv" ? " rv" : "") + '">' + nIcon(m.k) + '</span><div class="pgk-nt-t"><p>' + esc(m.b) + "</p><small>" + esc(m.d) + "</small></div></div>";
+        }).join("") + "</div>" + emptyBox(SLEEP, T("Больше уведомлений нет"), "");
+        K.nlast = Math.max(K.nlast || 0, it[0].id);
+        try { localStorage.setItem("pgk_nseen_" + K.uid, String(it[0].id)); } catch (x) {}
+      }
+      bell();
+    }).catch(function () { body.innerHTML = ""; toast(T("Не получилось — проверьте интернет."), true); });
+  }
+
+  /* картинки по макету (питомцы на первом экране, собака в акции) — те же анимации, что на сайте */
+  function arts() {
+    qa("[data-k-art]").forEach(function (el) {
+      if (el._a) return;
+      var u = el.getAttribute("data-k-art"), h = W.PGSite && W.PGSite.media ? W.PGSite.media(u, true) : "";
+      if (h) { el._a = 1; el.innerHTML = h; }
+    });
+  }
+  /* экран приветствия: «Начать» — регистрация, «Войти» — вход, стрелка — назад */
+  function gateGo(v) {
+    var g = D.getElementById("pgk-gate"); if (!g) return;
+    kbHide();
+    g.setAttribute("data-gv", v === "hi" ? "hi" : "form");
+    if (v !== "hi") { var a = $(".pgk-auth", g); if (a) requestAnimationFrame(function () { authSeg(a, v); }); }
+    scrollToY(0, false);
+  }
+
   /* ---------- все нажатия — одним обработчиком ---------- */
   D.addEventListener("click", function (e) {
     var t = e.target, b;
     if (!t.closest) return;
     if ((b = t.closest("[data-auth]"))) { authSeg(b.closest(".pgk-auth"), b.getAttribute("data-auth")); return; }
+    if ((b = t.closest("[data-gate]"))) { e.preventDefault(); gateGo(b.getAttribute("data-gate")); return; }
     if ((b = t.closest("[data-eye]"))) { var inp = b.parentNode.querySelector("input"); if (inp) { inp.type = inp.type === "password" ? "text" : "password"; b.classList.toggle("on", inp.type === "text"); } return; }
     if ((b = t.closest("[data-k-open]"))) { e.preventDefault(); var id = b.getAttribute("data-k-open"); if (id === "chat" && K) chat(); else kOpen(id); return; }
     if ((b = t.closest("[data-k-close]"))) { e.preventDefault(); kClose(); return; }
@@ -1440,6 +1585,15 @@
     if ((b = t.closest("[data-k-lbx]")) || (t.classList && t.classList.contains("pgk-lb"))) { lbClose(); return; }
     if ((b = t.closest("[data-k-photo]"))) { e.preventDefault(); lightbox(b.getAttribute("data-k-photo"), b.getAttribute("data-k-cap")); return; }
     if (!K) return;
+    /* 38.1: избранное, няни, уведомления, личные данные */
+    if ((b = t.closest("[data-k-fav]"))) { e.preventDefault(); e.stopPropagation(); favToggle(+b.getAttribute("data-k-fav")); return; }
+    if ((b = t.closest("[data-k-nanny]"))) { e.preventDefault(); nannyOpen(+b.getAttribute("data-k-nanny")); return; }
+    if ((b = t.closest("[data-k-nannies]"))) { e.preventDefault(); nannies(b.getAttribute("data-k-nannies")); return; }
+    if ((b = t.closest("[data-k-ns]"))) { NS.sort = b.getAttribute("data-k-ns"); qa("[data-k-ns]").forEach(function (x) { x.classList.toggle("on", x === b); }); sgMove(b.parentNode); nList(); return; }
+    if ((b = t.closest("[data-k-nbook]"))) { e.preventDefault(); nannyBook(+b.getAttribute("data-k-nbook")); return; }
+    if ((b = t.closest("[data-k-nmsg]"))) { e.preventDefault(); nannyMsg(+b.getAttribute("data-k-nmsg")); return; }
+    if ((b = t.closest("[data-k-notifs]"))) { e.preventDefault(); notifs(); return; }
+    if ((b = t.closest("[data-k-edit]"))) { e.preventDefault(); kOpen("me"); return; }
     if ((b = t.closest("[data-k-tab]"))) {
       e.preventDefault();
       if (stack.length) kClose(true);
@@ -1448,6 +1602,7 @@
       if (b.hasAttribute("data-k-walk")) o.walk = +b.getAttribute("data-k-walk");
       if (b.closest(".pgk-tabbar")) { o.keep = true; o.bar = true; }
       tab(b.getAttribute("data-k-tab"), o);
+      if (b.getAttribute("data-k-goto") === "pets") setTimeout(function () { var mp = D.getElementById("pgk-mypets"); if (mp) scrollToY(Math.max(0, scrollY() + mp.getBoundingClientRect().top - 70), true); }, 60);
       return;
     }
     if ((b = t.closest("[data-k-order]"))) { e.preventDefault(); orderSheet(+b.getAttribute("data-k-order")); return; }
@@ -1499,7 +1654,7 @@
         if (img) img.innerHTML = h;
         /* аватар меняется везде: в шапке, списке питомцев, на карте */
         if (pet) { qa('[data-k-petpage="' + pet + '"] .pgk-av').forEach(function (x) { x.innerHTML = h; }); var p = petOf(+pet); if (p) p.av = j.url; }
-        else qa(".pgk-hd-av .pgk-av").forEach(function (x) { x.innerHTML = h; });
+        else qa(".pgk-hd-av .pgk-av, .pgk-me-av .pgk-av").forEach(function (x) { x.innerHTML = h; });
         toast(T("Сохранено"));
       }).catch(function () { wrap.classList.remove("busy"); toast(T("Не получилось — проверьте интернет."), true); });
       t.value = "";
@@ -1509,6 +1664,7 @@
   D.addEventListener("input", function (e) {
     var t = e.target;
     if (t.matches && t.matches("[data-k-send] textarea")) { t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; }
+    if (t.matches && t.matches("[data-k-nq]")) { NS.q = t.value; nList(); }
   });
   D.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { if ($(".pgk-lb.on")) lbClose(); else if (stack.length) kClose(); }
