@@ -402,6 +402,7 @@
     root.innerHTML =
       '<div class="login screen">' +
         '<div class="login-top">' + langSwitch() + '</div>' +
+        '<div class="t-login-art">' + villaArt() + sparkleSvg('t-login-spark') + '</div>' +
         '<div class="login-hero"><div class="brand-tile">' + brandMark() + '</div>' +
           '<h1>' + esc(C.brand) + '</h1><p>' + esc(loc(C.tagline)) + '</p></div>' +
         '<form class="login-card glass" id="login-form" novalidate>' +
@@ -411,7 +412,7 @@
             '<input class="input" id="l-pass" name="password" type="password" autocomplete="current-password" required>' +
             '<button type="button" class="eye" aria-label="' + esc(t('show_pass')) + '">' + icon('eye', 'sm') + '</button></div>' +
           '<p class="form-error" id="l-err" role="alert"></p>' +
-          '<button class="btn btn-primary btn-block" type="submit">' + esc(t('sign_in')) + '</button>' +
+          '<button class="btn btn-ink btn-block" type="submit">' + esc(t('sign_in')) + icon('arrowRight', 'sm') + '</button>' +
         '</form>' +
         '<div class="login-foot"><p class="tiny" style="text-align:center;margin:0">' + esc(t('login_hint')) + '</p>' +
           '<div class="trust"><span>' + icon('shield') + esc(t('trust_anon')) + '</span><span>' + icon('mask') + esc(t('trust_noname')) + '</span><span>' + icon('lock') + esc(t('trust_private')) + '</span></div>' +
@@ -590,7 +591,7 @@
         '<div class="svc-ico tone-' + esc(s.color || 'peach') + ' tone-bg">' + icon(s.icon, 'lg') + '</div>' +
         '<div><h3>' + esc(loc(s.title)) + '</h3><p>' + esc(loc(s.desc)) + '</p></div>' +
         '<div class="svc-foot">' + (s.price ? '<span class="price">' + esc(s.price) + '</span>' : '<span class="price na">' + esc(t('price_chat')) + '</span>') +
-        '<button class="btn btn-primary btn-sm" data-order="' + esc(s.id) + '">' + esc(t('order')) + icon('arrowRight', 'xs') + '</button></div>' +
+        '<button class="btn btn-ink btn-sm" data-order="' + esc(s.id) + '">' + esc(t('order')) + icon('arrowRight', 'xs') + '</button></div>' +
         '</article>';
     }).join('');
     return '<main class="screen"><h1 class="page-title">' + esc(t('services_title')) + '</h1><p class="page-sub">' + esc(t('services_sub')) + '</p>' +

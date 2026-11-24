@@ -135,3 +135,17 @@ body { background:
 .t-top .brand-sub { white-space: normal; font-size: 12px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .t-top { gap: 10px; }
 .t-top .brand-name { font-size: 21px; }
+
+/* вход */
+.t-login-art { position: relative; height: 112px; margin: -6px -22px 0; overflow: hidden; }
+.t-login-art .t-villa { position: absolute; right: -10px; bottom: 0; height: 100%; width: auto; }
+.t-login-spark { width: 26px; height: 26px; left: 24%; top: 24%; animation: float 4s ease-in-out infinite; }
+.login .login-hero { margin: 4px 0 22px; position: relative; }
+.login .login-hero .brand-tile { width: 76px; height: 76px; border-radius: 24px; }
+.login .btn-ink { height: 54px; }
+
+/* иконки в списках профиля — в сиреневых тонах */
+.li-ico.tone-bg { background: linear-gradient(150deg, #FFFFFF, #ECE8FF); color: var(--accent); }
+@media (prefers-color-scheme: dark) { .li-ico.tone-bg, .svc-ico.tone-bg, .quick-ico.tone-bg { background: rgba(156, 141, 255, .14); } .t-mat-img { background: linear-gradient(150deg, #22203A, #2C2750); } }
+.big-ava.tone-bg { background: linear-gradient(150deg, #D9D2FF, #A193FF); color: #fff; }
+.svc .btn-ink { height: 40px; }
