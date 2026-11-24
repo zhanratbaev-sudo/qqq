@@ -51,7 +51,11 @@
       priv3: 'Отзывы публикуются без имени и фото',
       install_ios: ['Нажмите «Поделиться» внизу Safari', 'Выберите «На экран „Домой“»', 'Нажмите «Добавить»'],
       install_other: ['Откройте меню браузера (⋮)', 'Выберите «Установить приложение» или «Добавить на главный экран»'],
-      installed: 'Приложение установлено', site: 'Открыть сайт', saved: 'Сохранено', close: 'Закрыть', download: 'Скачать', notifications: 'Сообщения'
+      installed: 'Приложение установлено', site: 'Открыть сайт',
+      nav_promos: 'Акции', nav_ai_full: 'ИИ-помощник', hero_btn: 'Оставить заявку', unis_title: 'Университеты',
+      promo_more: 'Узнать больше', adv_title: 'Наши преимущества', adv1: 'Анонимность', adv2: 'Высокое качество', adv3: 'Соблюдение сроков',
+      reviews_count: '({n} отзывов)', materials: 'Полезные материалы', no_promos: 'Сейчас акций нет — загляните позже.', no_materials: 'Материалы скоро появятся.',
+      open: 'Открыть', order_promo: 'Здравствуйте! Хочу воспользоваться акцией «{p}».\n', promos_sub: 'Скидки и спецпредложения для студентов.', materials_sub: 'Лекции, шпаргалки и примеры — бесплатно.', saved: 'Сохранено', close: 'Закрыть', download: 'Скачать', notifications: 'Сообщения'
     },
     kk: {
       nav_home: 'Басты', nav_services: 'Қызметтер', nav_chat: 'Чат', nav_ai: 'ЖИ', nav_profile: 'Профиль',
@@ -95,7 +99,11 @@
       priv3: 'Пікірлер атсыз және фотосыз жарияланады',
       install_ios: ['Safari төменгі жағындағы «Бөлісу» батырмасын басыңыз', '«Басты экранға қосу» тармағын таңдаңыз', '«Қосу» батырмасын басыңыз'],
       install_other: ['Браузер мәзірін ашыңыз (⋮)', '«Қосымшаны орнату» немесе «Басты экранға қосу» таңдаңыз'],
-      installed: 'Қосымша орнатылды', site: 'Сайтты ашу', saved: 'Сақталды', close: 'Жабу', download: 'Жүктеп алу', notifications: 'Хабарламалар'
+      installed: 'Қосымша орнатылды', site: 'Сайтты ашу',
+      nav_promos: 'Акциялар', nav_ai_full: 'ЖИ-көмекші', hero_btn: 'Өтінім қалдыру', unis_title: 'Университеттер',
+      promo_more: 'Толығырақ', adv_title: 'Біздің артықшылықтар', adv1: 'Анонимдік', adv2: 'Жоғары сапа', adv3: 'Мерзімді сақтау',
+      reviews_count: '({n} пікір)', materials: 'Пайдалы материалдар', no_promos: 'Қазір акция жоқ — кейінірек қараңыз.', no_materials: 'Материалдар жақында қосылады.',
+      open: 'Ашу', order_promo: 'Сәлеметсіз бе! «{p}» акциясын пайдаланғым келеді.\n', promos_sub: 'Студенттерге арналған жеңілдіктер мен ұсыныстар.', materials_sub: 'Дәрістер, шпаргалкалар мен мысалдар — тегін.', saved: 'Сақталды', close: 'Жабу', download: 'Жүктеп алу', notifications: 'Хабарламалар'
     }
   };
 
@@ -220,6 +228,10 @@
     share: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>',
     plusSq: '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/>',
     image: '<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+    shapes: '<rect x="3" y="11" width="10" height="10" rx="2.5"/><circle cx="15.5" cy="8.5" r="5.5"/><path d="M9 11V8"/>',
+    lecture: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/>',
+    tag: '<path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/>',
+    homeFill: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>'
   };
   function icon(name, cls) {
@@ -229,7 +241,7 @@
   function aiStar(cls) {
     var id = 'sg' + (++starSeq);
     return '<svg class="ai-star ' + (cls || '') + '" viewBox="0 0 100 100" aria-hidden="true"><defs>' +
-      '<radialGradient id="' + id + '" cx="36%" cy="30%" r="80%"><stop offset="0" stop-color="#FFE1C4"/><stop offset=".42" stop-color="#FF9B52"/><stop offset="1" stop-color="#E2541C"/></radialGradient></defs>' +
+      '<radialGradient id="' + id + '" cx="36%" cy="30%" r="80%"><stop offset="0" stop-color="#EEEAFF"/><stop offset=".42" stop-color="#A193FF"/><stop offset="1" stop-color="#5A45E6"/></radialGradient></defs>' +
       '<path d="M50 3C54 31 69 46 97 50 69 54 54 69 50 97 46 69 31 54 3 50 31 46 46 31 50 3Z" fill="url(#' + id + ')"/>' +
       '<path d="M50 15c2.6 15 8.5 23.5 21 29" stroke="rgba(255,255,255,.6)" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg>';
   }
@@ -331,7 +343,7 @@
   /* --------------------------------------------------------------- router */
   function route() {
     var r = (location.hash || '#home').slice(1).split('?')[0];
-    var allowed = ['home', 'services', 'chat', 'profile'];
+    var allowed = ['home', 'services', 'chat', 'profile', 'promos', 'materials'];
     if (C.ai && C.ai.enabled) allowed.push('ai');
     return allowed.indexOf(r) > -1 ? r : 'home';
   }
@@ -350,18 +362,21 @@
     else if (r === 'chat') html = viewChat();
     else if (r === 'ai') html = viewAI();
     else if (r === 'profile') html = viewProfile();
+    else if (r === 'promos') html = viewPromos();
+    else if (r === 'materials') html = viewMaterials();
     root.innerHTML = html + tabbar(r);
     if (r === 'chat') mountChat();
     if (r === 'ai') mountAI();
   }
 
   function tabbar(active) {
-    var tabs = [['home', 'home', t('nav_home')], ['services', 'grid', t('nav_services')], ['chat', 'chat', t('nav_chat')]];
+    var tabs = [['home', 'home', t('nav_home')], ['services', 'grid', t('nav_services')], ['chat', 'chat', t('nav_chat')], ['promos', 'star', t('nav_promos')]];
     if (C.ai && C.ai.enabled) tabs.push(['ai', 'sparkle', t('nav_ai')]);
-    tabs.push(['profile', 'user', t('nav_profile')]);
-    return '<nav class="tabbar glass" aria-label="Menu">' + tabs.map(function (tb) {
-      var badge = tb[0] === 'chat' && state.unread && active !== 'chat' ? '<span class="badge">' + state.unread + '</span>' : '';
-      return '<a class="tab" href="#' + tb[0] + '"' + (active === tb[0] ? ' aria-current="page"' : '') + '>' + icon(tb[1]) + '<span>' + esc(tb[2]) + '</span>' + badge + '</a>';
+    else tabs.push(['profile', 'user', t('nav_profile')]);
+    return '<nav class="tabbar glass t-tabbar" aria-label="Menu">' + tabs.map(function (tb) {
+      var on = active === tb[0];
+      var badge = tb[0] === 'chat' && state.unread && !on ? '<span class="badge">' + state.unread + '</span>' : '';
+      return '<a class="tab" href="#' + tb[0] + '"' + (on ? ' aria-current="page"' : '') + '>' + icon(on && tb[1] === 'home' ? 'homeFill' : tb[1]) + '<span>' + esc(tb[2]) + '</span>' + badge + '</a>';
     }).join('') + '</nav>';
   }
 
@@ -438,72 +453,125 @@
 
   /* ----------------------------------------------------------------- home */
   function header() {
-    return '<header class="topbar">' +
-      '<div class="brand-tile">' + brandMark() + '</div>' +
+    return '<header class="topbar t-top">' +
+      '<button class="brand-tile" data-go="profile" aria-label="' + esc(t('nav_profile')) + '">' + brandMark() + '</button>' +
       '<div class="grow"><p class="brand-name">' + esc(C.brand) + '</p><div class="brand-sub">' + esc(loc(C.tagline)) + '</div></div>' +
       langSwitch() +
-      '<a href="#chat" class="icon-btn glass" aria-label="' + esc(t('notifications')) + '">' + icon('bell') + (state.unread ? '<span class="dot"></span>' : '') + '</a>' +
+      '<a href="#chat" class="icon-btn t-bell" aria-label="' + esc(t('notifications')) + '">' + icon('bell') + (state.unread ? '<span class="dot"></span>' : '') + '</a>' +
+      '<a href="#profile" class="t-me" aria-label="' + esc(t('nav_profile')) + '">' + anonAvatar(state.student.alias, 'anon-ava') + '</a>' +
       '</header>';
   }
 
-  function uniRow() {
-    var cur = uniById(state.student.university);
-    var chips = (C.universities || []).slice(0, 3).map(function (u) {
-      return '<button class="uni-chip" data-uni="' + esc(u.id) + '" aria-pressed="' + (cur && cur.id === u.id) + '" title="' + esc(loc(u.name)) + '">' +
-        (u.logo ? '<img src="' + esc(u.logo) + '" alt="' + esc(u.short) + '">' : esc(u.short)) + '</button>';
-    }).join('');
-    return '<div class="uni-row">' +
-      '<button class="uni-select glass" data-action="uni-sheet">' + icon('grad') + '<span>' + esc(cur ? loc(cur.name) : t('choose_uni')) + '</span>' + icon('chevDown', 'sm') + '</button>' +
-      (chips ? '<div class="uni-chips glass">' + chips + '</div>' : '') +
-      '</div>';
+  function sparkleSvg(cls) {
+    return '<svg class="t-sparkle ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.9 6.2 4.8 10.1 11 11-6.2.9-10.1 4.8-11 11-.9-6.2-4.8-10.1-11-11C7.2 11.1 11.1 7.2 12 1Z"/></svg>';
   }
 
-  function lastMessagePreview() {
-    var m = state.messages.length ? state.messages[state.messages.length - 1] : null;
-    if (!m) return { text: state.lastPreview || t('no_messages'), time: state.lastPreviewTime || 0 };
-    var txt = m.text || (m.file ? '📎 ' + m.file.name : (m.type === 'review_request' ? '⭐ ' + t('review_t') : ''));
-    return { text: (m.from === 'me' ? t('you') : '') + txt, time: m.time };
+  /* Современный белый дом с консолями — без фото, рисуется SVG. */
+  var villaSeq = 0;
+  function villaArt(cls) {
+    var id = 'v' + (++villaSeq);
+    function level(x, y, w, h, gx, gw, depth) {
+      var g = '';
+      for (var i = 1; i < 3; i++) g += '<rect x="' + (gx + gw * i / 3) + '" y="' + (y + 9) + '" width="1.8" height="' + (h - 16) + '" fill="#E4E6EF" opacity=".7"/>';
+      return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="url(#' + id + 'w)"/>' +
+        '<polygon points="' + (x + w) + ',' + y + ' ' + (x + w + depth) + ',' + (y - depth * 0.45) + ' ' + (x + w + depth) + ',' + (y + h - depth * 0.45) + ' ' + (x + w) + ',' + (y + h) + '" fill="url(#' + id + 'd)"/>' +
+        '<rect x="' + gx + '" y="' + (y + 9) + '" width="' + gw + '" height="' + (h - 16) + '" rx="1" fill="url(#' + id + 'g)"/>' +
+        '<rect x="' + gx + '" y="' + (y + 9) + '" width="' + gw * 0.35 + '" height="' + (h - 16) + '" fill="#FFFFFF" opacity=".12"/>' + g;
+    }
+    function slab(x, y, w, depth) {
+      return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="11" fill="#FFFFFF"/>' +
+        '<rect x="' + x + '" y="' + (y + 11) + '" width="' + w + '" height="4" fill="#D6D3E6"/>' +
+        '<polygon points="' + (x + w) + ',' + y + ' ' + (x + w + depth) + ',' + (y - depth * 0.5) + ' ' + (x + w + depth) + ',' + (y + 11 - depth * 0.5) + ' ' + (x + w) + ',' + (y + 11) + '" fill="#ECEAF5"/>' +
+        '<polygon points="' + x + ',' + y + ' ' + (x + depth) + ',' + (y - depth * 0.5) + ' ' + (x + w + depth) + ',' + (y - depth * 0.5) + ' ' + (x + w) + ',' + y + '" fill="#F7F6FC"/>';
+    }
+    return '<svg class="t-villa ' + (cls || '') + '" viewBox="0 0 330 300" preserveAspectRatio="xMaxYMax meet" aria-hidden="true"><defs>' +
+      '<linearGradient id="' + id + 'w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#ECEBF4"/></linearGradient>' +
+      '<linearGradient id="' + id + 'g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5A6378"/><stop offset=".55" stop-color="#2F3445"/><stop offset="1" stop-color="#4A5166"/></linearGradient>' +
+      '<linearGradient id="' + id + 'd" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E3E0EF"/><stop offset="1" stop-color="#CBC7DE"/></linearGradient>' +
+      '<radialGradient id="' + id + 's" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#B9AEF5" stop-opacity=".45"/><stop offset="1" stop-color="#B9AEF5" stop-opacity="0"/></radialGradient></defs>' +
+      '<ellipse cx="200" cy="286" rx="150" ry="16" fill="url(#' + id + 's)"/>' +
+      level(104, 238, 180, 44, 168, 70, 34) + slab(70, 228, 228, 34) +
+      level(140, 176, 156, 52, 150, 62, 34) + '<rect x="222" y="185" width="44" height="36" rx="1" fill="url(#' + id + 'g)"/>' + slab(96, 166, 214, 34) +
+      level(176, 114, 128, 52, 196, 72, 34) + slab(146, 104, 176, 34) +
+      '<rect x="0" y="282" width="330" height="18" fill="#F3F2FA" opacity=".9"/></svg>';
   }
 
   function viewHome() {
     var svcs = (C.services || []).slice(0, 4);
-    var quick = svcs.map(function (s) {
-      return '<button class="quick-item glass" data-order="' + esc(s.id) + '"><span class="quick-ico tone-' + esc(s.color || 'peach') + ' tone-bg">' + icon(s.icon) + '</span><span>' + esc(loc(s.title)) + '</span></button>';
+    var tiles = svcs.map(function (s) {
+      return '<button class="t-tile glass" data-order="' + esc(s.id) + '">' + icon(s.icon, 'lg') + '<span>' + esc(loc(s.title)) + '</span></button>';
     }).join('');
-    var prev = lastMessagePreview();
-    var ai = C.ai && C.ai.enabled
-      ? '<a class="ai-banner glass" href="#ai">' + aiStar() + '<div class="grow"><h3>' + esc(t('ai_title')) + '</h3><p>' + esc(t('ai_sub')) + '</p></div><span class="round-arrow">' + icon('arrowRight', 'sm') + '</span></a>'
-      : '';
+    var cur = state.student.university;
+    var unis = (C.universities || []).map(function (u) {
+      return '<button class="t-chip" data-uni="' + esc(u.id) + '" aria-pressed="' + (cur === u.id) + '" title="' + esc(loc(u.name)) + '">' + esc(u.short) + '</button>';
+    }).join('');
+    var promo = (C.promos || [])[0];
+    var stats = state.stats || { count: 0, average: 0 };
+    var lastReview = state.reviews[0];
+    var mats = (C.materials || []).slice(0, 8);
 
-    var reviews = state.reviews.length
-      ? '<div class="h-scroll">' + state.reviews.map(reviewCard).join('') + '</div>'
-      : '<div class="empty glass">' + icon('star') + esc(t('no_reviews')) + '</div>';
-
-    return '<main class="screen">' + header() + uniRow() +
-      '<section class="hero">' +
-        '<div class="hero-art">' + heroArt() + '</div>' +
-        '<span class="anon-badge">' + icon('lock', 'xs') + esc(t('anon_badge')) + '</span>' +
-        '<div class="hero-body"><h1>' + esc(loc(C.hero && C.hero.title)) + '</h1><p>' + esc(loc(C.hero && C.hero.text)) + '</p>' +
-        '<a class="btn btn-dark" href="#services">' + esc(t('hero_cta')) + icon('arrowRight', 'sm') + '</a></div>' +
+    return '<main class="screen t-screen">' + header() +
+      '<section class="t-hero">' +
+        '<div class="t-hero-art">' + (C.hero && C.hero.image ? '<img src="' + esc(C.hero.image) + '" alt="">' : villaArt()) + sparkleSvg('t-hero-spark') + '</div>' +
+        '<div class="t-hero-body"><h1>' + esc(loc(C.hero && C.hero.title)) + '</h1><p>' + esc(loc(C.hero && C.hero.text)) + '</p>' +
+        '<a class="btn btn-ink" href="#services">' + esc(t('hero_btn')) + icon('arrowRight', 'sm') + '</a></div>' +
       '</section>' +
-      (quick ? '<nav class="quick">' + quick + '</nav>' : '') +
-      ai +
-      '<div class="duo">' +
-        '<a class="mini-chat glass" href="#chat"><h3>' + esc(t('chat_card')) + (state.unread ? '<span class="badge">' + state.unread + '</span>' : icon('arrowRight', 'sm')) + '</h3>' +
-          '<div class="mini-row"><div class="avatar">' + (C.logo ? '<img src="' + esc(C.logo) + '" alt="">' : esc(C.brand.charAt(0))) + '</div>' +
-          '<div style="min-width:0"><div class="t">' + esc(C.brand) + '</div><div class="tiny"><span class="status-dot' + (state.adminOnline ? ' on' : '') + '"></span>' + esc(state.adminOnline ? t('chat_on') : t('chat_off').split(' — ')[0]) + '</div></div></div>' +
-          '<div class="mini-row"><div class="s">' + esc(prev.text) + '</div></div>' +
+      (tiles ? '<nav class="t-tiles">' + tiles + '</nav>' : '') +
+      (unis ? '<section class="t-card glass"><div class="t-card-head"><h2>' + esc(t('unis_title')) + '</h2><button class="link-more" data-action="uni-sheet">' + esc(t('all')) + icon('arrowRight', 'sm') + '</button></div><div class="t-chips">' + unis + '</div></section>' : '') +
+      (promo ? promoCard(promo) : '') +
+      '<div class="t-duo">' +
+        '<section class="t-card glass t-adv"><h3>' + esc(t('adv_title')) + '</h3>' +
+          ['adv1', 'adv2', 'adv3'].map(function (k) { return '<div class="t-check"><span>' + icon('check', 'xs') + '</span>' + esc(t(k)) + '</div>'; }).join('') +
+          '<svg class="t-shield" viewBox="0 0 64 72" aria-hidden="true"><path d="M32 2 60 12v22c0 18-12 30-28 36C16 64 4 52 4 34V12Z" fill="rgba(255,255,255,.7)" stroke="rgba(130,115,240,.25)" stroke-width="2"/><path d="m20 36 9 9 16-18" fill="none" stroke="rgba(130,115,240,.45)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</section>' +
+        '<a class="t-card glass t-rev" href="#reviews-list" data-action="reviews"><h3>' + esc(t('reviews')) + '</h3>' +
+          (stats.count ? '<div class="t-rating"><b>' + esc(stats.average) + '</b>' + '<span class="t-star">' + icon('star') + '</span><span class="tiny">' + esc(t('reviews_count', { n: stats.count })) + '</span></div>' : '<p class="tiny" style="margin:6px 0 0">' + esc(t('no_reviews')) + '</p>') +
+          '<div class="t-rev-row"><div class="t-stack">' + [0, 1, 2].map(function (i) { return anonAvatar('s' + i, 'anon-ava'); }).join('') + '</div>' +
+          (lastReview ? '<span class="t-quote">«' + esc(lastReview.text.length > 46 ? lastReview.text.slice(0, 44) + '…' : lastReview.text) + '»</span>' : '') + '</div>' +
         '</a>' +
-        '<div class="promo"><span class="pill">' + icon('shield', 'xs') + esc(t('promo_pill')) + '</span>' +
-          '<h3>' + esc(t('promo_title')) + '</h3>' +
-          '<svg class="lock-art" viewBox="0 0 100 100" aria-hidden="true"><rect x="18" y="44" width="64" height="50" rx="14" fill="rgba(255,255,255,.65)"/><path d="M32 46V32a18 18 0 0 1 36 0v14" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="9" stroke-linecap="round"/><circle cx="50" cy="66" r="7" style="fill:var(--accent)"/><rect x="47" y="68" width="6" height="12" rx="3" style="fill:var(--accent)"/></svg>' +
-          '<a class="btn" href="#services" data-scroll="how">' + esc(t('promo_btn')) + icon('arrowRight', 'xs') + '</a>' +
-        '</div>' +
       '</div>' +
-      '<section class="section"><div class="section-head"><h2>' + esc(t('reviews')) + '</h2>' +
-        (state.stats.count ? '<span class="rating-sum">' + stars(Math.round(state.stats.average)) + '<b>' + esc(state.stats.average) + '</b> · ' + state.stats.count + '</span>' : '') +
-      '</div>' + reviews + '</section>' +
+      (mats.length ? '<section class="section"><div class="section-head"><h2>' + esc(t('materials')) + '</h2><a class="link-more" href="#materials">' + esc(t('all')) + icon('arrowRight', 'sm') + '</a></div>' +
+        '<div class="h-scroll t-mats">' + mats.map(materialCard).join('') + '</div></section>' : '') +
       '</main>';
+  }
+
+  function promoCard(p, big) {
+    return '<section class="t-promo' + (big ? ' big' : '') + '">' +
+      '<div class="t-promo-art">' + (p.image ? '<img src="' + esc(p.image) + '" alt="">' : villaArt('t-villa-promo')) + sparkleSvg('t-promo-spark') + '</div>' +
+      '<div class="t-promo-body"><span class="t-badge">' + esc(loc(p.badge) || t('nav_promos')) + '</span>' +
+      '<h3>' + esc(loc(p.title)) + '</h3>' + (loc(p.text) ? '<p>' + esc(loc(p.text)) + '</p>' : '') +
+      '<button class="btn btn-ink btn-sm" data-promo="' + esc(p.id) + '">' + esc(big ? t('order') : t('promo_more')) + icon('arrowRight', 'xs') + '</button></div></section>';
+  }
+
+  function materialCard(m) {
+    return '<a class="t-mat" href="' + esc(m.url || '#materials') + '"' + (m.url ? ' target="_blank" rel="noopener"' : '') + '>' +
+      '<span class="t-mat-img">' + (m.image ? '<img src="' + esc(m.image) + '" alt="" loading="lazy">' : icon('lecture', 'lg')) + '</span>' +
+      '<span class="t-mat-t">' + esc(loc(m.title)) + '</span></a>';
+  }
+
+  function viewPromos() {
+    var list = C.promos || [];
+    return '<main class="screen t-screen"><h1 class="page-title">' + esc(t('nav_promos')) + '</h1><p class="page-sub">' + esc(t('promos_sub')) + '</p>' +
+      (list.length ? list.map(function (p) { return promoCard(p, true); }).join('') : '<div class="empty glass">' + icon('tag') + esc(t('no_promos')) + '</div>') +
+      '<section class="section"><div class="section-head"><h2>' + esc(t('reviews')) + '</h2></div>' +
+      (state.reviews.length ? '<div class="h-scroll">' + state.reviews.map(reviewCard).join('') + '</div>' : '<div class="empty glass">' + icon('star') + esc(t('no_reviews')) + '</div>') +
+      '</section></main>';
+  }
+
+  function viewMaterials() {
+    var list = C.materials || [];
+    return '<main class="screen t-screen"><h1 class="page-title">' + esc(t('materials')) + '</h1><p class="page-sub">' + esc(t('materials_sub')) + '</p>' +
+      (list.length ? '<div class="t-mat-grid">' + list.map(materialCard).join('') + '</div>' : '<div class="empty glass">' + icon('lecture') + esc(t('no_materials')) + '</div>') + '</main>';
+  }
+
+  function startPromo(id) {
+    var p = (C.promos || []).filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    var s = p.service && serviceById(p.service);
+    state.draftService = s ? s.id : null;
+    state.draftText = t('order_promo', { p: loc(p.title) }) + (s ? t('order_text', { svc: loc(s.title) }).split('\n').slice(1).join('\n') : '');
+    vibrate();
+    go('chat');
   }
 
   function reviewCard(r) {
@@ -957,6 +1025,8 @@
     var el;
     if ((el = e.target.closest('[data-lang]'))) { setLang(el.getAttribute('data-lang')); return; }
     if ((el = e.target.closest('[data-order]'))) { startOrder(el.getAttribute('data-order')); return; }
+    if ((el = e.target.closest('[data-promo]'))) { startPromo(el.getAttribute('data-promo')); return; }
+    if ((el = e.target.closest('[data-go]'))) { go(el.getAttribute('data-go')); return; }
     if ((el = e.target.closest('[data-uni]'))) { setUni(el.getAttribute('data-uni')); return; }
     if ((el = e.target.closest('[data-view]'))) { viewer(el.getAttribute('data-view')); return; }
     if ((el = e.target.closest('[data-ai-chip]'))) { askAI(el.getAttribute('data-ai-chip')); return; }
@@ -977,6 +1047,10 @@
       if (a === 'uni-sheet') uniSheet();
       else if (a === 'install') install();
       else if (a === 'logout') logout();
+      else if (a === 'reviews') {
+        e.preventDefault();
+        sheet('<h3>' + esc(t('reviews')) + '</h3>' + (state.reviews.length ? '<div class="t-rev-list">' + state.reviews.map(reviewCard).join('') + '</div>' : '<div class="empty">' + esc(t('no_reviews')) + '</div>'));
+      }
       else if (a === 'clear-chip') { state.draftService = null; renderChip(); }
       else if (a === 'ai-clear') { state.ai.messages = []; SS.del('studyhub_ai'); render(); }
       else if (a === 'dismiss-ai') { state.aiDismissedFor = +el.getAttribute('data-msg'); renderMessages(false); }

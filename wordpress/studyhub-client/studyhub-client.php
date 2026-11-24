@@ -2,7 +2,7 @@
 /**
  * Plugin Name: StudyHub Студент
  * Description: Кабинет студента (приложение, адрес /app/): вход по выданному логину, услуги и заказ, анонимный личный чат с администратором, файлы, отзыв по приглашению, выбор университета, русский и казахский. Нужен плагин «StudyHub Ядро».
- * Version: 2.0.0
+ * Version: 2.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Requires Plugins: studyhub-core
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'STUDYHUB_CLIENT_FILE', __FILE__ );
-define( 'STUDYHUB_CLIENT_VER', '2.0.0' );
+define( 'STUDYHUB_CLIENT_VER', '2.1.0' );
 
 /* кабинет работает поверх «StudyHub Ядро»: подключаемся, когда загружены все плагины */
 add_action(
@@ -31,7 +31,7 @@ add_action(
 			return;
 		}
 		studyhub_register_plugin( STUDYHUB_CLIENT_FILE, array( 'name' => 'StudyHub Студент', 'version' => STUDYHUB_CLIENT_VER ) );
-		foreach ( array( 'auth', 'rest', 'app' ) as $f ) {
+		foreach ( array( 'auth', 'rest', 'app', 'content' ) as $f ) {
 			require_once __DIR__ . '/includes/' . $f . '.php';
 		}
 	},

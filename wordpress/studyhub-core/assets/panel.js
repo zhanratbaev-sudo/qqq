@@ -6,7 +6,7 @@
   var root = document.getElementById('panel');
   var esc = SH.esc, icon = SH.icon;
 
-  var ICON_CHOICES = { book: 'Книга', cube: 'Макет', pencil: 'Карандаш', ruler: 'Линейка', building: 'Здание', laptop: 'Ноутбук', palette: 'Палитра', doc: 'Документ' };
+  var ICON_CHOICES = { cube: 'Макет', pencil: 'Карандаш', shapes: 'Композиция', lecture: 'Лекция', book: 'Книга', ruler: 'Линейка', building: 'Здание', laptop: 'Ноутбук', palette: 'Палитра', doc: 'Документ' };
   var TONES = { peach: 'Персиковый', lilac: 'Сиреневый', mint: 'Мятный', sky: 'Голубой', sand: 'Песочный', rose: 'Розовый' };
 
   var state = {
@@ -470,6 +470,8 @@
     var fields = meta.fields.map(function (f) {
       var v = vals[f.name] == null ? '' : vals[f.name];
       var help = f.help ? '<small>' + esc(f.help) + '</small>' : '';
+      if (f.type === 'heading') return '<h2 style="grid-column:1/-1;margin:14px 0 0;padding-top:14px;border-top:1px solid var(--hairline)">' + esc(f.label) + (f.help ? ' <small class="tiny" style="font-weight:500">' + esc(f.help) + '</small>' : '') + '</h2>';
+      if (f.type === 'media') return '<label class="p-field">' + esc(f.label) + help + '<span style="display:flex;gap:6px"><input class="input" type="url" name="' + esc(f.name) + '" value="' + esc(v) + '" placeholder="https://…"><button type="button" class="btn btn-ghost btn-sm" style="height:46px" data-upload="1">' + icon('image', 'xs') + '</button></span></label>';
       if (f.type === 'info') return '<div class="p-field" style="grid-column:1/-1"><span>' + esc(f.label) + '</span><div style="font-weight:400;color:var(--text)">' + esc(v || f.help || '') + '</div></div>';
       if (f.type === 'checkbox') return '<label class="p-check" style="grid-column:1/-1"><input type="checkbox" name="' + esc(f.name) + '"' + (+v ? ' checked' : '') + '><span>' + esc(f.label) + (f.help ? '<br><small class="muted">' + esc(f.help) + '</small>' : '') + '</span></label>';
       if (f.type === 'textarea') return '<label class="p-field" style="grid-column:1/-1">' + esc(f.label) + help + '<textarea class="textarea" name="' + esc(f.name) + '" rows="' + (f.rows || 4) + '" placeholder="' + esc(f.placeholder || '') + '">' + esc(v) + '</textarea></label>';

@@ -16,6 +16,8 @@ $studyhub_lang   = ( $config['student'] && 'kk' === $config['student']['lang'] )
 <?php echo studyhub_head_tags( 'app' ); // phpcs:ignore ?>
 <title><?php echo esc_html( $studyhub_brand ); ?></title>
 <meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="<?php echo esc_url( studyhub_asset_url( 'client.css', STUDYHUB_CLIENT_FILE ) ); ?>">
+<meta name="theme-color" content="#F1EFFB">
 </head>
 <body>
 <div id="app" aria-live="polite">
