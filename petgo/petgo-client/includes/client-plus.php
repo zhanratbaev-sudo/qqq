@@ -362,7 +362,8 @@ function petgo_cl_ai_reply($uid) {
     );
     $res = PGA_AI::request($body);
     if (is_wp_error($res) || empty($res['text'])) {
-        return false;
+        /* 38.2: ИИ не ответил (ключ, лимит Google, нет связи) — клиенту сообщение, менеджеру уведомление */
+        return function_exists('petgo_cl_ai_fail') ? petgo_cl_ai_fail($uid, $cid) : false;
     }
     $text = trim((string) $res['text']);
     $add  = '';

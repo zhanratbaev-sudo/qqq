@@ -151,8 +151,101 @@ function petgo_cl_profile38($u) {
         $h .= $row(petgo_cl_ic('doc'), $L('Договор'), 'data-k-ct');
     }
     $h .= $row(petgo_cl_ic('help'), $L('Помощь и поддержка'), 'data-k-open="chat"');
-    $h .= $row(petgo_cl_ic('info'), $L('О PetGo'), 'href="' . esc_url(petgo_site_url('home')) . '"', 'a');
+    /* 38.2: «О PetGo» — экран внутри приложения, сайт из кабинета не открывается */
+    $h .= $row(petgo_cl_ic('info'), $L('О PetGo'), 'data-k-open="about"');
     return $h . '</div>';
+}
+
+/* ---------- 38.2 «О PetGo»: о компании, услуги и цены, вопросы, связь — внутри приложения ---------- */
+function petgo_cl_about_html() {
+    $L   = 'petgo_site_l';
+    $c   = petgo_site_cfg();
+    $ok  = petgo_cl_icon('check', 'pg-i');
+    $h   = '<div class="pgk-about"><div class="pgk-ab-top"><span class="pgk-wl-logo">' . petgo_cl_ic('paw') . '</span><h2>PetGo</h2><p>' . esc_html($L('Забота. Доверие. Вместе.')) . '</p></div>';
+    if (!empty($c['slides'][0]['t'])) {
+        $h .= '<p class="pgk-ab-lead"><b>' . esc_html(petgo_site_tx($c['slides'][0]['t'])) . '</b>' . (!empty($c['slides'][0]['s']) ? ' ' . esc_html(petgo_site_tx($c['slides'][0]['s'])) : '') . '</p>';
+    }
+    /* цифры: средняя оценка, отзывы, няни, выполненные заказы */
+    $rv  = function_exists('petgo_site_reviews') ? (array) petgo_site_reviews() : array();
+    $nn  = petgo_site_nannies();
+    $st  = array();
+    if ($rv) {
+        $avg  = array_sum(wp_list_pluck($rv, 'r')) / count($rv);
+        $st[] = array(number_format($avg, 1, petgo_site_lang() === 'en' ? '.' : ',', ''), count($rv) . ' ' . petgo_site_n(count($rv), array('отзыв', 'отзыва', 'отзывов')), 'star');
+    }
+    if ($nn) {
+        $st[] = array((string) count($nn), $L('нянь в команде'), 'paw');
+        $done = array_sum(array_map('intval', wp_list_pluck($nn, 'done')));
+        if ($done > 0) {
+            $st[] = array((string) $done, petgo_site_n($done, array('заказ', 'заказа', 'заказов')) . ' ' . $L('выполнено'), 'check');
+        }
+    }
+    if ($st) {
+        $h .= '<div class="pgk-ab-st">';
+        foreach ($st as $x) {
+            $h .= '<div><b>' . ($x[2] === 'star' ? petgo_cl_icon('star', 'pg-i pgk-star') : '') . esc_html($x[0]) . '</b><small>' . esc_html($x[1]) . '</small></div>';
+        }
+        $h .= '</div>';
+    }
+    if (!empty($c['checks'])) {
+        $h .= '<h4 class="pgk-gt">' . esc_html($L('Почему PetGo')) . '</h4><div class="pgk-list pgk-ab-ok">';
+        foreach ((array) $c['checks'] as $t) {
+            $h .= '<div class="pgk-row"><span class="pgk-mrow-i">' . $ok . '</span><span class="pgk-row-t">' . esc_html(petgo_site_tx($t)) . '</span></div>';
+        }
+        $h .= '</div>';
+    }
+    if (!empty($c['services'])) {
+        $h .= '<h4 class="pgk-gt">' . esc_html($L('Услуги и цены')) . '</h4><div class="pgk-ab-sv">';
+        foreach ((array) $c['services'] as $sv) {
+            $pr   = petgo_site_price($sv);
+            $id   = (string) $sv['id'];
+            $kind = strpos($id, 'week') !== false ? 'week' : (strpos($id, 'visit') !== false ? 'visit' : 'walk');
+            $pet  = isset($sv['pet']) ? ($sv['pet'] === 'cat' ? $L('Для кошек') : ($sv['pet'] === 'dog' ? $L('Для собак') : '')) : '';
+            $h   .= '<div class="pgk-card pgk-ab-s"><div class="pgk-ab-s-h"><b>' . esc_html(petgo_site_tx($sv['title'])) . '</b>' . ($pet !== '' ? '<small>' . esc_html($pet) . '</small>' : '') . '</div>';
+            $h   .= !empty($sv['text']) ? '<p>' . esc_html(petgo_site_tx($sv['text'])) . '</p>' : '';
+            $h   .= '<div class="pgk-ab-s-f"><span class="pgk-ab-pr">' . ($pr['now'] ? '<b>' . esc_html(petgo_site_money($pr['now'])) . ' ₸</b>' . ($pr['old'] ? '<s>' . esc_html(petgo_site_money($pr['old'])) . ' ₸</s>' : '') . '<small>' . esc_html(petgo_site_tx($sv['unit'])) . '</small>' : '') . '</span>';
+            $h   .= '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-book="' . esc_attr($kind) . '">' . esc_html($L('Заказать')) . '</button></div></div>';
+        }
+        $h .= '</div>';
+    }
+    $faq = function_exists('petgo_site_faq') ? petgo_site_faq($c) : array();
+    if ($faq) {
+        $h .= '<h4 class="pgk-gt">' . esc_html($L('Частые вопросы')) . '</h4><div class="pgk-list pgk-ab-faq">';
+        foreach ($faq as $q) {
+            $h .= '<details class="pgk-more-d"><summary class="pgk-row"><span class="pgk-row-t">' . esc_html($q[0]) . '</span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</summary><p>' . esc_html($q[1]) . '</p></details>';
+        }
+        $h .= '</div>';
+    }
+    $tel = preg_replace('/\D/', '', (string) ($c['phone'] !== '' ? $c['phone'] : $c['wa']));
+    $h  .= '<h4 class="pgk-gt">' . esc_html($L('Связаться')) . '</h4><div class="pgk-list">';
+    $h  .= '<button type="button" class="pg-b pgk-row pgk-mrow" data-k-open="chat"><span class="pgk-mrow-i">' . petgo_cl_icon('chat') . '</span><span class="pgk-row-t">' . esc_html($L('Написать менеджеру')) . '</span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button>';
+    $h  .= '<a class="pgk-row pgk-mrow" data-ext target="_blank" rel="noopener" href="https://wa.me/' . esc_attr(petgo_site_wa()) . '"><span class="pgk-mrow-i">' . petgo_cl_icon('wa') . '</span><span class="pgk-row-t">WhatsApp</span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</a>';
+    if ($tel !== '') {
+        $h .= '<a class="pgk-row pgk-mrow" data-ext href="tel:+' . esc_attr($tel) . '"><span class="pgk-mrow-i">' . petgo_cl_icon('phone') . '</span><span class="pgk-row-t"><b>' . esc_html($L('Позвонить')) . '</b><small>' . esc_html(petgo_site_phone_fmt()) . '</small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</a>';
+    }
+    $h .= '</div><p class="pgk-ids">PetGo · ' . esc_html($L('Алматы')) . '</p></div>';
+    return $h;
+}
+add_filter('petgo_cl_sheets', function ($h) {
+    return $h . petgo_cl_sheet('about', petgo_site_l('О PetGo'), petgo_cl_about_html(), '', 'pgk-sheet-tall');
+}, 5);
+
+/* 38.2: помощник (ИИ) не смог ответить — клиент не остаётся в тишине: сообщение в чате (не чаще раза в 20 минут),
+   менеджеру — уведомление. Причина ошибки видна в «PetGo ИИ» → «Проверить каждый ключ». */
+function petgo_cl_ai_fail($uid, $cid) {
+    if (get_transient('petgo_cl_ai_fail_' . (int) $uid)) {
+        return false;
+    }
+    set_transient('petgo_cl_ai_fail_' . (int) $uid, 1, 20 * MINUTE_IN_SECONDS);
+    global $wpdb;
+    $tel = petgo_site_phone_fmt();
+    $wpdb->insert(petgo_tb('msgs'), array('chat_id' => (int) $cid, 'user_id' => 0, 'subject_id' => 0, 'kind' => 'sys', 'body' => petgo_site_l('Помощник сейчас не может ответить. Ваше сообщение увидит менеджер и ответит здесь.') . ($tel !== '' ? ' ' . petgo_site_l('Срочно — позвоните:') . ' ' . $tel : ''), 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
+    if (function_exists('petgo_push_notify') && function_exists('petgo_push_users')) {
+        $u = get_userdata($uid);
+        petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Клиент ждёт ответа (ИИ не ответил)', ($u ? $u->display_name . ' · ' : '') . petgo_cl_code($uid), petgo_page_url(array('c' => (int) $cid)));
+    }
+    petgo_bump();
+    return true;
 }
 
 /* ============================================================
@@ -208,6 +301,15 @@ function petgo_cl_dict38() {
         'Поиск няни…' => array('Күтуші іздеу…', 'Search for pet sitters…'),
         'Сортировка' => array('Сұрыптау', 'Sort'),
         'Наши няни' => array('Біздің күтушілер', 'Our pet sitters'),
+        'нянь в команде' => array('күтуші командада', 'sitters on the team'),
+        'выполнено' => array('орындалды', 'completed'),
+        'Почему PetGo' => array('Неге PetGo', 'Why PetGo'),
+        'Для собак' => array('Иттерге', 'For dogs'),
+        'Для кошек' => array('Мысықтарға', 'For cats'),
+        'Связаться' => array('Байланыс', 'Contact us'),
+        'Написать менеджеру' => array('Менеджерге жазу', 'Message a manager'),
+        'Помощник сейчас не может ответить. Ваше сообщение увидит менеджер и ответит здесь.' => array('Көмекші қазір жауап бере алмайды. Хабарламаңызды менеджер көріп, осында жауап береді.', 'The assistant cannot answer right now. A manager will see your message and reply here.'),
+        'Срочно — позвоните:' => array('Шұғыл болса — қоңырау шалыңыз:', 'Urgent? Call:'),
         'Все' => array('Барлығы', 'See all'),
         'Новая няня' => array('Жаңа күтуші', 'New sitter'),
         'от' => array('бастап', 'from'),

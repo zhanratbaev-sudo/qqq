@@ -1177,3 +1177,49 @@ html.pgk-dark .pgk-auth .pgk-list, html.pgk-dark .pgk-auth-alt { box-shadow: non
 @media (prefers-reduced-motion: reduce) {
   .pgk-wave, .pgk-zz text, .pgk-nc-fav.pop .pg-i, .pgk-nts .pgk-nt, .pgk-empty38, .pgk-gate[data-gv] .pgk-gform, .pgk-gate[data-gv] .pgk-wl { animation: none !important; }
 }
+
+/* ============================================================
+   38.2: подпись «Заказать» под лапкой, «О PetGo» внутри приложения, внизу экрана входа — только язык
+   ============================================================ */
+.pg-layer .pgk-tb38 > .pgk-tb-paw.pg-b.pg-b { position: relative; flex: 0 0 76px; max-width: 76px; align-self: stretch; justify-content: flex-end; gap: 0; padding: 0 0 var(--paw-pb, 7px); color: var(--k-acci); font-weight: 600; }
+/* меню, нижнее меню и подвал сайта в кабинете не показываются ни на телефоне, ни на компьютере */
+html.pgk-on .pg-layer .pg-nav, html.pgk-on .pg-layer .pg-dock, html.pgk-on .pg .pg-foot, html.pgk-on .pg .pg-phead { display: none !important; }
+@media (min-width: 861px) { .pgk { padding-top: calc(var(--sat) + 24px); } }
+.pg-layer .pgk-tb38 > .pgk-tb-paw > i { position: absolute; top: -26px; left: 50%; width: 58px !important; height: 58px !important; margin: 0 0 0 -29px; }
+.pgk-tb-paw i .pg-i { width: 30px !important; height: 30px !important; }
+.pgk-tb-paw:active i { transform: scale(.9); }
+.pg-layer .pgk-tb38 > .pgk-tb-paw > span { overflow: visible; }
+.pgk-gate-foot { justify-content: center; }
+.pgk-about { padding-bottom: 8px; }
+.pgk-ab-top { text-align: center; padding: 4px 0 2px; }
+.pgk-ab-top .pgk-wl-logo .pg-i { width: 54px; height: 54px; }
+.pgk-ab-top h2 { margin: 6px 0 2px; font: 800 30px/1.1 var(--k-font); letter-spacing: -.03em; color: var(--k-acc); }
+html.pgk-dark .pgk-ab-top h2 { color: var(--k-tx); }
+.pgk-ab-top p { margin: 0; font-size: 15px; color: var(--k-mu); }
+.pgk-ab-lead { margin: 18px 2px 0; font-size: 16px; line-height: 1.5; color: var(--k-tx); }
+.pgk-ab-lead b { font-weight: 700; }
+.pgk-ab-st { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 16px; }
+.pgk-ab-st > div { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 14px 6px; border-radius: 18px; background: var(--k-card); text-align: center; }
+.pgk-ab-st b { display: inline-flex; align-items: center; gap: 4px; font: 800 22px/1 var(--k-font); color: var(--k-tx); }
+.pgk-ab-st small { font-size: 12.5px; line-height: 1.25; color: var(--k-mu); }
+.pgk-about .pgk-gt { margin: 26px 2px 8px; text-transform: none; font: 700 18px/1.2 var(--k-font); color: var(--k-tx); }
+.pgk-ab-ok .pgk-row { cursor: default; min-height: 54px; }
+.pgk-ab-ok .pgk-row-t { white-space: normal; font-size: 16px; }
+.pgk-ab-ok .pgk-row + .pgk-row::before { left: 62px; }
+.pgk-ab-sv { display: grid; gap: 10px; }
+.pgk-ab-s { padding: 16px; }
+.pgk-ab-s-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pgk-ab-s-h b { font-size: 17px; font-weight: 700; }
+.pgk-ab-s-h small { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--k-mint); color: var(--k-mint-tx); font-size: 12.5px; font-weight: 600; }
+.pgk-ab-s p { margin: 6px 0 0; font-size: 15px; line-height: 1.45; color: var(--k-mu); }
+.pgk-ab-s-f { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+.pgk-ab-pr { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; }
+.pgk-ab-pr b { font-size: 19px; font-weight: 800; color: var(--k-acci); }
+.pgk-ab-pr s { font-size: 14px; color: var(--k-mu); }
+.pgk-ab-pr small { width: 100%; font-size: 13px; color: var(--k-mu); }
+.pgk-ab-faq summary .pgk-row-t { white-space: normal; font-size: 16px; font-weight: 500; }
+.pgk-ab-faq details + details summary::before { content: ""; position: absolute; top: 0; right: 0; left: 14px; border-top: .5px solid var(--k-line); }
+.pgk-ab-faq details > p { margin: 0; padding: 0 16px 16px; font-size: 15px; line-height: 1.5; color: var(--k-mu); animation: pgkIn 260ms var(--k-out) both; }
+.pgk-about .pgk-list .pgk-mrow .pgk-row-t small { white-space: normal; }
+.pg-layer .pgk-tb38 > .pgk-tb-paw > i { color: var(--k-acc-tx); }
+.pgk-ab-lead b { display: block; margin-bottom: 4px; }
