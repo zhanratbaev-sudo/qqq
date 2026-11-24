@@ -43,7 +43,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root.sh-auto {
     --bg: #111113;
     --bg-glow-1: #3A2214;
     --bg-glow-2: #1E1A36;
@@ -66,6 +66,29 @@
     color-scheme: dark;
   }
 }
+:root.sh-dark {
+    --bg: #111113;
+    --bg-glow-1: #3A2214;
+    --bg-glow-2: #1E1A36;
+    --surface: rgba(32, 32, 36, 0.72);
+    --surface-solid: #1C1C1F;
+    --surface-2: rgba(44, 44, 48, 0.6);
+    --stroke: rgba(255, 255, 255, 0.06);
+    --hairline: rgba(255, 255, 255, 0.08);
+    --text: #F4F4F6;
+    --text-2: #A8A8B2;
+    --text-3: #6E6E78;
+    --shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 10px 30px -12px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 30px 60px -24px rgba(0, 0, 0, 0.8);
+    --peach-a: #3A2418; --peach-b: #4E2C18; --peach-i: #FFB28A;
+    --lilac-a: #26213F; --lilac-b: #31285A; --lilac-i: #C5B6FF;
+    --mint-a: #17302A;  --mint-b: #1B3F33;  --mint-i: #8EE0B8;
+    --sky-a: #18273D;   --sky-b: #1D3454;   --sky-i: #9EC4FF;
+    --sand-a: #33291A;  --sand-b: #45361C;  --sand-i: #F3CF86;
+    --rose-a: #3A1D27;  --rose-b: #4F2232;  --rose-i: #FFAFC5;
+    color-scheme: dark;
+  }
+
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
@@ -147,7 +170,11 @@ img { max-width: 100%; display: block; }
 .btn[disabled] { opacity: .5; pointer-events: none; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 10px 24px -10px color-mix(in srgb, var(--accent) 80%, transparent); }
 .btn-dark { background: #16161A; color: #fff; }
-@media (prefers-color-scheme: dark) { .btn-dark { background: #F4F4F6; color: #16161A; } }
+@media (prefers-color-scheme: dark) {
+  :root.sh-auto .btn-dark { background: #F4F4F6; color: #16161A; }
+}
+:root.sh-dark .btn-dark { background: #F4F4F6; color: #16161A; }
+
 .btn-ghost { background: var(--surface-2); border: 1px solid var(--hairline); }
 .btn-block { width: 100%; }
 .btn-sm { height: 38px; padding: 0 16px; font-size: 14px; }
@@ -198,12 +225,20 @@ img { max-width: 100%; display: block; }
   box-shadow: var(--shadow); isolation: isolate;
   background: linear-gradient(160deg, #EAF1F8 0%, #F6EEE6 60%, #F3E3D6 100%);
 }
-@media (prefers-color-scheme: dark) { .hero { background: linear-gradient(160deg, #1D2430 0%, #261F1B 70%); } }
+@media (prefers-color-scheme: dark) {
+  :root.sh-auto .hero { background: linear-gradient(160deg, #1D2430 0%, #261F1B 70%); }
+}
+:root.sh-dark .hero { background: linear-gradient(160deg, #1D2430 0%, #261F1B 70%); }
+
 .hero-art { position: absolute; inset: 0; z-index: -1; }
 .hero-art svg, .hero-art img { position: absolute; right: -6px; bottom: 0; height: 100%; width: auto; }
 .hero-art img { right: 0; width: 100%; object-fit: cover; }
 .hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.85) 0%, rgba(255,255,255,.55) 45%, rgba(255,255,255,0) 75%); }
-@media (prefers-color-scheme: dark) { .hero-art::after { background: linear-gradient(90deg, rgba(17,17,19,.9) 0%, rgba(17,17,19,.55) 50%, rgba(17,17,19,0) 80%); } }
+@media (prefers-color-scheme: dark) {
+  :root.sh-auto .hero-art::after { background: linear-gradient(90deg, rgba(17,17,19,.9) 0%, rgba(17,17,19,.55) 50%, rgba(17,17,19,0) 80%); }
+}
+:root.sh-dark .hero-art::after { background: linear-gradient(90deg, rgba(17,17,19,.9) 0%, rgba(17,17,19,.55) 50%, rgba(17,17,19,0) 80%); }
+
 .hero-body { padding: 24px 22px 22px; max-width: 74%; }
 .hero h1 { font: 800 29px/1.06 var(--font-display); letter-spacing: -0.03em; margin: 0 0 10px; }
 .hero p { margin: 0 0 18px; color: var(--text-2); font-size: 14px; }
@@ -273,7 +308,11 @@ img { max-width: 100%; display: block; }
 .promo h3 { margin: 10px 0 0; font: 800 21px/1.1 var(--font-display); letter-spacing: -0.02em; position: relative; z-index: 1; }
 .promo .lock-art { position: absolute; right: -14px; bottom: -10px; width: 110px; height: 110px; opacity: .9; }
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.75); color: var(--peach-i); }
-@media (prefers-color-scheme: dark) { .pill { background: rgba(0,0,0,.3); } }
+@media (prefers-color-scheme: dark) {
+  :root.sh-auto .pill { background: rgba(0,0,0,.3); }
+}
+:root.sh-dark .pill { background: rgba(0,0,0,.3); }
+
 .promo .btn { position: relative; z-index: 1; align-self: flex-start; max-width: 100%; white-space: normal; text-align: left; line-height: 1.15; background: var(--surface-solid); height: 40px; padding: 0 14px; font-size: 13.5px; margin-top: 12px; }
 
 /* ---------- Reviews ---------- */

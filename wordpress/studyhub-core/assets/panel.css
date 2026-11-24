@@ -131,3 +131,11 @@ code.p-code { font: 600 13px ui-monospace, SFMono-Regular, Menlo, monospace; bac
 .p-login-note { font-size: 13px; color: var(--text-2); text-align: center; margin: 0; }
 .creds { width: 100%; min-height: 130px; font: 500 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (min-width: 720px) { body.panel-body { padding: 0; } }
+/* заявки */
+.p-req { display: grid; gap: 10px; }
+.p-req-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.p-req-task { margin: 0; font-size: 15px; line-height: 1.45; white-space: pre-wrap; }
+.p-req-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--text-2); }
+.p-req-contacts { display: flex; gap: 8px; flex-wrap: wrap; }
+.p-req-reply { background: var(--surface-2); border-radius: 14px; padding: 10px 12px; }
+.p-req-reply p { margin: 4px 0 0; white-space: pre-wrap; }

@@ -60,6 +60,6 @@
   body.s-body { padding: 0; }
 }
 .s-cta .btn.btn-dark { background: #16161A; color: #fff; }
-@media (prefers-color-scheme: dark) { .s-cta .btn.btn-dark { background: #F4F4F6; color: #16161A; } }
+@media (prefers-color-scheme: dark) { :root.sh-auto .s-cta .btn.btn-dark { background: #F4F4F6; color: #16161A; } }
 .s-grid .svc-foot { flex-wrap: wrap; }
 .s-grid .price { white-space: nowrap; }

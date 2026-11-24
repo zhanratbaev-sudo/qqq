@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 $studyhub_canon = studyhub_site_url( $key );
 ?><!doctype html>
-<html lang="<?php echo esc_attr( studyhub_lang() ); ?>">
+<html lang="<?php echo esc_attr( studyhub_lang() ); ?>" class="sh-auto">
 <head>
 <?php echo studyhub_head_tags(); // phpcs:ignore ?>
 <title><?php echo esc_html( $seo['title'] ); ?></title>

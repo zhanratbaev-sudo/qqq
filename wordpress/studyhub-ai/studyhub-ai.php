@@ -2,7 +2,7 @@
 /**
  * Plugin Name: StudyHub ИИ
  * Description: ИИ-помощник для студентов (Google Gemini): вкладка «ИИ» в кабинете, подсказка в чате, когда администратор не в сети или долго не отвечает. Несколько ключей по кругу, запасные модели, база знаний. Настройки — в панели StudyHub. Нужны «StudyHub Ядро» и «StudyHub Студент».
- * Version: 2.0.0
+ * Version: 3.0.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Requires Plugins: studyhub-core
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'STUDYHUB_AI_FILE', __FILE__ );
-define( 'STUDYHUB_AI_VER', '2.0.0' );
+define( 'STUDYHUB_AI_VER', '3.0.0' );
 
 require_once __DIR__ . '/includes/class-ai.php';
 require_once __DIR__ . '/includes/class-rest.php';

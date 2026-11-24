@@ -2,7 +2,7 @@
 /**
  * Plugin Name: StudyHub Сайт
  * Description: Сайт для студентов без темы WordPress: Главная, Услуги, Отзывы, «Войти» в кабинет. Русский и казахский, светлая и тёмная тема, SEO. Нужен плагин «StudyHub Ядро».
- * Version: 2.0.0
+ * Version: 2.1.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Requires Plugins: studyhub-core
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'STUDYHUB_SITE_FILE', __FILE__ );
-define( 'STUDYHUB_SITE_VER', '2.0.0' );
+define( 'STUDYHUB_SITE_VER', '2.1.0' );
 
 /* сайт работает поверх «StudyHub Ядро»: подключаемся, когда загружены все плагины */
 add_action(

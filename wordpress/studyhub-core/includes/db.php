@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class StudyHub_DB {
 
-	const DB_VERSION = '1.0.0';
+	const DB_VERSION = '1.1.0';
 
 	public static function table( $name ) {
 		global $wpdb;
@@ -45,6 +45,8 @@ class StudyHub_DB {
 			disabled tinyint(1) NOT NULL DEFAULT 0,
 			created_at bigint(20) unsigned NOT NULL DEFAULT 0,
 			last_seen bigint(20) unsigned NOT NULL DEFAULT 0,
+			device_hash char(64) NOT NULL DEFAULT '',
+			face_lock tinyint(1) NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
 			UNIQUE KEY login (login)
 			) $charset;"
@@ -57,6 +59,7 @@ class StudyHub_DB {
 			token_hash char(64) NOT NULL,
 			created_at bigint(20) unsigned NOT NULL DEFAULT 0,
 			expires_at bigint(20) unsigned NOT NULL DEFAULT 0,
+			unlock_until bigint(20) unsigned NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
 			UNIQUE KEY token_hash (token_hash),
 			KEY student_id (student_id)
@@ -109,6 +112,47 @@ class StudyHub_DB {
 			created_at bigint(20) unsigned NOT NULL DEFAULT 0,
 			PRIMARY KEY  (id),
 			KEY status (status),
+			KEY student_id (student_id)
+			) $charset;"
+		);
+
+		$requests = self::table( 'requests' );
+		$passkeys = self::table( 'passkeys' );
+		dbDelta(
+			"CREATE TABLE $requests (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			token_hash char(64) NOT NULL,
+			device_hash char(64) NOT NULL DEFAULT '',
+			service varchar(40) NOT NULL DEFAULT '',
+			task text NOT NULL,
+			deadline varchar(60) NOT NULL DEFAULT '',
+			university varchar(40) NOT NULL DEFAULT '',
+			telegram varchar(64) NOT NULL DEFAULT '',
+			phone varchar(32) NOT NULL DEFAULT '',
+			lang varchar(5) NOT NULL DEFAULT 'ru',
+			status varchar(12) NOT NULL DEFAULT 'new',
+			reply text NULL,
+			student_id bigint(20) unsigned NOT NULL DEFAULT 0,
+			creds text NULL,
+			seen_admin tinyint(1) NOT NULL DEFAULT 0,
+			created_at bigint(20) unsigned NOT NULL DEFAULT 0,
+			updated_at bigint(20) unsigned NOT NULL DEFAULT 0,
+			PRIMARY KEY  (id),
+			KEY token_hash (token_hash),
+			KEY status (status)
+			) $charset;"
+		);
+		dbDelta(
+			"CREATE TABLE $passkeys (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			student_id bigint(20) unsigned NOT NULL,
+			cred_id varchar(255) NOT NULL,
+			pubkey text NOT NULL,
+			sign_count bigint(20) unsigned NOT NULL DEFAULT 0,
+			created_at bigint(20) unsigned NOT NULL DEFAULT 0,
+			last_used bigint(20) unsigned NOT NULL DEFAULT 0,
+			PRIMARY KEY  (id),
+			UNIQUE KEY cred_id (cred_id),
 			KEY student_id (student_id)
 			) $charset;"
 		);
@@ -175,6 +219,8 @@ class StudyHub_DB {
 		$wpdb->delete( self::table( 'messages' ), array( 'student_id' => $id ) );
 		$wpdb->delete( self::table( 'sessions' ), array( 'student_id' => $id ) );
 		$wpdb->delete( self::table( 'reviews' ), array( 'student_id' => $id ) );
+		$wpdb->delete( self::table( 'passkeys' ), array( 'student_id' => $id ) );
+		$wpdb->update( self::table( 'requests' ), array( 'student_id' => 0, 'creds' => null ), array( 'student_id' => $id ) );
 		$wpdb->delete( self::table( 'students' ), array( 'id' => $id ) );
 	}
 
@@ -342,4 +388,53 @@ class StudyHub_DB {
 		global $wpdb;
 		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table( 'reviews' ) . " WHERE status = 'pending'" );
 	}
+
+	/* ---------------------------------------------------------------------
+	 * Requests (заявки с сайта)
+	 * ------------------------------------------------------------------ */
+
+	public static function add_request( array $data ) {
+		global $wpdb;
+		$data['created_at'] = time();
+		$data['updated_at'] = time();
+		$wpdb->insert( self::table( 'requests' ), $data );
+		return (int) $wpdb->insert_id;
+	}
+
+	public static function get_request( $id ) {
+		global $wpdb;
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'requests' ) . ' WHERE id = %d', $id ) );
+	}
+
+	public static function request_by_token( $token_hash ) {
+		global $wpdb;
+		return $wpdb->get_row( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'requests' ) . ' WHERE token_hash = %s ORDER BY id DESC LIMIT 1', $token_hash ) );
+	}
+
+	public static function update_request( $id, array $data ) {
+		global $wpdb;
+		$data['updated_at'] = time();
+		return $wpdb->update( self::table( 'requests' ), $data, array( 'id' => (int) $id ) );
+	}
+
+	public static function delete_request( $id ) {
+		global $wpdb;
+		return $wpdb->delete( self::table( 'requests' ), array( 'id' => (int) $id ) );
+	}
+
+	public static function requests( $limit = 200 ) {
+		global $wpdb;
+		return (array) $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM ' . self::table( 'requests' ) . ' ORDER BY id DESC LIMIT %d', $limit ) );
+	}
+
+	public static function new_requests_count() {
+		global $wpdb;
+		return (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . self::table( 'requests' ) . " WHERE status = 'new'" );
+	}
+
+	public static function requests_today_by_device( $device_hash ) {
+		global $wpdb;
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM ' . self::table( 'requests' ) . ' WHERE device_hash = %s AND created_at > %d', $device_hash, time() - DAY_IN_SECONDS ) );
+	}
 }
+

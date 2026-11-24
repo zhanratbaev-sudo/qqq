@@ -10,7 +10,7 @@
   var TONES = { peach: 'Персиковый', lilac: 'Сиреневый', mint: 'Мятный', sky: 'Голубой', sand: 'Песочный', rose: 'Розовый' };
 
   var state = {
-    chats: [], status: 'auto', online: false, pending: 0,
+    chats: [], status: 'auto', online: false, pending: 0, newRequests: 0, requests: null,
     active: 0, messages: [], lastId: 0, readUpTo: 0, filter: '',
     students: null, reviews: null, reviewFilter: 'pending', reviewStats: { count: 0, average: 0 },
     settings: null, services: null, universities: null, plugins: [], section: {}
@@ -62,6 +62,7 @@
   function navItems() {
     var items = [
       ['chats', 'chat', 'Чаты', totalUnread()],
+      ['requests', 'doc', 'Заявки', state.newRequests],
       ['students', 'user', 'Студенты', 0],
       ['reviews', 'star', 'Отзывы', state.pending],
       ['catalog', 'grid', 'Услуги и вузы', 0],
@@ -96,7 +97,7 @@
       '<button class="p-nav" data-act="logout">' + icon('logout', 'sm') + 'Выйти</button></div></aside>';
     var mobileTabs = nav.slice(0, 3).concat([['more', 'grid', 'Ещё', 0]]);
     var tabbar = '<nav class="tabbar glass">' + mobileTabs.map(function (n) {
-      var cur = n[0] === active || (n[0] === 'more' && ['catalog', 'settings'].concat((P.sections || []).map(function (s) { return 's-' + s.key; })).indexOf(active) > -1);
+      var cur = n[0] === active || (n[0] === 'more' && ['reviews', 'catalog', 'settings'].concat((P.sections || []).map(function (s) { return 's-' + s.key; })).indexOf(active) > -1);
       return '<a class="tab" href="#' + n[0] + '"' + (cur ? ' aria-current="page"' : '') + (n[0] === 'more' ? ' data-act="more"' : '') + '>' + icon(n[1]) + '<span>' + esc(n[2]) + '</span>' + (n[3] ? '<span class="badge">' + n[3] + '</span>' : '') + '</a>';
     }).join('') + '</nav>';
     var mtop = '<div class="p-mtop"><div class="brand-tile">' + SH.brandMark(P.logo) + '</div><div class="grow"><b>' + esc(P.brand) + '</b><span>Панель</span></div>' + statusSeg() + '</div>';
@@ -119,6 +120,7 @@
     if (r === 'chats') html = viewChats();
     else if (r === 'students') html = viewStudents();
     else if (r === 'reviews') html = viewReviews();
+    else if (r === 'requests') html = viewRequests();
     else if (r === 'catalog') html = viewCatalog();
     else if (r === 'settings') html = viewSettings();
     else if (r.indexOf('s-') === 0) html = viewSection(r.slice(2));
@@ -215,9 +217,10 @@
 
   function loadChats() {
     return api('admin/chats').then(function (d) {
-      var before = totalUnread() + '|' + state.pending + '|' + state.status + '|' + state.online;
-      state.chats = d.chats; state.status = d.status; state.online = d.online; state.pending = d.pending;
-      if (before !== totalUnread() + '|' + state.pending + '|' + state.status + '|' + state.online) refreshShell();
+      var before = totalUnread() + '|' + state.pending + '|' + state.status + '|' + state.online + '|' + state.newRequests;
+      if (d.requests > state.newRequests && state.requests) loadRequests();
+      state.chats = d.chats; state.status = d.status; state.online = d.online; state.pending = d.pending; state.newRequests = d.requests || 0;
+      if (before !== totalUnread() + '|' + state.pending + '|' + state.status + '|' + state.online + '|' + state.newRequests) refreshShell();
       renderChatList();
       var n = totalUnread();
       document.title = (n ? '(' + n + ') ' : '') + P.brand + ' · Панель';
@@ -321,11 +324,12 @@
       '</div><div class="p-row-actions"><button class="btn btn-primary">' + icon('plusSq', 'xs') + 'Создать</button></div></form>' +
       '<div class="p-list">' + (list.length ? list.map(function (s) {
         return '<div class="p-item glass' + (s.disabled ? ' off' : '') + '">' + SH.anonAvatar(s.alias) +
-          '<div class="grow"><div class="t">' + esc(s.alias) + ' <code class="p-code">' + esc(s.login) + '</code>' + (s.university ? '<span class="p-tag">' + esc(s.university) + '</span>' : '') + (s.disabled ? '<span class="p-tag mute">заблокирован</span>' : '') + (s.unread ? '<span class="badge">' + s.unread + '</span>' : '') + '</div>' +
+          '<div class="grow"><div class="t">' + esc(s.alias) + ' <code class="p-code">' + esc(s.login) + '</code>' + (s.university ? '<span class="p-tag">' + esc(s.university) + '</span>' : '') + (s.disabled ? '<span class="p-tag mute">заблокирован</span>' : '') + (s.device ? '<span class="p-tag ok">📱 устройство привязано</span>' : '') + (s.unread ? '<span class="badge">' + s.unread + '</span>' : '') + '</div>' +
           '<div class="s">' + (s.note ? '📝 ' + esc(s.note) + ' · ' : '') + (s.lastSeen ? 'был(а) ' + SH.fmtDate(s.lastSeen) : 'ещё не входил(а)') + '</div></div>' +
           '<div class="p-filter">' +
             '<button class="btn btn-ghost btn-sm" data-st-chat="' + s.id + '">' + icon('chat', 'xs') + 'Чат</button>' +
             '<button class="btn btn-ghost btn-sm" data-st="reset" data-id="' + s.id + '">Новый пароль</button>' +
+            (s.device ? '<button class="btn btn-ghost btn-sm" data-st="reset_device" data-id="' + s.id + '" title="Разрешить вход на другом телефоне">Сбросить устройство</button>' : '') +
             '<button class="btn btn-ghost btn-sm" data-st="' + (s.disabled ? 'enable' : 'disable') + '" data-id="' + s.id + '">' + (s.disabled ? 'Включить' : 'Блок') + '</button>' +
             '<button class="btn btn-danger btn-sm" data-st="delete" data-id="' + s.id + '" aria-label="Удалить">' + icon('trash', 'xs') + '</button>' +
           '</div></div>';
@@ -343,6 +347,35 @@
           this.innerHTML = icon('check', 'xs') + 'Скопировано';
         });
       });
+  }
+
+  /* ---------------------------------------------------------------- заявки */
+  var REQ_LABEL = { new: ['Новая', 'warn'], answered: ['Есть ответ', ''], accepted: ['Чат открыт', 'ok'], declined: ['Отклонена', 'mute'] };
+  function loadRequests() { api('admin/requests').then(function (d) { state.requests = d.requests; if (route() === 'requests') render(); }).catch(fail); }
+  function viewRequests() {
+    if (!state.requests) { loadRequests(); return head('Заявки', '') + loading(); }
+    var list = state.requests;
+    return head('Заявки', 'С сайта, без регистрации. Ответьте — студент увидит ответ на своём телефоне. «Принять» откроет ему чат с вами.') +
+      (list.length ? '<div class="p-list">' + list.map(function (r) {
+        var l = REQ_LABEL[r.status] || [r.status, 'mute'];
+        var tg = r.telegram ? r.telegram.replace(/^@/, '') : '';
+        return '<article class="p-card glass p-req" data-req="' + r.id + '">' +
+          '<div class="p-req-top"><b>Заявка #' + r.id + '</b>' + (r.service ? '<span class="p-tag ok">' + esc(svcTitle(r.service)) + '</span>' : '') + '<span class="p-tag ' + l[1] + '">' + l[0] + '</span><span class="tiny" style="margin-left:auto">' + SH.fmtDate(r.created) + '</span></div>' +
+          '<p class="p-req-task">' + esc(r.task) + '</p>' +
+          '<div class="p-req-meta">' + (r.deadline ? '<span>⏱ ' + esc(r.deadline) + '</span>' : '') + (r.university ? '<span>🎓 ' + esc(r.university) + '</span>' : '') + '<span>' + (r.lang === 'kk' ? 'Қазақша' : 'Русский') + '</span></div>' +
+          ((tg || r.phone) ? '<div class="p-req-contacts">' + (tg ? '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://t.me/' + esc(tg) + '">Telegram @' + esc(tg) + '</a>' : '') +
+            (r.phone ? '<a class="btn btn-ghost btn-sm" href="tel:' + esc(r.phone.replace(/[^+\d]/g, '')) + '">' + esc(r.phone) + '</a>' : '') +
+            '<button class="btn btn-ghost btn-sm" data-rq="erase" title="Стереть контакты из базы">Стереть контакты</button></div>' : (r.status !== 'accepted' ? '<p class="tiny">Контакты стёрты.</p>' : '')) +
+          (r.reply ? '<div class="p-req-reply"><span class="tiny">Ваш ответ</span><p>' + esc(r.reply) + '</p></div>' : '') +
+          (r.status === 'accepted'
+            ? '<div class="p-row-actions"><button class="btn btn-primary btn-sm" data-st-chat="' + r.student + '">' + icon('chat', 'xs') + 'Открыть чат</button><button class="btn btn-danger btn-sm" data-rq="delete">' + icon('trash', 'xs') + '</button></div>'
+            : '<textarea class="textarea" rows="2" placeholder="Ответ студенту: цена, срок, вопросы…"></textarea>' +
+              '<div class="p-row-actions"><button class="btn btn-ghost btn-sm" data-rq="reply">Отправить ответ</button>' +
+              '<button class="btn btn-primary btn-sm" data-rq="accept">' + icon('check', 'xs') + 'Принять и открыть чат</button>' +
+              (r.status !== 'declined' ? '<button class="btn btn-ghost btn-sm" data-rq="decline">Отклонить</button>' : '') +
+              '<button class="btn btn-danger btn-sm" data-rq="delete" aria-label="Удалить">' + icon('trash', 'xs') + '</button></div>') +
+          '</article>';
+      }).join('') + '</div>' : '<div class="p-empty glass">' + icon('doc') + 'Заявок пока нет. Они придут с сайта — студенты оставляют их без регистрации.</div>');
   }
 
   /* ---------------------------------------------------------------- отзывы */
@@ -394,12 +427,11 @@
   function uniRow(u) {
     u = u || {};
     return '<div class="p-edit" data-row="uni"><input type="hidden" name="id" value="' + esc(u.id || '') + '">' +
-      '<div class="p-edit-head"><span class="uni-chip">' + (u.logo ? '<img src="' + esc(u.logo) + '" alt="">' : esc(u.short || '?')) + '</span><b>' + esc(u.short || 'Новый вуз') + '</b>' +
+      '<div class="p-edit-head"><span class="quick-ico tone-lilac tone-bg">' + icon('grad', 'sm') + '</span><b>' + esc(u.short || 'Новый вуз') + '</b>' +
       '<button type="button" class="btn btn-danger btn-sm" data-act="row-del">' + icon('trash', 'xs') + '</button></div><div class="p-grid">' +
-      '<label class="p-field">Коротко (на значке)<input class="input" name="short" maxlength="10" value="' + esc(u.short || '') + '" required></label>' +
+      '<label class="p-field">Коротко <small>например КазГАСА</small><input class="input" name="short" maxlength="16" value="' + esc(u.short || '') + '" required></label>' +
       '<label class="p-field">Полное название (рус)<input class="input" name="name_ru" value="' + esc(u.name_ru || '') + '"></label>' +
       '<label class="p-field">Толық атауы (қаз)<input class="input" name="name_kk" value="' + esc(u.name_kk || '') + '"></label>' +
-      '<label class="p-field">Логотип<span style="display:flex;gap:6px"><input class="input" name="logo" type="url" value="' + esc(u.logo || '') + '" placeholder="https://…"><button type="button" class="btn btn-ghost btn-sm" style="height:46px" data-upload="logo">' + icon('image', 'xs') + '</button></span></label>' +
       '</div></div>';
   }
   function viewCatalog() {
@@ -449,7 +481,9 @@
         fld('app_slug', 'Кабинет студента', 'text', location.origin + '/…') + fld('panel_slug', 'Эта панель', 'text', location.origin + '/…') +
         fld('contact_url', 'Ссылка «Получить доступ» на сайте', 'url', 'Telegram, WhatsApp или Instagram — куда писать новым студентам. Ваше имя не показывается.') +
         fld('contact_label', 'Текст кнопки', 'text') + '</div>' +
-        fld('site_on_front', 'Показывать сайт StudyHub на главной странице', 'checkbox', 'Выключите, если главную должна показывать тема WordPress') +
+        fld('app_on_front', 'Главная страница сайта = кабинет студента (вход, заявка, ИИ)', 'checkbox', 'Как в приложении: открыл сайт — сразу вход') +
+        fld('site_on_front', 'Иначе показывать сайт-визитку StudyHub на главной', 'checkbox', 'Если оба выключены — главную показывает тема WordPress') +
+        fld('erase_contacts', 'Стирать Telegram и телефон из заявки, когда открывается чат', 'checkbox', 'Максимальная анонимность: дальше общение только в чате') +
         fld('delete_on_uninstall', 'Удалить все данные при удалении плагина', 'checkbox', 'Чаты, студенты, файлы — безвозвратно') + '</section>' +
       '<section class="p-card glass"><h2>' + icon('grid', 'sm') + 'Дополнения</h2><div class="p-list">' + state.plugins.map(function (p) {
         return '<div class="p-item" style="padding:8px 0"><div class="grow"><div class="t">' + esc(p.name) + (p.core ? ' <span class="p-tag mute">ядро</span>' : '') + '</div></div><span class="tiny">' + esc(p.ver) + '</span></div>';
@@ -509,12 +543,27 @@
     if ((el = e.target.closest('[data-st-chat]'))) { state.active = +el.getAttribute('data-st-chat'); go('chats'); return; }
     if ((el = e.target.closest('[data-st]'))) {
       var doSt = el.getAttribute('data-st'), id = +el.getAttribute('data-id');
-      var q = { reset: 'Сгенерировать новый пароль? Старый перестанет работать.', delete: 'Удалить студента вместе с перепиской и файлами? Это необратимо.', disable: 'Заблокировать вход этому студенту?' }[doSt];
+      var q = { reset_device: 'Отвязать телефон? Студент сможет войти на другом устройстве (текущий вход закроется).', reset: 'Сгенерировать новый пароль? Старый перестанет работать.', delete: 'Удалить студента вместе с перепиской и файлами? Это необратимо.', disable: 'Заблокировать вход этому студенту?' }[doSt];
       if (q && !confirm(q)) return;
       api('admin/students/' + id, { method: 'POST', body: { do: doSt } }).then(function (d) { if (d.creds) credsSheet(d); loadStudents(); loadChats(); }).catch(fail);
       return;
     }
     if ((el = e.target.closest('[data-rf]'))) { state.reviewFilter = el.getAttribute('data-rf'); render(); return; }
+    if ((el = e.target.closest('[data-rq]'))) {
+      var card = el.closest('[data-req]'), rid = card.getAttribute('data-req'), act = el.getAttribute('data-rq');
+      var ta = card.querySelector('textarea'), txt = ta ? ta.value.trim() : '';
+      if (act === 'delete' && !confirm('Удалить заявку?')) return;
+      if (act === 'erase' && !confirm('Стереть Telegram и телефон из заявки?')) return;
+      if (act === 'accept' && !confirm('Открыть студенту чат? Для него создадутся логин и пароль — они появятся у него на телефоне.')) return;
+      if (act === 'reply' && !txt) { SH.toast('Напишите ответ', true); ta.focus(); return; }
+      el.disabled = true;
+      api('admin/requests/' + rid, { method: 'POST', body: { do: act, text: txt } }).then(function (d) {
+        SH.toast(act === 'accept' ? 'Чат открыт — студент увидит его на своём телефоне' : act === 'reply' ? 'Ответ отправлен' : 'Готово');
+        if (d.creds) credsSheet(d);
+        loadRequests(); loadChats(); state.students = null;
+      }).catch(function (ex) { el.disabled = false; fail(ex); });
+      return;
+    }
     if ((el = e.target.closest('[data-rv]'))) {
       var rv = el.getAttribute('data-rv');
       if (rv === 'delete' && !confirm('Удалить отзыв?')) return;

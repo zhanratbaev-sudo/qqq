@@ -10,12 +10,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 add_filter(
 	'studyhub_routes',
 	function ( $routes ) {
+		$front = (bool) StudyHub_Settings::get( 'app_on_front' );
+		if ( $front ) {
+			/* сайт = кабинет: главная сразу открывает вход (сайт-визитка уходит на свой адрес) */
+			foreach ( $routes as $k => $r ) {
+				$routes[ $k ]['front'] = false;
+			}
+		}
 		$routes['app'] = array(
 			'slug'   => StudyHub_Settings::slug( 'app_slug', 'app' ),
+			'front'  => $front,
 			'render' => 'studyhub_render_app',
 		);
 		return $routes;
-	}
+	},
+	30
 );
 
 add_filter(
@@ -45,6 +54,9 @@ function studyhub_app_config() {
 			'maxUploadMb'     => (int) $s['max_upload_mb'],
 			'accept'          => '.' . implode( ',.', array_keys( StudyHub_Files::allowed_types() ) ),
 			'student'         => $student ? studyhub_student_shape( $student ) : null,
+			'locked'          => ! $student && StudyHub_Auth::locked_student() ? array( 'alias' => StudyHub_Auth::locked_student()->alias ) : null,
+			'request'         => $student ? null : studyhub_request_public( studyhub_my_request() ),
+			'rpId'            => StudyHub_WebAuthn::rp_id(),
 			'unread'          => $student ? StudyHub_DB::unread_for_student( $student->id ) : 0,
 			'ai'              => array( 'enabled' => false ), // заполняет «StudyHub ИИ».
 		)
@@ -53,6 +65,7 @@ function studyhub_app_config() {
 }
 
 function studyhub_render_app() {
+	StudyHub_Auth::device_hash(); // у каждого телефона своя метка (один логин — одно устройство).
 	$config = studyhub_app_config();
 	include dirname( __DIR__ ) . '/templates/app.php';
 }

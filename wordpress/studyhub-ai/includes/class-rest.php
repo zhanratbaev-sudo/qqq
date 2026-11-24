@@ -26,7 +26,11 @@ class StudyHub_AI_Rest {
 		if ( '1' !== $req->get_header( 'x_studyhub' ) ) {
 			return new WP_Error( 'forbidden', 'forbidden', array( 'status' => 403 ) );
 		}
-		if ( ! function_exists( 'studyhub_current_student' ) || ! studyhub_current_student() ) {
+		if ( ! function_exists( 'studyhub_current_student' ) ) {
+			return new WP_Error( 'off', 'ai_off', array( 'status' => 503 ) );
+		}
+		/* гость (ещё без логина) тоже может спросить ИИ — со своим дневным лимитом */
+		if ( ! studyhub_current_student() && (int) StudyHub_AI::settings()['guest_limit'] < 1 ) {
 			return new WP_Error( 'not_logged_in', 'not_logged_in', array( 'status' => 401 ) );
 		}
 		return StudyHub_AI::on() ? true : new WP_Error( 'off', 'ai_off', array( 'status' => 503 ) );
@@ -35,9 +39,11 @@ class StudyHub_AI_Rest {
 	public static function chat( WP_REST_Request $req ) {
 		$s       = StudyHub_AI::settings();
 		$student = studyhub_current_student();
-		$key     = 'studyhub_ai_' . (int) $student->id . '_' . gmdate( 'Ymd' );
+		$who     = $student ? 's' . (int) $student->id : 'g' . substr( StudyHub_Auth::device_hash(), 0, 24 );
+		$key     = 'studyhub_ai_' . $who . '_' . gmdate( 'Ymd' );
 		$count   = (int) get_transient( $key );
-		if ( $count >= max( 1, (int) $s['daily_limit'] ) ) {
+		$limit   = $student ? (int) $s['daily_limit'] : (int) $s['guest_limit'];
+		if ( $count >= max( 1, $limit ) ) {
 			return new WP_Error( 'limit', 'daily_limit', array( 'status' => 429 ) );
 		}
 		$contents = StudyHub_AI::contents( (array) $req->get_param( 'messages' ) );
@@ -50,7 +56,7 @@ class StudyHub_AI_Rest {
 			return new WP_Error( 'ai_unavailable', 'ai_unavailable', array( 'status' => 502 ) );
 		}
 		set_transient( $key, $count + 1, DAY_IN_SECONDS );
-		studyhub_event( 'ai_answer', array( 'student' => (int) $student->id ) );
+		studyhub_event( 'ai_answer', array( 'student' => $student ? (int) $student->id : 0 ) );
 		return array( 'reply' => $reply );
 	}
 }

@@ -10,8 +10,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 function studyhub_student_shape( $s ) {
 	return array(
 		'alias'      => $s->alias,
+		'login'      => $s->login,
 		'university' => $s->university,
 		'lang'       => $s->lang,
+		'faceLock'   => (int) $s->face_lock,
+		'passkeys'   => class_exists( 'StudyHub_WebAuthn' ) ? StudyHub_WebAuthn::count_for( $s->id ) : 0,
 	);
 }
 
@@ -90,6 +93,10 @@ function studyhub_rest_me_update( WP_REST_Request $req ) {
 		if ( '' === $uni || in_array( $uni, StudyHub_Settings::university_ids(), true ) ) {
 			$data['university'] = $uni;
 		}
+	}
+	$lock = $req->get_param( 'faceLock' );
+	if ( null !== $lock ) {
+		$data['face_lock'] = ( $lock && StudyHub_WebAuthn::count_for( $s->id ) > 0 ) ? 1 : 0;
 	}
 	$lang = $req->get_param( 'lang' );
 	if ( in_array( $lang, array( 'ru', 'kk' ), true ) ) {

@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?><!doctype html>
-<html lang="ru">
+<html lang="ru" class="sh-auto">
 <head>
 <?php echo studyhub_head_tags( 'panel' ); // phpcs:ignore ?>
 <title><?php echo esc_html( StudyHub_Settings::brand() ); ?> · Панель</title>

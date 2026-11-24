@@ -60,6 +60,8 @@ function studyhub_panel_routes() {
 	$r( '/admin/students', 'GET', 'studyhub_rest_students' );
 	$r( '/admin/students', 'POST', 'studyhub_rest_student_create' );
 	$r( '/admin/students/(?P<id>\d+)', 'POST', 'studyhub_rest_student_action' );
+	$r( '/admin/requests', 'GET', 'studyhub_rest_requests' );
+	$r( '/admin/requests/(?P<id>\d+)', 'POST', 'studyhub_rest_request_action' );
 	$r( '/admin/reviews', 'GET', 'studyhub_rest_reviews' );
 	$r( '/admin/reviews/(?P<id>\d+)', 'POST', 'studyhub_rest_review_action' );
 	$r( '/admin/settings', 'GET', 'studyhub_rest_settings' );
@@ -107,6 +109,7 @@ function studyhub_rest_chats() {
 		'status'  => StudyHub_Settings::get( 'admin_status' ),
 		'online'  => StudyHub_Settings::admin_online(),
 		'pending' => StudyHub_DB::pending_reviews_count(),
+		'requests' => StudyHub_DB::new_requests_count(),
 	);
 }
 
@@ -193,6 +196,7 @@ function studyhub_rest_students() {
 			'created'    => (int) $s->created_at,
 			'lastSeen'   => (int) $s->last_seen,
 			'disabled'   => (int) $s->disabled,
+			'device'     => '' !== (string) $s->device_hash,
 		);
 	}
 	return array( 'students' => $out );
@@ -253,6 +257,13 @@ function studyhub_rest_student_action( WP_REST_Request $req ) {
 		StudyHub_Auth::destroy_sessions( $id );
 		$creds = array( array( 'login' => $s->login, 'password' => $pass ) );
 		return array( 'creds' => $creds, 'text' => studyhub_share_text( $creds ) );
+	}
+	if ( 'reset_device' === $do ) {
+		StudyHub_DB::update_student( $id, array( 'device_hash' => '' ) );
+		if ( class_exists( 'StudyHub_Auth' ) ) {
+			StudyHub_Auth::destroy_sessions( $id );
+		}
+		return array( 'ok' => true );
 	}
 	if ( 'disable' === $do || 'enable' === $do ) {
 		StudyHub_DB::update_student( $id, array( 'disabled' => 'disable' === $do ? 1 : 0 ) );
@@ -324,7 +335,7 @@ function studyhub_rest_settings_save( WP_REST_Request $req ) {
 	$text = array( 'brand_name', 'brand_tagline_ru', 'brand_tagline_kk', 'hero_title_ru', 'hero_title_kk', 'contact_label' );
 	$area = array( 'hero_text_ru', 'hero_text_kk', 'welcome_ru', 'welcome_kk' );
 	$urls = array( 'brand_logo', 'hero_image', 'contact_url' );
-	$bool = array( 'notify_email', 'reviews_automod', 'site_on_front', 'delete_on_uninstall' );
+	$bool = array( 'notify_email', 'reviews_automod', 'site_on_front', 'app_on_front', 'erase_contacts', 'delete_on_uninstall' );
 	foreach ( $text as $k ) {
 		if ( array_key_exists( $k, $in ) ) {
 			$out[ $k ] = sanitize_text_field( (string) $in[ $k ] );
@@ -402,7 +413,7 @@ function studyhub_rest_catalog_save( WP_REST_Request $req ) {
 			'short'   => $short,
 			'name_ru' => sanitize_text_field( isset( $row['name_ru'] ) ? $row['name_ru'] : '' ),
 			'name_kk' => sanitize_text_field( isset( $row['name_kk'] ) ? $row['name_kk'] : '' ),
-			'logo'    => esc_url_raw( isset( $row['logo'] ) ? $row['logo'] : '' ),
+			'logo'    => '',
 		);
 	}
 	StudyHub_Settings::update( array( 'services' => $services, 'universities' => $unis ) );
@@ -458,4 +469,94 @@ function studyhub_rest_upload_image( WP_REST_Request $req ) {
 		return new WP_Error( 'upload', $id->get_error_message(), array( 'status' => 400 ) );
 	}
 	return array( 'url' => wp_get_attachment_url( $id ) );
+}
+
+/* ---------- заявки с сайта ---------- */
+
+function studyhub_request_shape( $r ) {
+	return array(
+		'id'         => (int) $r->id,
+		'service'    => $r->service,
+		'task'       => $r->task,
+		'deadline'   => $r->deadline,
+		'university' => StudyHub_Settings::university_label( $r->university ),
+		'telegram'   => $r->telegram,
+		'phone'      => $r->phone,
+		'lang'       => $r->lang,
+		'status'     => $r->status,
+		'reply'      => (string) $r->reply,
+		'student'    => (int) $r->student_id,
+		'created'    => (int) $r->created_at,
+		'updated'    => (int) $r->updated_at,
+	);
+}
+
+function studyhub_rest_requests() {
+	$out = array();
+	foreach ( StudyHub_DB::requests() as $r ) {
+		$out[] = studyhub_request_shape( $r );
+	}
+	return array( 'requests' => $out );
+}
+
+function studyhub_rest_request_action( WP_REST_Request $req ) {
+	$r = StudyHub_DB::get_request( (int) $req['id'] );
+	if ( ! $r ) {
+		return new WP_Error( 'not_found', 'not_found', array( 'status' => 404 ) );
+	}
+	$do = sanitize_key( (string) $req->get_param( 'do' ) );
+	if ( 'reply' === $do ) {
+		$text = trim( sanitize_textarea_field( (string) $req->get_param( 'text' ) ) );
+		if ( '' === $text ) {
+			return new WP_Error( 'empty', 'Напишите ответ.', array( 'status' => 400 ) );
+		}
+		StudyHub_DB::update_request( $r->id, array( 'reply' => $text, 'status' => 'new' === $r->status ? 'answered' : $r->status ) );
+	} elseif ( 'accept' === $do ) {
+		if ( ! class_exists( 'StudyHub_Auth' ) ) {
+			return new WP_Error( 'no_client', 'Включите плагин «StudyHub Студент».', array( 'status' => 400 ) );
+		}
+		if ( 'accepted' === $r->status && $r->student_id ) {
+			return new WP_Error( 'already', 'Заявка уже принята.', array( 'status' => 409 ) );
+		}
+		$login = StudyHub_Auth::generate_login();
+		$pass  = StudyHub_Auth::generate_password();
+		$sid   = StudyHub_DB::create_student( $login, $pass, 'Заявка #' . $r->id );
+		if ( ! $sid ) {
+			return new WP_Error( 'fail', 'Не удалось создать доступ.', array( 'status' => 500 ) );
+		}
+		StudyHub_DB::update_student( $sid, array( 'university' => $r->university, 'lang' => $r->lang ) );
+		/* переписка начинается с самой заявки и вашего ответа */
+		$task = $r->task . ( $r->deadline ? "\n\n⏱ " . $r->deadline : '' );
+		$m1   = StudyHub_DB::add_message( $sid, 'student', 'text', $task, 0, $r->service ? array( 'service' => $r->service ) : null );
+		StudyHub_DB::mark_read( $sid, 'admin' );
+		$reply = trim( (string) $req->get_param( 'text' ) );
+		$reply = '' !== $reply ? sanitize_textarea_field( $reply ) : (string) $r->reply;
+		if ( '' !== $reply ) {
+			StudyHub_DB::add_message( $sid, 'admin', 'text', $reply );
+		}
+		$data = array(
+			'status'     => 'accepted',
+			'student_id' => $sid,
+			'reply'      => $reply,
+			'creds'      => wp_json_encode( array( 'login' => $login, 'password' => $pass ) ),
+		);
+		if ( StudyHub_Settings::get( 'erase_contacts' ) ) {
+			$data['telegram'] = '';
+			$data['phone']    = '';
+		}
+		StudyHub_DB::update_request( $r->id, $data );
+		studyhub_event( 'request_accepted', array( 'request' => (int) $r->id, 'student' => $sid ) );
+		return array( 'ok' => true, 'student' => $sid, 'creds' => array( 'login' => $login, 'password' => $pass ), 'text' => studyhub_share_text( array( array( 'login' => $login, 'password' => $pass ) ) ) );
+	} elseif ( 'decline' === $do ) {
+		$text = trim( sanitize_textarea_field( (string) $req->get_param( 'text' ) ) );
+		StudyHub_DB::update_request( $r->id, array( 'status' => 'declined', 'reply' => '' !== $text ? $text : (string) $r->reply ) );
+	} elseif ( 'erase' === $do ) {
+		StudyHub_DB::update_request( $r->id, array( 'telegram' => '', 'phone' => '' ) );
+	} elseif ( 'delete' === $do ) {
+		StudyHub_DB::delete_request( $r->id );
+		return array( 'ok' => true );
+	} else {
+		return new WP_Error( 'bad', 'bad_action', array( 'status' => 400 ) );
+	}
+	return array( 'request' => studyhub_request_shape( StudyHub_DB::get_request( $r->id ) ) );
 }

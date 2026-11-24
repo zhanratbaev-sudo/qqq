@@ -2,7 +2,7 @@
 /**
  * Plugin Name: StudyHub Ядро
  * Description: База StudyHub и админ-панель (отдельная страница /panel/, как приложение): чаты со студентами, логины, отзывы, услуги и вузы, настройки. Сайт — плагин «StudyHub Сайт», кабинет студента — «StudyHub Студент», помощник — «StudyHub ИИ».
- * Version: 2.0.0
+ * Version: 3.0.0
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Text Domain: studyhub
@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'STUDYHUB_VER', '2.0.0' );
+define( 'STUDYHUB_VER', '3.0.0' );
 define( 'STUDYHUB_CORE_FILE', __FILE__ );
 define( 'STUDYHUB_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'STUDYHUB_CORE_URL', plugin_dir_url( __FILE__ ) );
