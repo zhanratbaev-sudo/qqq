@@ -1136,18 +1136,16 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
 @media (prefers-reduced-motion: reduce) { .pg-form .pg-segi, .pg-form .pg-fl-other { transition: none; } }
 
 /* ============================================================
-   39.0: верхнее меню и первый блок — одинаковый отступ сверху и по бокам, одинаковые скругления.
-   Меню — отдельная плашка сверху; под ней с тем же отступом — блок с картинкой. Скругление блока = скругление меню
-   (половина высоты меню), у стекла с текстом внутри — меньше ровно на отступ (углы «повторяют» друг друга).
-   Телефон: отступ 12, меню 52 → скругления 26 и 18. Планшет и компьютер: отступ 12, меню 60 → 30 и 16.
+   39.0.1: меню снова лежит поверх первого блока, как раньше (картинка видна сквозь стекло меню).
+   Блок начинается на одном уровне с меню и с теми же отступами по бокам (12 px), скругление у них одно —
+   верхние углы блока прячутся ровно под углами меню. Стекло с текстом внизу — скругление меньше ровно на отступ.
    ============================================================ */
-.pg .pg-hero { padding-top: calc(var(--sat) + 84px); }
+.pg .pg-hero { padding-top: calc(var(--sat) + 12px); }
 .pg .pg-hero-stage { margin: 0 12px; border-radius: 30px; }
 .pg .pg-hero-track > .pg-hero-m { border-radius: 30px; }
 .pg .pg-hero-glass { left: 14px; right: 14px; bottom: 14px; border-radius: 16px; }
 .pg-layer .pg-nav { border-radius: 30px; }
 @media (max-width: 600px) {
-  .pg .pg-hero { padding-top: calc(var(--sat) + 76px); }
   .pg .pg-hero-stage { margin: 0 12px; border-radius: 26px; }
   .pg .pg-hero-track > .pg-hero-m { border-radius: 26px; }
   .pg .pg-hero-glass { left: 8px; right: 8px; bottom: 8px; border-radius: 18px; }
