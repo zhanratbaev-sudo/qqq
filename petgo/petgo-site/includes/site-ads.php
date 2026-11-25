@@ -366,3 +366,135 @@ add_filter('robots_txt', function ($out, $public) {
 add_action('update_option_petgo_site', function () {
     update_option('petgo_site_mod', time(), false);
 });
+
+/* ============================================================
+   39.0 ПОИСК: Яндекс и Bing узнают об изменениях сразу (IndexNow), услуги — в разметке компании,
+   короткий текст о сервисе внизу главной (те слова, по которым ищут: выгул собак, няня для кошек, догситтер…).
+   Google берёт страницы из карты сайта и Search Console — IndexNow он не поддерживает.
+   ============================================================ */
+function petgo_ads_inow_key() {
+    $k = (string) get_option('petgo_indexnow_key', '');
+    if (!preg_match('/^[a-f0-9]{32}$/', $k)) {
+        $k = md5(wp_generate_password(40, true, true) . microtime());
+        update_option('petgo_indexnow_key', $k, false);
+    }
+    return $k;
+}
+/* файл-ключ /<ключ>.txt — так поисковик проверяет, что сайт наш */
+add_action('parse_request', function ($wp) {
+    $req = isset($wp->request) ? trim((string) $wp->request, '/') : '';
+    if ($req === '' || substr($req, -4) !== '.txt') {
+        return;
+    }
+    $k = (string) get_option('petgo_indexnow_key', '');
+    if ($k !== '' && hash_equals($k . '.txt', $req)) {
+        status_header(200);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo $k;
+        exit;
+    }
+}, 0);
+function petgo_ads_inow_urls() {
+    $o = array();
+    foreach (petgo_site_pages() as $k => $p) {
+        if (!empty($p['hide']) || $k === 'account' || !empty($p['noindex'])) {
+            continue;
+        }
+        foreach (array_keys(petgo_site_langs()) as $l) {
+            $o[] = petgo_site_url($k, $l);
+        }
+    }
+    return array_values(array_unique($o));
+}
+function petgo_ads_inow_soon() {
+    if (!get_option('blog_public') || wp_next_scheduled('petgo_ads_inow')) {
+        return;
+    }
+    wp_schedule_single_event(time() + 90, 'petgo_ads_inow');
+}
+add_action('update_option_petgo_site_mod', 'petgo_ads_inow_soon');
+add_action('add_option_petgo_site_mod', 'petgo_ads_inow_soon');
+/* первый раз после обновления плагина — тоже сообщаем */
+add_action('init', function () {
+    if (get_option('petgo_inow_ver') !== '39' && get_option('blog_public')) {
+        update_option('petgo_inow_ver', '39', false);
+        petgo_ads_inow_soon();
+    }
+}, 30);
+add_action('petgo_ads_inow', function () {
+    if (!get_option('blog_public') || get_transient('petgo_inow_sent')) {
+        return;
+    }
+    set_transient('petgo_inow_sent', 1, 10 * MINUTE_IN_SECONDS);
+    $key  = petgo_ads_inow_key();
+    $body = wp_json_encode(array('host' => wp_parse_url(home_url('/'), PHP_URL_HOST), 'key' => $key, 'keyLocation' => home_url('/' . $key . '.txt'), 'urlList' => petgo_ads_inow_urls()), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    foreach (array('https://yandex.com/indexnow', 'https://api.indexnow.org/indexnow') as $ep) {
+        wp_remote_post($ep, array('timeout' => 8, 'blocking' => false, 'headers' => array('Content-Type' => 'application/json; charset=utf-8'), 'body' => $body));
+    }
+    update_option('petgo_inow_last', time(), false);
+});
+
+/* районы и ЖК, где работают няни (их отмечает «PetGo Магазин» кругами на карте) */
+function petgo_ads_areas() {
+    return array_values(array_filter(array_map('strval', (array) apply_filters('petgo_site_service_areas', array()))));
+}
+
+/* услуги с ценами — в разметке компании на главной (Google и Яндекс понимают, что именно мы делаем и сколько стоит) */
+add_filter('petgo_site_schema', function ($g, $page) {
+    if ($page !== 'home') {
+        return $g;
+    }
+    $items = array();
+    foreach ((array) petgo_site_cfg()['services'] as $s) {
+        if (empty($s['title'])) {
+            continue;
+        }
+        $p = function_exists('petgo_site_price') ? petgo_site_price($s) : array('now' => 0);
+        $o = array('@type' => 'Offer', 'itemOffered' => array('@type' => 'Service', 'name' => petgo_site_tx(petgo_site_l($s['title'])), 'areaServed' => array('@type' => 'City', 'name' => 'Алматы')));
+        if (!empty($p['now'])) {
+            $o['price'] = (string) (int) $p['now'];
+            $o['priceCurrency'] = 'KZT';
+        }
+        $items[] = $o;
+    }
+    foreach ($g as $i => $x) {
+        if (isset($x['@type']) && $x['@type'] === 'LocalBusiness') {
+            if ($items) {
+                $g[$i]['hasOfferCatalog'] = array('@type' => 'OfferCatalog', 'name' => petgo_site_l('Услуги и цены'), 'itemListElement' => $items);
+            }
+            $g[$i]['alternateName'] = array('PetGo', 'ПетГо', 'petgo.kz');
+            $g[$i]['knowsAbout'] = array(petgo_site_l('Выгул собак'), petgo_site_l('Няня для кошек'), petgo_site_l('Визиты к питомцу на дом'));
+            $areas = petgo_ads_areas();
+            if ($areas) {
+                $g[$i]['areaServed'] = array_merge(array(array('@type' => 'City', 'name' => 'Алматы')), array_map(function ($a) {
+                    return array('@type' => 'Place', 'name' => $a . ', Алматы');
+                }, array_slice($areas, 0, 30)));
+            }
+        }
+    }
+    return $g;
+}, 30, 2);
+
+/* текст о сервисе внизу главной — короткий, для людей и для поиска */
+add_filter('petgo_site_home_sections', function ($sec) {
+    $L     = 'petgo_site_l';
+    $areas = petgo_ads_areas();
+    $h  = '<section class="pg-sec pg-seo"><div class="pg-wrap"><div class="pg-seo-in pg-rise"><h2 class="pg-h">' . esc_html($L('Выгул собак и няня для кошек в Алматы')) . '</h2>';
+    $h .= '<p>' . esc_html($L('PetGo — сервис нянь для собак и кошек в Алматы. Догситтер погуляет с вашей собакой в удобное время: прогулка от часа, на поводке, с играми, фото и отчётом после каждого выгула. Кэтситтер приходит к кошке домой: кормит, меняет лоток, играет и присылает фото.')) . '</p>';
+    $h .= '<p>' . esc_html(petgo_site_tx($L('Уезжаете в отпуск или задерживаетесь на работе — закажите ежедневные визиты на неделю. Выгул собаки — {walk} ₸ за час для первого заказа. Приход няни отмечается по геолокации, а следить за прогулкой можно в приложении My PetGo.'))) . '</p>';
+    if ($areas) {
+        $h .= '<p>' . esc_html($L('Работаем в ЖК и районах:') . ' ' . implode(', ', array_slice($areas, 0, 30)) . '.') . '</p>';
+    }
+    $sec[60] = $h . '</div></div></section>';
+    return $sec;
+}, 40);
+
+add_filter('petgo_site_dict_more', function ($d) {
+    return array_merge($d, array(
+        'Выгул собак и няня для кошек в Алматы' => array('Алматыда ит серуендету және мысыққа күтуші', 'Dog walking and cat sitting in Almaty'),
+        'PetGo — сервис нянь для собак и кошек в Алматы. Догситтер погуляет с вашей собакой в удобное время: прогулка от часа, на поводке, с играми, фото и отчётом после каждого выгула. Кэтситтер приходит к кошке домой: кормит, меняет лоток, играет и присылает фото.' => array('PetGo — Алматыдағы иттер мен мысықтарға арналған күтушілер сервисі. Догситтер итіңізбен ыңғайлы уақытта серуендейді: бір сағаттан бастап, бауда, ойындармен, әр серуеннен кейін фото мен есеп жібереді. Кэтситтер мысыққа үйге келеді: тамақтандырады, науасын ауыстырады, ойнайды және фото жібереді.', 'PetGo is a dog walking and cat sitting service in Almaty. A dog sitter walks your dog at a time that suits you: from one hour, on a leash, with games, photos and a report after every walk. A cat sitter visits your cat at home: feeds, changes the litter, plays and sends photos.'),
+        'Уезжаете в отпуск или задерживаетесь на работе — закажите ежедневные визиты на неделю. Выгул собаки — {walk} ₸ за час для первого заказа. Приход няни отмечается по геолокации, а следить за прогулкой можно в приложении My PetGo.' => array('Демалысқа кетсеңіз немесе жұмыста кешіксеңіз — бір аптаға күнделікті келуге тапсырыс беріңіз. Итті серуендету — алғашқы тапсырыста сағатына {walk} ₸. Күтушінің келуі геолокация бойынша белгіленеді, ал серуенді My PetGo қосымшасында бақылауға болады.', 'Going on holiday or staying late at work? Book daily visits for a week. Dog walking is {walk} ₸ per hour for your first order. The sitter\'s arrival is confirmed by geolocation, and you can follow the walk in the My PetGo app.'),
+        'Работаем в ЖК и районах:' => array('Жұмыс істейтін ТК мен аудандар:', 'We work in these complexes and districts:'),
+        'Выгул собак' => array('Итті серуендету', 'Dog walking'), 'Няня для кошек' => array('Мысыққа күтуші', 'Cat sitting'), 'Визиты к питомцу на дом' => array('Үйдегі жануарға келу', 'Home visits for pets'),
+    ));
+});

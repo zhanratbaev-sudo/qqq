@@ -196,6 +196,8 @@ function petgo_cl_dashboard() {
     $h .= '<button type="button" class="pg-b pgk-live" data-k-tab="map"' . ($live ? '' : ' hidden') . '><span class="pgk-live-av">' . petgo_cl_av($live ? $live['av'] : '', $live ? $live['name'] : '') . '</span><span class="pgk-live-t"><b data-k-live-name>' . esc_html($live ? $live['name'] : '') . '</b><span data-k-live-text>' . esc_html($live ? $live['text'] : '') . '</span></span><span class="pgk-live-go">' . esc_html($L('На карте')) . petgo_cl_icon('right') . '</span></button>';
     /* 38.1: услуги плитками (заказ сразу с нужной услугой) и акция */
     $h .= petgo_cl_home38_svcs() . petgo_cl_home38_promo($uid);
+    /* 39.0: место для разделов других плагинов (например, баннер «Магазин») — сразу после услуг и акции */
+    $h .= (string) apply_filters('petgo_cl_home_mid', '', $uid);
     $h .= '<h2 class="pgk-h2" id="pgk-mypets">' . esc_html($L('Мои питомцы')) . '</h2><div class="pgk-list pgk-pets">';
     foreach ($st as $s) {
         $pid = $s['id'];
@@ -260,7 +262,16 @@ function petgo_cl_dashboard() {
     /* 34.7: заказ — QR-код для няни появляется, когда нажимаешь на заказ */
     $h .= petgo_cl_sheet('order', $L('Заказ'), '<div class="pgk-ord" data-k-order-body><div class="pgk-map-load"><i class="pg-spin"></i></div></div>');
     /* 38.1: няни (список, поиск, избранные), профиль няни, уведомления, личные данные */
-    $h .= petgo_cl_sheet('nannies', $L('Наши няни'), '<div class="pgk-nsrch"><label class="pgk-sbar pgk-sbar-in">' . petgo_cl_ic('search') . '<input type="search" data-k-nq placeholder="' . esc_attr($L('Поиск няни…')) . '" autocomplete="off" enterkeyhint="search"></label></div><div class="pgk-sg pgk-nsort" role="radiogroup"><i class="pgk-sgi" aria-hidden="true"></i><button type="button" class="pg-b on" data-k-ns="rate">' . esc_html($L('Рейтинг')) . '</button><button type="button" class="pg-b" data-k-ns="rn">' . esc_html($L('Отзывы')) . '</button><button type="button" class="pg-b" data-k-ns="done">' . esc_html($L('Опыт')) . '</button><button type="button" class="pg-b" data-k-ns="fav">' . esc_html($L('Избранные')) . '</button></div><div class="pgk-ncs" data-k-nlist></div>', '', 'pgk-sheet-tall');
+    /* 39.0: поиск и фильтр — разные: поиск ищет по имени, фильтр — сортировка, оценка, избранные */
+    $h .= petgo_cl_sheet('nannies', $L('Наши няни'), '<div class="pgk-nsrch"><label class="pgk-sbar pgk-sbar-in">' . petgo_cl_ic('search') . '<input type="search" data-k-nq placeholder="' . esc_attr($L('Поиск няни…')) . '" autocomplete="off" enterkeyhint="search"></label><button type="button" class="pg-b pgk-sfilt pgk-nf-b" data-k-nfilter aria-label="' . esc_attr($L('Фильтр')) . '">' . petgo_cl_ic('sliders') . '<i data-k-nf-n hidden></i></button></div><div class="pgk-nf-on" data-k-nf-on hidden></div><p class="pgk-nf-note">' . esc_html($L('Места — по хорошим отзывам: чем их больше, тем выше няня.')) . '</p><div class="pgk-ncs" data-k-nlist></div>', '', 'pgk-sheet-tall');
+    $nf  = '<div class="pgk-nf"><h4 class="pgk-gt">' . esc_html($L('Сначала')) . '</h4><div class="pgk-chips" data-nf="sort">';
+    foreach (array('place' => 'По месту', 'rate' => 'По оценке', 'rn' => 'По отзывам', 'done' => 'По опыту') as $k => $t) {
+        $nf .= '<button type="button" class="pg-b" data-v="' . $k . '">' . esc_html($L($t)) . '</button>';
+    }
+    $nf .= '</div><h4 class="pgk-gt">' . esc_html($L('Оценка')) . '</h4><div class="pgk-chips" data-nf="min"><button type="button" class="pg-b" data-v="0">' . esc_html($L('Любая')) . '</button><button type="button" class="pg-b" data-v="4.5">4,5 ' . esc_html($L('и выше')) . '</button><button type="button" class="pg-b" data-v="4.8">4,8 ' . esc_html($L('и выше')) . '</button></div>';
+    $nf .= '<div class="pgk-list pgk-nf-ck"><label class="pgk-row"><span class="pgk-row-t">' . esc_html($L('Только избранные')) . '</span><input type="checkbox" class="pgk-sw" data-nf="fav"></label><label class="pgk-row"><span class="pgk-row-t">' . esc_html($L('Только с отзывами')) . '</span><input type="checkbox" class="pgk-sw" data-nf="rv"></label></div>';
+    $nf .= '<div class="pgk-nf-go"><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nf-reset>' . esc_html($L('Сбросить')) . '</button><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nf-apply><span data-k-nf-cnt></span></button></div></div>';
+    $h .= petgo_cl_sheet('nfilter', $L('Фильтр'), $nf);
     $h .= petgo_cl_sheet('nanny', '', '<div data-k-nanny-body></div>', '', 'pgk-sheet-tall pgk-sheet-nanny');
     $h .= petgo_cl_sheet('notifs', $L('Уведомления'), '<div data-k-notifs-body></div>', '', 'pgk-sheet-tall');
     $h .= petgo_cl_sheet('me', $L('Личные данные'), petgo_cl_me_form($u));

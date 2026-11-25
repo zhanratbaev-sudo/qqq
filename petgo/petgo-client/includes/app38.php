@@ -41,6 +41,11 @@ function petgo_cl_ic($n, $cls = 'pg-i') {
 function petgo_cl_nannies38() {
     global $wpdb;
     $out = array();
+    /* 39.0: места нянь — у кого больше хороших отзывов (4–5 звёзд), тот выше; дальше — средняя оценка и опыт */
+    $good = array();
+    foreach ((array) $wpdb->get_results('SELECT nanny_id, COUNT(*) n FROM ' . petgo_tb('reviews') . " WHERE status='ok' AND rating>=4 GROUP BY nanny_id") as $r) {
+        $good[(int) $r->nanny_id] = (int) $r->n;
+    }
     foreach (petgo_site_nannies() as $n) {
         $rv = array();
         foreach ((array) $wpdb->get_results($wpdb->prepare('SELECT name, rating, body, ts FROM ' . petgo_tb('reviews') . " WHERE nanny_id=%d AND status='ok' ORDER BY ts DESC LIMIT 3", (int) $n['id'])) as $r) {
@@ -48,7 +53,19 @@ function petgo_cl_nannies38() {
         }
         $u     = get_userdata((int) $n['id']);
         $out[] = array('id' => (int) $n['id'], 'name' => $n['name'], 'img' => $n['img'], 'rate' => $n['rate'], 'rn' => (int) $n['rn'], 'done' => (int) $n['done'], 'bio' => $n['bio'], 'new' => !empty($n['new']),
-            'since' => $u ? (int) wp_date('Y', strtotime((string) $u->user_registered)) : 0, 'rv' => $rv);
+            'since' => $u ? (int) wp_date('Y', strtotime((string) $u->user_registered)) : 0, 'rv' => $rv, 'good' => isset($good[(int) $n['id']]) ? $good[(int) $n['id']] : 0);
+    }
+    usort($out, function ($a, $b) {
+        if ($a['good'] !== $b['good']) {
+            return $b['good'] - $a['good'];
+        }
+        if ((float) $a['rate'] !== (float) $b['rate']) {
+            return (float) $b['rate'] < (float) $a['rate'] ? -1 : 1;
+        }
+        return $b['done'] - $a['done'];
+    });
+    foreach ($out as $i => $n) {
+        $out[$i]['place'] = $i + 1;
     }
     return $out;
 }
@@ -61,7 +78,8 @@ function petgo_cl_favs($uid) {
 /* карточка няни на главной и в списке (по макету «Nearby sitters») */
 function petgo_cl_nanny_card($n, $fav, $price) {
     $L = 'petgo_site_l';
-    $h = '<button type="button" class="pg-b pgk-nc" data-k-nanny="' . (int) $n['id'] . '"><span class="pgk-nc-av">' . petgo_cl_av($n['img'], $n['name']) . '</span><span class="pgk-nc-b"><b>' . esc_html($n['name']) . petgo_cl_ic('verified', 'pg-i pgk-ver') . '</b>';
+    $pl = isset($n['place']) ? (int) $n['place'] : 0;
+    $h = '<button type="button" class="pg-b pgk-nc" data-k-nanny="' . (int) $n['id'] . '"><span class="pgk-nc-av">' . petgo_cl_av($n['img'], $n['name']) . ($pl ? '<i class="pgk-place p' . min(4, $pl) . '" aria-label="' . esc_attr(petgo_site_lf('%s место', $pl)) . '">' . $pl . '</i>' : '') . '</span><span class="pgk-nc-b"><b>' . esc_html($n['name']) . petgo_cl_ic('verified', 'pg-i pgk-ver') . '</b>';
     $h .= '<span class="pgk-nc-r">' . ($n['rate'] ? petgo_cl_icon('star', 'pg-i pgk-star') . '<em>' . esc_html(number_format((float) $n['rate'], 1, petgo_site_lang() === 'en' ? '.' : ',', '')) . '</em> <small>(' . esc_html((int) $n['rn'] . ' ' . petgo_site_n((int) $n['rn'], array('отзыв', 'отзыва', 'отзывов'))) . ')</small>' : '<small>' . esc_html($L('Новая няня')) . '</small>') . '</span>';
     $h .= '<span class="pgk-nc-m"><small>' . petgo_cl_ic('walk', 'pg-i') . esc_html((int) $n['done'] . ' ' . petgo_site_n((int) $n['done'], array('заказ', 'заказа', 'заказов'))) . '</small>' . ($price ? '<small class="pgk-nc-p">' . esc_html($L('от')) . ' <b>' . esc_html(petgo_site_money($price)) . ' ₸</b> / ' . esc_html($L('час')) . '</small>' : '') . '</span></span>';
     $h .= '<i class="pgk-nc-fav' . (in_array((int) $n['id'], $fav, true) ? ' on' : '') . '" data-k-fav="' . (int) $n['id'] . '" role="button" aria-label="' . esc_attr($L('В избранное')) . '">' . petgo_cl_ic('heart') . '</i></button>';
@@ -74,7 +92,7 @@ function petgo_cl_home38_top($u, $hi) {
     $first = explode(' ', trim($u->display_name));
     $h  = '<div class="pgk-top"><span class="pgk-city">' . petgo_cl_icon('pin') . esc_html($L('Алматы')) . '</span><button type="button" class="pg-b pgk-bell" data-k-notifs aria-label="' . esc_attr($L('Уведомления')) . '">' . petgo_cl_ic('bell') . '<i class="pgk-bell-dot" data-k-bell hidden></i></button></div>';
     $h .= '<header class="pgk-hd pgk-hello" data-title="' . esc_attr($first[0]) . '"><h1><span data-k-hello>' . esc_html($L($hi)) . '</span><br>' . esc_html($first[0]) . ' <span class="pgk-wave" aria-hidden="true">👋</span></h1><p>' . esc_html($L('Лучший уход для вашего питомца')) . '</p></header>';
-    $h .= '<div class="pgk-search"><button type="button" class="pg-b pgk-sbar" data-k-nannies="search">' . petgo_cl_ic('search') . '<span>' . esc_html($L('Поиск няни…')) . '</span></button><button type="button" class="pg-b pgk-sfilt" data-k-nannies="sort" aria-label="' . esc_attr($L('Сортировка')) . '">' . petgo_cl_ic('sliders') . '</button></div>';
+    $h .= '<div class="pgk-search"><button type="button" class="pg-b pgk-sbar" data-k-nannies="search">' . petgo_cl_ic('search') . '<span>' . esc_html($L('Поиск няни…')) . '</span></button><button type="button" class="pg-b pgk-sfilt" data-k-nfilter aria-label="' . esc_attr($L('Сортировка')) . '">' . petgo_cl_ic('sliders') . '</button></div>';
     return $h;
 }
 
@@ -301,6 +319,21 @@ function petgo_cl_dict38() {
         'Поиск няни…' => array('Күтуші іздеу…', 'Search for pet sitters…'),
         'Сортировка' => array('Сұрыптау', 'Sort'),
         'Наши няни' => array('Біздің күтушілер', 'Our pet sitters'),
+        '%s место' => array('%s-орын', 'Place %s'),
+        'Фильтр' => array('Сүзгі', 'Filter'),
+        'Сначала' => array('Алдымен', 'Sort by'),
+        'По месту' => array('Орны бойынша', 'Top rated'),
+        'По оценке' => array('Баға бойынша', 'Rating'),
+        'По отзывам' => array('Пікірлер бойынша', 'Reviews'),
+        'По опыту' => array('Тәжірибе бойынша', 'Experience'),
+        'Оценка' => array('Баға', 'Rating'),
+        'Любая' => array('Кез келген', 'Any'),
+        'и выше' => array('және жоғары', 'and up'),
+        'Только избранные' => array('Тек таңдаулылар', 'Favorites only'),
+        'Только с отзывами' => array('Тек пікірлері барлар', 'With reviews only'),
+        'Показать нянь: %s' => array('Күтушілерді көрсету: %s', 'Show sitters: %s'),
+        'Сбросить' => array('Тазалау', 'Reset'),
+        'Места — по хорошим отзывам: чем их больше, тем выше няня.' => array('Орындар — жақсы пікірлер бойынша: көп болса, күтуші жоғары.', 'Places are based on good reviews: the more, the higher.'),
         'нянь в команде' => array('күтуші командада', 'sitters on the team'),
         'выполнено' => array('орындалды', 'completed'),
         'Почему PetGo' => array('Неге PetGo', 'Why PetGo'),

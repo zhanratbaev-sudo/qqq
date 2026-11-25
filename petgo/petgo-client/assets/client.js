@@ -1457,36 +1457,85 @@
   function rateFmt(r) { var x = Number(r).toFixed(1); return K.lang === "en" ? x : x.replace(".", ","); }
   function nRate(n) { return n.rate ? svg(STAR, "pg-i pgk-star") + "<em>" + esc(rateFmt(n.rate)) + "</em> <small>(" + esc(rvWord(n.rn)) + ")</small>" : "<small>" + esc(T("Новая няня")) + "</small>"; }
   function ncard(n) {
-    var pr = (K.price || {}).walk || 0;
-    return '<button type="button" class="pg-b pgk-nc" data-k-nanny="' + n.id + '"><span class="pgk-nc-av">' + avHtml({ av: n.img, name: n.name }) + '</span><span class="pgk-nc-b"><b>' + esc(n.name) + VER + "</b>" +
+    var pr = (K.price || {}).walk || 0, pl = +n.place || 0;
+    return '<button type="button" class="pg-b pgk-nc" data-k-nanny="' + n.id + '"><span class="pgk-nc-av">' + avHtml({ av: n.img, name: n.name }) + (pl ? '<i class="pgk-place p' + Math.min(4, pl) + '" aria-label="' + esc(T("%s место").replace("%s", pl)) + '">' + pl + "</i>" : "") + '</span><span class="pgk-nc-b"><b>' + esc(n.name) + VER + "</b>" +
       '<span class="pgk-nc-r">' + nRate(n) + "</span>" +
       '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
       '<i class="pgk-nc-fav' + (isFav(n.id) ? " on" : "") + '" data-k-fav="' + n.id + '" role="button" aria-label="' + esc(T("В избранное")) + '">' + svg(HEART) + "</i></button>";
   }
   function emptyBox(icon, title, text) { return '<div class="pgk-empty38">' + icon + "<b>" + esc(title) + "</b>" + (text ? "<p>" + esc(text) + "</p>" : "") + "</div>"; }
 
-  /* «Наши няни»: поиск по имени и описанию, сортировка, избранные */
-  var NS = { sort: "rate", q: "" };
+  /* 39.0 «Наши няни»: поиск — по имени и описанию; фильтр — отдельно (сортировка, оценка, избранные, с отзывами).
+     Места: 1, 2, 3 — у кого больше хороших отзывов; на главной — первые три, в «Все» — все (4, 5, 6…). */
+  var NS = { q: "" }, NF0 = { sort: "place", min: 0, fav: false, rv: false }, NF = JSON.parse(JSON.stringify(NF0));
+  function nfActive() { return (NF.sort !== "place" ? 1 : 0) + (NF.min ? 1 : 0) + (NF.fav ? 1 : 0) + (NF.rv ? 1 : 0); }
+  function nFiltered(f) {
+    f = f || NF;
+    var q = NS.q.toLowerCase().trim(), key = f.sort === "place" ? "" : f.sort;
+    var list = (K.nannies || []).filter(function (n) {
+      if (f.fav && !isFav(n.id)) return false;
+      if (f.rv && !(+n.rn)) return false;
+      if (f.min && !(+n.rate >= f.min)) return false;
+      return !q || (n.name + " " + (n.bio || "")).toLowerCase().indexOf(q) > -1;
+    });
+    list.sort(function (a, b) { return key ? ((+b[key] || 0) - (+a[key] || 0) || (+a.place || 0) - (+b.place || 0)) : (+a.place || 0) - (+b.place || 0); });
+    return list;
+  }
   function nannies(mode) {
     var s = kOpen("nannies"); if (!s) return;
     var q = $("[data-k-nq]", s);
     NS.q = ""; if (q) q.value = "";
-    NS.sort = mode === "fav" ? "fav" : "rate";
-    $("[data-k-sht]", s).textContent = T(mode === "fav" ? "Избранные няни" : "Наши няни");
-    qa("[data-k-ns]", s).forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-k-ns") === NS.sort); });
-    requestAnimationFrame(function () { sgMove($(".pgk-nsort", s), true); });
+    if (mode === "fav") { NF = JSON.parse(JSON.stringify(NF0)); NF.fav = true; }
+    else if (mode !== "keep") NF = JSON.parse(JSON.stringify(NF0));
+    $("[data-k-sht]", s).textContent = T(NF.fav && nfActive() === 1 ? "Избранные няни" : "Наши няни");
     var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
     nList();
     if (mode === "search" && q) setTimeout(function () { q.focus(); }, reduce ? 0 : 300);
   }
+  function nfLabel() {
+    var o = [];
+    if (NF.sort !== "place") o.push(T({ rate: "По оценке", rn: "По отзывам", done: "По опыту" }[NF.sort]));
+    if (NF.min) o.push(rateFmt(NF.min) + " " + T("и выше"));
+    if (NF.fav) o.push(T("Только избранные"));
+    if (NF.rv) o.push(T("Только с отзывами"));
+    return o;
+  }
   function nList() {
     var box = $("[data-k-nlist]"); if (!box) return;
-    var q = NS.q.toLowerCase().trim(), list = (K.nannies || []).slice(), key = NS.sort === "fav" ? "rate" : NS.sort;
-    if (NS.sort === "fav") list = list.filter(function (n) { return isFav(n.id); });
-    if (q) list = list.filter(function (n) { return (n.name + " " + (n.bio || "")).toLowerCase().indexOf(q) > -1; });
-    list.sort(function (a, b) { return (+b[key] || 0) - (+a[key] || 0) || (+b.rn || 0) - (+a.rn || 0); });
-    box.innerHTML = list.length ? list.map(ncard).join("") : emptyBox('<span class="pgk-empty38-i">' + svg(NS.sort === "fav" && !q ? HEART : '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>') + "</span>", T(NS.sort === "fav" && !q ? "Избранные няни" : "Никого не нашли"), NS.sort === "fav" && !q ? T("Нет избранных нянь — нажмите ♡ на карточке няни.") : "");
+    var list = nFiltered(), q = NS.q.trim(), n = nfActive(), on = $("[data-k-nf-on]"), badge = $("[data-k-nf-n]");
+    if (badge) { badge.textContent = n; badge.hidden = !n; }
+    if (on) { on.hidden = !n; on.innerHTML = n ? nfLabel().map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + '<button type="button" class="pg-b" data-k-nf-clear aria-label="' + esc(T("Сбросить")) + '">' + svg('<path d="M6 6l12 12M18 6 6 18"/>') + "</button>" : ""; }
+    var favOnly = NF.fav && !q;
+    box.innerHTML = list.length ? list.map(ncard).join("") : emptyBox('<span class="pgk-empty38-i">' + svg(favOnly ? HEART : '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>') + "</span>", T(favOnly ? "Избранные няни" : "Никого не нашли"), favOnly ? T("Нет избранных нянь — нажмите ♡ на карточке няни.") : "");
   }
+  /* лист «Фильтр»: выбор применяется кнопкой «Показать нянь: N» — число меняется сразу */
+  var NFd = null;
+  function nfOpen() {
+    NFd = JSON.parse(JSON.stringify(NF));
+    var s = kOpen("nfilter"); if (!s) return;
+    nfPaint(s);
+  }
+  function nfPaint(s) {
+    s = s || D.getElementById("pgk-nfilter"); if (!s || !NFd) return;
+    qa('[data-nf="sort"] .pg-b', s).forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-v") === NFd.sort); });
+    qa('[data-nf="min"] .pg-b', s).forEach(function (b) { b.classList.toggle("on", +b.getAttribute("data-v") === +NFd.min); });
+    var fv = $('[data-nf="fav"]', s), rv = $('[data-nf="rv"]', s);
+    if (fv) fv.checked = !!NFd.fav; if (rv) rv.checked = !!NFd.rv;
+    var c = $("[data-k-nf-cnt]", s); if (c) c.textContent = T("Показать нянь: %s").replace("%s", nFiltered(NFd).length);
+  }
+  D.addEventListener("click", function (e) {
+    var t = e.target, b;
+    if (!K || !t.closest) return;
+    if ((b = t.closest("#pgk-nfilter [data-nf] .pg-b"))) { var g = b.parentNode.getAttribute("data-nf"), v = b.getAttribute("data-v"); NFd[g] = g === "min" ? +v : v; nfPaint(); return; }
+    if (t.closest("[data-k-nf-reset]")) { NFd = JSON.parse(JSON.stringify(NF0)); nfPaint(); return; }
+    if (t.closest("[data-k-nf-apply]")) { NF = NFd; NS.q = ""; kClose(true); setTimeout(function () { nannies("keep"); }, reduce ? 0 : 120); return; }
+    if (t.closest("[data-k-nf-clear]")) { NF = JSON.parse(JSON.stringify(NF0)); nList(); $("[data-k-sht]", D.getElementById("pgk-nannies")).textContent = T("Наши няни"); return; }
+    if (t.closest("[data-k-nfilter]")) { e.preventDefault(); nfOpen(); }
+  });
+  D.addEventListener("change", function (e) {
+    var t = e.target;
+    if (K && NFd && t.matches && t.matches('#pgk-nfilter [data-nf]')) { NFd[t.getAttribute("data-nf")] = t.checked; nfPaint(); }
+  });
   /* профиль няни: большое фото, рейтинг, услуги, о себе, отзывы, «Заказать» и «Написать» */
   function nannyOpen(id) {
     var n = nnOf(id); if (!n) return;
@@ -1589,7 +1638,6 @@
     if ((b = t.closest("[data-k-fav]"))) { e.preventDefault(); e.stopPropagation(); favToggle(+b.getAttribute("data-k-fav")); return; }
     if ((b = t.closest("[data-k-nanny]"))) { e.preventDefault(); nannyOpen(+b.getAttribute("data-k-nanny")); return; }
     if ((b = t.closest("[data-k-nannies]"))) { e.preventDefault(); nannies(b.getAttribute("data-k-nannies")); return; }
-    if ((b = t.closest("[data-k-ns]"))) { NS.sort = b.getAttribute("data-k-ns"); qa("[data-k-ns]").forEach(function (x) { x.classList.toggle("on", x === b); }); sgMove(b.parentNode); nList(); return; }
     if ((b = t.closest("[data-k-nbook]"))) { e.preventDefault(); nannyBook(+b.getAttribute("data-k-nbook")); return; }
     if ((b = t.closest("[data-k-nmsg]"))) { e.preventDefault(); nannyMsg(+b.getAttribute("data-k-nmsg")); return; }
     if ((b = t.closest("[data-k-notifs]"))) { e.preventDefault(); notifs(); return; }
