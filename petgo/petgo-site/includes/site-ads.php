@@ -34,16 +34,17 @@ function petgo_ads_cfg($fresh = false) {
 
 /* заголовки и описания по умолчанию — с ключевыми словами для Алматы ({walk}, {week} — цены с сайта) */
 function petgo_ads_seo_defaults() {
-    return array(
+    /* 39.1: страницы других файлов и плагинов добавляют свои заголовки фильтром petgo_ads_seo_defaults */
+    return (array) apply_filters('petgo_ads_seo_defaults', array(
         'home'     => array('Выгул собак и няня для кошек в Алматы — PetGo', 'Выгул собак и визиты к кошкам и собакам на дом в Алматы. Проверенные няни, фото после каждого визита, приход по геолокации. Оставьте заявку — подберём няню.'),
         'services' => array('Цены на выгул собак и визиты к питомцам в Алматы — PetGo', 'Выгул собак — {walk} ₸ за час для первого заказа, ежедневные визиты к кошкам и собакам на неделю. Фото и отчёт няни после каждого визита.'),
         'nannies'  => array('Няни для собак и кошек в Алматы — PetGo', 'Проверенные догситтеры и кэтситтеры PetGo в Алматы. Подберём няню под характер и привычки вашего питомца.'),
         'reviews'  => array('Отзывы о PetGo — выгул собак и няни в Алматы', 'Настоящие отзывы хозяев собак и кошек после заказов PetGo в Алматы.'),
-    );
+    ));
 }
 
 function petgo_ads_seo_pages() {
-    return array('home' => 'Главная', 'services' => 'Услуги и цены', 'nannies' => 'Няни', 'reviews' => 'Отзывы');
+    return (array) apply_filters('petgo_ads_seo_pages', array('home' => 'Главная', 'services' => 'Услуги и цены', 'nannies' => 'Няни', 'reviews' => 'Отзывы'));
 }
 
 /* ---------- подключение к приложению сотрудников (через API PetGo) ---------- */
@@ -404,6 +405,10 @@ function petgo_ads_inow_urls() {
             $o[] = petgo_site_url($k, $l);
         }
     }
+    /* удалённые страницы тоже: поисковик перепроверит их и уберёт из выдачи */
+    if (function_exists('petgo_site_gone_urls')) {
+        $o = array_merge($o, petgo_site_gone_urls());
+    }
     return array_values(array_unique($o));
 }
 function petgo_ads_inow_soon() {
@@ -485,6 +490,17 @@ add_filter('petgo_site_home_sections', function ($sec) {
     if ($areas) {
         $h .= '<p>' . esc_html($L('Работаем в ЖК и районах:') . ' ' . implode(', ', array_slice($areas, 0, 30)) . '.') . '</p>';
     }
+    /* 39.1: ссылки на страницы услуг — по ним поиск находит «выгул собак» и «няня для кошек» */
+    $pgs = petgo_site_pages();
+    $lk  = array();
+    foreach (array('dogwalk', 'catsit') as $k) {
+        if (isset($pgs[$k])) {
+            $lk[] = '<a href="' . esc_url(petgo_site_url($k)) . '">' . esc_html($pgs[$k]['title']) . '</a>';
+        }
+    }
+    if ($lk) {
+        $h .= '<p class="pg-seo-links">' . esc_html($L('Подробнее об услугах:')) . ' ' . implode(' · ', $lk) . '</p>';
+    }
     $sec[60] = $h . '</div></div></section>';
     return $sec;
 }, 40);
@@ -496,5 +512,96 @@ add_filter('petgo_site_dict_more', function ($d) {
         'Уезжаете в отпуск или задерживаетесь на работе — закажите ежедневные визиты на неделю. Выгул собаки — {walk} ₸ за час для первого заказа. Приход няни отмечается по геолокации, а следить за прогулкой можно в приложении My PetGo.' => array('Демалысқа кетсеңіз немесе жұмыста кешіксеңіз — бір аптаға күнделікті келуге тапсырыс беріңіз. Итті серуендету — алғашқы тапсырыста сағатына {walk} ₸. Күтушінің келуі геолокация бойынша белгіленеді, ал серуенді My PetGo қосымшасында бақылауға болады.', 'Going on holiday or staying late at work? Book daily visits for a week. Dog walking is {walk} ₸ per hour for your first order. The sitter\'s arrival is confirmed by geolocation, and you can follow the walk in the My PetGo app.'),
         'Работаем в ЖК и районах:' => array('Жұмыс істейтін ТК мен аудандар:', 'We work in these complexes and districts:'),
         'Выгул собак' => array('Итті серуендету', 'Dog walking'), 'Няня для кошек' => array('Мысыққа күтуші', 'Cat sitting'), 'Визиты к питомцу на дом' => array('Үйдегі жануарға келу', 'Home visits for pets'),
+    ));
+});
+
+/* ============================================================
+   39.1 УДАЛЁННЫЕ СТРАНИЦЫ (например, выключенный магазин): поиску — «удалена навсегда» (410) и запрет индексации,
+   Яндексу и Bing — сразу сообщение об изменении (IndexNow). Так страница уходит из поиска быстрее, чем с «не найдено».
+   Работает и когда магазин выключен кнопкой, и когда плагин отключён в WordPress.
+   ============================================================ */
+add_action('init', 'petgo_site_gone_track', 40);
+function petgo_site_gone_track() {
+    $now = array();
+    foreach (petgo_site_pages() as $p) {
+        if ($p['slug'] !== '' && empty($p['hide'])) {
+            $now[$p['slug']] = 1;
+        }
+    }
+    $known = get_option('petgo_site_known', null);
+    $gone  = (array) get_option('petgo_site_gone', array());
+    $chg   = false;
+    if (!is_array($known)) {
+        $known = $now;
+        /* магазин уже был на сайте и сейчас выключен — сразу считаем его страницу удалённой */
+        if (get_option('petgo_shop') !== false && !isset($now['magazin'])) {
+            $gone['magazin'] = time();
+            $chg             = true;
+        }
+    }
+    foreach ($known as $slug => $x) {
+        if (!isset($now[$slug]) && !isset($gone[$slug])) {
+            $gone[$slug] = time();
+            $chg         = true;
+        }
+    }
+    foreach ($now as $slug => $x) {
+        if (isset($gone[$slug])) {
+            unset($gone[$slug]);
+            $chg = true;
+        }
+    }
+    if ($known !== $now || get_option('petgo_site_known', null) === null) {
+        update_option('petgo_site_known', $now, false);
+    }
+    if ($chg) {
+        update_option('petgo_site_gone', $gone, false);
+        if (function_exists('petgo_ads_inow_soon')) {
+            delete_transient('petgo_inow_sent');
+            petgo_ads_inow_soon();
+        }
+    }
+}
+function petgo_site_gone_urls() {
+    $o = array();
+    foreach (array_keys((array) get_option('petgo_site_gone', array())) as $slug) {
+        $u = get_option('permalink_structure') ? home_url(user_trailingslashit($slug)) : add_query_arg('petgo', $slug, home_url('/'));
+        foreach (array_keys(petgo_site_langs()) as $l) {
+            $o[] = $l === 'ru' ? $u : add_query_arg('lang', $l, $u);
+        }
+    }
+    return $o;
+}
+add_action('parse_request', function ($wp) {
+    if (is_admin()) {
+        return;
+    }
+    $slug = isset($_GET['petgo']) ? sanitize_key(wp_unslash($_GET['petgo'])) : '';
+    if ($slug === '' && isset($wp->request)) {
+        $slug = sanitize_key(trim((string) $wp->request, '/'));
+    }
+    $gone = (array) get_option('petgo_site_gone', array());
+    if ($slug === '' || !isset($gone[$slug])) {
+        return;
+    }
+    foreach (petgo_site_pages() as $p) {
+        if ($p['slug'] === $slug) {
+            return;
+        }
+    }
+    status_header(410);
+    nocache_headers();
+    header('X-Robots-Tag: noindex, nofollow');
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>' . esc_html(petgo_site_l('Страница удалена')) . ' — PetGo</title>'
+        . '<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FBF9E8;color:#024C46;font:16px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;text-align:center;padding:24px}a{display:inline-block;margin-top:16px;padding:12px 22px;border-radius:999px;background:#024C46;color:#fff;text-decoration:none;font-weight:600}</style></head>'
+        . '<body><div><h1 style="margin:0 0 8px;font-size:26px">' . esc_html(petgo_site_l('Страница удалена')) . '</h1><p style="margin:0">' . esc_html(petgo_site_l('Этого раздела на сайте больше нет.')) . '</p><a href="' . esc_url(petgo_site_url('home')) . '">' . esc_html(petgo_site_l('На главную')) . '</a></div></body></html>';
+    exit;
+}, 0);
+add_filter('petgo_site_dict_more', function ($d) {
+    return array_merge($d, array(
+        'Страница удалена' => array('Бет жойылды', 'Page removed'),
+        'Этого раздела на сайте больше нет.' => array('Бұл бөлім сайтта енді жоқ.', 'This section is no longer on the site.'),
+        'На главную' => array('Басты бетке', 'Go to home page'),
     ));
 });

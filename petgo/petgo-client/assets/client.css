@@ -1254,3 +1254,18 @@ html.pgk-dark .pgk-place.p4 { color: var(--k-acc-tx); }
 .pgk-sw:checked { background: var(--k-acc); }
 .pgk-sw:checked::after { transform: translateX(20px); }
 .pgk-nf-go { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 22px; }
+
+/* ============================================================
+   39.1: тестовая неделя — полоса на главной, карточка вместо акции, заметка в заказе
+   ============================================================ */
+.pgk-tw { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin: 14px 0 0; padding: 12px 16px; border-radius: 18px; background: #1E9A5F; color: #fff; animation: pgkIn var(--k-sheet-in) var(--k-out) both; }
+.pgk-tw b { padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, .2); font: 800 13px/1 var(--k-font); letter-spacing: .01em; }
+.pgk-tw span { font: 600 15px/1.3 var(--k-font); }
+.pgk-tw-promo { background: #DDF3E6; }
+html.pgk-dark .pgk-tw-promo { background: #123A2A; }
+.pgk-tw-promo .pgk-pr-t b { color: #1E9A5F; font-size: 44px; }
+html.pgk-dark .pgk-tw-promo .pgk-pr-t b { color: #4FD6A0; }
+.pgk-tw-note { display: flex; flex-direction: column; gap: 3px; margin: 2px 0 6px; padding: 12px 14px; border-radius: 16px; background: rgba(30, 154, 95, .12); color: var(--k-tx); }
+.pgk-tw-note b { color: #1E9A5F; font-size: 15px; } html.pgk-dark .pgk-tw-note b { color: #4FD6A0; }
+.pgk-tw-note span { font-size: 14px; color: var(--k-mu); }
+.pgk-ab-pr s + small { width: auto; color: #1E9A5F; font-weight: 700; }

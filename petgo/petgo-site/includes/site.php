@@ -280,12 +280,15 @@ function petgo_site_vars() {
     $b  = $b ? $b : (isset($sv[1]) ? $sv[1] : $a);
     $pa = $a ? petgo_site_price($a) : array('now' => 0, 'old' => 0);
     $pb = $b ? petgo_site_price($b) : array('now' => 0, 'old' => 0);
+    $k  = petgo_site_service('week-cat');
+    $pk = $k ? petgo_site_price($k) : $pb;
     $v  = array(
         '{off}'      => (int) $c['off'] . '%',
         '{walk}'     => petgo_site_money($pa['now']),
         '{walk_old}' => petgo_site_money($pa['old'] ? $pa['old'] : $pa['now']),
         '{week}'     => petgo_site_money($pb['now']),
         '{week_old}' => petgo_site_money($pb['old'] ? $pb['old'] : $pb['now']),
+        '{week_cat}' => petgo_site_money($pk['now']),
     );
     return $v;
 }
@@ -538,9 +541,15 @@ function petgo_site_b_hero() {
 }
 
 /* услуги: выбор «Собака / Кошка» и карточки из настроек */
-function petgo_site_b_services($head = true) {
+function petgo_site_b_services($head = true, $pet = '') {
     $c   = petgo_site_cfg();
     $sv  = $c['services'];
+    /* 39.1: на страницах «Выгул собак» / «Няня для кошек» — только услуги для этого питомца */
+    if ($pet !== '') {
+        $sv = array_values(array_filter($sv, function ($s) use ($pet) {
+            return $s['pet'] === $pet || $s['pet'] === 'all';
+        }));
+    }
     if (!$sv) {
         return '';
     }
@@ -553,7 +562,7 @@ function petgo_site_b_services($head = true) {
     $h  = '<section class="pg-sec pg-svc" id="pg-services" data-pet="' . ($both ? 'dog' : 'any') . '"><div class="pg-wrap">';
     $L = 'petgo_site_l';
     if ($head) {
-        $h .= '<div class="pg-sec-head pg-rise"><h2 class="pg-h">' . esc_html($L('Выберите услугу')) . '</h2>' . ($off > 0 ? '<p class="pg-sub">' . esc_html(petgo_site_lf('Цены указаны для первого заказа со скидкой %s.', $off . '%')) . '</p>' : '') . '</div>';
+        $h .= '<div class="pg-sec-head pg-rise"><h2 class="pg-h">' . esc_html(is_string($head) ? $head : $L('Выберите услугу')) . '</h2>' . ($off > 0 ? '<p class="pg-sub">' . esc_html(petgo_site_lf('Цены указаны для первого заказа со скидкой %s.', $off . '%')) . '</p>' : '') . '</div>';
     }
     if ($both) {
         $h .= '<div class="pg-picker pg-rise" role="tablist" aria-label="' . esc_attr($L('Кто у вас дома')) . '"><span class="pg-picker-ind" aria-hidden="true"></span><button type="button" class="pg-b pg-pet" role="tab" data-pet="dog" aria-selected="true"><span class="pg-pet-art" data-art="art:dog-gold"></span>' . esc_html($L('Собака')) . '</button><button type="button" class="pg-b pg-pet" role="tab" data-pet="cat" aria-selected="false"><span class="pg-pet-art" data-art="art:cat-orange"></span>' . esc_html($L('Кошка')) . '</button></div>';
@@ -675,7 +684,7 @@ function petgo_site_content($page, $a = array()) {
         case 'services':
             $off = (int) $c['off'];
             return petgo_site_b_title($L('Услуги и цены'), $off > 0 ? petgo_site_lf('Первый заказ — со скидкой %s.', $off . '%') : $L('Выберите, что нужно вашему питомцу.'))
-                . petgo_site_b_services(false) . petgo_site_b_how()
+                . petgo_site_b_services(false) . (function_exists('petgo_site_land_links') ? petgo_site_land_links('') : '') . petgo_site_b_how()
                 . '<section class="pg-sec"><div class="pg-wrap pg-narrow">' . petgo_site_b_faq() . '</div></section>'
                 . petgo_site_b_cta($L('Не нашли нужную услугу?'), $L('Напишите нам — обсудим, что нужно вашему питомцу.'));
         case 'nannies':

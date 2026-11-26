@@ -477,6 +477,8 @@
     var when = d ? T(WD[d.getDay()]).replace(/^./, function (c) { return c.toUpperCase(); }) + ", " + d.getDate() + " " + T(MON[d.getMonth()]) : "";
     when += " · " + pad(BK.h) + ":" + pad(BK.m) + "–" + pad(Math.floor(en / 60) % 24) + ":" + pad(en % 60);
     if (sv.days > 1) when += " · " + sv.days + " " + T("дней");
+    /* 39.1: тестовая неделя — в приложении всё 0 ₸ */
+    if (K.test) { box.innerHTML = "<b>" + esc(when) + "</b><strong>0 ₸</strong>"; var pt = bpart("price"); if (pt) pt.textContent = " · 0 ₸"; return; }
     box.innerHTML = "<b>" + esc(when) + "</b>" + (price ? "<strong>≈ " + money(price) + "</strong>" : "<span>" + esc(T("Цену подтвердит менеджер")) + "</span>");
     /* 38.1: сумма и на кнопке — «Отправить заявку · 3 000 ₸», как в макете */
     var pe = bpart("price"); if (pe) pe.textContent = price ? " · ≈ " + money(price) : "";
@@ -558,6 +560,10 @@
     bkPets();
     seg(bpart("kind"), Object.keys(K.svcs).map(function (k) { return [k, K.svcs[k].t]; }), BK.kind);
     bkDays(); bkDurs(); bkNannies();
+    /* 39.1: тестовая неделя — заметка вверху заказа */
+    var twn = $(".pgk-tw-note", f);
+    if (K.test && !twn) { twn = D.createElement("div"); twn.className = "pgk-tw-note"; twn.innerHTML = "<b>" + esc(T("Тестовая неделя")) + "</b><span>" + esc(T("Заказ в тестовую неделю — бесплатно")) + (K.test.until ? " " + esc(K.test.until) : "") + "</span>"; f.insertBefore(twn, f.firstChild); }
+    else if (!K.test && twn) twn.remove();
     wheelBuild();
     /* лист уже на экране — ставим колёса без анимации */
     requestAnimationFrame(function () { bkTimeFix("force"); bkSum(); sgAll(f); });
@@ -1460,7 +1466,7 @@
     var pr = (K.price || {}).walk || 0, pl = +n.place || 0;
     return '<button type="button" class="pg-b pgk-nc" data-k-nanny="' + n.id + '"><span class="pgk-nc-av">' + avHtml({ av: n.img, name: n.name }) + (pl ? '<i class="pgk-place p' + Math.min(4, pl) + '" aria-label="' + esc(T("%s место").replace("%s", pl)) + '">' + pl + "</i>" : "") + '</span><span class="pgk-nc-b"><b>' + esc(n.name) + VER + "</b>" +
       '<span class="pgk-nc-r">' + nRate(n) + "</span>" +
-      '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
+      '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (K.test ? '<small class="pgk-nc-p"><b>0 ₸</b> · ' + esc(T("тестовая неделя")) + "</small>" : pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
       '<i class="pgk-nc-fav' + (isFav(n.id) ? " on" : "") + '" data-k-fav="' + n.id + '" role="button" aria-label="' + esc(T("В избранное")) + '">' + svg(HEART) + "</i></button>";
   }
   function emptyBox(icon, title, text) { return '<div class="pgk-empty38">' + icon + "<b>" + esc(title) + "</b>" + (text ? "<p>" + esc(text) + "</p>" : "") + "</div>"; }
@@ -1552,7 +1558,7 @@
       '<div class="pgk-np-tags">' + tags + "</div>" +
       (n.bio ? '<h4 class="pgk-gt">' + esc(T("О няне")) + '</h4><p class="pgk-np-bio">' + esc(n.bio) + "</p>" : "") +
       (rv ? '<h4 class="pgk-gt">' + esc(T("Отзывы")) + '</h4><div class="pgk-nrvs">' + rv + "</div>" : "") + "</div>" +
-      '<div class="pgk-np-go"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nbook="' + n.id + '"><span>' + esc(T("Заказать выгул или визит")) + "</span>" + (pr ? "<em>" + esc(T("от")) + " " + esc(money(pr)) + "</em>" : "") + '</button><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nmsg="' + n.id + '">' + svg(CHATI) + esc(T("Написать")) + "</button></div></div>";
+      '<div class="pgk-np-go"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nbook="' + n.id + '"><span>' + esc(T("Заказать выгул или визит")) + "</span>" + (K.test ? "<em>0 ₸ · " + esc(T("тестовая неделя")) + "</em>" : pr ? "<em>" + esc(T("от")) + " " + esc(money(pr)) + "</em>" : "") + '</button><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nmsg="' + n.id + '">' + svg(CHATI) + esc(T("Написать")) + "</button></div></div>";
     var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
   }
   function nannyBook(id) {

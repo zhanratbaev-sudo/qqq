@@ -85,8 +85,12 @@ function petgo_shop_page() {
     }
     $tab = isset($tabs[$tab]) ? $tab : 'orders';
     echo '<style>' . petgo_shop_staff_css() . '</style><div class="psha">';
-    if (!petgo_shop_on() && $tab !== 'set') {
-        echo '<a class="pgc-card pshz-warn" href="' . esc_url(petgo_page_url(array('pg' => 'shop', 'tab' => 'set'))) . '"><span class="pshz-wi">!</span><span class="pshz-wt"><b>Магазин выключен</b><small>Клиенты его не видят: ни на сайте, ни в приложении, ни в поиске. Включить — в «Настройках».</small></span></a>';
+    /* 39.1: включить / выключить магазин — одной кнопкой сверху раздела */
+    if (petgo_can('admin')) {
+        $on = petgo_shop_on();
+        echo '<div class="pgc-card pshz-warn' . ($on ? ' ok' : '') . '"><span class="pshz-wi">' . ($on ? '✓' : '!') . '</span><span class="pshz-wt"><b>' . ($on ? 'Магазин включён' : 'Магазин выключен') . '</b><small>' . ($on ? 'Клиенты видят его на сайте и в приложении.' : 'Его нет нигде: ни на сайте, ни в приложении, ни в поиске Google и Яндекс. Товары и заказы сохранены.') . '</small></span>'
+            . petgo_form_open('shop_onoff', 'class="psha-f"') . '<input type="hidden" name="on" value="' . ($on ? '0' : '1') . '"><button type="submit" class="pgc-btn sm' . ($on ? ' sec red' : '') . '"' . ($on ? ' onclick="return confirm(\'Выключить магазин везде — на сайте, в приложении и в поиске?\')"' : '') . '>' . ($on ? 'Выключить' : 'Включить') . '</button></form></div>';
+        echo '<style>.pshz-warn{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px 16px;text-decoration:none;color:inherit;box-shadow:inset 0 0 0 1.5px var(--wn,#E8A33C)}.pshz-wi{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--wn,#E8A33C);color:#fff}.pshz-wt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pshz-wt b{color:var(--tx)}.pshz-wt small{color:var(--mu);line-height:1.35}.pshz-warn .psha-f{flex:none;margin:0}.pshz-warn.ok{box-shadow:inset 0 0 0 1.5px #1E9A5F}.pshz-warn.ok .pshz-wi{background:#1E9A5F}</style>';
     }
     echo '<nav class="psha-tabs">';
     foreach ($tabs as $k => $t) {
@@ -443,6 +447,18 @@ function petgo_shop_page_set() {
     }
     echo '</div><div class="pgct-save" style="position:sticky;bottom:calc(var(--sab) + 12px);z-index:5"><button type="submit" class="pgc-btn wide lg">Сохранить</button></div></form>';
 }
+
+add_action('admin_post_petgo_shop_onoff', function () {
+    petgo_guard('admin');
+    $c       = get_option('petgo_shop', array());
+    $c       = is_array($c) ? $c : array();
+    $c['on'] = !empty($_POST['on']) ? '1' : '0';
+    update_option('petgo_shop', $c, false);
+    update_option('petgo_site_mod', time(), false);
+    petgo_flash($c['on'] === '1' ? 'Магазин включён' : 'Магазин выключен везде — на сайте, в приложении и в поиске', true);
+    wp_safe_redirect(petgo_page_url(array('pg' => 'shop')));
+    exit;
+});
 
 add_action('admin_post_petgo_shop_set', function () {
     petgo_guard('admin');

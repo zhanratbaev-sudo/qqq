@@ -1159,3 +1159,37 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
 .pg .pg-seo-in { max-width: 820px; }
 .pg .pg-seo-in .pg-h { font-size: clamp(22px, 4.4vw, 30px); }
 .pg .pg-seo-in p { margin: 12px 0 0; font-size: 16px; line-height: 1.6; color: var(--muted, rgba(2, 76, 70, .7)); }
+
+/* ============================================================
+   39.1 СТРАНИЦЫ УСЛУГ ДЛЯ ПОИСКА: «Выгул собак в Алматы», «Няня для кошек в Алматы»
+   ============================================================ */
+.pg .pg-land-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 28px; align-items: center; }
+.pg .pg-land-copy { display: flex; flex-direction: column; gap: 18px; }
+.pg .pg-land-copy .pg-sub { margin: 0; font-size: 18px; line-height: 1.5; }
+.pg .pg-land-copy .pg-chips { margin-top: 2px; }
+.pg .pg-land-art { border-radius: 30px; aspect-ratio: 4 / 3; box-shadow: var(--sh); }
+.pg .pg-land-why { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.pg .pg-land-why li { display: flex; flex-direction: column; gap: 8px; padding: 20px; border-radius: 26px; background: rgba(255, 255, 255, .78); box-shadow: var(--g-rim); }
+.pg .pg-land-why b { font-size: 17px; letter-spacing: -.01em; }
+.pg .pg-land-why p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--muted, rgba(2, 76, 70, .7)); }
+.pg .pg-land-i { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--line); color: var(--acc, #024C46); }
+.pg .pg-land-i .pg-i { width: 22px; height: 22px; }
+.pg .pg-land-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.pg .pg-land-links a { display: inline-flex; align-items: center; gap: 6px; padding: 12px 14px 12px 18px; border-radius: 999px; font-weight: 600; text-decoration: none; color: inherit; background: rgba(255, 255, 255, .78); box-shadow: var(--g-rim); transition: transform 160ms var(--ease-out, ease-out); }
+.pg .pg-land-links a:active { transform: scale(.97); }
+.pg .pg-land-links .pg-i { width: 18px; height: 18px; }
+.pg .pg-seo-links a { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 960px) {
+  .pg .pg-land-why { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .pg .pg-land-hero { grid-template-columns: 1fr; gap: 20px; }
+  .pg .pg-land-art { aspect-ratio: 16 / 9; border-radius: 26px; }
+  .pg .pg-land-copy .pg-sub { font-size: 16.5px; }
+}
+@media (max-width: 600px) {
+  .pg .pg-land-why { gap: 10px; }
+  .pg .pg-land-why li { padding: 16px; border-radius: 22px; }
+  .pg .pg-land-why b { font-size: 16px; }
+  .pg .pg-land-why p { font-size: 14px; }
+}
