@@ -253,7 +253,35 @@ function petgo_site_price($svc) {
     $p    = petgo_site_num($svc['price']);
     $off  = min(100, max(0, (int) $c['off']));
     $sale = $off > 0 && $p > 0 && $svc['sale'] === '1';
-    return array('now' => $sale ? (int) round($p * (100 - $off) / 100) : $p, 'old' => $sale ? $p : 0, 'off' => $sale ? $off : 0);
+    /* 39.4: неделя визитов — скидка первого заказа только на ПЕРВЫЙ ДЕНЬ (один визит = цена часа выгула),
+       остальные 6 дней — по обычной цене. Например, 29 990 − 3 500 = 26 490 ₸ при скидке 100%. */
+    if ($sale && petgo_site_is_week($svc)) {
+        $cut = (int) round(min(petgo_site_day_price($p), $p) * $off / 100);
+        return array('now' => $p - $cut, 'old' => $p, 'off' => $off, 'cut' => $cut, 'day1' => true);
+    }
+    $now = $sale ? (int) round($p * (100 - $off) / 100) : $p;
+    return array('now' => $now, 'old' => $sale ? $p : 0, 'off' => $sale ? $off : 0, 'cut' => $sale ? $p - $now : 0, 'day1' => false);
+}
+
+/* 39.4: услуга «на неделю» (ежедневные визиты) */
+function petgo_site_is_week($svc) {
+    return strpos((string) $svc['id'], 'week') !== false || mb_stripos((string) $svc['unit'], 'недел') !== false;
+}
+
+/* 39.4: цена одного дня (одного визита) — обычная цена часа выгула; нет выгула — неделя / 7 */
+function petgo_site_day_price($week = 0) {
+    $w = petgo_site_service('walk');
+    $d = $w ? petgo_site_num($w['price']) : 0;
+    return $d > 0 ? $d : (int) round($week / 7);
+}
+
+/* 39.4: подпись скидки первого заказа: «первый час выгула или первый день визитов» */
+function petgo_site_first_line() {
+    $off = (int) petgo_site_cfg()['off'];
+    if ($off <= 0) {
+        return '';
+    }
+    return $off >= 100 ? petgo_site_l('Первый заказ: первый час выгула или первый день визитов — бесплатно.') : petgo_site_lf('Первый заказ: скидка %s на первый час выгула или первый день визитов.', $off . '%');
 }
 
 function petgo_site_service($id) {
@@ -562,7 +590,7 @@ function petgo_site_b_services($head = true, $pet = '') {
     $h  = '<section class="pg-sec pg-svc" id="pg-services" data-pet="' . ($both ? 'dog' : 'any') . '"><div class="pg-wrap">';
     $L = 'petgo_site_l';
     if ($head) {
-        $h .= '<div class="pg-sec-head pg-rise"><h2 class="pg-h">' . esc_html(is_string($head) ? $head : $L('Выберите услугу')) . '</h2>' . ($off > 0 ? '<p class="pg-sub">' . esc_html(petgo_site_lf('Цены указаны для первого заказа со скидкой %s.', $off . '%')) . '</p>' : '') . '</div>';
+        $h .= '<div class="pg-sec-head pg-rise"><h2 class="pg-h">' . esc_html(is_string($head) ? $head : $L('Выберите услугу')) . '</h2>' . ($off > 0 ? '<p class="pg-sub">' . esc_html(petgo_site_first_line()) . '</p>' : '') . '</div>';
     }
     if ($both) {
         $h .= '<div class="pg-picker pg-rise" role="tablist" aria-label="' . esc_attr($L('Кто у вас дома')) . '"><span class="pg-picker-ind" aria-hidden="true"></span><button type="button" class="pg-b pg-pet" role="tab" data-pet="dog" aria-selected="true"><span class="pg-pet-art" data-art="art:dog-gold"></span>' . esc_html($L('Собака')) . '</button><button type="button" class="pg-b pg-pet" role="tab" data-pet="cat" aria-selected="false"><span class="pg-pet-art" data-art="art:cat-orange"></span>' . esc_html($L('Кошка')) . '</button></div>';
@@ -588,8 +616,14 @@ function petgo_site_b_services($head = true, $pet = '') {
         }
         /* 39.2: скидка 100% — первый заказ 0 ₸, обычная цена зачёркнута */
         if ($p['now'] > 0 || $p['old'] > 0) {
-            $h .= '<div class="pg-price-row"><span class="pg-price">' . esc_html(petgo_site_money($p['now'])) . ' ₸</span>' . ($p['off'] ? '<span class="pg-off">−' . (int) $p['off'] . '%</span>' : '');
-            $h .= '<span class="pg-meta">' . esc_html($L($s['unit'])) . ($p['old'] ? ' · ' . esc_html($L('потом')) . ' <s>' . esc_html(petgo_site_money($p['old'])) . ' ₸</s>' : '') . '</span></div>';
+            $tag = !empty($p['day1']) ? ((int) $p['off'] >= 100 ? $L('1-й день бесплатно') : '−' . petgo_site_money($p['cut']) . ' ₸') : '−' . (int) $p['off'] . '%';
+            $h .= '<div class="pg-price-row"><span class="pg-price">' . esc_html(petgo_site_money($p['now'])) . ' ₸</span>' . ($p['off'] ? '<span class="pg-off">' . esc_html($tag) . '</span>' : '');
+            $h .= '<span class="pg-meta">' . esc_html($L($s['unit'])) . ($p['old'] ? ' · ' . esc_html($L('потом')) . ' <s>' . esc_html(petgo_site_money($p['old'])) . ' ₸</s>' : '') . '</span>';
+            /* 39.4: неделя — первый день бесплатно, остальные 6 по обычной цене */
+            if (!empty($p['day1'])) {
+                $h .= '<span class="pg-meta pg-day1">' . esc_html((int) $p['off'] >= 100 ? petgo_site_lf('Первый день бесплатно (−%s ₸), остальные 6 дней — по обычной цене.', petgo_site_money($p['cut'])) : petgo_site_lf('Скидка на первый день (−%s ₸), остальные 6 дней — по обычной цене.', petgo_site_money($p['cut']))) . '</span>';
+            }
+            $h .= '</div>';
         }
         /* 34.0: кнопка услуги открывает заявку (а не WhatsApp): услуга и вид питомца подставляются сами */
         $h .= '<button type="button" class="pg-b pg-btn pg-btn-primary" data-sheet="request" data-note="' . esc_attr($msg) . '"' . ($s['pet'] !== 'all' ? ' data-species="' . esc_attr($s['pet']) . '"' : '') . '>' . esc_html($L($s['btn'] !== '' ? $s['btn'] : 'Заказать')) . '</button></article>';
@@ -684,7 +718,7 @@ function petgo_site_content($page, $a = array()) {
     switch ($page) {
         case 'services':
             $off = (int) $c['off'];
-            return petgo_site_b_title($L('Услуги и цены'), $off > 0 ? petgo_site_lf('Первый заказ — со скидкой %s.', $off . '%') : $L('Выберите, что нужно вашему питомцу.'))
+            return petgo_site_b_title($L('Услуги и цены'), $off > 0 ? petgo_site_first_line() : $L('Выберите, что нужно вашему питомцу.'))
                 . petgo_site_b_services(false) . (function_exists('petgo_site_land_links') ? petgo_site_land_links('') : '') . petgo_site_b_how()
                 . '<section class="pg-sec"><div class="pg-wrap pg-narrow">' . petgo_site_b_faq() . '</div></section>'
                 . petgo_site_b_cta($L('Не нашли нужную услугу?'), $L('Напишите нам — обсудим, что нужно вашему питомцу.'));
@@ -799,3 +833,35 @@ function petgo_site_shortcode($atts) {
     $a = shortcode_atts(array('form' => '1', 'reviews' => '1', 'page' => 'home'), $atts);
     return petgo_site_render(sanitize_key($a['page']), $a);
 }
+
+/* ============================================================
+   39.4 НЕДЕЛЯ ВИЗИТОВ: «ПЕРВЫЙ ДЕНЬ БЕСПЛАТНО»
+   Один раз после обновления у услуг «на неделю» включается «Скидка на эту услугу» — теперь это скидка
+   первого заказа только на первый день (остальные 6 — по обычной цене), а не на всю неделю.
+   Выключить можно, как и раньше, в «Настройках сайта» → услуга → «Скидка на эту услугу».
+   ============================================================ */
+add_action('init', function () {
+    if (get_option('petgo_site_m394')) {
+        return;
+    }
+    $c = get_option('petgo_site');
+    if (is_array($c) && !empty($c['services']) && is_array($c['services'])) {
+        foreach ($c['services'] as $i => $s) {
+            if (is_array($s) && petgo_site_is_week(array_merge(array('id' => '', 'unit' => ''), $s))) {
+                $c['services'][$i]['sale'] = '1';
+            }
+        }
+        update_option('petgo_site', $c);
+    }
+    update_option('petgo_site_m394', 1, false);
+}, 30);
+
+add_filter('petgo_site_dict_more', function ($d) {
+    return array_merge($d, array(
+        'Первый заказ: первый час выгула или первый день визитов — бесплатно.' => array('Алғашқы тапсырыс: серуеннің алғашқы сағаты немесе келудің алғашқы күні — тегін.', 'First order: the first hour of a walk or the first day of visits is free.'),
+        'Первый заказ: скидка %s на первый час выгула или первый день визитов.' => array('Алғашқы тапсырыс: серуеннің алғашқы сағатына немесе келудің алғашқы күніне %s жеңілдік.', 'First order: %s off the first hour of a walk or the first day of visits.'),
+        '1-й день бесплатно' => array('1-күн тегін', '1st day free'),
+        'Первый день бесплатно (−%s ₸), остальные 6 дней — по обычной цене.' => array('Алғашқы күн тегін (−%s ₸), қалған 6 күн — әдеттегі бағамен.', 'The first day is free (−%s ₸), the other 6 days are at the regular price.'),
+        'Скидка на первый день (−%s ₸), остальные 6 дней — по обычной цене.' => array('Алғашқы күнге жеңілдік (−%s ₸), қалған 6 күн — әдеттегі бағамен.', 'Discount on the first day (−%s ₸), the other 6 days are at the regular price.'),
+    ));
+});

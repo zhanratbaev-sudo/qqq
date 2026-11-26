@@ -3,7 +3,7 @@
  * Plugin Name:       PetGo ИИ
  * Plugin URI:        https://petgo.kz/
  * Description:       ИИ‑помощник для сайта PetGo (Google Gemini): чат в центре нижнего меню, ответ «печатается» по мере генерации, голосовые сообщения, знания с сайта, передача чата менеджеру в приложение. Работает вместе с плагином «PetGo Кабинет».
- * Version:           34.1.0
+ * Version:           34.2.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            web.for made
@@ -14,7 +14,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'PGA_VERSION', '34.1.0' );
+define( 'PGA_VERSION', '34.2.0' );
 define( 'PGA_FILE', __FILE__ );
 define( 'PGA_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PGA_URL', plugin_dir_url( __FILE__ ) );

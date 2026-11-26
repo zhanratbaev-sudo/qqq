@@ -410,6 +410,21 @@ function petgo_cl_ajax() {
         update_user_meta($uid, 'petgo_phone', $phone);
         update_user_meta($uid, 'petgo_phone_d', petgo_phone_digits($phone));
         petgo_cl_link_pets($uid);
+        /* 39.4: адрес — для заказов; питомцам без адреса (или со старым адресом профиля) — тот же */
+        if (isset($_POST['addr'])) {
+            $old  = (string) get_user_meta($uid, 'petgo_addr', true);
+            $addr = trim(mb_substr(sanitize_text_field((string) petgo_p('addr')), 0, 200));
+            update_user_meta($uid, 'petgo_addr', $addr);
+            if ($addr !== '') {
+                foreach (petgo_cl_pets($uid) as $pt) {
+                    $pid = is_object($pt) ? (int) $pt->ID : (int) $pt;
+                    $cur = trim((string) get_post_meta($pid, '_pf_address', true));
+                    if ($cur === '' || $cur === $old) {
+                        update_post_meta($pid, '_pf_address', $addr);
+                    }
+                }
+            }
+        }
         petgo_cl_json(true, array('msg' => $L('Сохранено')));
     }
     if ($op === 'pass') {

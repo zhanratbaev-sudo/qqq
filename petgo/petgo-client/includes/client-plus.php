@@ -76,29 +76,79 @@ function petgo_cl_book_svcs() {
     return array(
         /* выгул — от часа */
         'walk'  => array('svc' => 'walk', 't' => 'Выгул', 'durs' => array(60, 90, 120, 180), 'dur' => 60, 'days' => 1, 'ic' => 'route'),
-        'visit' => array('svc' => 'visit', 't' => 'Визит домой', 'durs' => array(30, 45, 60), 'dur' => 30, 'days' => 1, 'ic' => 'home'),
-        'week'  => array('svc' => 'visit', 't' => 'Неделя визитов', 'durs' => array(30, 45, 60), 'dur' => 30, 'days' => 7, 'ic' => 'calendar'),
+        /* 39.4: визит и неделя — без длительности: няня приходит к выбранному времени и выполняет задание */
+        'visit' => array('svc' => 'visit', 't' => 'Визит домой', 'durs' => array(), 'dur' => 60, 'days' => 1, 'ic' => 'home'),
+        'week'  => array('svc' => 'visit', 't' => 'Неделя визитов', 'durs' => array(), 'dur' => 60, 'days' => 7, 'ic' => 'calendar'),
     );
 }
 
-/* цена для подсказки (точную подтверждает менеджер) */
+/* цена для подсказки (точную подтверждает менеджер).
+   39.4: обычные цены + скидка первого заказа отдельно: выгул — на первый час, неделя — на первый день,
+   визит домой (цена дня = цене часа выгула) — на один визит. Со второго заказа скидок нет. */
 function petgo_cl_book_prices($uid) {
     $first = !petgo_cl_orders($uid, 1);
+    $off   = min(100, max(0, (int) petgo_site_cfg()['off']));
     $get   = function ($id) use ($first) {
         $s = petgo_site_service($id);
         if (!$s) {
-            return 0;
+            return array(0, 0);
         }
         $p = petgo_site_price($s);
-        return (int) ($first || !$p['old'] ? $p['now'] : $p['old']);
+        return array((int) ($p['old'] ? $p['old'] : $p['now']), $first ? (int) $p['cut'] : 0);
     };
-    return array('walk' => $get('walk'), 'week_dog' => $get('week-dog'), 'week_cat' => $get('week-cat'));
+    $w   = $get('walk');
+    $wd  = $get('week-dog');
+    $wc  = $get('week-cat');
+    $day = petgo_site_day_price($wd[0]);
+    return array(
+        'walk' => $w[0], 'walk_cut' => $w[1],
+        'week_dog' => $wd[0], 'week_dog_cut' => $wd[1],
+        'week_cat' => $wc[0], 'week_cat_cut' => $wc[1],
+        'visit' => $day, 'visit_cut' => $first && $off > 0 ? (int) round($day * $off / 100) : 0,
+        'first' => $first && $off > 0, 'off' => $off,
+    );
 }
 
-/* 39.2: скидка 100% на первый заказ — первый заказ клиента бесплатный */
-function petgo_cl_first_free($uid) {
-    $c = petgo_site_cfg();
-    return (int) $c['off'] >= 100 && $uid && !petgo_cl_orders($uid, 1);
+/* 39.4: скидка первого заказа на конкретный заказ: выгул — первый час, неделя — первый день, визит — визит */
+function petgo_cl_first_disc($uid, $kind, $dur, $pid) {
+    $pr = petgo_cl_book_prices($uid);
+    if (empty($pr['first'])) {
+        return null;
+    }
+    $cat = (string) get_post_meta($pid, '_pf_species', true) === 'cat';
+    if ($kind === 'walk') {
+        $cut = (int) $pr['walk_cut'];
+        $one = (int) round($pr['walk'] * $dur / 60);
+    } elseif ($kind === 'week') {
+        $cut = (int) ($cat ? $pr['week_cat_cut'] : $pr['week_dog_cut']);
+        $one = (int) $pr['visit'];
+    } else {
+        $cut = (int) $pr['visit_cut'];
+        $one = (int) $pr['visit'];
+    }
+    if ($cut <= 0) {
+        return null;
+    }
+    $cut = min($cut, $one);
+    return array('cut' => $cut, 'pay' => max(0, $one - $cut), 'free' => $cut >= $one, 'kind' => $kind, 'off' => (int) $pr['off']);
+}
+
+/* 39.4: что входит в визит (и в каждый день недели визитов) — одно описание для клиента, няни и менеджера */
+function petgo_cl_visit_tasks($sp, $lang = null) {
+    $t = $sp === 'cat' ? 'покормить, налить свежую воду, почистить лоток, немного убрать' : 'покормить, налить свежую воду, немного убрать за питомцем';
+    return $lang === 'ru' ? $t : petgo_site_l($t);
+}
+
+/* 39.4: текст о скидке первого заказа: для клиента (чат) и для менеджера (заказ) */
+function petgo_cl_disc_text($fd, $for = 'client') {
+    $cut = petgo_site_money($fd['cut']) . ' ₸';
+    if ($fd['kind'] === 'week') {
+        return $for === 'staff' ? 'ПЕРВЫЙ ЗАКАЗ: этот (первый) день недели — ' . ($fd['free'] ? 'бесплатно' : 'скидка') . ' (−' . $cut . '). Остальные 6 дней — по обычной цене.' : 'Первый заказ: первый день — ' . ($fd['free'] ? 'бесплатно' : 'со скидкой') . ' (−' . $cut . '), остальные 6 дней — по обычной цене.';
+    }
+    if ($fd['kind'] === 'walk') {
+        return $for === 'staff' ? 'ПЕРВЫЙ ЗАКАЗ: первый час выгула — ' . ($fd['off'] >= 100 ? 'бесплатно' : 'скидка ' . $fd['off'] . '%') . ' (−' . $cut . ').' . ($fd['pay'] > 0 ? ' Остальное время — по обычной цене: ' . petgo_site_money($fd['pay']) . ' ₸.' : ' Оплату не брать.') : 'Первый заказ: первый час — ' . ($fd['off'] >= 100 ? 'бесплатно' : 'со скидкой') . ' (−' . $cut . ').';
+    }
+    return $for === 'staff' ? 'ПЕРВЫЙ ЗАКАЗ: визит — ' . ($fd['free'] ? 'бесплатно, оплату не брать' : 'скидка') . ' (−' . $cut . ').' : 'Первый заказ: визит — ' . ($fd['free'] ? 'бесплатно' : 'со скидкой') . ' (−' . $cut . ').';
 }
 
 function petgo_cl_confirmed($uid) {
@@ -128,7 +178,7 @@ function petgo_cl_busy($ts, $dur, $days = 1) {
 }
 
 /* создать заявку на услугу; $by: client | ai */
-function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by = 'client') {
+function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by = 'client', $addr = '') {
     $L = 'petgo_site_l';
     $S = petgo_cl_book_svcs();
     if (!petgo_cl_owns($uid, $pid)) {
@@ -138,7 +188,18 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
         return array('ok' => false, 'msg' => $L('Выберите услугу.'));
     }
     $sv  = $S[$kind];
-    $dur = in_array((int) $dur, $sv['durs'], true) ? (int) $dur : $sv['dur'];
+    /* 39.4: длительность выбирается только у выгула; визит и неделя — по заданию, без длительности */
+    $dur = $sv['durs'] && in_array((int) $dur, $sv['durs'], true) ? (int) $dur : $sv['dur'];
+    if ($kind === 'walk' && (string) get_post_meta($pid, '_pf_species', true) === 'cat') {
+        return array('ok' => false, 'msg' => $L('Выгул — только для собак. Для кошки выберите «Визит домой» или «Неделю визитов».'));
+    }
+    /* 39.4: адрес обязателен — из заказа, из анкеты питомца или из профиля; новый адрес запоминается */
+    $addr = trim(mb_substr(sanitize_text_field((string) $addr), 0, 200));
+    $addr = $addr !== '' ? $addr : trim((string) get_post_meta($pid, '_pf_address', true));
+    $addr = $addr !== '' ? $addr : trim((string) get_user_meta($uid, 'petgo_addr', true));
+    if (mb_strlen($addr) < 5) {
+        return array('ok' => false, 'field' => 'addr', 'msg' => $L('Укажите адрес: улица, дом, подъезд, квартира.'));
+    }
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $date) || !preg_match('/^\d{2}:\d{2}$/', (string) $time)) {
         return array('ok' => false, 'msg' => $L('Выберите день и время.'));
     }
@@ -166,13 +227,24 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
             return array('ok' => false, 'busy' => 1, 'msg' => petgo_site_lf('Няня %s занята в это время. Выберите другое время или другую няню.', $nname));
         }
     }
+    if ($addr !== trim((string) get_post_meta($pid, '_pf_address', true))) {
+        update_post_meta($pid, '_pf_address', $addr);
+    }
+    update_user_meta($uid, 'petgo_addr', $addr);
     $u    = get_userdata($uid);
     $tw   = function_exists('petgo_tw_on') && petgo_tw_on();
-    $f1   = petgo_cl_first_free($uid);
-    $com  = ($f1 ? 'ПЕРВЫЙ ЗАКАЗ — бесплатно (скидка 100%). ' : '') . ($tw ? 'Заказ в период «' . petgo_tw_name('ru') . '». ' : '') . ($by === 'ai' ? 'Записал помощник (ИИ) в чате кабинета.' : 'Заказ из кабинета клиента.') . ($nname !== '' ? ' Хочет няню: ' . $nname . '.' : '') . ($sv['days'] > 1 ? ' ' . $sv['t'] . '.' : '');
+    $fd   = petgo_cl_first_disc($uid, $kind, $dur, $pid);
+    $f1   = $fd && $fd['free'];
+    $sp   = (string) get_post_meta($pid, '_pf_species', true);
+    $com  = ($tw ? 'Заказ в период «' . petgo_tw_name('ru') . '». ' : '') . ($by === 'ai' ? 'Записал помощник (ИИ) в чате кабинета.' : 'Заказ из кабинета клиента.') . ($nname !== '' ? ' Хочет няню: ' . $nname . '.' : '') . ($sv['days'] > 1 ? ' ' . $sv['t'] . '.' : '');
+    $com .= "\nАдрес: " . $addr;
+    /* 39.4: визит и неделя — что входит (чтобы не было разногласий), остальное — из комментария клиента */
+    if ($kind !== 'walk') {
+        $com .= "\nЗадание: " . petgo_cl_visit_tasks($sp, 'ru') . '.';
+    }
     $note = trim(sanitize_textarea_field((string) $note));
     if ($note !== '') {
-        $com .= "\nКомментарий: " . mb_substr($note, 0, 500);
+        $com .= "\n" . ($kind !== 'walk' ? 'Дополнительно: ' : 'Комментарий: ') . mb_substr($note, 0, 500);
     }
     /* 34.5: откуда пришёл клиент — для заказов из кабинета (если пришёл по рекламе) */
     if ($by === 'client' && function_exists('petgo_src_read')) {
@@ -188,7 +260,9 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
             continue;
         }
         wp_update_post(array('ID' => $id, 'post_title' => 'Order #' . $id));
-        foreach (array('_pet' => (int) $pid, '_nanny' => 0, '_nanny_name' => '', '_want_nanny' => $nanny, '_service' => $sv['svc'], '_ts' => $ts + $i * DAY_IN_SECONDS, '_dur' => $dur, '_comment' => $com, '_status' => 'new', '_src' => $by, '_test' => $tw ? '1' : '', '_free1' => $f1 ? '1' : '') as $k => $v) {
+        /* скидка первого заказа — только на первый заказ серии (первый час выгула, первый день недели, визит) */
+        $d0 = $fd && $i === 0;
+        foreach (array('_pet' => (int) $pid, '_nanny' => 0, '_nanny_name' => '', '_want_nanny' => $nanny, '_service' => $sv['svc'], '_ts' => $ts + $i * DAY_IN_SECONDS, '_dur' => $dur, '_comment' => $com . ($d0 ? "\n" . petgo_cl_disc_text($fd, 'staff') : ''), '_status' => 'new', '_src' => $by, '_test' => $tw ? '1' : '', '_addr' => $addr, '_kind' => $kind, '_disc' => $d0 ? (int) $fd['cut'] : '', '_free1' => $d0 && $f1 ? '1' : '') as $k => $v) {
             update_post_meta($id, $k, $v);
         }
         $ids[] = $id;
@@ -198,8 +272,8 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
     }
     $when = wp_date('d.m в H:i', $ts, petgo_tz());
     petgo_audit('client_book', 'pet=' . $pid . ' ' . $kind . ' ' . $date . ' ' . $time . ' by=' . $by, $uid);
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ($f1 ? 'Первый заказ бесплатно · ' : '') . ($by === 'ai' ? 'Помощник записал клиента' : 'Заказ из кабинета клиента'), get_the_title($pid) . ' · ' . $sv['t'] . ' · ' . $when . ' · ' . $u->display_name . ($nname !== '' ? ' · няня ' . $nname : ''), petgo_page_url(array('pg' => 'orders')));
-    petgo_cl_sys($uid, sprintf('Заявка принята: %s для %s, %s (%d мин)%s. Менеджер подтвердит время или предложит другое.', mb_strtolower($sv['t']), get_the_title($pid), $when, $dur, $nname !== '' ? ', няня ' . $nname : '') . ($f1 ? ' Первый заказ — бесплатно (скидка 100%).' : ''));
+    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ($fd ? 'Первый заказ · ' : '') . ($by === 'ai' ? 'Помощник записал клиента' : 'Заказ из кабинета клиента'), get_the_title($pid) . ' · ' . $sv['t'] . ' · ' . $when . ' · ' . $u->display_name . ($nname !== '' ? ' · няня ' . $nname : ''), petgo_page_url(array('pg' => 'orders')));
+    petgo_cl_sys($uid, sprintf('Заявка принята: %s для %s, %s%s%s. Менеджер подтвердит время или предложит другое.', mb_strtolower($sv['t']), get_the_title($pid), $when, $kind === 'walk' ? sprintf(' (%d мин)', $dur) : '', $nname !== '' ? ', няня ' . $nname : '') . ($fd ? ' ' . petgo_cl_disc_text($fd, 'client') : ''));
     if (function_exists('petgo_event')) {
         petgo_event('booking', array('user' => (int) $uid, 'orders' => $ids, 'kind' => $kind, 'by' => $by));
     }
@@ -223,7 +297,7 @@ function petgo_cp_ops($op, $uid) {
         if (!petgo_cl_ip_limit('b' . $uid, 10, HOUR_IN_SECONDS)) {
             petgo_cl_json(false, array('msg' => $L('Слишком много заявок подряд. Напишите менеджеру.')));
         }
-        $r = petgo_cl_book($uid, (int) petgo_p('pet'), (string) petgo_p('kind'), (string) petgo_p('date'), (string) petgo_p('time'), (int) petgo_p('dur'), (int) petgo_p('nanny'), (string) petgo_p('note'));
+        $r = petgo_cl_book($uid, (int) petgo_p('pet'), (string) petgo_p('kind'), (string) petgo_p('date'), (string) petgo_p('time'), (int) petgo_p('dur'), (int) petgo_p('nanny'), (string) petgo_p('note'), 'client', (string) petgo_p('addr'));
         petgo_cl_json($r['ok'], $r);
     }
     if ($op === 'rv_skip') {
@@ -325,7 +399,7 @@ function petgo_cl_ai_prompt($uid) {
         . "Отвечай на языке клиента (русский, казахский или английский)" . ($lang !== '' && $lang !== 'ru' ? ', сайт открыт на ' . ($lang === 'kz' ? 'казахском' : 'английском') : '') . ". Коротко и по делу: 1–5 предложений, без приветствия в каждом сообщении, без эмодзи.\n\n"
         . "ЧТО ТЫ ДЕЛАЕШЬ:\n"
         . "1. Отвечаешь на любые вопросы о PetGo, услугах, ценах, нянях, прогулках и уходе за питомцами. Ты не ветеринар: при болезни советуй клинику.\n"
-        . "2. Записываешь на услугу. Нужно: питомец, услуга (walk — выгул; visit — визит домой; week — неделя визитов, 7 дней подряд), дата, время (с 07:00 до 21:30), длительность (выгул 60/90/120/180 мин — не меньше часа, визит 30/45/60), няня (по желанию, id; 0 — любая свободная).\n"
+        . "2. Записываешь на услугу. Нужно: питомец, услуга (walk — выгул; visit — визит домой; week — неделя визитов, 7 дней подряд), дата, время (с 07:00 до 21:30), длительность — только для выгула (60/90/120/180 мин, не меньше часа); у визита и недели визитов длительности нет: няня приходит к выбранному времени и кормит, наливает воду, чистит лоток, немного убирает, остальное клиент пишет в комментарии; выгул — только для собак, няня (по желанию, id; 0 — любая свободная).\n"
         . "   Смотри занятость нянь ниже и предлагай только свободное время. Перед записью перескажи детали и спроси «Записываю?». Только после явного согласия клиента добавь в САМЫЙ КОНЕЦ ответа одну метку:\n"
         . "   [[BOOK:{\"pet\":ID,\"kind\":\"walk\",\"date\":\"ГГГГ-ММ-ДД\",\"time\":\"ЧЧ:ММ\",\"dur\":60,\"nanny\":0}]]\n"
         . "   Не пиши, что запись создана, — система сама ответит клиенту.\n"

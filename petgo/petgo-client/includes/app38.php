@@ -81,7 +81,7 @@ function petgo_cl_nanny_card($n, $fav, $price) {
     $pl = isset($n['place']) ? (int) $n['place'] : 0;
     $h = '<button type="button" class="pg-b pgk-nc" data-k-nanny="' . (int) $n['id'] . '"><span class="pgk-nc-av">' . petgo_cl_av($n['img'], $n['name']) . ($pl ? '<i class="pgk-place p' . min(4, $pl) . '" aria-label="' . esc_attr(petgo_site_lf('%s место', $pl)) . '">' . $pl . '</i>' : '') . '</span><span class="pgk-nc-b"><b>' . esc_html($n['name']) . petgo_cl_ic('verified', 'pg-i pgk-ver') . '</b>';
     $h .= '<span class="pgk-nc-r">' . ($n['rate'] ? petgo_cl_icon('star', 'pg-i pgk-star') . '<em>' . esc_html(number_format((float) $n['rate'], 1, petgo_site_lang() === 'en' ? '.' : ',', '')) . '</em> <small>(' . esc_html((int) $n['rn'] . ' ' . petgo_site_n((int) $n['rn'], array('отзыв', 'отзыва', 'отзывов'))) . ')</small>' : '<small>' . esc_html($L('Новая няня')) . '</small>') . '</span>';
-    $h .= '<span class="pgk-nc-m"><small>' . petgo_cl_ic('walk', 'pg-i') . esc_html((int) $n['done'] . ' ' . petgo_site_n((int) $n['done'], array('заказ', 'заказа', 'заказов'))) . '</small>' . (!$price && (int) petgo_site_cfg()['off'] >= 100 ? '<small class="pgk-nc-p"><b>0 ₸</b> · ' . esc_html($L('первый заказ')) . '</small>' : ($price ? '<small class="pgk-nc-p">' . esc_html($L('от')) . ' <b>' . esc_html(petgo_site_money($price)) . ' ₸</b> / ' . esc_html($L('час')) . '</small>' : '')) . '</span></span>';
+    $h .= '<span class="pgk-nc-m"><small>' . petgo_cl_ic('walk', 'pg-i') . esc_html((int) $n['done'] . ' ' . petgo_site_n((int) $n['done'], array('заказ', 'заказа', 'заказов'))) . '</small>' . (petgo_cl_free_hour() ? '<small class="pgk-nc-p"><b>0 ₸</b> · ' . esc_html($L('первый час')) . '</small>' : ($price ? '<small class="pgk-nc-p">' . esc_html($L('от')) . ' <b>' . esc_html(petgo_site_money($price)) . ' ₸</b> / ' . esc_html($L('час')) . '</small>' : '')) . '</span></span>';
     $h .= '<i class="pgk-nc-fav' . (in_array((int) $n['id'], $fav, true) ? ' on' : '') . '" data-k-fav="' . (int) $n['id'] . '" role="button" aria-label="' . esc_attr($L('В избранное')) . '">' . petgo_cl_ic('heart') . '</i></button>';
     return $h;
 }
@@ -90,8 +90,10 @@ function petgo_cl_nanny_card($n, $fav, $price) {
 function petgo_cl_home38_top($u, $hi) {
     $L     = 'petgo_site_l';
     $first = explode(' ', trim($u->display_name));
-    $h  = '<div class="pgk-top"><span class="pgk-city">' . petgo_cl_icon('pin') . esc_html($L('Алматы')) . '</span><button type="button" class="pg-b pgk-bell" data-k-notifs aria-label="' . esc_attr($L('Уведомления')) . '">' . petgo_cl_ic('bell') . '<i class="pgk-bell-dot" data-k-bell hidden></i></button></div>';
-    $h .= '<header class="pgk-hd pgk-hello" data-title="' . esc_attr($first[0]) . '"><h1><span data-k-hello>' . esc_html($L($hi)) . '</span><br>' . esc_html($first[0]) . ' <span class="pgk-wave" aria-hidden="true">👋</span></h1><p>' . esc_html($L('Лучший уход для вашего питомца')) . '</p></header>';
+    /* 39.4: «Алматы +5° облачно» и подсказка по погоде с именем питомца вместо постоянной фразы */
+    $wx = function_exists('petgo_wx_tip') ? petgo_wx_tip((int) $u->ID) : null;
+    $h  = '<div class="pgk-top"><span class="pgk-city">' . petgo_cl_icon('pin') . (function_exists('petgo_wx_city_html') ? petgo_wx_city_html((int) $u->ID) : esc_html($L('Алматы'))) . '</span><button type="button" class="pg-b pgk-bell" data-k-notifs aria-label="' . esc_attr($L('Уведомления')) . '">' . petgo_cl_ic('bell') . '<i class="pgk-bell-dot" data-k-bell hidden></i></button></div>';
+    $h .= '<header class="pgk-hd pgk-hello" data-title="' . esc_attr($first[0]) . '"><h1><span data-k-hello>' . esc_html($L($hi)) . '</span><br>' . esc_html($first[0]) . ' <span class="pgk-wave" aria-hidden="true">👋</span></h1><p' . ($wx ? ' class="pgk-wx-tip"' : '') . '>' . esc_html($wx ? $wx['tip'] : $L('Лучший уход для вашего питомца')) . '</p></header>';
     /* 39.1: тестовая неделя — полоса под приветствием */
     $h .= function_exists('petgo_tw_ribbon') ? petgo_tw_ribbon() : '';
     $h .= '<div class="pgk-search"><button type="button" class="pg-b pgk-sbar" data-k-nannies="search">' . petgo_cl_ic('search') . '<span>' . esc_html($L('Поиск няни…')) . '</span></button><button type="button" class="pg-b pgk-sfilt" data-k-nfilter aria-label="' . esc_attr($L('Сортировка')) . '">' . petgo_cl_ic('sliders') . '</button></div>';
@@ -109,24 +111,46 @@ function petgo_cl_home38_svcs() {
 }
 
 /* акция (по макету «−50% on your first walk»): скидка на первый заказ или первая акция из «Для вас» */
+/* 39.4: какая акция стоит наверху главной: 'first' — скидка первого заказа, иначе id последней акции «Для вас».
+   Та же акция в «Для вас» второй раз не показывается. */
+function petgo_cl_top_promo($uid) {
+    static $memo = array();
+    if (isset($memo[$uid])) {
+        return $memo[$uid];
+    }
+    if ((int) petgo_site_cfg()['off'] > 0 && !petgo_cl_orders($uid, 1)) {
+        return $memo[$uid] = array('id' => 'first');
+    }
+    foreach (array_reverse(petgo_board()) as $b) {
+        if ($b['type'] === 'promo') {
+            return $memo[$uid] = $b;
+        }
+    }
+    return $memo[$uid] = null;
+}
+
+function petgo_cl_free_hour() {
+    static $f = null;
+    if ($f === null) {
+        $pr = petgo_cl_book_prices(get_current_user_id());
+        $f  = !empty($pr['first']) && $pr['walk'] > 0 && $pr['walk_cut'] >= $pr['walk'];
+    }
+    return $f;
+}
+
 function petgo_cl_home38_promo($uid) {
     $L   = 'petgo_site_l';
     $c   = petgo_site_cfg();
     $off = (int) $c['off'];
-    if ($off > 0 && !petgo_cl_orders($uid, 1)) {
+    $top = petgo_cl_top_promo($uid);
+    if (!$top) {
+        return '';
+    }
+    if ($top['id'] === 'first') {
         $big = '−' . $off . '%';
-        $sub = $off >= 100 ? $L('Первый выгул или визит — бесплатно') : $L('на первый выгул или визит');
+        $sub = $off >= 100 ? $L('Первый час выгула или первый день визитов — бесплатно') : $L('на первый час выгула или первый день визитов');
     } else {
-        $p = null;
-        foreach (array_reverse(petgo_board()) as $b) {
-            if ($b['type'] === 'promo') {
-                $p = $b;
-                break;
-            }
-        }
-        if (!$p) {
-            return '';
-        }
+        $p = $top;
         $big = $L($p['title']);
         $sub = $p['text'] !== '' ? $L($p['text']) : '';
     }
@@ -157,7 +181,7 @@ function petgo_cl_profile38($u) {
     $h   = '<div class="pgk-me"><label class="pgk-me-av">' . petgo_cl_av(petgo_user_avatar_url($uid), $u->display_name) . '<input type="file" accept="image/*" class="pgw-vh" data-k-avatar><i class="pgk-cam">' . petgo_cl_icon('camera') . '</i></label><div class="pgk-me-t"><b>' . esc_html($u->display_name) . '</b><small>' . esc_html($ph !== '' ? $ph : '@' . $u->user_login) . '</small></div><button type="button" class="pg-b pgk-me-ed" data-k-edit aria-label="' . esc_attr($L('Изменить данные')) . '">' . petgo_cl_ic('pen') . '</button></div>';
     $c   = petgo_site_cfg();
     if ((int) $c['off'] > 0 && !petgo_cl_orders($uid, 1)) {
-        $h .= '<div class="pgk-disc"><div><small>' . esc_html($L('Ваша скидка')) . '</small><b>' . esc_html(petgo_site_lf('−%s на первый заказ', (int) $c['off'] . '%')) . '</b><span>' . esc_html($L((int) $c['off'] >= 100 ? 'Первый выгул или визит — бесплатно, код не нужен' : 'Применится сама — код не нужен')) . '</span></div><i>' . petgo_cl_ic('gift') . '</i></div>';
+        $h .= '<div class="pgk-disc"><div><small>' . esc_html($L('Ваша скидка')) . '</small><b>' . esc_html(petgo_site_lf('−%s на первый заказ', (int) $c['off'] . '%')) . '</b><span>' . esc_html($L((int) $c['off'] >= 100 ? 'Первый час выгула или первый день визитов — бесплатно, код не нужен' : 'На первый час выгула или первый день визитов, код не нужен')) . '</span></div><i>' . petgo_cl_ic('gift') . '</i></div>';
     }
     /* 39.3: тестовая неделя — полоса с кнопкой «Оценить PetGo» (без цен) */
     $h .= function_exists('petgo_tw_ribbon') ? petgo_tw_ribbon($uid) : '';

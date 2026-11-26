@@ -172,7 +172,7 @@ function petgo_cl_dashboard() {
         'aj' => petgo_rel_url(admin_url('admin-ajax.php')), 'n' => wp_create_nonce('petgo_cl'), 'lang' => petgo_site_lang(), 'uid' => $uid,
         'pets' => $st, 'pre' => (object) $pre, 'gkey' => trim((string) get_option('petgo_gmaps_key', '')),
         'leaflet' => array('css' => petgo_asset_url('leaflet/leaflet.css'), 'js' => petgo_asset_url('leaflet/leaflet.js')),
-        'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'free1' => petgo_cl_first_free($uid), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
+        'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'addr' => (string) get_user_meta($uid, 'petgo_addr', true), 'tasks' => array('cat' => array_map('petgo_site_l', array('Покормит', 'Нальёт свежую воду', 'Почистит лоток', 'Немного уберёт')), 'dog' => array_map('petgo_site_l', array('Покормит', 'Нальёт свежую воду', 'Немного уберёт за питомцем'))), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
         'tr' => petgo_cl_js_dict(),
         'qrjs' => petgo_asset_url('vendor/qrcode.min.js'),
         'fav' => petgo_cl_favs($uid), 'nlast' => petgo_cl_notif_last($uid), 'wa' => petgo_site_wa(),
@@ -407,9 +407,12 @@ function petgo_cl_for_html($uid) {
             $blog[] = $b;
         }
     }
-    $c = petgo_site_cfg();
-    if ((int) $c['off'] > 0 && !petgo_cl_orders($uid, 1)) {
-        array_unshift($promos, array('id' => 'first', 'title' => petgo_site_lf('−%s на первый заказ', (int) $c['off'] . '%'), 'text' => $L('Скидка действует на первую прогулку или неделю визитов.'), 'when' => '', 'place' => '', 'photo' => ''));
+    /* 39.4: акция, которая уже стоит наверху главной, здесь не повторяется; скидки первого заказа здесь нет */
+    $top = function_exists('petgo_cl_top_promo') ? petgo_cl_top_promo($uid) : null;
+    if ($top && $top['id'] !== 'first') {
+        $promos = array_values(array_filter($promos, function ($b) use ($top) {
+            return $b['id'] !== $top['id'];
+        }));
     }
     if ($my !== '') {
         $h .= '<h2 class="pgk-h2">' . esc_html($L('От менеджера')) . '</h2><div class="pgk-card pgk-rec"><span class="pgk-row-i">' . petgo_cl_icon('chat') . '</span><p>' . nl2br(esc_html($my)) . '</p></div>';
@@ -582,7 +585,11 @@ function petgo_cl_book_form() {
     $h .= $g($L('Услуга'), '<div class="pgk-sg" data-b="kind"></div>');
     $h .= $g($L('День'), '<div class="pgk-bk-days" data-b="date"></div>');
     $h .= $g($L('Время'), '<div class="pgk-card pgk-wheel" data-b="time"><i class="pgk-wh-band" aria-hidden="true"></i><div class="pgk-wh-col" data-w="h" tabindex="0" aria-label="' . esc_attr($L('Часы')) . '"></div><span class="pgk-wh-sep">:</span><div class="pgk-wh-col" data-w="m" tabindex="0" aria-label="' . esc_attr($L('Минуты')) . '"></div></div>');
-    $h .= $g($L('Длительность'), '<div class="pgk-sg" data-b="dur"></div>');
+    /* 39.4: длительность — только у выгула; у визита и недели — что сделает няня */
+    $h .= str_replace('<div class="pgk-g">', '<div class="pgk-g" data-bg="dur">', $g($L('Длительность'), '<div class="pgk-sg" data-b="dur"></div>'));
+    $h .= str_replace('<div class="pgk-g">', '<div class="pgk-g" data-bg="tasks" hidden>', $g($L('Что сделает няня'), '<div class="pgk-card pgk-bk-tasks" data-b-tasks></div>'));
+    /* 39.4: адрес обязателен — подставляется из анкеты питомца, новый запоминается */
+    $h .= $g($L('Адрес'), '<div class="pgk-list" data-b-addr><label class="pgk-f"><input type="text" name="addr" maxlength="200" autocomplete="street-address" placeholder="' . esc_attr($L('Улица, дом, ЖК, подъезд, квартира')) . '" required></label></div>');
     $h .= $g($L('Няня'), '<div class="pgk-list" data-b="nanny"></div>');
     $h .= $g($L('Комментарий'), '<div class="pgk-list"><label class="pgk-f pgk-fa"><textarea name="note" rows="2" maxlength="500" placeholder="' . esc_attr($L('Пожелания няне, как попасть и т. п.')) . '"></textarea></label></div>');
     $h .= '<div class="pgk-bk-bar"><div class="pgk-bk-sum" data-b="sum"></div><p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Отправить заявку')) . '<em data-b="price"></em></span><i class="pg-spin" aria-hidden="true"></i></button></div></form>';
@@ -616,7 +623,7 @@ function petgo_cl_account_html($u, $un = 0) {
 function petgo_cl_me_form($u) {
     $L  = 'petgo_site_l';
     $em = function_exists('petgo_real_email') ? petgo_real_email($u) : $u->user_email;
-    $h  = '<form class="pgk-form" data-k-op="profile" novalidate><div class="pgk-list">' . petgo_cl_field('name', $L('Имя'), 'text', $u->display_name, ' maxlength="60" autocomplete="name" required') . petgo_cl_field('phone', $L('Телефон'), 'tel', petgo_site_phone_fmt((string) get_user_meta($u->ID, 'petgo_phone', true)), ' maxlength="20" inputmode="tel" required') . petgo_cl_field('email', $L('Почта'), 'email', $em, ' maxlength="100" placeholder="' . esc_attr($L('необязательно')) . '" autocomplete="email"') . '</div>';
+    $h  = '<form class="pgk-form" data-k-op="profile" novalidate><div class="pgk-list">' . petgo_cl_field('name', $L('Имя'), 'text', $u->display_name, ' maxlength="60" autocomplete="name" required') . petgo_cl_field('phone', $L('Телефон'), 'tel', petgo_site_phone_fmt((string) get_user_meta($u->ID, 'petgo_phone', true)), ' maxlength="20" inputmode="tel" required') . petgo_cl_field('email', $L('Почта'), 'email', $em, ' maxlength="100" placeholder="' . esc_attr($L('необязательно')) . '" autocomplete="email"') . petgo_cl_field('addr', $L('Адрес'), 'text', (string) get_user_meta($u->ID, 'petgo_addr', true), ' maxlength="200" placeholder="' . esc_attr($L('Улица, дом, ЖК, подъезд, квартира')) . '" autocomplete="street-address"') . '</div>';
     $h .= '<p class="pgk-err" role="alert" hidden></p><button type="submit" class="pg-b pgk-btn pgk-btn-p pgk-go"><span>' . esc_html($L('Сохранить')) . '</span><i class="pg-spin" aria-hidden="true"></i></button></form>';
     $h .= '<p class="pgk-ids">@' . esc_html($u->user_login) . ' · ID ' . esc_html(petgo_cl_code($u->ID)) . '</p>';
     return $h;

@@ -225,11 +225,25 @@ add_filter('petgo_admin_home_top', function ($h) {
 });
 /* заказы: отметка в карточке заказа */
 add_filter('petgo_order_detail_top', function ($h, $oid) {
-    /* 39.2: первый заказ со скидкой 100% */
-    if (get_post_meta($oid, '_free1', true) === '1') {
-        $h = '<div class="pgc-card" style="margin-bottom:12px;box-shadow:inset 0 0 0 1.5px #1E9A5F"><b style="color:#1E9A5F">Первый заказ — бесплатно (скидка 100%)</b><p class="mu" style="margin:4px 0 0">Первый заказ клиента. Оплату не брать.</p></div>' . $h;
+    /* 39.4: скидка первого заказа — на первый час выгула, первый день недели или визит (сумма — в _disc) */
+    $cut  = (int) get_post_meta($oid, '_disc', true);
+    $free = get_post_meta($oid, '_free1', true) === '1';
+    if ($cut <= 0 && !$free) {
+        return $h;
     }
-    return $h;
+    $kind = (string) get_post_meta($oid, '_kind', true);
+    $m    = $cut > 0 ? ' (−' . petgo_site_money($cut) . ' ₸)' : '';
+    if ($kind === 'week') {
+        $t = $free ? 'Первый день недели — бесплатно' . $m : 'Скидка на первый день недели' . $m;
+        $p = $free ? 'Первый заказ клиента. За этот день оплату не брать, остальные 6 дней — по обычной цене.' : 'Первый заказ клиента. Остальные 6 дней — по обычной цене.';
+    } elseif ($kind === 'walk') {
+        $t = $free ? 'Первый выгул — бесплатно' . $m : 'Первый час выгула — скидка' . $m;
+        $p = $free ? 'Первый заказ клиента, 1 час. Оплату не брать.' : 'Первый заказ клиента. Остальное время — по обычной цене.';
+    } else {
+        $t = $free ? 'Визит — бесплатно' . $m : 'Скидка на визит' . $m;
+        $p = $free ? 'Первый заказ клиента. Оплату не брать.' : 'Первый заказ клиента.';
+    }
+    return '<div class="pgc-card" style="margin-bottom:12px;box-shadow:inset 0 0 0 1.5px #1E9A5F"><b style="color:#1E9A5F">' . esc_html($t) . '</b><p class="mu" style="margin:4px 0 0">' . esc_html($p) . '</p></div>' . $h;
 }, 5, 2);
 
 add_filter('petgo_site_dict_more', function ($d) {

@@ -1284,3 +1284,16 @@ html.pgk-dark .pg-layer .pgk-ptr.ready, html.pgk-dark .pg-layer .pgk-ptr.spin { 
 .pg-layer .pgk-ptr.spin svg { animation: pgkPtrSpin 700ms linear infinite; }
 @keyframes pgkPtrSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .pg-layer .pgk-ptr.spin svg { animation-duration: 1400ms; } }
+
+/* ============================================================
+   39.4 ПОГОДА НА ГЛАВНОЙ, ЗАДАНИЕ ВИЗИТА
+   ============================================================ */
+.pgk-city .pgk-wx { margin-left: 6px; font-weight: 700; }
+.pgk-city .pgk-wx-d { margin-left: 5px; font-size: .86em; color: var(--k-mu); font-weight: 500; }
+.pgk-hello p.pgk-wx-tip { color: var(--k-tx); opacity: .78; }
+.pgk-bk-tasks { padding: 14px 16px; }
+.pgk-tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pgk-tasks li { display: flex; align-items: center; gap: 10px; font-size: 16px; }
+.pgk-tasks li .pg-i, .pgk-tasks li svg { flex: none; width: 18px; height: 18px; color: var(--k-ok); }
+.pgk-bk-tasks p { margin: 10px 0 0; font-size: 14px; line-height: 1.4; color: var(--k-mu); }
+.pgk-bk-sum strong s { margin-right: 4px; font-weight: 500; color: var(--k-mu); }

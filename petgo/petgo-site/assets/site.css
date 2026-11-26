@@ -1193,3 +1193,7 @@ html.pg-lang-in .pg-langs a.on { animation: pgLangPop 250ms 100ms var(--ease-out
   .pg .pg-land-why b { font-size: 16px; }
   .pg .pg-land-why p { font-size: 14px; }
 }
+
+/* 39.4 неделя визитов: «первый день бесплатно» под ценой */
+.pg .pg-price-row { flex-wrap: wrap; }
+.pg .pg-price-row .pg-day1 { flex-basis: 100%; margin-top: 2px; font-size: 14px; line-height: 1.4; }
