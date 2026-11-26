@@ -15,7 +15,7 @@
   --k-feed: #ECEADB; --k-feed-card: #FFFEF8; --k-kb: #E9E7D8; --k-kbf: #FFFEF8;
   --k-press: 150ms; --k-sheet-in: 280ms; --k-sheet-out: 200ms; --k-pop-in: 240ms; --k-pop-out: 170ms; --k-move: 250ms;
   --k-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --sab: env(safe-area-inset-bottom, 0px); --sat: env(safe-area-inset-top, 0px);
+  --sab: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)); --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
 }
 html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar {
   --k-bg: #000; --k-card: #1C1C1E; --k-card2: #2C2C2E; --k-tx: #F2F2F7; --k-mu: #8E8E93; --k-mu2: #5A5A5F;
@@ -1276,7 +1276,7 @@ html.pgk-dark .pgk-tw .pgk-tw-fb.pg-b { background: rgba(255, 255, 255, .92); co
 /* ============================================================
    39.2 ПОТЯНИТЕ ВНИЗ — ОБНОВИТЬ
    ============================================================ */
-.pg-layer .pgk-ptr { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 10px); z-index: 70; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #6B7A77; box-shadow: 0 0 0 .5px rgba(15, 42, 38, .08), 0 6px 18px rgba(0, 0, 0, .14); opacity: 0; transform: translate3d(-50%, -52px, 0); transition: transform 300ms cubic-bezier(.32, .72, 0, 1), opacity 200ms ease-out, color 150ms ease-out; pointer-events: none; }
+.pg-layer .pgk-ptr { position: fixed; left: 50%; top: calc(max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)) + 10px); z-index: 70; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #6B7A77; box-shadow: 0 0 0 .5px rgba(15, 42, 38, .08), 0 6px 18px rgba(0, 0, 0, .14); opacity: 0; transform: translate3d(-50%, -52px, 0); transition: transform 300ms cubic-bezier(.32, .72, 0, 1), opacity 200ms ease-out, color 150ms ease-out; pointer-events: none; }
 .pg-layer .pgk-ptr svg { width: 22px; height: 22px; }
 .pg-layer .pgk-ptr.ready, .pg-layer .pgk-ptr.spin { color: #024C46; }
 html.pgk-dark .pg-layer .pgk-ptr { background: #2C2C2E; color: #8E8E93; box-shadow: 0 0 0 .5px rgba(255, 255, 255, .1), 0 6px 18px rgba(0, 0, 0, .4); }
@@ -1297,3 +1297,57 @@ html.pgk-dark .pg-layer .pgk-ptr.ready, html.pgk-dark .pg-layer .pgk-ptr.spin { 
 .pgk-tasks li .pg-i, .pgk-tasks li svg { flex: none; width: 18px; height: 18px; color: var(--k-ok); }
 .pgk-bk-tasks p { margin: 10px 0 0; font-size: 14px; line-height: 1.4; color: var(--k-mu); }
 .pgk-bk-sum strong s { margin-right: 4px; font-weight: 500; color: var(--k-mu); }
+
+/* ============================================================
+   40.0 УВЕДОМЛЕНИЯ: список по дням, значки по смыслу; лист «Включите уведомления»; ссылки в шапке чата
+   ============================================================ */
+.pgk-ntd { margin: 18px 4px 8px; font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--k-mu); }
+.pgk-ntd:first-child { margin-top: 4px; }
+.pgk-nts.pgk-card { padding: 0; overflow: hidden; }
+.pgk-nts .pgk-nt { padding: 14px 14px 14px 12px; }
+.pgk-nts .pgk-nt.new { background: rgba(30, 154, 95, .06); }
+html.pgk-dark .pgk-nts .pgk-nt.new { background: rgba(76, 195, 138, .08); }
+.pgk-nts .pgk-nt.new::after { top: 50%; right: auto; left: 4px; width: 6px; height: 6px; transform: translateY(-50%); }
+.pgk-nt-i { width: 42px; height: 42px; border-radius: 14px; }
+.pgk-nt-i svg { width: 22px; height: 22px; }
+.pgk-nt-i.ic-cal { background: rgba(64, 120, 220, .12); color: #3D6FD0; }
+.pgk-nt-i.ic-check, .pgk-nt-i.ic-done { background: rgba(30, 154, 95, .13); color: #1E9A5F; }
+.pgk-nt-i.ic-walk, .pgk-nt-i.ic-pin { background: rgba(14, 122, 100, .13); color: #0E7A64; }
+.pgk-nt-i.ic-home { background: rgba(232, 163, 60, .16); color: #B4730F; }
+.pgk-nt-i.ic-x { background: rgba(214, 69, 58, .12); color: #C63A2E; }
+.pgk-nt-i.ic-star { background: rgba(245, 166, 35, .16); color: #E39A12; }
+.pgk-nt-i.ic-star svg { fill: currentColor; stroke: none; }
+html.pgk-dark .pgk-nt-i.ic-cal { color: #8AB2FF; } html.pgk-dark .pgk-nt-i.ic-check, html.pgk-dark .pgk-nt-i.ic-done { color: #4CC38A; }
+html.pgk-dark .pgk-nt-i.ic-walk, html.pgk-dark .pgk-nt-i.ic-pin { color: #4FD6B4; } html.pgk-dark .pgk-nt-i.ic-home { color: #F0B04D; } html.pgk-dark .pgk-nt-i.ic-x { color: #FF8A7E; }
+.pgk-nt-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pgk-nt-h b { font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--k-tx); }
+.pgk-nt-h time { flex: none; font-size: 13px; color: var(--k-mu); font-variant-numeric: tabular-nums; }
+.pgk-nt-t p { margin: 3px 0 0; font-size: 14.5px; line-height: 1.4; color: var(--k-mu); }
+.pgk-nt-t .pgk-btn, .pgk-nt-t .pgk-myrv { margin-top: 10px; }
+.pgk-ntp { display: flex; align-items: center; gap: 12px; margin: 4px 0 6px; padding: 12px 14px; border-radius: 16px; background: rgba(30, 154, 95, .1); }
+.pgk-ntp > span { flex: none; width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: #1E9A5F; color: #fff; }
+.pgk-ntp > span svg { width: 20px; height: 20px; }
+.pgk-ntp b { flex: 1; font-size: 15px; line-height: 1.3; }
+/* лист «Включите уведомления» */
+.pgk-pa { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 6px 6px 4px; text-align: center; }
+.pgk-pa-i { position: relative; width: 76px; height: 76px; border-radius: 24px; display: grid; place-items: center; background: linear-gradient(160deg, #1E9A5F, #0E6B54); color: #fff; box-shadow: 0 10px 26px rgba(14, 107, 84, .3); animation: pgkPaBell 1.6s var(--k-out) .4s both; }
+.pgk-pa-i svg { width: 38px; height: 38px; }
+.pgk-pa-i i { position: absolute; top: 14px; right: 16px; width: 14px; height: 14px; border-radius: 50%; background: #FF5A4E; box-shadow: 0 0 0 3px #179060; }
+@keyframes pgkPaBell { 0% { transform: rotate(0); } 15% { transform: rotate(-12deg); } 30% { transform: rotate(10deg); } 45% { transform: rotate(-6deg); } 60%, 100% { transform: rotate(0); } }
+.pgk-pa h3 { margin: 8px 0 0; font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.pgk-pa > p { margin: 0; max-width: 330px; font-size: 16px; line-height: 1.45; color: var(--k-mu); }
+.pgk-pa-l { list-style: none; margin: 8px 0 6px; padding: 0; width: 100%; max-width: 360px; display: grid; gap: 8px; text-align: left; }
+.pgk-pa-l li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--k-card); font-size: 15.5px; }
+.pgk-pa-l li span { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; }
+.pgk-pa-l li span svg { width: 19px; height: 19px; }
+.pgk-pa-l .ic-check, .pgk-pa-l .ic-done { background: rgba(30, 154, 95, .13); color: #1E9A5F; }
+.pgk-pa-l .ic-walk { background: rgba(14, 122, 100, .13); color: #0E7A64; }
+.pgk-pa .pgk-go { width: 100%; max-width: 360px; }
+@media (prefers-reduced-motion: reduce) { .pgk-pa-i { animation: none; } }
+/* шапка чата: WhatsApp и «Позвать менеджера» */
+.pgk-sht p.pgk-chat-links { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; }
+.pgk-chat-wa { display: inline-flex; align-items: center; gap: 5px; color: #1E9A5F; font-weight: 600; text-decoration: none; }
+.pgk-chat-wa svg { width: 16px; height: 16px; }
+html.pgk-dark .pgk-chat-wa { color: #4CC38A; }
+.pgk-chat-mgr.pg-b { padding: 4px 10px; border: 0; border-radius: 999px; background: var(--k-fill2); color: var(--k-tx); font: 600 13px/1.3 var(--k-font); cursor: pointer; }
+.pgk-chat-mgr.pg-b:disabled { opacity: .6; }

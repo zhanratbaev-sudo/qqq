@@ -187,6 +187,8 @@ function petgo_topbar($adm) {
     if ($adm) {
         echo '<button type="button" class="pgc-btn pgc-create desk" data-menu="pgc-fabm">' . petgo_icon('plus') . '<span>' . esc_html(petgo_t('create')) . '</span></button>';
     }
+    /* 40.0: колокольчик — лента «Уведомления» (новые клиенты, заказы, отзывы, договоры…) */
+    echo function_exists('petgo_feed_bell') ? petgo_feed_bell() : '';
     echo '<button type="button" class="pgc-iconb mob" data-chat aria-label="' . esc_attr(petgo_t('chat')) . '">' . petgo_icon('chat') . '<i class="pgc-bd pgc-cbd"' . ($un ? '' : ' hidden') . '>' . (int) $un . '</i></button>';
     echo '<div class="pgc-me"><button type="button" class="pgc-meb" data-menu="pgc-menu" aria-label="' . esc_attr(petgo_t('profile')) . '">' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name) . '<span class="pgc-mn desk">' . esc_html($u->display_name) . '</span></button>';
     echo '<div class="pgc-menu" id="pgc-menu"><div class="pgc-mt">' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name, 'md') . '<div><b>' . esc_html($u->display_name) . '</b><small>' . esc_html(petgo_t('role_' . petgo_role_of())) . '</small></div></div>';
@@ -410,10 +412,11 @@ function petgo_settings_modal() {
 
     if (petgo_is_owner()) {
         $w = petgo_form_open('wipe');
-        foreach (array('orders' => 'wipe_orders', 'pets' => 'wipe_pets', 'reqs' => 'wipe_reqs', 'chats' => 'wipe_chats') as $k => $l) {
+        foreach (array('orders' => 'wipe_orders', 'pets' => 'wipe_pets', 'reqs' => 'wipe_reqs', 'chats' => 'wipe_chats', 'clients' => 'wipe_clients') as $k => $l) {
             $w .= '<label class="pgc-ck"><input type="checkbox" name="w[]" value="' . $k . '"> <span>' . esc_html(petgo_t($l)) . '</span></label>';
         }
-        $w .= '<label class="pgc-f"><span>' . esc_html(petgo_t('wipe_pass')) . '</span><input type="password" name="wipe_pass" autocomplete="current-password" required></label><button class="pgc-btn red wide" type="submit" onclick="return confirm(\'' . esc_js(petgo_t('wipe_q')) . '\')">' . esc_html(petgo_t('wipe_btn')) . '</button></form>';
+        /* 40.0: без пароля — два подтверждения подряд */
+        $w .= '<button class="pgc-btn red wide" type="submit" onclick="if(!this.form.querySelector(\'input[name=&quot;w[]&quot;]:checked\'))return false;return confirm(\'' . esc_js(petgo_t('wipe_q')) . '\')&&confirm(\'' . esc_js(petgo_t('wipe_q2')) . '\')">' . esc_html(petgo_t('wipe_btn')) . '</button></form>';
         $s .= '<div class="pgc-sgrp"><details class="pgc-danger"><summary>' . esc_html(petgo_t('wipe')) . petgo_icon('chev') . '</summary><p class="mu">' . esc_html(petgo_t('wipe_hint')) . '</p>' . $w . '</details></div>';
     }
     $s .= '<p class="pgc-ver">' . esc_html(petgo_app_name() . ' · ' . PETGO_VER) . '</p>';

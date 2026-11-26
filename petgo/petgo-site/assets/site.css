@@ -16,7 +16,7 @@
   --g-rgb: 251, 249, 232; --g-a: .68; --g-blur: 22px;
   --g-rim: inset 0 0 0 .5px rgba(2, 76, 70, .12), inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .35);
   --g-sh: 0 10px 34px rgba(2, 76, 70, .14), 0 1px 3px rgba(2, 76, 70, .06);
-  --sab: env(safe-area-inset-bottom, 0px); --sat: env(safe-area-inset-top, 0px);
+  --sab: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)); --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 17px; line-height: 1.47; color: var(--green); -webkit-font-smoothing: antialiased; text-size-adjust: 100%; -webkit-text-size-adjust: 100%;
 }

@@ -256,8 +256,9 @@ function petgo_pf_send() {
         if (!$pid) {
             $fail($L('Не получилось сохранить. Попробуйте ещё раз.'));
         }
-        if (!(int) petgo_p('pet_id')) {
-            /* 36.0: клиент добавил питомца — без уведомления (видно в «Питомцах»), это не требует действий */
+        /* 40.0: клиент добавил или изменил питомца — сотрудникам уведомление (делает «PetGo Клиент») */
+        if (function_exists('petgo_event')) {
+            petgo_event('pet_saved', array('user' => (int) $cl, 'pet' => (int) $pid, 'new' => !(int) petgo_p('pet_id')));
         }
         wp_send_json(array('ok' => true, 'pet' => $pid));
     }

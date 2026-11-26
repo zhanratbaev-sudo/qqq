@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Клиент
  * Description: Кабинет клиента на сайте PetGo: вход и регистрация, питомцы, заказ выгула и визитов, карта прогулки, отчёты нянь, отзывы, чат с менеджером и помощником. Своё оформление (стиль iPhone в цветах PetGo, светлая и тёмная тема). Нужны «PetGo Кабинет» и «PetGo Сайт».
- * Version: 39.4.0
+ * Version: 40.0.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('PETGO_CLIENT_FILE', __FILE__);
-define('PETGO_CLIENT_VER', '39.4.0');
+define('PETGO_CLIENT_VER', '40.0.0');
 
 add_action('plugins_loaded', function () {
     if (!defined('PETGO_VER') || !defined('PETGO_SITE_FILE')) {
@@ -26,7 +26,7 @@ add_action('plugins_loaded', function () {
     } else {
         petgo_asset_root(PETGO_CLIENT_FILE);
     }
-    foreach (array('client', 'client-plus', 'client-dict', 'ui', 'contract', 'app38', 'testweek', 'app394') as $f) {
+    foreach (array('client', 'client-plus', 'client-dict', 'ui', 'contract', 'app38', 'testweek', 'app394', 'notify40') as $f) {
         require_once __DIR__ . '/includes/' . $f . '.php';
     }
     /* своё оформление кабинета: стили в <head>, скрипт — после скриптов сайта */
@@ -87,7 +87,7 @@ function petgo_cl_boot_html() {
         . '.pgk-boot.out{opacity:0;pointer-events:none}.pgk-boot.in{opacity:0;transition:opacity 180ms ease-out}.pgk-boot.in.show{opacity:1}'
         . '.pgk-boot-sp{display:block;width:34px;height:34px;border-radius:50%;border:3px solid rgba(2,76,70,.15);border-top-color:#024C46;animation:pgkBootSp .8s linear infinite}'
         . 'html.pgk-dark .pgk-boot-sp{border-color:rgba(255,255,255,.14);border-top-color:#4CC38A}'
-        . '.pgk-boot-top{position:absolute;top:calc(env(safe-area-inset-top,0px) + 58px);left:0;right:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#024C46;animation:pgkBootIn 520ms cubic-bezier(.32,.72,0,1) both}'
+        . '.pgk-boot-top{position:absolute;top:calc(max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px)) + 58px);left:0;right:0;display:flex;align-items:center;justify-content:center;gap:10px;font-size:24px;font-weight:800;letter-spacing:-.02em;color:#024C46;animation:pgkBootIn 520ms cubic-bezier(.32,.72,0,1) both}'
         . '.pgk-boot-top svg{display:block;width:40px;height:45px}.pgb-c{fill:#024C46}html.pgk-dark .pgb-c{fill:#0E7A64}html.pgk-dark .pgk-boot-top{color:#F1F4F2}'
         . '.pgk-boot-hi{display:flex;flex-direction:column;align-items:center;gap:6px;padding:0 28px;text-align:center}'
         . '.pgk-boot-hi span{font-size:21px;color:#6B7A77;animation:pgkBootIn 560ms 150ms cubic-bezier(.32,.72,0,1) both}html.pgk-dark .pgk-boot-hi span{color:#8D9893}'
@@ -95,7 +95,7 @@ function petgo_cl_boot_html() {
         . '.pgk-boot-wx{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:26px;padding:0 32px;text-align:center;animation:pgkBootIn 560ms 850ms cubic-bezier(.32,.72,0,1) both}'
         . '.pgk-boot-wx em{font-style:normal;padding:8px 16px;border-radius:999px;background:rgba(2,76,70,.08);color:#024C46;font-size:16px;font-weight:700}html.pgk-dark .pgk-boot-wx em{background:rgba(255,255,255,.08);color:#4CC38A}'
         . '.pgk-boot-wx p{margin:0;max-width:320px;font-size:18px;line-height:1.4;color:#33504B}html.pgk-dark .pgk-boot-wx p{color:#C9D3CF}'
-        . '.pgk-boot-wait{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 56px);opacity:0;transition:opacity 300ms}.pgk-boot.wait .pgk-boot-wait{opacity:1}.pgk-boot-wait .pgk-boot-sp{width:24px;height:24px;border-width:2.5px}'
+        . '.pgk-boot-wait{position:absolute;bottom:calc(max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px)) + 56px);opacity:0;transition:opacity 300ms}.pgk-boot.wait .pgk-boot-wait{opacity:1}.pgk-boot-wait .pgk-boot-sp{width:24px;height:24px;border-width:2.5px}'
         . '@keyframes pgkBootSp{to{transform:rotate(360deg)}}@keyframes pgkBootIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}'
         . '@media (prefers-reduced-motion:reduce){.pgk-boot *{animation-delay:0ms!important;animation-duration:1ms!important}.pgk-boot-sp{animation-duration:1.6s!important}}';
     $js = <<<'JS'

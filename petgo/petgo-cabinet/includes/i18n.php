@@ -59,6 +59,8 @@ function petgo_dict_more() {
         'wipe_pass' => array('Пароль администратора', 'Әкімші құпиясөзі', 'Administrator password', '管理员密码'),
         'wipe_q' => array('Точно очистить выбранное? Это необратимо.', 'Таңдалғанды тазалау керек пе? Бұл қайтарылмайды.', 'Really clear the selection? This cannot be undone.', '确定清空所选内容？此操作不可撤销。'),
         'wipe_btn' => array('Очистить', 'Тазалау', 'Clear', '清空'),
+        'wipe_clients' => array('Клиенты (кабинеты и их чаты)', 'Клиенттер (кабинеттер мен чаттары)', 'Clients (accounts and their chats)', '客户（账户及聊天）'),
+        'wipe_q2' => array('Последнее подтверждение: удалить выбранное навсегда? Вернуть будет нельзя.', 'Соңғы растау: таңдалғанды біржола жою керек пе? Қайтару мүмкін емес.', 'Last confirmation: delete the selected data forever? This cannot be undone.', '最后确认：永久删除所选内容？无法恢复。'),
         'wipe_ok' => array('Очищено', 'Тазаланды', 'Cleared', '已清空'),
         'err_wipe_pass' => array('Неверный пароль администратора', 'Әкімші құпиясөзі қате', 'Wrong administrator password', '管理员密码错误'),
         'err_wipe_many' => array('Слишком много попыток, подождите 15 минут', 'Тым көп әрекет, 15 минут күтіңіз', 'Too many attempts, wait 15 minutes', '尝试过多，请等待15分钟'),

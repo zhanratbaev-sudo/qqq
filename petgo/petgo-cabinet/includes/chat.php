@@ -349,18 +349,8 @@ function petgo_chats_wipe($ids, $del) {
 
 add_action('admin_post_petgo_wipe', 'petgo_h_wipe');
 function petgo_h_wipe() {
+    /* 40.0: без пароля — владелец дважды подтверждает в приложении (два вопроса подряд) */
     petgo_guard('owner');
-    $u = wp_get_current_user();
-    $k = 'petgo_wp_' . $u->ID;
-    if ((int) get_transient($k) >= 5) {
-        petgo_fail('err_wipe_many');
-    }
-    $pw = (string) petgo_p('wipe_pass');
-    if ($pw === '' || !wp_check_password($pw, $u->user_pass, $u->ID)) {
-        set_transient($k, (int) get_transient($k) + 1, 15 * MINUTE_IN_SECONDS);
-        petgo_fail('err_wipe_pass');
-    }
-    delete_transient($k);
     $w = array_map('sanitize_key', (array) petgo_p('w'));
     if (!$w) {
         petgo_fail('err_na');
@@ -394,6 +384,18 @@ function petgo_h_wipe() {
     if (in_array('chats', $w, true)) {
         petgo_chats_wipe($wpdb->get_col('SELECT id FROM ' . petgo_tb('chats')), true);
     }
+    /* 40.0: все кабинеты клиентов (питомцы остаются в базе, если их не выбрали отдельно) */
+    if (in_array('clients', $w, true)) {
+        foreach (get_users(array('role' => 'petgo_client', 'fields' => 'ID', 'number' => -1)) as $cu) {
+            if (function_exists('petgo_cl_delete_account')) {
+                petgo_cl_delete_account((int) $cu);
+            } else {
+                require_once ABSPATH . 'wp-admin/includes/user.php';
+                wp_delete_user((int) $cu, get_current_user_id());
+            }
+        }
+    }
+    petgo_audit('wipe', implode(',', $w));
     petgo_bump();
     petgo_flash(petgo_t('wipe_ok'));
     petgo_back('orders');

@@ -55,6 +55,8 @@ function petgo_site_sw_serve() {
     $cfg = array(
         'v' => PETGO_SITE_VER . '.' . substr(md5(implode('|', $pre)), 0, 10), 'home' => $home, 'skip' => $skip, 'pre' => $pre,
         'wait' => 3500, 'tx' => $tx, 'phone' => petgo_site_phone(),
+        /* 40.0: уведомления клиенту (заказ подтверждён, няня пришла…) — показывает service worker */
+        'peek' => admin_url('admin-ajax.php'), 'app' => petgo_site_url('account'), 'icon' => petgo_asset_url('icon-192.png'),
     );
     $js = (string) @file_get_contents(dirname(__DIR__) . '/assets/site-sw.js');
     nocache_headers();

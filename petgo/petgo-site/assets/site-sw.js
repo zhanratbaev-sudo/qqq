@@ -160,3 +160,33 @@ self.addEventListener("fetch", function (e) {
 	if (/\/wp-content\/uploads\/.+\.(jpe?g|png|webp|gif|svg)$/i.test(u.pathname)) { e.respondWith(stale(req, IC, 80)); return; }
 	if (u.pathname.indexOf("/wp-content/") < 0 && !/\.[a-z0-9]{2,5}$/i.test(u.pathname)) { e.respondWith(page(req)); return; }
 });
+
+/* 40.0 УВЕДОМЛЕНИЯ КЛИЕНТУ: сервер присылает пустой push, текст забираем у сайта (petgo_push_peek) и показываем.
+   Нажали на уведомление — открывается приложение (кабинет), если оно уже открыто — переходит туда. */
+self.addEventListener("push", function (e) {
+	e.waitUntil(self.registration.pushManager.getSubscription().then(function (s) {
+		if (!s || !C.peek) return [];
+		var fd = new URLSearchParams();
+		fd.append("action", "petgo_push_peek");
+		fd.append("e", s.endpoint);
+		return fetch(C.peek, { method: "POST", body: fd, credentials: "include" }).then(function (r) { return r.json(); }).then(function (d) { return (d && d.items) || []; });
+	}).catch(function () { return []; }).then(function (items) {
+		if (!items.length) items = [{ t: "PetGo", b: "", u: C.app }];
+		return Promise.all(items.map(function (i) {
+			return self.registration.showNotification(i.t || "PetGo", { body: i.b || "", icon: C.icon, badge: C.icon, tag: "pgk-" + (i.g || "n"), renotify: true, data: { u: i.u || C.app } });
+		}));
+	}));
+});
+self.addEventListener("notificationclick", function (e) {
+	e.notification.close();
+	var u = (e.notification.data && e.notification.data.u) || C.app || C.home;
+	e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (l) {
+		for (var i = 0; i < l.length; i++) {
+			if (C.app && l[i].url.indexOf(C.app.split("#")[0].split("?")[0]) === 0 && "focus" in l[i]) {
+				if ("navigate" in l[i]) l[i].navigate(u);
+				return l[i].focus();
+			}
+		}
+		return self.clients.openWindow(u);
+	}));
+});

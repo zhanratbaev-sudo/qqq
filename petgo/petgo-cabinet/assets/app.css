@@ -1134,3 +1134,6 @@ html.pgc-theming *,html.pgc-theming *::before,html.pgc-theming *::after{transiti
 
 /* 34.9: сохранённая копия — отсчёт «Опоздание» спрятан, пока сервер не подтвердит данные */
 .pgc-cd:empty { display: none; }
+
+/* 40.0 колокольчик «Уведомления» в шапке */
+.pgc a.pgc-iconb{text-decoration:none}

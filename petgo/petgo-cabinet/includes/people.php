@@ -145,7 +145,8 @@ function petgo_cl_unread($uid) {
         return 0;
     }
     $lr = (int) $wpdb->get_var($wpdb->prepare('SELECT last_read FROM ' . petgo_tb('members') . ' WHERE chat_id=%d AND user_id=%d', $cid, $uid));
-    return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . petgo_tb('msgs') . ' WHERE chat_id=%d AND id>%d AND user_id<>%d', $cid, $lr, $uid));
+    /* 40.0: статусы заказов (sys, loc, rv) — в «Уведомлениях», не в счётчике чата */
+    return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . petgo_tb('msgs') . " WHERE chat_id=%d AND id>%d AND user_id<>%d AND kind NOT IN ('sys','loc','rv')", $cid, $lr, $uid));
 }
 
 /* сообщение в чат клиента от имени клиента (или системы) + уведомление сотрудникам */
@@ -325,6 +326,9 @@ function petgo_cl_sys($uid, $body, $kind = 'sys', $subj = 0) {
         return $dup;
     }
     $wpdb->insert(petgo_tb('msgs'), array('chat_id' => $cid, 'user_id' => 0, 'subject_id' => (int) $subj, 'kind' => $kind, 'body' => $body, 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
+    $mid = (int) $wpdb->insert_id;
     petgo_bump();
-    return (int) $wpdb->insert_id;
+    /* 40.0: уведомление клиенту на телефон (если он их включил) — делает «PetGo Клиент» */
+    do_action('petgo_cl_sys_sent', (int) $uid, (string) $body, (string) $kind, (int) $subj, $mid);
+    return $mid;
 }

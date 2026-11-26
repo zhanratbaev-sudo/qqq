@@ -111,7 +111,7 @@
     qa("[data-k-drag]", root).forEach(function (h) {
       if (h._d) return; h._d = 1;
       var y0 = 0, dy = 0, t0 = 0, ly = 0, lt = 0, v = 0, inn = h.closest(".pgk-sin"), sh = h.closest(".pgk-sheet"), drag = false;
-      h.addEventListener("touchstart", function (e) { if (e.target.closest("button")) return; drag = true; y0 = ly = e.touches[0].clientY; t0 = lt = Date.now(); dy = 0; v = 0; sh.classList.add("drag"); }, { passive: true });
+      h.addEventListener("touchstart", function (e) { if (e.target.closest("button, a")) return; drag = true; y0 = ly = e.touches[0].clientY; t0 = lt = Date.now(); dy = 0; v = 0; sh.classList.add("drag"); }, { passive: true });
       h.addEventListener("touchmove", function (e) {
         if (!drag) return;
         var y = e.touches[0].clientY, now = Date.now();
@@ -734,7 +734,7 @@
   }
   function msgHtml(m, anim, i) {
     var cls = anim ? " new" : "", st = anim && i ? ' style="animation-delay:' + Math.min(i, 5) * 40 + 'ms"' : "";
-    if (m.k === "sys" || m.k === "rv" || m.k === "loc") {
+    if (m.k === "sys" || m.k === "rv" || m.k === "loc" || m.k === "note" || m.k === "mgr") {
       var act = "";
       if (m.k === "rv" && m.s) act = m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>";
       if (m.k === "loc" && m.pid) act = '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-tab="map" data-k-focus="' + m.pid + '">' + svg('<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>') + esc(T("Где сейчас")) + "</button>";
@@ -1361,7 +1361,8 @@
       }, 1400);
     }
     /* 39.2: тестовая неделя — после первого завершённого заказа один раз просим оценить PetGo */
-    else if (K.test && K.test.ask && !K.test.fb) afterBoot(function () {
+    else if (!(K.test && K.test.ask && !K.test.fb)) afterBoot(pushAsk, 900);
+    if (!K.rv && K.test && K.test.ask && !K.test.fb) afterBoot(function () {
       if (stack.length || !$("#pgk-fb")) return;
       kOpen("fb");
       K.test.ask = false;
@@ -1717,27 +1718,94 @@
   /* уведомления: сообщения PetGo (заказ подтверждён, няня пришла, отчёт); точка на колокольчике — есть новые */
   function nSeen() { try { return +localStorage.getItem("pgk_nseen_" + K.uid) || 0; } catch (x) { return 0; } }
   function bell() { var d = $("[data-k-bell]"); if (d && K) d.hidden = !(K.nlast && K.nlast > nSeen()); }
-  function nIcon(k) {
-    if (k === "rv") return svg(STAR);
-    if (k === "loc") return svg('<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>');
-    return LOGO;
+  /* 40.0: значки уведомлений по смыслу: заявка, подтверждено, прогулка, няня пришла, дома, отмена, отзыв, карта */
+  var NTI = {
+    cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
+    check: '<circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.3l2.6 2.6 5-5.2"/>',
+    walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M10.5 21l2-6.5 2.5 2.5V21M8 12.5l2.5-5h3l2 3.5 2.5 1"/><path d="M12.5 14.5l-2-3.5"/>',
+    home: '<path d="M3.5 10.5 12 4l8.5 6.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5h4v5"/>',
+    done: '<path d="M3.5 10.5 12 4l8.5 6.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9 14.5l2 2 4-4"/>',
+    x: '<circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/>',
+    pin: '<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+    star: '<path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.8l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
+    bell: '<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7.5 2 7.5H4S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/>'
+  };
+  function ntAct(m) {
+    if (m.k === "rv" && m.s) return m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>";
+    if (m.k === "loc" && m.pid) return '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-tab="map" data-k-focus="' + m.pid + '">' + svg(NTI.pin) + esc(T("Где сейчас")) + "</button>";
+    return "";
   }
   function notifs() {
     var s = kOpen("notifs"); if (!s) return;
     var body = $("[data-k-notifs-body]", s);
     body.innerHTML = '<div class="pgk-map-load"><i class="pg-spin"></i></div>';
-    api("notifs").then(function (j) {
-      var it = (j && j.items) || [], seen = nSeen();
-      if (!it.length) body.innerHTML = emptyBox(SLEEP, T("Пока нет уведомлений"), T("Здесь появятся подтверждения заказов, приход няни и отчёты о прогулках."));
-      else {
-        body.innerHTML = '<div class="pgk-list pgk-nts">' + it.map(function (m, i) {
-          return '<div class="pgk-nt' + (m.id > seen ? " new" : "") + '" style="--i:' + Math.min(i, 8) + '"><span class="pgk-nt-i' + (m.k === "rv" ? " rv" : "") + '">' + nIcon(m.k) + '</span><div class="pgk-nt-t"><p>' + esc(m.b) + "</p><small>" + esc(m.d) + "</small></div></div>";
-        }).join("") + "</div>" + emptyBox(SLEEP, T("Больше уведомлений нет"), "");
-        K.nlast = Math.max(K.nlast || 0, it[0].id);
-        try { localStorage.setItem("pgk_nseen_" + K.uid, String(it[0].id)); } catch (x) {}
-      }
+    Promise.all([api("notifs40"), pushState()]).then(function (r) {
+      var j = r[0], st = r[1], it = (j && j.items) || [], seen = nSeen(), h = "", day = "";
+      /* уведомления на телефон выключены — сразу здесь можно включить */
+      if (st === "off") h += '<div class="pgk-ntp"><span>' + svg(NTI.bell) + '</span><b>' + esc(T("Уведомления на телефон выключены")) + '</b><button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-push-on>' + esc(T("Включить")) + "</button></div>";
+      if (!it.length) { body.innerHTML = h + emptyBox(SLEEP, T("Пока нет уведомлений"), T("Здесь появятся подтверждения заказов, приход няни и отчёты о прогулках.")); bell(); return; }
+      it.forEach(function (m, i) {
+        if (m.dl !== day) { h += (day ? "</div>" : "") + '<h4 class="pgk-ntd">' + esc(dayLabel(m.dl)) + '</h4><div class="pgk-card pgk-nts">'; day = m.dl; }
+        h += '<div class="pgk-nt' + (m.id > seen ? " new" : "") + '" style="--i:' + Math.min(i, 8) + '"><span class="pgk-nt-i ic-' + esc(m.ic) + '">' + svg(NTI[m.ic] || NTI.bell) + '</span><div class="pgk-nt-t"><div class="pgk-nt-h"><b>' + esc(m.t) + "</b><time>" + esc(m.tm) + "</time></div>" + (m.x ? "<p>" + esc(m.x) + "</p>" : "") + ntAct(m) + "</div></div>";
+      });
+      body.innerHTML = h + "</div>";
+      K.nlast = Math.max(K.nlast || 0, it[0].id);
+      try { localStorage.setItem("pgk_nseen_" + K.uid, String(it[0].id)); } catch (x) {}
       bell();
     }).catch(function () { body.innerHTML = ""; toast(T("Не получилось — проверьте интернет."), true); });
+  }
+
+  /* ============================================================
+     40.0 УВЕДОМЛЕНИЯ НА ТЕЛЕФОН: в браузере и в приложении с экрана «Домой» — web push,
+     в приложении My PetGo из магазинов — через Firebase (если владелец подключил ключ)
+     ============================================================ */
+  function pnNative() { var c = W.Capacitor; return !!(c && c.isNativePlatform && c.isNativePlatform() && c.Plugins && c.Plugins.PushNotifications) ? c.Plugins.PushNotifications : null; }
+  function pushWebOk() { return "serviceWorker" in navigator && "PushManager" in W && "Notification" in W && !!(K.push && K.push.key); }
+  function b64u(s) { var p = "=".repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")), o = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) o[i] = r.charCodeAt(i); return o; }
+  function pushState() {
+    if (!K || !K.push) return Promise.resolve("na");
+    var pn = pnNative();
+    if (pn) {
+      if (!K.push.native) return Promise.resolve("na");
+      return pn.checkPermissions().then(function (p) { return p.receive === "granted" ? (K.push.nt ? "on" : "off") : p.receive === "denied" ? "denied" : "off"; }).catch(function () { return "na"; });
+    }
+    if (!pushWebOk()) return Promise.resolve("na");
+    if (Notification.permission === "denied") return Promise.resolve("denied");
+    return navigator.serviceWorker.ready.then(function (r) { return r.pushManager.getSubscription(); }).then(function (s) { return s && Notification.permission === "granted" ? "on" : "off"; }).catch(function () { return "off"; });
+  }
+  var pnBound = false;
+  function pnBind(pn) {
+    if (pnBound) return; pnBound = true;
+    pn.addListener("registration", function (t) { if (t && t.value) api("push_native", { token: t.value }).then(function () { K.push.nt = 1; }).catch(function () {}); });
+    pn.addListener("pushNotificationActionPerformed", function (a) { var u = a && a.notification && a.notification.data && a.notification.data.u; if (u && u.indexOf(location.origin) === 0) location.href = u; else notifs(); });
+  }
+  function pushOn(quiet) {
+    var pn = pnNative();
+    var done = function (ok) { if (!quiet) toast(ok ? T("Уведомления включены") : T("Уведомления выключены в настройках телефона. Включите их для этого приложения."), !ok); qa("[data-k-push-on]").forEach(function (b) { if (ok) b.closest(".pgk-ntp") && b.closest(".pgk-ntp").remove(); }); return ok; };
+    if (pn) {
+      pnBind(pn);
+      return pn.requestPermissions().then(function (p) { if (p.receive !== "granted") return done(false); return pn.register().then(function () { return done(true); }); }).catch(function () { return done(false); });
+    }
+    if (!pushWebOk()) return Promise.resolve(false);
+    return Notification.requestPermission().then(function (p) {
+      if (p !== "granted") return done(false);
+      return navigator.serviceWorker.ready.then(function (r) {
+        return r.pushManager.getSubscription().then(function (s) { return s || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(K.push.key) }); });
+      }).then(function (s) { return api("push_sub", { s: JSON.stringify(s) }); }).then(function () { K.push.on = 1; return done(true); });
+    }).catch(function () { return done(false); });
+  }
+  function pushLater() { try { localStorage.setItem("pgk_push_later", String(Date.now())); } catch (x) {} }
+  /* при открытии приложения: уже разрешено — тихо обновляем подписку; не решено — спрашиваем (не чаще раза в неделю) */
+  function pushAsk() {
+    var pn = pnNative();
+    if (pn && K.push && K.push.native) { pnBind(pn); pn.checkPermissions().then(function (p) { if (p.receive === "granted") pn.register().catch(function () {}); }).catch(function () {}); }
+    pushState().then(function (st) {
+      if (st !== "off") return;
+      if (!pn && pushWebOk() && Notification.permission === "granted") { pushOn(true); return; }
+      var later = 0; try { later = +localStorage.getItem("pgk_push_later") || 0; } catch (x) {}
+      if (Date.now() - later < 7 * 86400000 || stack.length) return;
+      kOpen("push");
+    });
   }
 
   /* картинки по макету (питомцы на первом экране, собака в акции) — те же анимации, что на сайте */
@@ -1766,6 +1834,14 @@
     if ((b = t.closest("[data-eye]"))) { var inp = b.parentNode.querySelector("input"); if (inp) { inp.type = inp.type === "password" ? "text" : "password"; b.classList.toggle("on", inp.type === "text"); } return; }
     if ((b = t.closest("[data-k-open]"))) { e.preventDefault(); var id = b.getAttribute("data-k-open"); if (id === "chat" && K) chat(); else kOpen(id); return; }
     if ((b = t.closest("[data-k-close]"))) { e.preventDefault(); kClose(); return; }
+    if ((b = t.closest("[data-k-push-on]"))) { e.preventDefault(); var inPush = b.closest("#pgk-push"); pushOn().then(function () { if (inPush) kClose(); }); return; }
+    if ((b = t.closest("[data-k-push-later]"))) { e.preventDefault(); pushLater(); kClose(); return; }
+    /* 40.0: позвать менеджера в чат — помощник замолкает, менеджер отвечает здесь */
+    if ((b = t.closest("[data-k-mgr]"))) {
+      e.preventDefault(); if (b.disabled) return; b.disabled = true;
+      api("mgr").then(function (j) { toast(j.msg || T("Отправлено")); b.textContent = T("Менеджер позван"); if (CL.chatOpen && W.PGKChatPoll) W.PGKChatPoll(); }).catch(function () { b.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
+      return;
+    }
     if ((b = t.closest("[data-k-rvlater]"))) { e.preventDefault(); kClose(); return; }
     if ((b = t.closest("[data-k-bookdone]"))) { e.preventDefault(); try { history.replaceState(history.state, "", "#walks"); } catch (x) {} hardReload("walks"); return; }
     if ((b = t.closest("[data-k-lbx]")) || (t.classList && t.classList.contains("pgk-lb"))) { lbClose(); return; }

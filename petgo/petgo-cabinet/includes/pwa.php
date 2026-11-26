@@ -175,7 +175,8 @@ function petgo_ajax_push_sub() {
 add_action('wp_ajax_petgo_push_peek', 'petgo_ajax_push_peek');
 add_action('wp_ajax_nopriv_petgo_push_peek', 'petgo_ajax_push_peek');
 function petgo_ajax_push_peek() {
-    if (!is_user_logged_in() || petgo_role_of() === '') {
+    /* 40.0: уведомления получают и клиенты (заказ подтверждён, няня пришла…) */
+    if (!is_user_logged_in() || (petgo_role_of() === '' && !(function_exists('petgo_cl_uid') && petgo_cl_uid()))) {
         wp_send_json(array('items' => array()));
     }
     $uid = get_current_user_id();
@@ -212,6 +213,12 @@ function petgo_push_users($roles) {
 }
 
 function petgo_push_notify($uids, $title, $body, $url = '', $tag = '') {
+    /* 40.0: каждое уведомление — ещё и в ленту «Уведомления» сотрудника (кроме сообщений чатов: у них свой значок) */
+    if (function_exists('petgo_feed_add') && !preg_match('/^c\d+$/', (string) $tag)) {
+        petgo_feed_add($uids, $title, $body, $url);
+    }
+    /* 40.0: приложение My PetGo (Firebase) — отправляет «PetGo Клиент» */
+    do_action('petgo_push_native', $uids, $title, $body, $url, $tag);
     if (!petgo_vapid()) {
         return;
     }

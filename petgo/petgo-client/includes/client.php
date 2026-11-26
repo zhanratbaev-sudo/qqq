@@ -346,9 +346,13 @@ function petgo_cl_ajax() {
         $out = array();
         $max = 0;
         foreach ((array) $rows as $r) {
+            $max = max($max, (int) $r->id);
+            /* 40.0: статусы заказов — в «Уведомлениях», в чате только разговор */
+            if (in_array((string) $r->kind, array('sys', 'loc', 'rv'), true)) {
+                continue;
+            }
             $a     = (int) $r->user_id ? get_userdata((int) $r->user_id) : false;
             $me    = (int) $r->user_id === $uid;
-            $max   = max($max, (int) $r->id);
             $out[] = array('id' => (int) $r->id, 'me' => $me, 'k' => (string) $r->kind, 's' => (int) $r->subject_id, 'pid' => $r->kind === 'loc' ? (int) petgo_o((int) $r->subject_id, 'pet') : 0, 'rv' => ($r->kind === 'rv' && (int) $r->subject_id && function_exists('petgo_rv_by_order') && petgo_rv_by_order((int) $r->subject_id)) ? (int) petgo_rv_by_order((int) $r->subject_id)->rating : 0, 'n' => $me ? '' : ($a ? $a->display_name : petgo_site_l($r->kind === 'ai' ? 'Помощник PetGo' : 'PetGo')), 'av' => (!$me && $a) ? petgo_user_avatar_url($a->ID) : '',
                 'h' => petgo_msg_html($r->body), 'p' => $r->photo !== '' ? petgo_media($r->photo) : '', 'tm' => wp_date('H:i', (int) $r->ts, petgo_tz()), 'dl' => wp_date('d.m.Y', (int) $r->ts, petgo_tz()));
         }
@@ -425,6 +429,9 @@ function petgo_cl_ajax() {
                 }
             }
         }
+        if (function_exists('petgo_event')) {
+            petgo_event('cl_profile', array('user' => (int) $uid));
+        }
         petgo_cl_json(true, array('msg' => $L('Сохранено')));
     }
     if ($op === 'pass') {
@@ -441,6 +448,9 @@ function petgo_cl_ajax() {
         WP_Session_Tokens::get_instance($uid)->destroy_all();
         wp_set_current_user($uid);
         wp_set_auth_cookie($uid, true, is_ssl());
+        if (function_exists('petgo_event')) {
+            petgo_event('cl_pass', array('user' => (int) $uid));
+        }
         petgo_cl_json(true, array('msg' => $L('Пароль изменён')));
     }
     if ($op === 'avatar' || $op === 'pet_av') {
@@ -493,10 +503,8 @@ function petgo_cl_ajax() {
         }
         petgo_audit('review_new', 'order=' . $oid . ' rating=' . $rating . ' client=' . $uid, $uid);
         petgo_bump();
-        /* 36.0: уведомление — только о плохом отзыве (3 и ниже), остальные — в утренней сводке */
-        if ((int) $rating <= 3) {
-            petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Плохой отзыв: ' . $rating . ' из 5', $u->display_name . ': ' . $rating . ' из 5 · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'reviews')));
-        }
+        /* 40.0: уведомление о каждом отзыве (плохой — с пометкой) */
+        petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ((int) $rating <= 3 ? 'Плохой отзыв: ' : 'Новый отзыв: ') . $rating . ' из 5', $u->display_name . ': ' . str_repeat('★', (int) $rating) . ($text !== '' ? ' · ' . mb_substr($text, 0, 100) : '') . ' · ' . petgo_nanny_label($oid), petgo_page_url(array('pg' => 'reviews')));
         petgo_cl_json(true, array('msg' => $L('Спасибо за отзыв!')));
     }
     if ($op === 'join') {
@@ -789,7 +797,12 @@ function petgo_page_clients() {
             echo '</div>';
         }
         echo '<div class="pgi-btns"><a class="pgc-btn sec" href="' . esc_url(petgo_page_url(array('pg' => 'clients', 'c' => $cid ? $cid : petgo_cl_chat($u->ID)))) . '">' . petgo_ic('msg') . '<span>' . esc_html(petgo_t('c_write')) . '</span></a>';
-        echo petgo_btn_form('cl_pass', array('uid' => $u->ID), petgo_t('cl_pw_reset'), 'pgc-btn sec', petgo_t('cl_pw_q')) . '</div>';
+        echo petgo_btn_form('cl_pass', array('uid' => $u->ID), petgo_t('cl_pw_reset'), 'pgc-btn sec', petgo_t('cl_pw_q'));
+        /* 40.0: удалить клиента — два подтверждения, без пароля */
+        if (petgo_can('admin')) {
+            echo petgo_form_open('cl_delete', 'class="pgc-inline"') . '<input type="hidden" name="uid" value="' . (int) $u->ID . '"><button type="submit" class="pgc-btn sec red" onclick="return confirm(\'' . esc_js('Удалить клиента «' . $u->display_name . '»? Удалятся кабинет, чат и уведомления. Питомцы останутся в базе.') . '\')&&confirm(\'' . esc_js('Точно удалить? Вернуть будет нельзя.') . '\')">' . petgo_ic('trash') . '<span>Удалить клиента</span></button></form>';
+        }
+        echo '</div>';
         echo petgo_form_open('cl_ok', 'class="pgcl-ok"') . '<input type="hidden" name="uid" value="' . (int) $u->ID . '"><label class="pgc-ck"><input type="checkbox" name="ok" value="1"' . checked(petgo_cl_confirmed($u->ID), true, false) . ' onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()"> <span>' . esc_html(petgo_t('cl_ok')) . '</span></label></form>';
         echo petgo_form_open('cl_rec', 'class="pgcl-rec"') . '<input type="hidden" name="uid" value="' . (int) $u->ID . '"><div class="pgf-list"><label class="pgf-row pgf-ra"><span>' . esc_html(petgo_t('cl_rec')) . '</span><textarea name="rec" rows="2" maxlength="1000" placeholder="' . esc_attr(petgo_t('cl_rec_ph')) . '">' . esc_textarea((string) get_user_meta($u->ID, 'petgo_cl_rec', true)) . '</textarea></label></div><button type="submit" class="pgc-btn sec sm">' . esc_html(petgo_t('save')) . '</button></form>';
         if ($free) {

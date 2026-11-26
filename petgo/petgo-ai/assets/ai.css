@@ -15,7 +15,7 @@
 	display: flex; flex-direction: column; border-radius: 26px 26px 0 0;
 	background: rgba(251, 249, 232, .92); -webkit-backdrop-filter: blur(30px) saturate(150%); backdrop-filter: blur(30px) saturate(150%);
 	box-shadow: inset 0 0 0 .5px rgba(2, 76, 70, .12), inset 0 1px 0 rgba(255, 255, 255, .9), 0 -20px 60px -20px rgba(1, 40, 36, .35);
-	padding-bottom: env(safe-area-inset-bottom);
+	padding-bottom: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px));
 	animation: pga-up .5s var(--pga-ease);
 }
 .pg-layer .pga-chat.is-closing .pga-chat__panel { animation: pga-down .28s var(--pga-ease) forwards; }
@@ -26,7 +26,7 @@
 /* телефон: чат на весь экран, своя клавиатура сайта — вплотную под полем ввода */
 @media (max-width: 639px) {
 	.pg-layer .pga-chat { align-items: stretch; background: rgba(1, 40, 36, .3); }
-	.pg-layer .pga-chat__panel { height: 100%; max-height: 100dvh; border-radius: 0; padding-top: env(safe-area-inset-top); }
+	.pg-layer .pga-chat__panel { height: 100%; max-height: 100dvh; border-radius: 0; padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)); }
 }
 .pg-layer.kb-open .pga-chat { bottom: var(--kb, 0px); }
 .pg-layer.kb-open .pga-chat__panel { padding-bottom: 0; }
