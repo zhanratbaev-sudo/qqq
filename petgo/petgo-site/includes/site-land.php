@@ -164,9 +164,10 @@ add_filter('petgo_site_schema', function ($g, $page) {
         if (empty($s['title']) || ($s['pet'] !== $d['pet'] && $s['pet'] !== 'all')) {
             continue;
         }
-        $p = petgo_site_price($s);
-        if ($p['now'] > 0) {
-            $offers[] = array('@type' => 'Offer', 'name' => petgo_site_l($s['title']), 'price' => (string) (int) $p['now'], 'priceCurrency' => 'KZT', 'url' => petgo_site_url($page));
+        $p  = petgo_site_price($s);
+        $pp = $p['now'] > 0 ? $p['now'] : $p['old'];
+        if ($pp > 0) {
+            $offers[] = array('@type' => 'Offer', 'name' => petgo_site_l($s['title']), 'price' => (string) (int) $pp, 'priceCurrency' => 'KZT', 'url' => petgo_site_url($page));
         }
     }
     if ($offers) {
@@ -184,7 +185,9 @@ add_filter('petgo_site_schema', function ($g, $page) {
 
 /* заголовок и описание для Google и Яндекс (можно поменять в «Реклама и SEO») */
 add_filter('petgo_ads_seo_defaults', function ($d) {
-    $d['dogwalk'] = array('Выгул собак в Алматы — догситтер от {walk} ₸ за час | PetGo', 'Выгул собак в Алматы: обученные няни, прогулка от часа, фото и отчёт после каждого выгула, приход по геолокации. Первый заказ — {walk} ₸ за час. Оставьте заявку.');
+    /* 39.2: первый заказ бесплатно (скидка 100%) — в заголовке так и пишем, а не «от 0 ₸» */
+    $free = (int) petgo_site_cfg()['off'] >= 100;
+    $d['dogwalk'] = array($free ? 'Выгул собак в Алматы — первый выгул бесплатно | PetGo' : 'Выгул собак в Алматы — догситтер от {walk} ₸ за час | PetGo', 'Выгул собак в Алматы: обученные няни, прогулка от часа, фото и отчёт после каждого выгула, приход по геолокации. Первый заказ — {walk} ₸ за час. Оставьте заявку.');
     $d['catsit']  = array('Няня для кошек в Алматы — кэтситтер на дом | PetGo', 'Кэтситтер в Алматы: няня приходит к кошке домой — кормит, меняет лоток, играет и присылает фото. Неделя визитов — {week_cat} ₸ для первого заказа.');
     return $d;
 });
@@ -259,5 +262,6 @@ add_filter('petgo_site_dict_more', function ($d) {
         'Няня для кошек в Алматы — кэтситтер на дом | PetGo' => array('Алматыда мысыққа күтуші — үйге кэтситтер | PetGo', 'Cat sitter in Almaty — home visits | PetGo'),
         'Кэтситтер в Алматы: няня приходит к кошке домой — кормит, меняет лоток, играет и присылает фото. Неделя визитов — {week_cat} ₸ для первого заказа.' => array('Алматыда кэтситтер: күтуші мысыққа үйге келеді — тамақтандырады, науасын ауыстырады, ойнайды және фото жібереді. Бір апта келу — алғашқы тапсырыста {week_cat} ₸.', 'Cat sitter in Almaty: a sitter visits your cat at home — feeds, changes the litter, plays and sends photos. A week of visits is {week_cat} ₸ for your first order.'),
         'Подробнее об услугах:' => array('Қызметтер туралы толығырақ:', 'More about our services:'),
+        'Выгул собак в Алматы — первый выгул бесплатно | PetGo' => array('Алматыда итті серуендету — алғашқы серуен тегін | PetGo', 'Dog walking in Almaty — first walk free | PetGo'),
     ));
 });

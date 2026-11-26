@@ -257,8 +257,10 @@ function petgo_ads_schema($graph, $page) {
                 if (!empty($s['text'])) {
                     $o['description'] = wp_strip_all_tags(petgo_site_tx(petgo_site_l($s['text'])));
                 }
-                if (!empty($p['now'])) {
-                    $o['offers'] = array('@type' => 'Offer', 'price' => (string) (int) $p['now'], 'priceCurrency' => 'KZT', 'url' => petgo_site_url('services'));
+                /* 39.2: при скидке 100% в разметке — обычная цена (первый заказ бесплатно) */
+                $pp = !empty($p['now']) ? (int) $p['now'] : (int) (isset($p['old']) ? $p['old'] : 0);
+                if ($pp > 0) {
+                    $o['offers'] = array('@type' => 'Offer', 'price' => (string) $pp, 'priceCurrency' => 'KZT', 'url' => petgo_site_url('services'));
                 }
                 $out[] = $o;
             }
@@ -456,8 +458,9 @@ add_filter('petgo_site_schema', function ($g, $page) {
         }
         $p = function_exists('petgo_site_price') ? petgo_site_price($s) : array('now' => 0);
         $o = array('@type' => 'Offer', 'itemOffered' => array('@type' => 'Service', 'name' => petgo_site_tx(petgo_site_l($s['title'])), 'areaServed' => array('@type' => 'City', 'name' => 'Алматы')));
-        if (!empty($p['now'])) {
-            $o['price'] = (string) (int) $p['now'];
+        $pp = !empty($p['now']) ? (int) $p['now'] : (int) (isset($p['old']) ? $p['old'] : 0);
+        if ($pp > 0) {
+            $o['price'] = (string) $pp;
             $o['priceCurrency'] = 'KZT';
         }
         $items[] = $o;

@@ -128,7 +128,7 @@
 
   function money(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
   function priceNote(s) {
-    var p = parseInt(String(s.price).replace(/\D/g, ""), 10) || 0, off = Math.min(90, Math.max(0, parseInt(S.off, 10) || 0));
+    var p = parseInt(String(s.price).replace(/\D/g, ""), 10) || 0, off = Math.min(100, Math.max(0, parseInt(S.off, 10) || 0));
     if (!p) return "Цена не показывается.";
     if (off > 0 && String(s.sale) === "1") return "На сайте: " + money(p * (100 - off) / 100) + " ₸ (−" + off + "%), потом " + money(p) + " ₸";
     return "На сайте: " + money(p) + " ₸, без скидки";
@@ -166,7 +166,7 @@
     }],
     services: ["Услуги и цены", function () {
       return [
-        group("Скидка на первый заказ", [list([lrow("Скидка, %", inp(S, "off", "30", "number", updPrices))])], "Цена со скидкой считается сама, старая зачёркивается. 0 — без скидки."),
+        group("Скидка на первый заказ", [list([lrow("Скидка, %", inp(S, "off", "30", "number", updPrices))])], "Цена со скидкой считается сама, старая зачёркивается. 0 — без скидки, 100 — первый заказ бесплатно."),
         group("Услуги", [cards(S.services, function (s, i) {
           if (!s.list) s.list = [];
           if (!s.media) s.media = [];

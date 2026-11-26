@@ -208,6 +208,19 @@
       }); }).catch(netErr(f));
       return;
     }
+    /* 39.2: отзыв о тестовой неделе — менеджеру в чат и в список в приложении сотрудников */
+    if (f.matches("[data-k-fbform]")) {
+      e.preventDefault(); kbHide();
+      formErr(f, ""); busyBtn(f, true);
+      var fr = $('input[name="rating"]:checked', f);
+      api("tw_fb", { rating: fr ? fr.value : 5, text: f.elements.text.value, call: f.elements.call && f.elements.call.checked ? "1" : "0" }).then(function (j) { busyEnd(f, function () {
+        if (!j.ok) { formErr(f, j.msg || ""); return; }
+        if (K.test) K.test.fb = 1;
+        qa('.pgk-tw-fb[data-k-open="fb"]').forEach(function (b) { b.textContent = T("Дополнить отзыв"); });
+        f.reset(); kClose(); toast(j.msg || T("Спасибо за отзыв!"));
+      }); }).catch(netErr(f));
+      return;
+    }
     if (f.matches("[data-k-send]")) { e.preventDefault(); sendMsg(f); }
   });
 
@@ -361,6 +374,62 @@
     panes.addEventListener("touchcancel", end, { passive: true });
   }
 
+  /* 39.2: потяните экран вниз (в самом верху) — приложение обновляется: новые питомцы, заказы, цены, няни.
+     Кружок со стрелкой едет за пальцем и крутится; дотянули — отпустите, и экран перезагрузится на той же вкладке. */
+  function ptrInit() {
+    var sc = D.getElementById("pg");
+    if (!sc || sc._ptr || !("ontouchstart" in W) || !K) return;
+    sc._ptr = 1;
+    var P = D.createElement("div"), TH = 70, y0 = 0, x0 = 0, on = false, pull = false, d = 0, busy = false;
+    var NO = "input, textarea, select, .leaflet-container, .pgk-map, .pgk-sg, .pgk-wh-col, [data-noptr]";
+    P.className = "pgk-ptr"; P.setAttribute("aria-hidden", "true");
+    P.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4h-4"/></svg>';
+    (D.getElementById("pg-layer") || D.body).appendChild(P);
+    function atTop() { return scrollY() <= 0; }
+    function show(dd) {
+      var p = Math.min(1, dd / TH);
+      P.style.transition = "none";
+      P.style.opacity = String(Math.min(1, dd / 30));
+      P.style.transform = "translate3d(-50%," + (dd - 52) + "px,0) rotate(" + Math.round(p * 270) + "deg) scale(" + (0.7 + p * 0.3) + ")";
+      P.classList.toggle("ready", dd >= TH);
+    }
+    function hide() { P.style.transition = ""; P.style.opacity = ""; P.style.transform = ""; P.classList.remove("ready", "spin"); }
+    sc.addEventListener("touchstart", function (e) {
+      on = pull = false;
+      if (busy || e.touches.length !== 1 || stack.length || !atTop() || (e.target.closest && e.target.closest(NO))) return;
+      y0 = e.touches[0].clientY; x0 = e.touches[0].clientX; d = 0; on = true;
+    }, { passive: true });
+    sc.addEventListener("touchmove", function (e) {
+      if (!on) return;
+      var dy = e.touches[0].clientY - y0, dx = Math.abs(e.touches[0].clientX - x0);
+      if (!pull) {
+        if (dy < 8 && dx < 8) return;
+        if (dy <= 0 || dx > dy || !atTop()) { on = false; return; }
+        pull = true;
+      }
+      if (e.cancelable) e.preventDefault();
+      d = Math.max(0, Math.min(120, dy * 0.5));
+      show(d);
+    }, { passive: false });
+    function end(e) {
+      if (!on) return;
+      on = false;
+      if (!pull) return;
+      pull = false;
+      if (e.type === "touchend" && d >= TH) {
+        busy = true;
+        if (navigator.vibrate) { try { navigator.vibrate(8); } catch (x) {} }
+        P.style.transition = ""; P.style.opacity = "1"; P.style.transform = "translate3d(-50%,16px,0)"; P.classList.add("spin");
+        try { sessionStorage.setItem("pgk_tab", CL.tab || "home"); } catch (x) {}
+        setTimeout(function () { location.reload(); }, 280);
+      } else hide();
+    }
+    sc.addEventListener("touchend", end, { passive: true });
+    sc.addEventListener("touchcancel", end, { passive: true });
+    /* вернулись на экран из истории (bfcache) — кружок не должен висеть */
+    W.addEventListener("pageshow", function () { busy = false; hide(); });
+  }
+
   /* ---------- анкета питомца (одна анкета — новые и правка) ---------- */
   function petSheet(pid) {
     var tpl = D.getElementById("pgk-tpl-pet"), s = kOpen("pet");
@@ -470,6 +539,8 @@
     if (BK.kind === "week") return (p && p.sp === "cat" ? pr.week_cat : pr.week_dog) || 0;
     return 0;
   }
+  /* 39.2: бесплатно — тестовая неделя или первый заказ со скидкой 100% */
+  function freeTag() { return K.test ? T("тестовая неделя") : K.free1 ? T("первый заказ") : ""; }
   function bkSum() {
     var box = bpart("sum"); if (!box) return;
     var price = bkPrice(), sv = K.svcs[BK.kind] || {};
@@ -478,7 +549,7 @@
     when += " · " + pad(BK.h) + ":" + pad(BK.m) + "–" + pad(Math.floor(en / 60) % 24) + ":" + pad(en % 60);
     if (sv.days > 1) when += " · " + sv.days + " " + T("дней");
     /* 39.1: тестовая неделя — в приложении всё 0 ₸ */
-    if (K.test) { box.innerHTML = "<b>" + esc(when) + "</b><strong>0 ₸</strong>"; var pt = bpart("price"); if (pt) pt.textContent = " · 0 ₸"; return; }
+    if (K.test || K.free1) { box.innerHTML = "<b>" + esc(when) + "</b><strong>0 ₸</strong>"; var pt = bpart("price"); if (pt) pt.textContent = " · 0 ₸"; return; }
     box.innerHTML = "<b>" + esc(when) + "</b>" + (price ? "<strong>≈ " + money(price) + "</strong>" : "<span>" + esc(T("Цену подтвердит менеджер")) + "</span>");
     /* 38.1: сумма и на кнопке — «Отправить заявку · 3 000 ₸», как в макете */
     var pe = bpart("price"); if (pe) pe.textContent = price ? " · ≈ " + money(price) : "";
@@ -562,8 +633,13 @@
     bkDays(); bkDurs(); bkNannies();
     /* 39.1: тестовая неделя — заметка вверху заказа */
     var twn = $(".pgk-tw-note", f);
-    if (K.test && !twn) { twn = D.createElement("div"); twn.className = "pgk-tw-note"; twn.innerHTML = "<b>" + esc(T("Тестовая неделя")) + "</b><span>" + esc(T("Заказ в тестовую неделю — бесплатно")) + (K.test.until ? " " + esc(K.test.until) : "") + "</span>"; f.insertBefore(twn, f.firstChild); }
-    else if (!K.test && twn) twn.remove();
+    if ((K.test || K.free1) && !twn) {
+      twn = D.createElement("div"); twn.className = "pgk-tw-note";
+      twn.innerHTML = K.test ? "<b>" + esc(T("Тестовая неделя")) + "</b><span>" + esc(T("Заказ в тестовую неделю — бесплатно")) + (K.test.until ? " " + esc(K.test.until) : "") + "</span>"
+        : "<b>" + esc(T("Первый заказ — бесплатно")) + "</b><span>" + esc(T("Скидка 100% на первый выгул или визит")) + "</span>";
+      f.insertBefore(twn, f.firstChild);
+    }
+    else if (!(K.test || K.free1) && twn) twn.remove();
     wheelBuild();
     /* лист уже на экране — ставим колёса без анимации */
     requestAnimationFrame(function () { bkTimeFix("force"); bkSum(); sgAll(f); });
@@ -1229,7 +1305,7 @@
     try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "home"; } catch (x) { t = "home"; }
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });
     requestAnimationFrame(function () { sgAll(); lensMove(true); });
-    topTitle(); scrollWatch(); swipeInit();
+    topTitle(); scrollWatch(); swipeInit(); ptrInit();
     arts(); bell();
     CL.soon = !!K.soon;
     /* приветствие по часам телефона */
@@ -1249,6 +1325,13 @@
         api("rv_skip", { order: K.rv.o }).catch(function () {});
       }, 1400);
     }
+    /* 39.2: тестовая неделя — после первого завершённого заказа один раз просим оценить PetGo */
+    else if (K.test && K.test.ask && !K.test.fb) setTimeout(function () {
+      if (stack.length || !$("#pgk-fb")) return;
+      kOpen("fb");
+      K.test.ask = false;
+      api("tw_fb_seen").catch(function () {});
+    }, 1600);
   }
   function leaveCabinet() {
     if (D.getElementById("pgk") || D.getElementById("pgk-gate")) return;
@@ -1466,7 +1549,7 @@
     var pr = (K.price || {}).walk || 0, pl = +n.place || 0;
     return '<button type="button" class="pg-b pgk-nc" data-k-nanny="' + n.id + '"><span class="pgk-nc-av">' + avHtml({ av: n.img, name: n.name }) + (pl ? '<i class="pgk-place p' + Math.min(4, pl) + '" aria-label="' + esc(T("%s место").replace("%s", pl)) + '">' + pl + "</i>" : "") + '</span><span class="pgk-nc-b"><b>' + esc(n.name) + VER + "</b>" +
       '<span class="pgk-nc-r">' + nRate(n) + "</span>" +
-      '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (K.test ? '<small class="pgk-nc-p"><b>0 ₸</b> · ' + esc(T("тестовая неделя")) + "</small>" : pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
+      '<span class="pgk-nc-m"><small>' + svg(WALKI) + esc(ordWord(n.done)) + "</small>" + (K.test || K.free1 ? '<small class="pgk-nc-p"><b>0 ₸</b> · ' + esc(freeTag()) + "</small>" : pr ? '<small class="pgk-nc-p">' + esc(T("от")) + " <b>" + esc(money(pr)) + "</b> / " + esc(T("час")) + "</small>" : "") + "</span></span>" +
       '<i class="pgk-nc-fav' + (isFav(n.id) ? " on" : "") + '" data-k-fav="' + n.id + '" role="button" aria-label="' + esc(T("В избранное")) + '">' + svg(HEART) + "</i></button>";
   }
   function emptyBox(icon, title, text) { return '<div class="pgk-empty38">' + icon + "<b>" + esc(title) + "</b>" + (text ? "<p>" + esc(text) + "</p>" : "") + "</div>"; }
@@ -1558,7 +1641,7 @@
       '<div class="pgk-np-tags">' + tags + "</div>" +
       (n.bio ? '<h4 class="pgk-gt">' + esc(T("О няне")) + '</h4><p class="pgk-np-bio">' + esc(n.bio) + "</p>" : "") +
       (rv ? '<h4 class="pgk-gt">' + esc(T("Отзывы")) + '</h4><div class="pgk-nrvs">' + rv + "</div>" : "") + "</div>" +
-      '<div class="pgk-np-go"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nbook="' + n.id + '"><span>' + esc(T("Заказать выгул или визит")) + "</span>" + (K.test ? "<em>0 ₸ · " + esc(T("тестовая неделя")) + "</em>" : pr ? "<em>" + esc(T("от")) + " " + esc(money(pr)) + "</em>" : "") + '</button><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nmsg="' + n.id + '">' + svg(CHATI) + esc(T("Написать")) + "</button></div></div>";
+      '<div class="pgk-np-go"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-nbook="' + n.id + '"><span>' + esc(T("Заказать выгул или визит")) + "</span>" + (K.test || K.free1 ? "<em>0 ₸ · " + esc(freeTag()) + "</em>" : pr ? "<em>" + esc(T("от")) + " " + esc(money(pr)) + "</em>" : "") + '</button><button type="button" class="pg-b pgk-btn pgk-btn-o" data-k-nmsg="' + n.id + '">' + svg(CHATI) + esc(T("Написать")) + "</button></div></div>";
     var sc = $(".pgk-sc", s); if (sc) sc.scrollTop = 0;
   }
   function nannyBook(id) {

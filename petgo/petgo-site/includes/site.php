@@ -88,7 +88,7 @@ function petgo_site_clean($in, $old = array()) {
         $o[$k] = empty($in[$k]) ? '0' : '1';
     }
     $o['seo']      = $txt(isset($in['seo']) ? $in['seo'] : '', 300);
-    $o['off']      = (string) min(90, max(0, petgo_site_num(isset($in['off']) ? $in['off'] : 0)));
+    $o['off']      = (string) min(100, max(0, petgo_site_num(isset($in['off']) ? $in['off'] : 0)));
     $o['hero_sec'] = (string) min(60, max(2, petgo_site_num(isset($in['hero_sec']) ? $in['hero_sec'] : 5)));
     $o['faq']      = mb_substr(sanitize_textarea_field(isset($in['faq']) && is_scalar($in['faq']) ? (string) $in['faq'] : ''), 0, 8000);
     /* старые настройки помощника (до 33.0) не трогаем: плагин «PetGo ИИ» забирает их к себе один раз */
@@ -251,7 +251,7 @@ function petgo_site_phone_fmt($d = null) {
 function petgo_site_price($svc) {
     $c    = petgo_site_cfg();
     $p    = petgo_site_num($svc['price']);
-    $off  = min(90, max(0, (int) $c['off']));
+    $off  = min(100, max(0, (int) $c['off']));
     $sale = $off > 0 && $p > 0 && $svc['sale'] === '1';
     return array('now' => $sale ? (int) round($p * (100 - $off) / 100) : $p, 'old' => $sale ? $p : 0, 'off' => $sale ? $off : 0);
 }
@@ -586,7 +586,8 @@ function petgo_site_b_services($head = true, $pet = '') {
             }
             $h .= '</ul>';
         }
-        if ($p['now'] > 0) {
+        /* 39.2: скидка 100% — первый заказ 0 ₸, обычная цена зачёркнута */
+        if ($p['now'] > 0 || $p['old'] > 0) {
             $h .= '<div class="pg-price-row"><span class="pg-price">' . esc_html(petgo_site_money($p['now'])) . ' ₸</span>' . ($p['off'] ? '<span class="pg-off">−' . (int) $p['off'] . '%</span>' : '');
             $h .= '<span class="pg-meta">' . esc_html($L($s['unit'])) . ($p['old'] ? ' · ' . esc_html($L('потом')) . ' <s>' . esc_html(petgo_site_money($p['old'])) . ' ₸</s>' : '') . '</span></div>';
         }

@@ -172,7 +172,7 @@ function petgo_cl_dashboard() {
         'aj' => petgo_rel_url(admin_url('admin-ajax.php')), 'n' => wp_create_nonce('petgo_cl'), 'lang' => petgo_site_lang(), 'uid' => $uid,
         'pets' => $st, 'pre' => (object) $pre, 'gkey' => trim((string) get_option('petgo_gmaps_key', '')),
         'leaflet' => array('css' => petgo_asset_url('leaflet/leaflet.css'), 'js' => petgo_asset_url('leaflet/leaflet.js')),
-        'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
+        'nannies' => $nn, 'svcs' => $svcs, 'price' => petgo_cl_book_prices($uid), 'free1' => petgo_cl_first_free($uid), 'rv' => petgo_cl_rv_due($uid), 'ai' => petgo_cl_ai_on(),
         'tr' => petgo_cl_js_dict(),
         'qrjs' => petgo_asset_url('vendor/qrcode.min.js'),
         'fav' => petgo_cl_favs($uid), 'nlast' => petgo_cl_notif_last($uid), 'wa' => petgo_site_wa(),

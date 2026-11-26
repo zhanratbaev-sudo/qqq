@@ -95,6 +95,12 @@ function petgo_cl_book_prices($uid) {
     return array('walk' => $get('walk'), 'week_dog' => $get('week-dog'), 'week_cat' => $get('week-cat'));
 }
 
+/* 39.2: скидка 100% на первый заказ — первый заказ клиента бесплатный */
+function petgo_cl_first_free($uid) {
+    $c = petgo_site_cfg();
+    return (int) $c['off'] >= 100 && $uid && !petgo_cl_orders($uid, 1);
+}
+
 function petgo_cl_confirmed($uid) {
     if (get_user_meta($uid, 'petgo_cl_ok', true)) {
         return true;
@@ -162,7 +168,8 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
     }
     $u    = get_userdata($uid);
     $tw   = function_exists('petgo_tw_on') && petgo_tw_on();
-    $com  = ($tw ? 'ТЕСТОВАЯ НЕДЕЛЯ — бесплатно (0 ₸). ' : '') . ($by === 'ai' ? 'Записал помощник (ИИ) в чате кабинета.' : 'Заказ из кабинета клиента.') . ($nname !== '' ? ' Хочет няню: ' . $nname . '.' : '') . ($sv['days'] > 1 ? ' ' . $sv['t'] . '.' : '');
+    $f1   = !$tw && petgo_cl_first_free($uid);
+    $com  = ($tw ? 'ТЕСТОВАЯ НЕДЕЛЯ — бесплатно (0 ₸). ' : '') . ($f1 ? 'ПЕРВЫЙ ЗАКАЗ — бесплатно (скидка 100%). ' : '') . ($by === 'ai' ? 'Записал помощник (ИИ) в чате кабинета.' : 'Заказ из кабинета клиента.') . ($nname !== '' ? ' Хочет няню: ' . $nname . '.' : '') . ($sv['days'] > 1 ? ' ' . $sv['t'] . '.' : '');
     $note = trim(sanitize_textarea_field((string) $note));
     if ($note !== '') {
         $com .= "\nКомментарий: " . mb_substr($note, 0, 500);
@@ -181,7 +188,7 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
             continue;
         }
         wp_update_post(array('ID' => $id, 'post_title' => 'Order #' . $id));
-        foreach (array('_pet' => (int) $pid, '_nanny' => 0, '_nanny_name' => '', '_want_nanny' => $nanny, '_service' => $sv['svc'], '_ts' => $ts + $i * DAY_IN_SECONDS, '_dur' => $dur, '_comment' => $com, '_status' => 'new', '_src' => $by, '_test' => $tw ? '1' : '') as $k => $v) {
+        foreach (array('_pet' => (int) $pid, '_nanny' => 0, '_nanny_name' => '', '_want_nanny' => $nanny, '_service' => $sv['svc'], '_ts' => $ts + $i * DAY_IN_SECONDS, '_dur' => $dur, '_comment' => $com, '_status' => 'new', '_src' => $by, '_test' => $tw ? '1' : '', '_free1' => $f1 ? '1' : '') as $k => $v) {
             update_post_meta($id, $k, $v);
         }
         $ids[] = $id;
@@ -191,8 +198,8 @@ function petgo_cl_book($uid, $pid, $kind, $date, $time, $dur, $nanny, $note, $by
     }
     $when = wp_date('d.m в H:i', $ts, petgo_tz());
     petgo_audit('client_book', 'pet=' . $pid . ' ' . $kind . ' ' . $date . ' ' . $time . ' by=' . $by, $uid);
-    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ($tw ? 'Тестовая неделя · ' : '') . ($by === 'ai' ? 'Помощник записал клиента' : 'Заказ из кабинета клиента'), get_the_title($pid) . ' · ' . $sv['t'] . ' · ' . $when . ' · ' . $u->display_name . ($nname !== '' ? ' · няня ' . $nname : ''), petgo_page_url(array('pg' => 'orders')));
-    petgo_cl_sys($uid, sprintf('Заявка принята: %s для %s, %s (%d мин)%s. Менеджер подтвердит время или предложит другое.', mb_strtolower($sv['t']), get_the_title($pid), $when, $dur, $nname !== '' ? ', няня ' . $nname : '') . ($tw ? ' Тестовая неделя — бесплатно (0 ₸).' : ''));
+    petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), ($tw ? 'Тестовая неделя · ' : '') . ($f1 ? 'Первый заказ бесплатно · ' : '') . ($by === 'ai' ? 'Помощник записал клиента' : 'Заказ из кабинета клиента'), get_the_title($pid) . ' · ' . $sv['t'] . ' · ' . $when . ' · ' . $u->display_name . ($nname !== '' ? ' · няня ' . $nname : ''), petgo_page_url(array('pg' => 'orders')));
+    petgo_cl_sys($uid, sprintf('Заявка принята: %s для %s, %s (%d мин)%s. Менеджер подтвердит время или предложит другое.', mb_strtolower($sv['t']), get_the_title($pid), $when, $dur, $nname !== '' ? ', няня ' . $nname : '') . ($tw ? ' Тестовая неделя — бесплатно (0 ₸).' : '') . ($f1 ? ' Первый заказ — бесплатно (скидка 100%).' : ''));
     if (function_exists('petgo_event')) {
         petgo_event('booking', array('user' => (int) $uid, 'orders' => $ids, 'kind' => $kind, 'by' => $by));
     }
