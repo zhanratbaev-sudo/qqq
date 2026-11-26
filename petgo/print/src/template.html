@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>PetGo — листовка A4</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 210mm; height: 297mm; }
+body { font-family: "Inter", sans-serif; color: #0F2A26; background: #FBF9E8; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-feature-settings: "ss01", "cv11"; }
+.page { position: relative; width: 210mm; height: 297mm; padding: 10mm 12mm 8mm; display: flex; flex-direction: column; gap: 3.3mm; overflow: hidden; }
+.paw-bg { position: absolute; color: #024C46; opacity: .045; }
+h1, h2, h3, .big { font-family: "Inter Display", "Inter", sans-serif; }
+
+/* шапка */
+.top { display: flex; align-items: center; justify-content: space-between; }
+.top .logo svg { height: 11.5mm; width: auto; display: block; }
+.top .contact { text-align: right; line-height: 1.25; }
+.top .contact b { display: block; font: 800 17pt/1.1 "Inter Display", sans-serif; color: #024C46; letter-spacing: -.01em; }
+.top .contact span { font-size: 10.5pt; font-weight: 600; color: #2D4A45; }
+
+/* главный блок */
+.hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 6mm; align-items: stretch; }
+.hero-t { display: flex; flex-direction: column; justify-content: center; gap: 2.6mm; }
+.eyebrow { align-self: flex-start; padding: 1.6mm 3.4mm; border-radius: 99px; background: #E1F2E9; color: #024C46; font-size: 9.6pt; font-weight: 700; letter-spacing: .01em; }
+h1 { font-size: 27pt; line-height: 1.02; font-weight: 800; letter-spacing: -.035em; color: #024C46; }
+h1 em { font-style: normal; color: #0B7A5F; }
+.lead { font-size: 11pt; line-height: 1.4; color: #2D4A45; max-width: 92mm; }
+.hero-i { position: relative; border-radius: 6mm; overflow: hidden; background: #fff; height: 60mm; box-shadow: 0 1.5mm 5mm rgba(2, 76, 70, .1); }
+.hero-i .art { position: absolute; inset: 0 0 15mm 0; }
+.hero-i .art svg { width: 100%; height: 100%; display: block; }
+.hero-i .faces { display: flex; align-items: center; justify-content: center; gap: 4mm; background: radial-gradient(circle at 50% 120%, #E1F2E9 0 60%, #fff 61%); }
+.hero-i .face { width: 33mm; height: 33mm; }
+.hero-i .face svg > rect:first-child { fill: transparent; }
+.deal { position: absolute; left: 0; right: 0; bottom: 0; height: 16mm; padding: 0 5mm; display: flex; align-items: center; gap: 3.5mm; background: #024C46; color: #fff; }
+.deal b { font: 800 26pt/1 "Inter Display", sans-serif; letter-spacing: -.03em; color: #FFB833; }
+.deal span { font-size: 11pt; font-weight: 700; line-height: 1.2; }
+.deal small { display: block; font-size: 8.6pt; font-weight: 500; opacity: .8; }
+
+/* услуги */
+.sec-h { display: flex; align-items: baseline; justify-content: space-between; }
+h2 { font-size: 15pt; font-weight: 800; letter-spacing: -.02em; color: #0F2A26; }
+.sec-h small { font-size: 9.6pt; font-weight: 600; color: #0B7A5F; }
+.svc { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+.card { position: relative; display: flex; flex-direction: column; gap: 1.1mm; padding: 3.2mm 4mm 3.2mm; border-radius: 5mm; background: #fff; box-shadow: 0 0 0 .25mm rgba(15, 42, 38, .08), 0 1mm 3mm rgba(15, 42, 38, .05); }
+.card .ic { position: absolute; top: 3mm; right: 3mm; width: 11.5mm; height: 11.5mm; border-radius: 50%; overflow: hidden; background: #E1F2E9; }
+.card .ic svg { width: 100%; height: 100%; display: block; }
+.card .ic svg > rect:first-child { fill: #E1F2E9; }
+h3 { font-size: 12pt; font-weight: 800; letter-spacing: -.015em; padding-right: 15mm; line-height: 1.15; }
+.for { font-size: 8.6pt; font-weight: 700; color: #0B7A5F; text-transform: uppercase; letter-spacing: .06em; }
+.card ul { list-style: none; display: flex; flex-direction: column; gap: .4mm; font-size: 8.8pt; color: #2D4A45; line-height: 1.3; }
+.card li { position: relative; padding-left: 4mm; }
+.card li::before { content: ""; position: absolute; left: .4mm; top: 1.2mm; width: 1.6mm; height: 1.6mm; border-radius: 50%; background: #0B7A5F; }
+.price { display: flex; align-items: baseline; flex-wrap: wrap; gap: .6mm 2.2mm; margin-top: auto; padding-top: 1mm; }
+.price b { font: 800 18pt/1 "Inter Display", sans-serif; letter-spacing: -.03em; color: #024C46; }
+.price .per { font-size: 9.6pt; font-weight: 600; color: #2D4A45; }
+.price .tag { padding: .8mm 2.2mm; border-radius: 99px; background: #024C46; color: #fff; font-size: 8.6pt; font-weight: 800; }
+.price .then { width: 100%; font-size: 8.8pt; color: #5E716D; }
+.price .ask { font: 700 12pt/1.2 "Inter Display", sans-serif; color: #024C46; }
+
+/* магазин */
+.shop { display: flex; align-items: center; gap: 3.4mm; padding: 2.4mm 4mm; border-radius: 5mm; background: #E1F2E9; }
+.shop .bag { flex: none; width: 9.5mm; height: 9.5mm; border-radius: 3.2mm; display: grid; place-items: center; background: #024C46; color: #fff; }
+.shop .bag svg { width: 6.4mm; height: 6.4mm; }
+.shop p { font-size: 9.4pt; line-height: 1.35; color: #0F2A26; }
+.shop p b { color: #024C46; }
+
+/* доверие */
+.trust { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.6mm; }
+.trust div { display: flex; align-items: center; gap: 2.2mm; font-size: 9pt; font-weight: 700; line-height: 1.2; color: #0F2A26; }
+.trust i { flex: none; width: 6.4mm; height: 6.4mm; border-radius: 1.8mm; display: grid; place-items: center; background: #024C46; color: #fff; }
+.trust i svg { width: 3.8mm; height: 3.8mm; }
+
+/* QR */
+.qr { position: relative; margin-top: auto; padding: 4.2mm 6mm 4.4mm; border-radius: 7mm; background: #024C46; color: #fff; overflow: hidden; }
+.qr-h { display: flex; align-items: baseline; justify-content: space-between; gap: 4mm; margin-bottom: 3mm; }
+.qr-h b { font: 800 14pt/1.1 "Inter Display", sans-serif; letter-spacing: -.02em; }
+.qr-h span { font-size: 9.6pt; opacity: .8; }
+.qr-row { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; }
+.qr-c { display: flex; flex-direction: column; align-items: center; gap: 1.4mm; text-align: center; }
+.qr-c .code { width: 38mm; height: 38mm; padding: 2.2mm; border-radius: 4mm; background: #fff; }
+.qr-c .code svg { width: 100%; height: 100%; display: block; }
+.qr-c small { font-size: 9pt; opacity: .78; }
+.qr-c b { font-size: 11.5pt; font-weight: 800; letter-spacing: -.005em; }
+.qr .paw-qr { position: absolute; right: -6mm; bottom: -9mm; width: 34mm; color: #fff; opacity: .06; }
+.foot { display: flex; justify-content: space-between; font-size: 7.8pt; color: #5E716D; }
+</style></head>
+<body><div class="page">
+<svg class="paw-bg" style="left:150mm;top:58mm;width:20mm;transform:rotate(18deg)" viewBox="0 0 100 100">{{PAW}}</svg>
+<svg class="paw-bg" style="left:4mm;top:128mm;width:14mm;transform:rotate(-22deg)" viewBox="0 0 100 100">{{PAW}}</svg>
+
+<header class="top"><div class="logo">{{LOGO}}</div><div class="contact"><b>petgo.kz</b><span>WhatsApp +7 747 817 57 12</span></div></header>
+
+<section class="hero">
+  <div class="hero-t">
+    <span class="eyebrow">Выгул собак · Няня для кошек · Алматы</span>
+    <h1>Няня для вашего питомца <em>в Алматы</em></h1>
+    <p class="lead">Гуляем с собаками и навещаем собак и кошек дома. После каждого визита — фото и отчёт няни.</p>
+  </div>
+  <div class="hero-i"><div class="art faces"><span class="face">{{DOG}}</span><span class="face">{{CAT}}</span></div><div class="deal"><b>−30%</b><span>на первый заказ<small>выгул или неделю визитов</small></span></div></div>
+</section>
+
+<div class="sec-h"><h2>Услуги и цены</h2><small>Первый заказ — со скидкой 30%</small></div>
+<section class="svc">
+  <div class="card"><span class="ic">{{DOG}}</span><span class="for">Для собак</span><h3>Выгул собак</h3>
+    <ul><li>От 1 до 3 часов, когда вам удобно</li><li>На поводке, с играми, фото и видео</li></ul>
+    <div class="price"><b>2&nbsp;100&nbsp;₸</b><span class="per">за час</span><span class="tag">−30%</span><span class="then">первый заказ, потом 3&nbsp;000&nbsp;₸ за час</span></div></div>
+  <div class="card"><span class="ic">{{DOG2}}</span><span class="for">Для собак</span><h3>Визиты на неделю</h3>
+    <ul><li>Каждый день, пока вы в отъезде</li><li>Кормим, гуляем, присылаем фото</li></ul>
+    <div class="price"><b>20&nbsp;993&nbsp;₸</b><span class="per">за неделю</span><span class="tag">−30%</span><span class="then">первый заказ, потом 29&nbsp;990&nbsp;₸ за неделю</span></div></div>
+  <div class="card"><span class="ic">{{CAT}}</span><span class="for">Для кошек</span><h3>Визиты на неделю</h3>
+    <ul><li>Каждый день, пока вы в отъезде</li><li>Кормим, меняем лоток, играем, фото</li></ul>
+    <div class="price"><b>20&nbsp;993&nbsp;₸</b><span class="per">за неделю</span><span class="tag">−30%</span><span class="then">первый заказ, потом 29&nbsp;990&nbsp;₸ за неделю</span></div></div>
+  <div class="card"><span class="ic">{{CAT2}}</span><span class="for">Для собак и кошек</span><h3>Разовый визит домой</h3>
+    <ul><li>30–60 минут, когда вы задерживаетесь</li><li>Покормить, поиграть, убрать лоток</li></ul>
+    <div class="price"><span class="ask">Цену подскажет менеджер</span></div></div>
+</section>
+
+<section class="shop"><span class="bag">{{BAG}}</span><p><b>Магазин PetGo:</b> корм, лакомства, игрушки и уход. Доставка бесплатно от 5&nbsp;000&nbsp;₸, а с выгулом няня привезёт заказ бесплатно.</p></section>
+
+<section class="trust">
+  <div><i>{{CHECK}}</i>Няни проходят обучение</div>
+  <div><i>{{CHECK}}</i>Фото и отчёт после визита</div>
+  <div><i>{{CHECK}}</i>Приход отмечается по геолокации</div>
+  <div><i>{{CHECK}}</i>Клиники-партнёры в Алматы</div>
+</section>
+
+<section class="qr">
+  <svg class="paw-qr" viewBox="0 0 100 100">{{PAW}}</svg>
+  <div class="qr-h"><b>Наведите камеру телефона</b><span>Заявка, вопросы и фото наших питомцев</span></div>
+  <div class="qr-row">
+    <div class="qr-c"><span class="code">{{QR_SITE}}</span><small>Сайт и заявка</small><b>petgo.kz</b></div>
+    <div class="qr-c"><span class="code">{{QR_WA}}</span><small>WhatsApp</small><b>+7 747 817 57 12</b></div>
+    <div class="qr-c"><span class="code">{{QR_IG}}</span><small>Instagram</small><b>@petgo.kz</b></div>
+  </div>
+</section>
+<div class="foot"><span>Цены на {{DATE}}. Скидка 30% — на первый заказ.</span><span>PetGo · выгул собак и визиты к питомцам в Алматы</span></div>
+</div></body></html>
