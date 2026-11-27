@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 40.2.1
+ * Version: 40.2.2
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '40.2.1');
+define('PETGO_VER', '40.2.2');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -703,6 +703,9 @@ function petgo_h_profile_save() {
     if (petgo_is_owner() && isset($_POST['staff_no'])) {
         petgo_staff_no_save($uid, petgo_p('staff_no'));
     }
+    if (petgo_is_owner() && isset($_POST['badge_title'])) {
+        petgo_badge_title_save($uid, petgo_p('badge_title'));
+    }
     if (isset($_FILES['avatar'])) {
         $r = petgo_save_image($_FILES['avatar'], 900, 82);
         if (is_array($r)) {
@@ -878,6 +881,9 @@ function petgo_h_staff_save() {
     update_user_meta($u->ID, 'petgo_phone', sanitize_text_field((string) petgo_p('phone')));
     if (isset($_POST['staff_no'])) {
         petgo_staff_no_save($u->ID, petgo_p('staff_no'));
+    }
+    if (isset($_POST['badge_title'])) {
+        petgo_badge_title_save($u->ID, petgo_p('badge_title'));
     }
     $pass = (string) petgo_p('pass');
     if ($pass !== '') {
@@ -1481,7 +1487,7 @@ function petgo_modal_staff() {
         if (petgo_is_owner()) {
             $e .= petgo_role_select(petgo_role_of($eu));
         }
-        $e .= petgo_field('staff_no', 'ID сотрудника (на бейдже)', 'text', petgo_staff_no($eu->ID)) . petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . (function_exists('petgo_staff_site_fields') ? petgo_staff_site_fields($eu) : '') . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
+        $e .= petgo_field('staff_no', 'ID сотрудника (на бейдже)', 'text', petgo_staff_no($eu->ID)) . petgo_field('badge_title', 'Надпись на бейдже (пусто — без надписи)', 'text', petgo_badge_title($eu)) . petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . (function_exists('petgo_staff_site_fields') ? petgo_staff_site_fields($eu) : '') . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
         echo petgo_modal('pgc-m-staffe', $eu->display_name . ' · ' . $eu->user_login, $e, true);
     }
 }

@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
    - QR-код открывает страницу проверки: клиент видит, что это действующий сотрудник PetGo (фото, имя, должность).
      Уволили или выключили сотрудника — страница сразу пишет «Не работает в PetGo».
    - Печать: кнопка «Распечатать» у сотрудника (свой бейдж) и у владельца/администратора в «Сотрудниках»
-     (один бейдж или все сразу). Лист A4, бейджи в настоящем размере 54 × 86 мм (как банковская карта),
+     (один бейдж или все сразу). Лист A4, бейджи в настоящем размере 54 × 85 мм (как банковская карта),
      с линиями для вырезания. В окне печати можно сохранить PDF.
    - ID сотрудника: по умолчанию PGS0007 (по номеру в системе); владелец или администратор меняет его
      в карточке сотрудника, владелец свой — в профиле. Фото — то же, что в профиле (загружается в хорошем качестве).
@@ -27,6 +27,35 @@ function petgo_staff_no_save($uid, $v) {
         delete_user_meta((int) $uid, 'petgo_staff_no');
     } else {
         update_user_meta((int) $uid, 'petgo_staff_no', $v);
+    }
+}
+
+/* 40.2.2: надпись под именем (должность) — пишет владелец или администратор.
+   Не задана: у сотрудников — роль («Няня», «Менеджер»…), у владельца — без надписи.
+   Пустое поле — на бейдже нет надписи. */
+function petgo_badge_title($u) {
+    $u = is_object($u) ? $u : get_userdata((int) $u);
+    if (!$u) {
+        return '';
+    }
+    if (metadata_exists('user', $u->ID, 'petgo_badge_title')) {
+        return (string) get_user_meta($u->ID, 'petgo_badge_title', true);
+    }
+    $r = petgo_role_of($u);
+    return ($r === 'owner' || $r === '') ? '' : petgo_t('role_' . $r);
+}
+function petgo_badge_title_save($uid, $v) {
+    $u = get_userdata((int) $uid);
+    if (!$u) {
+        return;
+    }
+    $v   = mb_substr(trim(sanitize_text_field((string) $v)), 0, 40);
+    $r   = petgo_role_of($u);
+    $def = ($r === 'owner' || $r === '') ? '' : petgo_t('role_' . $r);
+    if ($v === $def) {
+        delete_user_meta($u->ID, 'petgo_badge_title');
+    } else {
+        update_user_meta($u->ID, 'petgo_badge_title', $v);
     }
 }
 
@@ -73,7 +102,7 @@ function petgo_paw_pattern($rgba) {
 
 /* стили бейджа: размеры в долях ширины карточки (cqw) — одинаково на экране и в печати (54 мм) */
 function petgo_badge_css() {
-    return '.pgb{--bw:min(330px,calc(100vw - 64px));container-type:inline-size;position:relative;width:var(--bw);aspect-ratio:54/85.6;margin:0 auto;border-radius:6.4cqw;overflow:hidden;background:' . petgo_paw_pattern('rgba(2,76,70,.05)') . ' 0 0/60cqw 60cqw repeat,#FAFCFA;color:#0F2A26;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;box-shadow:0 1px 2px rgba(15,42,38,.06),0 18px 50px rgba(15,42,38,.16);-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:center}'
+    return '.pgb{--bw:min(330px,calc(100vw - 64px));container-type:inline-size;position:relative;width:var(--bw);aspect-ratio:54/85;margin:0 auto;border-radius:6.4cqw;overflow:hidden;background:' . petgo_paw_pattern('rgba(2,76,70,.05)') . ' 0 0/60cqw 60cqw repeat,#FAFCFA;color:#0F2A26;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;box-shadow:0 1px 2px rgba(15,42,38,.06),0 18px 50px rgba(15,42,38,.16);-webkit-print-color-adjust:exact;print-color-adjust:exact;text-align:center}'
         . '.pgb *{box-sizing:border-box}'
         . '.pgb-top{position:absolute;left:0;right:0;top:0;height:44cqw;background:' . petgo_paw_pattern('rgba(255,255,255,.08)') . ' 0 0/60cqw 60cqw repeat,linear-gradient(160deg,#0B6B5C,#024C46 70%)}'
         . '.pgb-logo{position:absolute;left:7cqw;top:7cqw;width:33cqw;height:auto}'
@@ -119,14 +148,15 @@ function petgo_badge_card($u, $qr = true, $inline = false) {
         return '';
     }
     $role = petgo_role_of($u);
+    $ttl  = petgo_badge_title($u);
     $av   = $inline ? petgo_badge_photo_inline($u->ID) : petgo_user_avatar_url($u->ID);
     $off  = (bool) get_user_meta($u->ID, 'petgo_disabled', true);
     $ini  = mb_strtoupper(mb_substr(trim($u->display_name), 0, 1));
     /* данные для файла (PDF / картинка), который собирается на телефоне */
-    $data = $qr ? ' data-b="' . esc_attr(wp_json_encode(array('n' => $u->display_name, 'r' => petgo_t('role_' . $role), 'id' => petgo_staff_no($u->ID), 'ph' => $av, 'q' => petgo_badge_verify_url($u->ID), 't' => petgo_badge_phone(), 'i' => $ini))) . '"' : '';
+    $data = $qr ? ' data-b="' . esc_attr(wp_json_encode(array('n' => $u->display_name, 'r' => $ttl, 'id' => petgo_staff_no($u->ID), 'ph' => $av, 'q' => petgo_badge_verify_url($u->ID), 't' => petgo_badge_phone(), 'i' => $ini))) . '"' : '';
     $h  = '<div class="pgb' . ($off ? ' off' : '') . '"' . $data . '><div class="pgb-top"><span class="pgb-logo">' . petgo_badge_logo() . '</span><span class="pgb-kind">' . esc_html('Сотрудник') . '</span></div>';
     $h .= '<div class="pgb-ph">' . ($av ? '<img src="' . ($inline ? esc_attr($av) : esc_url($av)) . '" alt="">' : '<b>' . esc_html($ini) . '</b>') . '</div>';
-    $h .= '<div class="pgb-main"><div class="pgb-name">' . esc_html($u->display_name) . '</div><span class="pgb-role">' . esc_html(petgo_t('role_' . $role)) . '</span><div class="pgb-id"><small>ID</small><b>' . esc_html(petgo_staff_no($u->ID)) . '</b></div></div>';
+    $h .= '<div class="pgb-main"><div class="pgb-name">' . esc_html($u->display_name) . '</div>' . ($ttl !== '' ? '<span class="pgb-role">' . esc_html($ttl) . '</span>' : '') . '<div class="pgb-id"><small>ID</small><b>' . esc_html(petgo_staff_no($u->ID)) . '</b></div></div>';
     $h .= '<div class="pgb-bot">' . ($qr ? '<span class="pgb-qr" data-qr="' . esc_attr(petgo_badge_verify_url($u->ID)) . '"></span>' : '') . '<span class="pgb-bt"><b>Проверить сотрудника</b><span>Наведите камеру на QR-код</span><em>petgo.kz · ' . esc_html(petgo_badge_phone()) . '</em></span></div><i class="pgb-line"></i></div>';
     return $h;
 }
@@ -159,7 +189,7 @@ add_filter('petgo_app_page', function ($done, $pg) {
     }
     echo '<style>' . petgo_badge_css() . '.pgbw{display:flex;flex-direction:column;align-items:center;gap:16px;padding:6px 0 10px}.pgbw p{margin:0;max-width:330px;text-align:center;color:var(--mu);font-size:14.5px;line-height:1.45}.pgbw .pgc-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(330px,100%)}.pgbw .pgc-btns .pgc-btn{flex:1 1 0;justify-content:center;white-space:nowrap}.pgbw>.pgb{cursor:zoom-in}.pgbw .pgc-btns+.pgc-btns{margin-top:-6px}.pgc .pgbw-png{min-height:40px;padding:0 12px;border:0;background:none;color:var(--ac2,var(--ac));font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}.pgbw [aria-busy]{opacity:.7}'
         . '.pgb-fs{position:fixed;inset:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:' . petgo_paw_pattern('rgba(2,76,70,.05)') . ' 0 0/220px 220px repeat,#F4F6F3;opacity:0;transition:opacity .22s ease;cursor:zoom-out}.pgb-fs.on{opacity:1}'
-        . '.pgb-fs .pgb{--bw:min(calc(100vw - 32px),calc((100vh - 90px) * .6308),calc((100dvh - 90px) * .6308));transform:scale(.96);transition:transform .32s cubic-bezier(.32,.72,0,1)}.pgb-fs.on .pgb{transform:none}.pgb-fs p{margin:0;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:#6B7A77}'
+        . '.pgb-fs .pgb{--bw:min(calc(100vw - 32px),calc((100vh - 90px) * .6353),calc((100dvh - 90px) * .6353));transform:scale(.96);transition:transform .32s cubic-bezier(.32,.72,0,1)}.pgb-fs.on .pgb{transform:none}.pgb-fs p{margin:0;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:#6B7A77}'
         . '@media(prefers-reduced-motion:reduce){.pgb-fs,.pgb-fs .pgb{transition:none}}</style>';
     echo '<div class="pgbw">' . petgo_badge_card($u) . '<p>' . esc_html($uid === $me ? 'Покажите бейдж клиенту при встрече: по QR-коду он проверит, что вы работаете в PetGo.' : 'Бейдж сотрудника. По QR-коду клиент проверяет, что сотрудник работает в PetGo.') . '</p>';
     echo '<div class="pgc-btns"><button type="button" class="pgc-btn pgb-show">' . petgo_icon('idcard') . '<span>Показать клиенту</span></button></div>';
@@ -171,7 +201,7 @@ add_filter('petgo_app_page', function ($done, $pg) {
     return true;
 }, 10, 2);
 
-/* ---------- печать: лист A4, бейджи 54 × 86 мм с линиями для вырезания ---------- */
+/* ---------- печать: лист A4, бейджи 85 × 54 мм с линиями для вырезания ---------- */
 /* старые ссылки 40.2.0 (admin-post.php) ведут на новый адрес */
 function petgo_badge_old_link() {
     $u = isset($_GET['u']) ? sanitize_text_field(wp_unslash($_GET['u'])) : '';
@@ -231,7 +261,7 @@ function petgo_badge_print() {
         . '.sheet{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;padding:24px 16px}'
         . '.cut{padding:0}'
         . '@media print{html,body{background:#fff}.bar{display:none}.sheet{display:grid;grid-template-columns:repeat(3,54mm);gap:6mm;justify-content:center;padding:0}.pgb{--bw:54mm;box-shadow:none;border-radius:3.4mm;break-inside:avoid}.cut{outline:.2mm dashed #B8C4C0;outline-offset:1.5mm;break-inside:avoid}}'
-        . '</style></head><body><div class="bar"><b>Бейджи PetGo · ' . count($ids) . '</b><span class="hint">Размер 54 × 86 мм, как банковская карта, по 9 на лист A4 с пунктиром для вырезания.</span><button type="button" data-pgb-pdf><span>Скачать PDF</span></button><button type="button" class="sec" data-pgb-print><span>Распечатать</span></button><a class="sec" href="' . esc_url($back) . '" onclick="if(document.referrer.indexOf(location.origin)===0&&history.length>1){history.back();return false}">Назад</a></div>'
+        . '</style></head><body><div class="bar"><b>Бейджи PetGo · ' . count($ids) . '</b><span class="hint">Размер 85 × 54 мм — под стандартный бейдж. По 9 на лист A4, с пунктиром для вырезания.</span><button type="button" data-pgb-pdf><span>Скачать PDF</span></button><button type="button" class="sec" data-pgb-print><span>Распечатать</span></button><a class="sec" href="' . esc_url($back) . '" onclick="if(document.referrer.indexOf(location.origin)===0&&history.length>1){history.back();return false}">Назад</a></div>'
         . '<div class="sheet">' . $cards . '</div>' . petgo_badge_js() . '</body></html>';
     exit;
 }
@@ -255,7 +285,7 @@ add_action('parse_request', function () {
         . '.st b{display:block;font-size:17px}.st span{font-size:14px;color:#6B7A77}'
         . 'p{margin:0;max-width:360px;text-align:center;font-size:14.5px;line-height:1.45;color:#6B7A77}a{color:#024C46;font-weight:600;white-space:nowrap}</style></head><body><main>';
     if ($ok) {
-        echo '<div class="st ok"><i>✓</i><div><b>Действующий сотрудник PetGo</b><span>' . esc_html($u->display_name . ' · ' . petgo_t('role_' . petgo_role_of($u)) . ' · ID ' . petgo_staff_no($uid)) . '</span></div></div>' . petgo_badge_card($u, false, true);
+        echo '<div class="st ok"><i>✓</i><div><b>Действующий сотрудник PetGo</b><span>' . esc_html(implode(' · ', array_filter(array($u->display_name, petgo_badge_title($u), 'ID ' . petgo_staff_no($uid)), 'strlen'))) . '</span></div></div>' . petgo_badge_card($u, false, true);
     } else {
         echo '<div class="st no"><i>!</i><div><b>' . esc_html($u ? 'Сотрудник больше не работает в PetGo' : 'Сотрудник не найден') . '</b><span>Не передавайте ему питомца и ключи.</span></div></div>';
     }

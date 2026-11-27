@@ -1,6 +1,6 @@
 /* PetGo · бейдж сотрудника в PDF и картинку.
    Бейдж рисуется прямо на телефоне (холст), PDF собирается здесь же — сервер и сторонние сервисы не нужны.
-   Лист A4: бейджи 54 × 85,6 мм в настоящем размере, по 9 на лист, с пунктиром для вырезания.
+   Лист A4: бейджи 85 × 54 мм (стандартный бейдж) в настоящем размере, по 9 на лист, с пунктиром для вырезания.
    На телефоне готовый файл отдаётся через меню «Поделиться» (Сохранить в Файлы / Напечатать / WhatsApp),
    на компьютере — обычным скачиванием. */
 (function () {
@@ -86,7 +86,7 @@
 
 	/* один бейдж на холсте шириной W пикселей; размеры — доли ширины, как на экране (cqw) */
 	function draw(b, A, photo, W) {
-		var u = W / 100, H = Math.round(W * 85.6 / 54);
+		var u = W / 100, H = Math.round(W * 85 / 54);
 		var c = D.createElement("canvas"); c.width = W; c.height = H;
 		var g = c.getContext("2d");
 		g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
@@ -130,11 +130,14 @@
 		g.fillStyle = "#0F2A26"; g.textAlign = "center"; g.textBaseline = "middle";
 		w.l.forEach(function (l) { g.fillText(l, W / 2, y + fs * 0.56); y += fs * 1.12; });
 		y += 2.2 * u;
-		g.font = "700 " + (4 * u) + "px " + FONT;
-		var rw = g.measureText(b.r || "").width + 6.8 * u, rh = 4 * u * 1.2 + 2.2 * u;
-		rr(g, W / 2 - rw / 2, y, rw, rh, rh / 2); g.fillStyle = "#E1F2E9"; g.fill();
-		g.fillStyle = "#024C46"; g.fillText(b.r || "", W / 2, y + rh / 2);
-		y += rh + 2.8 * u;
+		/* надпись под именем — только если она задана */
+		if (b.r) {
+			g.font = "700 " + (4 * u) + "px " + FONT;
+			var rw = Math.min(g.measureText(b.r).width + 6.8 * u, 88 * u), rh = 4 * u * 1.2 + 2.2 * u;
+			rr(g, W / 2 - rw / 2, y, rw, rh, rh / 2); g.fillStyle = "#E1F2E9"; g.fill();
+			g.fillStyle = "#024C46"; g.fillText(b.r, W / 2, y + rh / 2, rw - 6.8 * u);
+			y += rh + 2.8 * u;
+		} else y += 0.6 * u;
 		g.textBaseline = "alphabetic";
 		g.font = "700 " + (3.2 * u) + "px " + FONT;
 		var lsp = 3.2 * u * 0.12, lw = swidth(g, "ID", lsp);
@@ -193,7 +196,7 @@
 		var enc = new TextEncoder(), parts = [], off = 0, offs = [];
 		function put(x) { var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
 		function f(v) { return (Math.round(v * 100) / 100).toString(); }
-		var K = 72 / 25.4, PW = 595.28, PH = 841.89, bw = 54, bh = 85.6, gap = 6, per = 9;
+		var K = 72 / 25.4, PW = 595.28, PH = 841.89, bw = 54, bh = 85, gap = 6, per = 9;
 		var mx = (210 - (3 * bw + 2 * gap)) / 2, my = (297 - (3 * bh + 2 * gap)) / 2;
 		var pages = Math.ceil(imgs.length / per), id = 3, pg = [];
 		for (var p = 0; p < pages; p++) { var o = { page: id++, cont: id++, im: [] }; for (var j = p * per; j < Math.min(imgs.length, p * per + per); j++) o.im.push(id++); pg.push(o); }
