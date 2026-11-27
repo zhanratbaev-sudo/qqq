@@ -261,32 +261,174 @@ function petgo_tag_page() {
     petgo_tag_page_pet($t, $cl, $acc);
 }
 
-/* новый (свободный) адресник: привязать к питомцу */
+/* новый (свободный) адресник: сразу регистрация питомца — кличка, кто это, фото и номер хозяина */
 function petgo_tag_page_new($t, $cl, $acc) {
     $code = (string) $t->code;
     $h    = '<div class="card c"><div class="ic">' . petgo_tag_svg('qr') . '</div><h1>Новый адресник PetGo</h1><p class="code">' . esc_html(petgo_tag_fmt($code)) . '</p>';
-    $h   .= '<p>Привяжите его к своему питомцу. Если питомец потеряется, человек отсканирует QR-код и сразу свяжется с вами.</p>';
-    if ($cl) {
-        $pets = function_exists('petgo_cl_pets') ? petgo_cl_pets($cl) : array();
-        if ($pets) {
-            $h .= '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" class="bind"><input type="hidden" name="action" value="petgo_tag_bind"><input type="hidden" name="c" value="' . esc_attr($code) . '">' . wp_nonce_field('petgo_tag_bind', '_n', false, false) . '<b class="lbl">Чей это адресник?</b><div class="pets">';
-            foreach ($pets as $i => $p) {
-                $h .= '<label class="pet"><input type="radio" name="pet" value="' . (int) $p->ID . '"' . ($i === 0 ? ' checked' : '') . '><span>' . esc_html($p->post_title) . '</span></label>';
-            }
-            $h .= '</div><button type="submit" class="btn">Привязать</button></form>';
-        } else {
-            $h .= '<p class="mu">Сначала добавьте питомца в приложении — потом привяжите адресник.</p><a class="btn" href="' . esc_url($acc) . '">Открыть My PetGo</a>';
+    $h   .= '<p>' . ($cl ? 'Привяжите его к питомцу' : 'Зарегистрируйте питомца за минуту') . ' — если он потеряется, человек отсканирует QR-код и сразу свяжется с вами.</p></div>';
+    $pets = ($cl && function_exists('petgo_cl_pets')) ? petgo_cl_pets($cl) : array();
+    $h   .= '<form class="card quick" method="post" action="' . esc_url(admin_url('admin-post.php')) . '" enctype="multipart/form-data" data-quick novalidate>';
+    $h   .= '<input type="hidden" name="action" value="petgo_tag_quick"><input type="hidden" name="c" value="' . esc_attr($code) . '">' . wp_nonce_field('petgo_tag_quick', '_n', false, false) . '<input type="text" name="hp" value="" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">';
+    if ($pets) {
+        $h .= '<b class="lbl">Чей это адресник?</b><div class="pets">';
+        foreach ($pets as $i => $p) {
+            $h .= '<label class="pet"><input type="radio" name="pet" value="' . (int) $p->ID . '"' . ($i === 0 ? ' checked' : '') . '><span>' . esc_html($p->post_title) . '</span></label>';
         }
+        $h .= '<label class="pet"><input type="radio" name="pet" value="new"><span>＋ Новый питомец</span></label></div>';
     } else {
-        /* после входа приложение само предложит привязать этот код */
+        $h .= '<input type="hidden" name="pet" value="new">';
+    }
+    $h .= '<div class="newpet"' . ($pets ? ' hidden' : '') . '>';
+    $h .= '<label class="phpick"><input type="file" name="photo" accept="image/*" class="hp"><span class="phc">' . petgo_tag_svg('camera') . '</span><span class="pht">Фото питомца</span></label>';
+    $h .= '<label class="fl"><span>Кличка питомца</span><input type="text" name="name" maxlength="40" autocomplete="off" autocapitalize="words" placeholder="Например, Бублик"></label>';
+    $h .= '<div class="seg" role="radiogroup" aria-label="Кто это"><label><input type="radio" name="sp" value="dog" checked><span>Собака</span></label><label><input type="radio" name="sp" value="cat"><span>Кошка</span></label></div>';
+    $h .= '</div>';
+    if (!$cl) {
+        $h .= '<label class="fl"><span>Ваш номер телефона</span><input type="tel" name="phone" inputmode="tel" autocomplete="tel" placeholder="+7 700 000 00 00"></label>';
+    }
+    $h .= '<button type="submit" class="btn">' . ($cl ? 'Привязать' : 'Зарегистрировать') . '</button><p class="res" role="alert" hidden></p>';
+    $h .= '<p class="mu sm">' . ($cl ? 'Адресник появится в приложении: питомец → «QR-адресник».' : 'Номер увидит тот, кто найдёт питомца. Нажимая «Зарегистрировать», вы соглашаетесь на обработку персональных данных.') . '</p></form>';
+    if (!$cl) {
+        /* уже есть кабинет: после входа приложение само предложит привязать этот код */
         setcookie('petgo_tagc', $code, time() + DAY_IN_SECONDS, COOKIEPATH ? COOKIEPATH : '/', COOKIE_DOMAIN, is_ssl(), true);
-        $h .= '<a class="btn" href="' . esc_url($acc) . '">Войти в My PetGo</a><p class="mu sm">Нет кабинета? Зарегистрируйтесь там же — после входа приложение само предложит привязать этот адресник.</p>';
+        $h .= '<p class="sm c alt">Уже есть кабинет PetGo? <a href="' . esc_url($acc) . '">Войти</a></p>';
     }
     if (function_exists('petgo_role_of') && petgo_role_of() !== '') {
         $b = petgo_tag_batches();
-        $h .= '<p class="mu sm">Для сотрудника: партия №' . (int) $t->batch . (isset($b[(int) $t->batch]) ? ' от ' . esc_html(wp_date('d.m.Y', (int) $b[(int) $t->batch]['ts'], petgo_tz())) : '') . ', свободен.</p>';
+        $h .= '<p class="mu sm c">Для сотрудника: партия №' . (int) $t->batch . (isset($b[(int) $t->batch]) ? ' от ' . esc_html(wp_date('d.m.Y', (int) $b[(int) $t->batch]['ts'], petgo_tz())) : '') . ', свободен.</p>';
     }
-    petgo_tag_shell('Новый адресник PetGo', $h . '</div>');
+    /* фото уменьшаем на телефоне (быстрее и без ошибок размера), ответ — без перезагрузки */
+    $js = '<script>(function(){var f=document.querySelector("[data-quick]");if(!f)return;var r=f.querySelector(".res"),b=f.querySelector("button[type=submit]"),np=f.querySelector(".newpet"),fi=f.querySelector("input[name=photo]"),pc=f.querySelector(".phpick"),blob=null;'
+        . 'function sync(){var v=f.querySelector("input[name=pet]:checked")||f.querySelector("input[name=pet]");if(np)np.hidden=!(v&&v.value==="new")}f.addEventListener("change",function(e){if(e.target.name==="pet")sync()});sync();'
+        . 'function err(t){r.hidden=false;r.textContent=t;b.disabled=false;b.removeAttribute("aria-busy")}'
+        . 'if(fi)fi.addEventListener("change",function(){var x=fi.files&&fi.files[0];blob=null;if(!x)return;var u=URL.createObjectURL(x),im=new Image();im.onload=function(){var m=1280,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);c.toBlob(function(bb){blob=bb},"image/jpeg",.86);pc.style.backgroundImage="url("+u+")";pc.classList.add("has")};im.src=u});'
+        . 'f.addEventListener("submit",function(e){e.preventDefault();if(b.disabled)return;r.hidden=true;var v=(f.querySelector("input[name=pet]:checked")||f.querySelector("input[name=pet]")).value;'
+        . 'if(v==="new"&&f.elements.name.value.trim().length<1)return err("Напишите кличку питомца.");'
+        . 'if(f.elements.phone&&f.elements.phone.value.replace(/\\D/g,"").length<10)return err("Проверьте номер телефона.");'
+        . 'b.disabled=true;b.setAttribute("aria-busy","true");var d=new FormData(f);d.append("ajax","1");if(blob&&v==="new"){d.delete("photo");d.append("photo",blob,"pet.jpg")}else if(v!=="new"){d.delete("photo")}'
+        . 'fetch(f.getAttribute("action"),{method:"POST",body:d,credentials:"same-origin"}).then(function(x){return x.json()}).then(function(j){if(j&&j.ok&&j.go){location.href=j.go;return}err((j&&j.msg)||"Не получилось. Попробуйте ещё раз.");if(j&&j.login){var a=document.createElement("a");a.className="btn sec";a.href=j.login;a.textContent="Войти в кабинет";r.after(a)}}).catch(function(){err("Нет связи с интернетом. Попробуйте ещё раз.")})})})();</script>';
+    petgo_tag_shell('Новый адресник PetGo', $h, $code, $js);
+}
+
+/* пароль для кабинета, созданного по адреснику: 8 знаков без похожих букв */
+function petgo_tag_pass() {
+    $a = 'abcdefghjkmnpqrstuvwxyz23456789';
+    $s = '';
+    for ($i = 0; $i < 8; $i++) {
+        $s .= $a[random_int(0, strlen($a) - 1)];
+    }
+    return $s;
+}
+
+/* регистрация по адреснику: кабинет на номер хозяина + питомец + привязка. Вошедший клиент — новый питомец или выбранный */
+add_action('admin_post_petgo_tag_quick', 'petgo_tag_quick');
+add_action('admin_post_nopriv_petgo_tag_quick', 'petgo_tag_quick');
+function petgo_tag_quick() {
+    nocache_headers();
+    $code = petgo_tag_norm(isset($_POST['c']) ? wp_unslash($_POST['c']) : '');
+    $back = $code !== '' ? petgo_tag_url($code) : home_url('/');
+    $acc  = function_exists('petgo_site_url') ? petgo_site_url('account') : home_url('/');
+    $ajax = !empty($_POST['ajax']);
+    $out  = function ($ok, $msg = '', $go = '', $login = '') use ($ajax, $back) {
+        if ($ajax) {
+            wp_send_json(array('ok' => $ok, 'msg' => $msg, 'go' => $go, 'login' => $login));
+        }
+        if ($ok) {
+            wp_safe_redirect($go);
+            exit;
+        }
+        wp_die(esc_html($msg), 'PetGo', array('response' => 200, 'link_url' => $login !== '' ? $login : $back, 'link_text' => $login !== '' ? 'Войти в кабинет' : 'Назад'));
+    };
+    if (!empty($_POST['hp'])) {
+        $out(false, 'Обновите страницу и попробуйте ещё раз.');
+    }
+    if (!isset($_POST['_n']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['_n'])), 'petgo_tag_quick') || (function_exists('petgo_guard_same_origin') && !petgo_guard_same_origin())) {
+        $out(false, 'Обновите страницу и попробуйте ещё раз.');
+    }
+    $t = petgo_tag_get($code);
+    if (!$t || (int) $t->st !== 0) {
+        $out(false, $t ? 'Этот адресник уже привязан к питомцу.' : 'Адресник не найден.');
+    }
+    $cl = function_exists('petgo_cl_uid') ? petgo_cl_uid() : 0;
+    if (is_user_logged_in() && !$cl) {
+        $out(false, 'Вы вошли как сотрудник. Откройте страницу в другом браузере или выйдите из приложения сотрудников.');
+    }
+    if (!petgo_tag_limit('quick', $cl ? 30 : 8, HOUR_IN_SECONDS)) {
+        $out(false, 'Слишком много попыток. Попробуйте через час.');
+    }
+    $pet = isset($_POST['pet']) ? sanitize_key(wp_unslash($_POST['pet'])) : 'new';
+    /* вошедший клиент выбрал своего питомца */
+    if ($cl && $pet !== 'new') {
+        $r = petgo_tag_bind($code, (int) $pet, $cl);
+        if ($r !== true) {
+            $out(false, $r);
+        }
+        setcookie('petgo_tagc', '', time() - 3600, COOKIEPATH ? COOKIEPATH : '/', COOKIE_DOMAIN, is_ssl(), true);
+        $out(true, '', add_query_arg('ok', '1', $back));
+    }
+    $name = mb_substr(trim(sanitize_text_field(wp_unslash(isset($_POST['name']) ? (string) $_POST['name'] : ''))), 0, 40);
+    $sp   = (isset($_POST['sp']) && $_POST['sp'] === 'cat') ? 'cat' : 'dog';
+    if ($name === '') {
+        $out(false, 'Напишите кличку питомца.');
+    }
+    $new = false;
+    if (!$cl) {
+        $phone = function_exists('petgo_pf_phone') ? petgo_pf_phone(isset($_POST['phone']) ? wp_unslash($_POST['phone']) : '') : '';
+        if ($phone === '') {
+            $out(false, 'Проверьте номер телефона.');
+        }
+        if (petgo_cl_by_phone($phone)) {
+            /* кабинет уже есть — входить по паролю (после входа приложение само предложит привязать адресник) */
+            setcookie('petgo_tagc', $code, time() + DAY_IN_SECONDS, COOKIEPATH ? COOKIEPATH : '/', COOKIE_DOMAIN, is_ssl(), true);
+            $out(false, 'С этим номером уже есть кабинет PetGo. Войдите — приложение само предложит привязать адресник.', '', $acc);
+        }
+        $d     = petgo_phone_digits($phone);
+        $login = 'pg' . substr($d, -10);
+        while (username_exists($login)) {
+            $login = 'pg' . substr($d, -10) . '-' . random_int(10, 99);
+        }
+        $pass = petgo_tag_pass();
+        $uid  = wp_insert_user(array('user_login' => $login, 'user_pass' => $pass, 'user_email' => '', 'display_name' => petgo_phone_fmt($phone), 'role' => 'petgo_client'));
+        if (is_wp_error($uid)) {
+            $out(false, 'Не получилось создать кабинет. Попробуйте ещё раз.');
+        }
+        update_user_meta($uid, 'petgo_phone', $phone);
+        update_user_meta($uid, 'petgo_phone_d', $d);
+        update_user_meta($uid, 'petgo_cl_since', time());
+        /* имени пока нет: приветствие без имени, клиент добавит его в профиле */
+        update_user_meta($uid, 'petgo_noname', 1);
+        update_user_meta($uid, 'petgo_src', array('last' => array('src' => 'qr-tag'), 'first' => array('src' => 'qr-tag')));
+        if (function_exists('petgo_site_lang')) {
+            update_user_meta($uid, 'petgo_cl_lang', petgo_site_lang());
+        }
+        wp_set_current_user($uid);
+        wp_set_auth_cookie($uid, true, is_ssl());
+        if (function_exists('petgo_cl_chat')) {
+            petgo_cl_chat($uid);
+        }
+        petgo_audit('client_reg', $login . ' tag=' . $code, $uid);
+        if (function_exists('petgo_event')) {
+            petgo_event('sign_up', array('user' => (int) $uid));
+        }
+        set_transient('petgo_tagpw_' . $uid, $pass, 30 * MINUTE_IN_SECONDS);
+        $cl  = (int) $uid;
+        $new = true;
+    }
+    $av = isset($_FILES['photo']) ? petgo_save_image($_FILES['photo'], 900, 80) : 'none';
+    $u  = get_userdata($cl);
+    $pid = petgo_pf_save_pet(array('title' => $name, 'species' => $sp, 'owner' => get_user_meta($cl, 'petgo_noname', true) ? '' : ($u ? $u->display_name : ''), 'phone' => (string) get_user_meta($cl, 'petgo_phone', true)), 0, is_array($av) ? $av : null, array('client' => $cl, 'src' => 'tag'));
+    if (!$pid) {
+        $out(false, 'Не получилось сохранить питомца. Попробуйте ещё раз.');
+    }
+    if (function_exists('petgo_event')) {
+        petgo_event('pet_saved', array('user' => (int) $cl, 'pet' => (int) $pid, 'new' => true));
+    }
+    $r = petgo_tag_bind($code, $pid, $cl);
+    if ($r !== true) {
+        $out(false, $r);
+    }
+    setcookie('petgo_tagc', '', time() - 3600, COOKIEPATH ? COOKIEPATH : '/', COOKIE_DOMAIN, is_ssl(), true);
+    $out(true, '', add_query_arg($new ? 'welcome' : 'ok', '1', $back));
 }
 
 /* привязанный адресник: анкета питомца для нашедшего */
@@ -302,7 +444,7 @@ function petgo_tag_page_pet($t, $cl, $acc) {
     $own   = $cl && $cl === $uid;
     $name  = get_the_title($pid);
     $owner = get_userdata($uid);
-    $first = $owner ? trim(strtok((string) $owner->display_name, ' ')) : '';
+    $first = ($owner && !get_user_meta($uid, 'petgo_noname', true)) ? trim(strtok((string) $owner->display_name, ' ')) : '';
     $sp    = (string) get_post_meta($pid, '_pf_species', true);
     $sub   = array_filter(array($sp === 'dog' ? 'Собака' : ($sp === 'cat' ? 'Кошка' : (string) get_post_meta($pid, '_pf_species_other', true)), (string) get_post_meta($pid, '_pf_breed', true)), 'strlen');
     /* сканирование: считаем и сообщаем хозяину (не чаще раза в 15 минут, если потерялся — раз в 2 минуты) */
@@ -318,11 +460,21 @@ function petgo_tag_page_pet($t, $cl, $acc) {
     $ph  = petgo_tag_photo($pid);
     $tel = $o['phone'] ? petgo_tag_owner_phone($uid, $pid) : '';
     $h   = '';
-    if ($own) {
+    $acc = function_exists('petgo_site_url') ? petgo_site_url('account') : home_url('/');
+    if ($own && isset($_GET['welcome'])) {
+        /* только что зарегистрировались по адреснику: пароль показываем один раз */
+        $pw  = (string) get_transient('petgo_tagpw_' . $uid);
+        delete_transient('petgo_tagpw_' . $uid);
+        $h  .= '<div class="card welcome"><div class="ok">' . petgo_tag_svg('check') . '</div><h1>Готово!</h1><p>' . esc_html('«' . $name . '» зарегистрирован, адресник привязан. Если питомец потеряется, нашедший сразу свяжется с вами.') . '</p>';
+        if ($pw !== '') {
+            $h .= '<div class="pw">Вход в кабинет — ваш номер телефона и пароль<br><code>' . esc_html($pw) . '</code><br><span class="mu">Сохраните пароль. Сменить его можно в кабинете: «Профиль».</span></div>';
+        }
+        $h .= '<a class="btn" href="' . esc_url($acc) . '">Перейти в кабинет</a><p class="mu sm">Ниже — анкета, как её увидит человек, который найдёт питомца.</p></div>';
+    } elseif ($own) {
         $h .= '<div class="own">' . petgo_tag_svg('eye') . '<span>Это ваш адресник. Так анкету видят те, кто отсканирует QR. Изменить — в приложении: питомец → «QR-адресник».</span></div>';
     }
     if (isset($_GET['ok'])) {
-        $h .= '<div class="okb">' . petgo_tag_svg('check') . '<span>Готово! Адресник привязан к питомцу ' . esc_html($name) . '.</span></div>';
+        $h .= '<div class="okb">' . petgo_tag_svg('check') . '<span>Готово! Адресник привязан к питомцу ' . esc_html($name) . '. <a class="lnk" href="' . esc_url($acc) . '">Перейти в кабинет</a></span></div>';
     }
     if ($o['lost']) {
         $h .= '<div class="lost"><b>Меня ищут!</b><span>Помогите мне вернуться домой — позвоните хозяину или отправьте, где я.</span></div>';
@@ -440,6 +592,7 @@ function petgo_tag_svg($n) {
         'pin'   => '<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
         'eye'   => '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
         'check' => '<circle cx="12" cy="12" r="8.5"/><path d="M8.2 12.3l2.6 2.6 5-5.2"/>',
+        'camera' => '<path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.3-2h5.2l1.3 2h1.6A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.5"/>',
     );
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . (isset($P[$n]) ? $P[$n] : '') . '</svg>';
 }
@@ -464,6 +617,11 @@ function petgo_tag_shell($title, $body, $code = '', $js = '') {
         . 'textarea{width:100%;margin-top:4px;padding:12px 14px;border:1px solid rgba(15,42,38,.14);border-radius:14px;font-size:16px;line-height:1.4;font-family:inherit;color:inherit;background:#F8FAF8;resize:vertical}textarea:focus{outline:2px solid #024C46;outline-offset:1px;border-color:transparent}'
         . '.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}.res{margin:10px 0 0;font-size:14.5px}.res.ok{color:#1E7A4C}.res.bad{color:#C63A2E}'
         . '.bind{margin-top:6px;text-align:left}.lbl{display:block;margin-bottom:8px}.pets{display:flex;flex-wrap:wrap;gap:8px}.pet input{position:absolute;opacity:0}.pet span{display:inline-flex;min-height:44px;align-items:center;padding:0 16px;border-radius:14px;background:#F1F4F2;font-weight:600;cursor:pointer}.pet input:checked+span{background:#024C46;color:#fff}.pet input:focus-visible+span{outline:2px solid #024C46;outline-offset:2px}'
+        . '.quick{display:flex;flex-direction:column;gap:12px}.fl{display:flex;flex-direction:column;gap:6px}.fl span{font-size:14px;font-weight:600;color:#3B4F4B}.fl input{width:100%;min-height:52px;padding:0 14px;border:1px solid rgba(15,42,38,.14);border-radius:14px;background:#F8FAF8;font-size:17px;font-family:inherit;color:inherit}.fl input:focus{outline:2px solid #024C46;outline-offset:1px;border-color:transparent}'
+        . '.phpick{position:relative;align-self:center;width:116px;height:116px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#E1F2E9 center/cover no-repeat;color:#024C46;cursor:pointer;border:3px solid #fff;box-shadow:0 6px 18px rgba(2,76,70,.16)}.phpick .phc svg{width:30px;height:30px}.phpick .pht{font-size:12.5px;font-weight:700}.phpick.has .phc,.phpick.has .pht{opacity:0}.phpick.has{margin-bottom:20px}.phpick.has::after{content:"Изменить";position:absolute;bottom:-26px;font-size:13px;font-weight:600;color:#024C46}.newpet{display:flex;flex-direction:column;gap:12px}.newpet[hidden]{display:none}'
+        . '.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:#F1F4F2}.seg input{position:absolute;opacity:0}.seg span{display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:11px;font-weight:600;cursor:pointer;color:#3B4F4B}.seg input:checked+span{background:#fff;color:#024C46;box-shadow:0 1px 3px rgba(15,42,38,.14)}.seg input:focus-visible+span{outline:2px solid #024C46}'
+        . '.quick .btn{margin-top:4px}.quick .sm{margin:0}.alt{margin:2px 0 0}.alt a,.welcome a.lnk{color:#024C46;font-weight:700}.lbl{display:block;font-weight:600}'
+        . '.welcome{text-align:center}.welcome .ok{width:58px;height:58px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:#1E9A5F;color:#fff}.welcome .ok svg{width:32px;height:32px}.pw{margin:12px 0 4px;padding:12px 14px;border-radius:16px;background:#F1F4F2;text-align:left;font-size:14.5px}.pw code{display:inline-block;margin:2px 0;padding:2px 8px;border-radius:8px;background:#fff;font:700 17px/1.4 ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.06em;color:#024C46}'
         . '.promo{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:20px;background:#024C46;color:#fff;text-decoration:none}.promo b{display:block;font-size:15px}.promo span{font-size:13.5px;opacity:.85}.promo i{margin-left:auto;font-style:normal;font-size:22px;opacity:.8}'
         . '.foot{text-align:center;font-size:12.5px;color:#6B7A77}'
         . '@media(prefers-reduced-motion:no-preference){.card,.lost{animation:up .4s cubic-bezier(.32,.72,0,1) both}@keyframes up{from{opacity:0;transform:translateY(8px)}}}'

@@ -4,7 +4,7 @@
    Стиль iPhone в цветах PetGo: крупные заголовки, сгруппированные списки, панель вкладок внизу на всю ширину.
    Плотные блоки без размытия. Светлая тема — кремовая с зелёным, тёмная — чёрная (как в iPhone) с зелёными акцентами. */
 
-.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar {
+.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar, .pgk-tour {
   --k-bg: #F2F0E3; --k-card: #FFFEF8; --k-card2: #F7F5EA; --k-tx: #10302C; --k-mu: #6E827E; --k-mu2: #A3B1AE;
   --k-line: rgba(16, 48, 44, .1); --k-fill: rgba(2, 76, 70, .06); --k-fill2: rgba(2, 76, 70, .11);
   --k-acc: #024C46; --k-acc-tx: #fff; --k-acci: #024C46;
@@ -17,7 +17,7 @@
   --k-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --sab: max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)); --sat: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
 }
-html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar {
+html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar, html.pgk-dark .pgk-tour {
   --k-bg: #000; --k-card: #1C1C1E; --k-card2: #2C2C2E; --k-tx: #F2F2F7; --k-mu: #8E8E93; --k-mu2: #5A5A5F;
   --k-line: rgba(255, 255, 255, .1); --k-fill: rgba(255, 255, 255, .07); --k-fill2: rgba(255, 255, 255, .12);
   --k-acc: #0E7A64; --k-acc-tx: #fff; --k-acci: #4CC38A;
@@ -752,20 +752,20 @@ html.pgk-dark .pg-layer .pg-sheet .pg-seg { background: rgba(255, 255, 255, .1);
    Движение — пружины Apple: нажатия, капля, смена вкладок; листание вкладок свайпом.
    Кнопки — без градиентов: ровный цвет и тонкий блик сверху.
    ============================================================ */
-.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar {
+.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar, .pgk-tour {
   --k-spring: cubic-bezier(.34, 1.36, .5, 1);
   --k-r: 22px;
   --k-glass: rgba(255, 255, 255, .48); --k-glass2: rgba(250, 249, 243, .8); --k-lens: rgba(255, 255, 255, .78);
   --k-rim: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .3), inset 0 0 0 .5px rgba(255, 255, 255, .55), inset 0 0 20px rgba(255, 255, 255, .2);
   --k-gsh: 0 16px 40px rgba(16, 48, 44, .16), 0 2px 6px rgba(16, 48, 44, .07);
 }
-html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar {
+html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar, html.pgk-dark .pgk-tour {
   --k-glass: rgba(44, 44, 47, .5); --k-glass2: rgba(26, 26, 28, .82); --k-lens: rgba(255, 255, 255, .14);
   --k-rim: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .06), inset 0 0 0 .5px rgba(255, 255, 255, .14);
   --k-gsh: 0 16px 40px rgba(0, 0, 0, .5), 0 2px 6px rgba(0, 0, 0, .3);
 }
 @supports (transition-timing-function: linear(0, 1)) {
-  .pgk, .pgk-auth, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar {
+  .pgk, .pgk-auth, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar, .pgk-tour {
     --k-spring: linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.9%, 1.061 23.2%, 1.075 26.5%, 1.066 30.2%, 1.039 35.4%, .995 45.8%, .985 52.4%, .999 66.6%, 1.002 79%, 1);
   }
 }
@@ -897,7 +897,7 @@ html.pgk-on .pgkb-pop::after { content: ""; position: absolute; left: 50%; top: 
    Нижняя панель — белая парящая плашка, по центру приподнятая зелёная лапка «Заказать».
    Кнопки — скруглённые прямоугольники, ровный цвет без теней и градиентов; вторая кнопка — контурная.
    ============================================================ */
-.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar {
+.pgk, .pgk-auth, .pgk-auth-alt, .pgk-sheet, .pgk-tabbar, .pgk-lb, .pgk-toast, .pgk-topbar, .pgk-tour {
   --k-bg: #F4F6F3; --k-card: #FFFFFF; --k-card2: #F4F6F3; --k-tx: #0F2A26; --k-mu: #6B7A77; --k-mu2: #A9B4B1;
   --k-line: rgba(15, 42, 38, .08); --k-fill: rgba(2, 76, 70, .05); --k-fill2: rgba(2, 76, 70, .09);
   --k-acc: #024C46; --k-acc-tx: #fff; --k-acci: #0B6B5C;
@@ -908,7 +908,7 @@ html.pgk-on .pgkb-pop::after { content: ""; position: absolute; left: 50%; top: 
   --k-glass2: rgba(244, 246, 243, .9);
   --k-star: #F5A623; --k-heart: #FF4D67;
 }
-html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar {
+html.pgk-dark .pgk, html.pgk-dark .pgk-auth, html.pgk-dark .pgk-auth-alt, html.pgk-dark .pgk-sheet, html.pgk-dark .pgk-tabbar, html.pgk-dark .pgk-toast, html.pgk-dark .pgk-topbar, html.pgk-dark .pgk-tour {
   --k-bg: #0B0D0C; --k-card: #171A19; --k-card2: #202423; --k-tx: #F1F4F2; --k-mu: #8D9893; --k-mu2: #56605C;
   --k-line: rgba(255, 255, 255, .08); --k-fill: rgba(255, 255, 255, .06); --k-fill2: rgba(255, 255, 255, .1);
   --k-acc: #3DCB8F; --k-acc-tx: #052418; --k-acci: #4FD6A0;
@@ -1382,3 +1382,30 @@ html.pgk-dark .pgk-chat-wa { color: #4CC38A; }
 .pgk-tgs .pgk-f > span { width: 64px; }
 .pgk-tgs .pgk-f input { font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
 .pgk-tgs-h { margin: -4px 16px 0; font-size: 13px; color: var(--k-mu); }
+
+/* ============ 40.5: знакомство с кабинетом (подсказки при первом входе) ============ */
+html.pgk-touring, html.pgk-touring body { overflow: hidden; }
+.pgk-tour { position: fixed; inset: 0; z-index: 10050; cursor: pointer; opacity: 0; transition: opacity 220ms ease; -webkit-tap-highlight-color: transparent; }
+.pgk-tour.on { opacity: 1; }
+.pgk-tour-hole { position: fixed; left: 50%; top: 50%; width: 0; height: 0; border-radius: 20px; box-shadow: 0 0 0 200vmax rgba(8, 20, 18, .66); outline: 2px solid rgba(255, 255, 255, .9); outline-offset: 2px; pointer-events: none; transition: left 360ms cubic-bezier(.32, .72, 0, 1), top 360ms cubic-bezier(.32, .72, 0, 1), width 360ms cubic-bezier(.32, .72, 0, 1), height 360ms cubic-bezier(.32, .72, 0, 1), border-radius 360ms ease; }
+.pgk-tour-card { position: fixed; left: 16px; right: 16px; max-width: 420px; margin: 0 auto; padding: 18px 18px 14px; border-radius: 24px; background: var(--k-card); color: var(--k-tx); box-shadow: 0 18px 50px rgba(0, 0, 0, .28); cursor: default; opacity: 0; transform: translateY(8px); transition: opacity 220ms ease, transform 300ms cubic-bezier(.32, .72, 0, 1); }
+.pgk-tour-card.in { opacity: 1; transform: none; }
+.pgk-tour-card b { display: block; font: 700 20px/1.2 var(--k-font); letter-spacing: -.01em; }
+.pgk-tour-card p { margin: 6px 0 14px; font: 400 16px/1.45 var(--k-font); color: var(--k-mu); }
+.pgk-tour-dots { display: flex; gap: 5px; margin-bottom: 10px; }
+.pgk-tour-dots i { width: 6px; height: 6px; border-radius: 3px; background: var(--k-fill2); transition: width 250ms ease, background-color 250ms ease; }
+.pgk-tour-dots i.on { width: 18px; background: var(--k-acc); }
+.pgk-tour-acts { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pgk-tour-skip.pg-b { min-height: 44px; padding: 0 6px; border: 0; background: none; color: var(--k-mu); font: 500 16px/1 var(--k-font); cursor: pointer; }
+.pgk-tour-skip[hidden] { display: none; }
+.pgk-tour-next.pg-b { min-width: 120px; margin-left: auto; }
+.pgk-tour-skip[hidden] + .pgk-tour-next.pg-b { flex: 1; }
+@media (prefers-reduced-motion: reduce) { .pgk-tour, .pgk-tour-hole, .pgk-tour-card { transition: none; } }
+
+/* ============ 40.5: договор — стрелка «назад» слева, «Скачать» справа ============ */
+.pgk-sheet-ct .pgk-sh { position: relative; }
+.pgk-ct-back.pg-b { flex: none; width: 40px; height: 40px; margin: 0 4px 0 -6px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; background: var(--k-fill); color: var(--k-tx); cursor: pointer; }
+.pgk-ct-back .pg-i { width: 22px; height: 22px; }
+.pgk-ct-hdl.pg-b { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--k-mint); color: var(--k-acci); font: 600 15px/1 var(--k-font); cursor: pointer; }
+.pgk-ct-hdl .pg-i { width: 18px; height: 18px; }
+.pgk-ct-hdl[aria-busy] { opacity: .6; }

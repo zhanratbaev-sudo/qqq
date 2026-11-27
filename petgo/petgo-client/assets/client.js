@@ -111,6 +111,7 @@
     if (!s) return null;
     if (stack.indexOf(s) > -1) return s;
     if (id !== "petp") act("s", id);
+    if (id === "ct") { var dl = $("[data-k-ct-dl]", s); if (dl) ctFetch(dl.getAttribute("data-k-ct-dl")).catch(function () {}); }
     if (W.PGCloseAI) W.PGCloseAI();
     s.style.zIndex = String(9996 + stack.length);
     s.inert = false;
@@ -508,6 +509,135 @@
       var tp = D.getElementById("pgk-pp-" + pid); if (tp) tp.innerHTML = j.h;
     }).catch(function () {});
   }
+  /* ============================================================
+     40.5: ЗНАКОМСТВО С КАБИНЕТОМ — подсказки по экрану при первом входе.
+     «Далее» или нажатие в любом месте экрана — следующая подсказка; «Пропустить» — закрыть
+     ============================================================ */
+  var TOUR = { i: 0, el: null, auto: false };
+  var TOURS = [
+    { t: "Добро пожаловать в My PetGo!", x: "Покажем, что где — это займёт полминуты. Нажимайте «Далее» или в любом месте экрана.", top: 1 },
+    { s: "[data-k-notifs]", t: "Уведомления", x: "Здесь всё о заказах: няня пришла, забрала питомца, вернула домой — с фото и отчётом.", top: 1 },
+    { s: ".pgk-svc3", t: "Услуги", x: "Выгул, визит домой или неделя визитов — нажмите, чтобы записаться." },
+    { s: ".pgk-pets", t: "Мои питомцы", x: "Анкета, фото, прогулки и QR-адресник каждого питомца." },
+    { s: ".pgk-tabbar .pgk-tb-paw", t: "Заказать", x: "Лапка — быстрый заказ: питомец, день и время за минуту." },
+    { s: '.pgk-tabbar [data-k-tab="map"]', t: "Карта", x: "Где сейчас питомец на прогулке и весь маршрут." },
+    { s: '.pgk-tabbar [data-k-open="chat"]', t: "Сообщения", x: "Помощник PetGo ответит на вопросы и поможет записаться." },
+    { s: '.pgk-tabbar [data-k-tab="acc"]', t: "Профиль", x: "Ваши данные, договор, уведомления и настройки." },
+    { t: "Готово!", x: "Можно заказывать первую прогулку. Хороших прогулок!", top: 1, last: 1 }
+  ];
+  function tourVis(st) {
+    if (!st.s) return null;
+    var e = $(st.s);
+    if (!e) return null;
+    var r = e.getBoundingClientRect();
+    return r.width > 4 && r.height > 4 ? e : null;
+  }
+  function tourStart(manual) {
+    if (TOUR.el || !K) return;
+    if (stack.length) { if (!manual) setTimeout(function () { tourStart(false); }, 1200); else kClose(true); if (!manual) return; }
+    TOUR.auto = !manual; TOUR.i = 0;
+    if (CL.tab !== "home") tab("home", { force: true });
+    var o = D.createElement("div");
+    o.className = "pgk-tour"; o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true"); o.setAttribute("aria-label", T("Знакомство с кабинетом"));
+    o.innerHTML = '<i class="pgk-tour-hole"></i><div class="pgk-tour-card" aria-live="polite"><div class="pgk-tour-dots"></div><b></b><p></p><div class="pgk-tour-acts"><button type="button" class="pg-b pgk-tour-skip">' + esc(T("Пропустить")) + '</button><button type="button" class="pg-b pgk-btn pgk-btn-p pgk-tour-next">' + esc(T("Далее")) + "</button></div></div>";
+    (D.getElementById("pg-layer") || D.body).appendChild(o);
+    TOUR.el = o;
+    D.documentElement.classList.add("pgk-touring");
+    o.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      if (e.target.closest(".pgk-tour-skip")) tourEnd(); else tourNext();
+    });
+    o.addEventListener("touchmove", function (e) { e.preventDefault(); }, { passive: false });
+    requestAnimationFrame(function () { o.classList.add("on"); tourShow(); });
+  }
+  function tourNext() {
+    var n = TOUR.i + 1;
+    while (n < TOURS.length && TOURS[n].s && !$(TOURS[n].s)) n++;
+    if (n >= TOURS.length || TOURS[TOUR.i].last) return tourEnd();
+    TOUR.i = n; tourShow();
+  }
+  function tourShow() {
+    var o = TOUR.el; if (!o) return;
+    var st = TOURS[TOUR.i], hole = $(".pgk-tour-hole", o), card = $(".pgk-tour-card", o);
+    $("b", card).textContent = T(st.t); $("p", card).textContent = T(st.x);
+    $(".pgk-tour-next", card).textContent = T(st.last ? "Начать" : "Далее");
+    $(".pgk-tour-skip", card).hidden = !!st.last;
+    var total = TOURS.length, dots = "";
+    for (var k = 0; k < total; k++) dots += '<i class="' + (k === TOUR.i ? "on" : "") + '"></i>';
+    $(".pgk-tour-dots", card).innerHTML = dots;
+    card.classList.remove("in"); void card.offsetWidth;
+    var e = st.s ? $(st.s) : null;
+    var fixed = e && e.closest(".pgk-tabbar");
+    var wait = 0;
+    if (st.top && scrollY() > 4) { scrollToY(0, true); wait = 380; }
+    else if (e && !fixed) {
+      var r0 = e.getBoundingClientRect(), vh = W.innerHeight, want = Math.max(0, scrollY() + r0.top - vh * 0.3);
+      if (r0.top < 70 || r0.bottom > vh - 230) { scrollToY(want, true); wait = 420; }
+    }
+    setTimeout(function () {
+      if (!TOUR.el) return;
+      var vh = W.innerHeight, vw = W.innerWidth, el = tourVis(st);
+      if (el) {
+        var r = el.getBoundingClientRect(), pad = 8, rad = Math.min(24, (r.height + pad * 2) / 2);
+        hole.style.cssText = "left:" + (r.left - pad) + "px;top:" + (r.top - pad) + "px;width:" + (r.width + pad * 2) + "px;height:" + (r.height + pad * 2) + "px;border-radius:" + rad + "px";
+        var ch = card.offsetHeight || 170, below = r.bottom + pad + 14;
+        if (below + ch < vh - 16) { card.style.top = below + "px"; card.style.bottom = ""; }
+        else { card.style.top = ""; card.style.bottom = (vh - r.top + pad + 14) + "px"; }
+      } else {
+        hole.style.cssText = "left:" + (vw / 2) + "px;top:" + (vh / 2) + "px;width:0;height:0;border-radius:0";
+        card.style.bottom = ""; card.style.top = Math.max(16, (vh - (card.offsetHeight || 170)) / 2) + "px";
+      }
+      card.classList.add("in");
+    }, wait);
+  }
+  function tourEnd() {
+    var o = TOUR.el; if (!o) return;
+    TOUR.el = null;
+    o.classList.remove("on");
+    D.documentElement.classList.remove("pgk-touring");
+    setTimeout(function () { o.remove(); }, 260);
+    scrollToY(0, true);
+    if (K.tour) { K.tour = 0; api("tour_done").catch(function () {}); }
+    if (TOUR.auto) setTimeout(pushAsk, 700);
+  }
+  D.addEventListener("keydown", function (e) {
+    if (!TOUR.el) return;
+    if (e.key === "Escape") { e.preventDefault(); tourEnd(); }
+    else if (e.key === "ArrowRight" || e.key === "Enter" || e.key === " ") { e.preventDefault(); tourNext(); }
+  }, true);
+
+  /* 40.5: договор — «Скачать» вверху справа. Файл берём заранее (когда открыт лист), чтобы меню «Поделиться» открылось сразу */
+  var CTF = { url: "", blob: null, p: null, sig: "" };
+  function ctSig() { var r = $("[data-k-ctroot]"), d = $("[data-k-ct-done]"); return (r ? r.getAttribute("data-st") : "") + "|" + (d && !d.hidden ? 1 : 0); }
+  function ctFetch(url) {
+    if (CTF.url === url && CTF.sig === ctSig() && (CTF.blob || CTF.p)) return CTF.p || Promise.resolve(CTF.blob);
+    CTF.url = url; CTF.blob = null; CTF.sig = ctSig();
+    CTF.p = fetch(url, { credentials: "same-origin" }).then(function (r) { if (!r.ok) throw new Error("dl"); var cd = r.headers.get("Content-Disposition") || "", m = cd.match(/filename="([^"]+)"/); CTF.name = m ? m[1] : "dogovor-petgo.pdf"; return r.blob(); })
+      .then(function (b) { CTF.blob = b; CTF.p = null; return b; }, function (e) { CTF.p = null; throw e; });
+    return CTF.p;
+  }
+  function ctDownload(btn) {
+    var url = btn.getAttribute("data-k-ct-dl");
+    function give(b) {
+      var name = CTF.name || "dogovor-petgo.pdf", f = null;
+      try { f = new File([b], name, { type: "application/pdf" }); } catch (x) {}
+      var mob = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (f && mob && navigator.canShare && navigator.share && navigator.canShare({ files: [f] })) {
+        return navigator.share({ files: [f], title: name }).catch(function (er) { if (!er || er.name !== "AbortError") save(b, name); });
+      }
+      save(b, name);
+    }
+    function save(b, name) {
+      var u = URL.createObjectURL(b), a = D.createElement("a");
+      a.href = u; a.download = name; a.style.display = "none"; D.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+      toast(T("Договор скачан"));
+    }
+    if (CTF.url === url && CTF.blob && CTF.sig === ctSig()) return give(CTF.blob);
+    btn.disabled = true; btn.setAttribute("aria-busy", "true");
+    ctFetch(url).then(give).catch(function () { toast(T("Не получилось скачать. Попробуйте ещё раз."), true); }).then(function () { btn.disabled = false; btn.removeAttribute("aria-busy"); });
+  }
+
   /* 40.3: QR-адресник питомца — привязать по коду, отвязать, настройки анкеты для нашедшего */
   var TG = { pet: 0 };
   function tgFmt(v) { v = String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); return v.length > 4 ? v.slice(0, 4) + "-" + v.slice(4) : v; }
@@ -1423,7 +1553,7 @@
     CL.soon = !!K.soon;
     /* приветствие по часам телефона */
     var hel = $("[data-k-hello]");
-    if (hel) { var hr = new Date().getHours(); hel.textContent = T(hr >= 5 && hr < 12 ? "Доброе утро," : hr >= 12 && hr < 17 ? "Добрый день," : hr >= 17 && hr < 23 ? "Добрый вечер," : "Доброй ночи,"); }
+    if (hel) { var hr = new Date().getHours(); hel.textContent = T(hr >= 5 && hr < 12 ? "Доброе утро," : hr >= 12 && hr < 17 ? "Добрый день," : hr >= 17 && hr < 23 ? "Добрый вечер," : "Доброй ночи,"); if (hel.closest(".noname")) hel.textContent = hel.textContent.replace(/,\s*$/, "!"); }
     live();
     /* 40.3: клиент отсканировал новый адресник до входа — приложение само предлагает привязать */
     if (K.tagc) afterBoot(function () {
@@ -1445,6 +1575,8 @@
       }, 1400);
     }
     /* 39.2: тестовая неделя — после первого завершённого заказа один раз просим оценить PetGo */
+    /* 40.5: первый вход — сначала знакомство с кабинетом, предложение уведомлений — после него */
+    else if (K.tour) afterBoot(function () { tourStart(false); }, 800);
     else if (!(K.test && K.test.ask && !K.test.fb)) afterBoot(pushAsk, 900);
     if (!K.rv && K.test && K.test.ask && !K.test.fb) afterBoot(function () {
       if (stack.length || !$("#pgk-fb")) return;
@@ -1952,6 +2084,8 @@
     if ((b = t.closest("[data-k-ct-cancel]"))) { e.preventDefault(); ctBack(""); return; }
     if ((b = t.closest("[data-k-ct-redo]"))) { e.preventDefault(); var cf = ctForm(), cd = $("[data-k-ct-done]"); if (cf) { cf.hidden = false; if (cd) cd.hidden = true; var ag = $(".pgk-ct-agree", cf), ab = $("[data-k-ct-click]", cf); if (ag) ag.hidden = true; if (ab) ab.hidden = true; } setTimeout(ctPrep, 300); return; }
     if ((b = t.closest("[data-k-ct]"))) { e.preventDefault(); ctOpen(); return; }
+    if ((b = t.closest("[data-k-ct-dl]"))) { e.preventDefault(); ctDownload(b); return; }
+    if ((b = t.closest("[data-k-tour]"))) { e.preventDefault(); tourStart(true); return; }
     if ((b = t.closest("[data-k-tg-add]"))) { e.preventDefault(); tgOpen(+b.getAttribute("data-k-tg-add")); return; }
     if ((b = t.closest("[data-k-tg-del]"))) { e.preventDefault(); tgDel(b); return; }
     if ((b = t.closest("[data-tg-pet]"))) { e.preventDefault(); TG.pet = +b.getAttribute("data-tg-pet"); qa("[data-tg-pet]").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(on)); }); return; }

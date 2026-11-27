@@ -93,7 +93,9 @@ function petgo_cl_home38_top($u, $hi) {
     /* 39.4: «Алматы +5° облачно» и подсказка по погоде с именем питомца вместо постоянной фразы */
     $wx = function_exists('petgo_wx_tip') ? petgo_wx_tip((int) $u->ID) : null;
     $h  = '<div class="pgk-top"><span class="pgk-city">' . petgo_cl_icon('pin') . (function_exists('petgo_wx_city_html') ? petgo_wx_city_html((int) $u->ID) : esc_html($L('Алматы'))) . '</span><button type="button" class="pg-b pgk-bell" data-k-notifs aria-label="' . esc_attr($L('Уведомления')) . '">' . petgo_cl_ic('bell') . '<i class="pgk-bell-dot" data-k-bell hidden></i></button></div>';
-    $h .= '<header class="pgk-hd pgk-hello" data-title="' . esc_attr($first[0]) . '"><h1><span data-k-hello>' . esc_html($L($hi)) . '</span><br>' . esc_html($first[0]) . ' <span class="pgk-wave" aria-hidden="true">👋</span></h1><p' . ($wx ? ' class="pgk-wx-tip"' : '') . '>' . esc_html($wx ? $wx['tip'] : $L('Лучший уход для вашего питомца')) . '</p></header>';
+    /* 40.5: кабинет создан по адреснику и имени ещё нет — «Добрый день! 👋» без имени */
+    $nn = (bool) get_user_meta($u->ID, 'petgo_noname', true);
+    $h .= '<header class="pgk-hd pgk-hello' . ($nn ? ' noname' : '') . '" data-title="' . esc_attr($nn ? 'PetGo' : $first[0]) . '"><h1><span data-k-hello>' . esc_html($nn ? rtrim($L($hi), ',') . '!' : $L($hi)) . '</span>' . ($nn ? ' ' : '<br>' . esc_html($first[0]) . ' ') . '<span class="pgk-wave" aria-hidden="true">👋</span></h1><p' . ($wx ? ' class="pgk-wx-tip"' : '') . '>' . esc_html($wx ? $wx['tip'] : $L('Лучший уход для вашего питомца')) . '</p></header>';
     /* 39.1: тестовая неделя — полоса под приветствием */
     $h .= function_exists('petgo_tw_ribbon') ? petgo_tw_ribbon() : '';
     $h .= '<div class="pgk-search"><button type="button" class="pg-b pgk-sbar" data-k-nannies="search">' . petgo_cl_ic('search') . '<span>' . esc_html($L('Поиск няни…')) . '</span></button><button type="button" class="pg-b pgk-sfilt" data-k-nfilter aria-label="' . esc_attr($L('Сортировка')) . '">' . petgo_cl_ic('sliders') . '</button></div>';

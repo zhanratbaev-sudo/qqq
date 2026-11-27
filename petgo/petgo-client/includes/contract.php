@@ -249,6 +249,20 @@ function petgo_ct_download() {
     $me  = get_current_user_id();
     $uid = isset($_GET['u']) ? (int) $_GET['u'] : 0;
     $f   = isset($_GET['f']) ? sanitize_key(wp_unslash($_GET['f'])) : 'pdf';
+    /* 40.5: «Скачать» в листе договора — подписанный договор, а если ещё не подписан — проект с данными клиента */
+    if ($f === 'auto') {
+        if (!$me || !wp_verify_nonce(isset($_GET['n']) ? sanitize_text_field(wp_unslash($_GET['n'])) : '', 'petgo_ct_file') || ($uid !== $me && !(function_exists('petgo_can') && petgo_can('office')))) {
+            status_header(403);
+            exit('403');
+        }
+        $r = petgo_ct_get($uid);
+        if ($r && !empty($r['pdf']) && ($p = petgo_ct_path($r['pdf'])) && is_file($p)) {
+            petgo_ct_send(file_get_contents($p), 'dogovor-petgo-' . preg_replace('/[^A-Za-z0-9-]/', '-', $r['no']) . '.pdf', 'application/pdf');
+        }
+        $u = get_userdata($uid);
+        $d = petgo_ct_data($uid, ($u && !get_user_meta($uid, 'petgo_noname', true)) ? $u->display_name : '', false, false, 'egov');
+        petgo_ct_send(petgo_ct_pdf($d), 'dogovor-petgo-proekt.pdf', 'application/pdf');
+    }
     if (!$me || !wp_verify_nonce(isset($_GET['n']) ? sanitize_text_field(wp_unslash($_GET['n'])) : '', 'petgo_ct_file')) {
         status_header(403);
         exit('403');
@@ -683,7 +697,7 @@ function petgo_ct_sheet_html($uid) {
     $L   = 'petgo_site_l';
     $u   = get_userdata($uid);
     $r   = petgo_ct_get($uid);
-    $d   = petgo_ct_data($uid, $r ? $r['name'] : ($u ? $u->display_name : ''), $r ? $r['vet'] === '1' : false, $r ? $r['photo'] === '1' : false, 'egov');
+    $d   = petgo_ct_data($uid, $r ? $r['name'] : (($u && !get_user_meta($uid, 'petgo_noname', true)) ? $u->display_name : ''), $r ? $r['vet'] === '1' : false, $r ? $r['photo'] === '1' : false, 'egov');
     $ck  = '<i aria-hidden="true">' . petgo_cl_icon('check') . '</i>';
     $h   = '<div class="pgk-ct" data-k-ctroot data-st="' . esc_attr($r ? $r['st'] : 'none') . '">';
     if ($r) {
@@ -735,7 +749,11 @@ add_filter('petgo_cl_sheets', function ($h, $uid) {
     if (!petgo_ct_ready() && !petgo_ct_get($uid)) {
         return $h;
     }
-    return $h . petgo_cl_sheet('ct', petgo_site_l('Договор'), petgo_ct_sheet_html($uid), '', 'pgk-sheet-tall pgk-sheet-ct');
+    /* 40.5: вверху слева — стрелка «назад», справа — «Скачать» (подписанный договор или проект с вашими данными) */
+    $sh = petgo_cl_sheet('ct', petgo_site_l('Договор'), petgo_ct_sheet_html($uid), '', 'pgk-sheet-tall pgk-sheet-ct');
+    $sh = preg_replace('#<button type="button" class="pg-b pgk-x" data-k-close[^>]*>.*?</button>#s', '<button type="button" class="pg-b pgk-ct-hdl" data-k-ct-dl="' . esc_url(petgo_ct_file_url($uid, 'auto')) . '" aria-label="' . esc_attr(petgo_site_l('Скачать договор')) . '"><svg class="pg-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span>' . esc_html(petgo_site_l('Скачать')) . '</span></button>', $sh, 1);
+    $sh = str_replace('<i class="pgk-grab" aria-hidden="true"></i>', '<i class="pgk-grab" aria-hidden="true"></i><button type="button" class="pg-b pgk-ct-back" data-k-close aria-label="' . esc_attr(petgo_site_l('Назад')) . '">' . petgo_cl_ic('back') . '</button>', $sh);
+    return $h . $sh;
 }, 10, 2);
 add_filter('petgo_cl_cfg', function ($cfg, $uid) {
     $r         = petgo_ct_get($uid);
