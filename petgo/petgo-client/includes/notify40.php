@@ -73,14 +73,20 @@ function petgo_cl_nt_icon($kind, $b) {
     return $kind === 'loc' ? 'pin' : 'bell';
 }
 add_action('petgo_cl_sys_sent', function ($uid, $body, $kind, $subj, $mid) {
-    if (!function_exists('petgo_push_notify') || !in_array($kind, array('sys', 'loc', 'rv'), true)) {
+    if (!function_exists('petgo_push_notify') || !in_array($kind, array('sys', 'loc', 'rv', 'tag'), true)) {
         return;
     }
     list($t, $x) = petgo_cl_nt_split($body);
-    petgo_push_notify(array((int) $uid), $t, $x !== '' ? $x : 'PetGo', petgo_site_url('account') . '#home', 'n' . (int) $mid);
+    /* 40.3: нашли питомца по адреснику — нажатие на уведомление сразу открывает карту */
+    $map = $kind === 'tag' ? petgo_cl_tag_map((int) $uid, (int) $mid) : '';
+    petgo_push_notify(array((int) $uid), $t, $x !== '' ? $x : 'PetGo', $map !== '' ? $map : petgo_site_url('account') . '#home', 'n' . (int) $mid);
 }, 10, 5);
 
 /* список уведомлений клиента: только статусы (не ответы помощника) */
+function petgo_cl_tag_map($uid, $mid) {
+    $m = get_user_meta((int) $uid, 'petgo_tagf', true);
+    return (is_array($m) && isset($m[$mid]) && function_exists('petgo_tag_maps')) ? petgo_tag_maps($m[$mid][0], $m[$mid][1]) : '';
+}
 function petgo_cl_notifs40($uid, $n = 60) {
     global $wpdb;
     $cid = function_exists('petgo_cl_chat') ? petgo_cl_chat($uid, false) : 0;
@@ -89,10 +95,11 @@ function petgo_cl_notifs40($uid, $n = 60) {
     }
     $o  = array();
     $tz = petgo_tz();
-    foreach ((array) $wpdb->get_results($wpdb->prepare('SELECT id, kind, body, subject_id, ts FROM ' . petgo_tb('msgs') . " WHERE chat_id=%d AND user_id=0 AND kind IN ('sys','loc','rv') ORDER BY id DESC LIMIT %d", $cid, (int) $n)) as $r) {
+    foreach ((array) $wpdb->get_results($wpdb->prepare('SELECT id, kind, body, subject_id, ts FROM ' . petgo_tb('msgs') . " WHERE chat_id=%d AND user_id=0 AND kind IN ('sys','loc','rv','tag') ORDER BY id DESC LIMIT %d", $cid, (int) $n)) as $r) {
         list($t, $x) = petgo_cl_nt_split($r->body);
+        $map = $r->kind === 'tag' ? petgo_cl_tag_map($uid, (int) $r->id) : '';
         $o[] = array(
-            'id' => (int) $r->id, 'k' => (string) $r->kind, 't' => $t, 'x' => $x, 'ic' => petgo_cl_nt_icon((string) $r->kind, $r->body),
+            'id' => (int) $r->id, 'k' => (string) $r->kind, 't' => $t, 'x' => $x, 'ic' => $r->kind === 'tag' ? ($map !== '' ? 'pin' : 'qr') : petgo_cl_nt_icon((string) $r->kind, $r->body), 'map' => $map,
             's' => (int) $r->subject_id, 'pid' => $r->kind === 'loc' ? (int) petgo_o((int) $r->subject_id, 'pet') : 0,
             'rv' => ($r->kind === 'rv' && (int) $r->subject_id && function_exists('petgo_rv_by_order') && petgo_rv_by_order((int) $r->subject_id)) ? (int) petgo_rv_by_order((int) $r->subject_id)->rating : 0,
             'dl' => wp_date('d.m.Y', (int) $r->ts, $tz), 'tm' => wp_date('H:i', (int) $r->ts, $tz),

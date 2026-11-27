@@ -431,7 +431,7 @@ function petgo_cl_ai_reply($uid) {
             return false;
         }
         /* 40.0: статусы заказов живут в «Уведомлениях», в разговор с помощником не идут */
-        if ($r->body === '' || in_array((string) $r->kind, array('sys', 'loc', 'rv'), true)) {
+        if ($r->body === '' || in_array((string) $r->kind, array('sys', 'loc', 'rv', 'tag'), true)) {
             continue;
         }
         $msgs[] = array('role' => $from === (int) $uid ? 'user' : 'model', 'text' => (string) $r->body);

@@ -100,7 +100,7 @@
     function nextLang() { return langs[(langs.indexOf(lang) + 1) % langs.length]; }
     function render() {
       /* 34.2: везде только эта клавиатура — кнопки «Системная клавиатура» нет (o.noSys) */
-      var h = '<div class="pgkb-top">' + (o.noSys ? '<span class="pgkb-t pgkb-tl">' + (NAMES[lang] || "") + "</span>" : '<button type="button" tabindex="-1" class="pgkb-t" data-a="sys">' + T("Системная клавиатура") + "</button>") + '<button type="button" tabindex="-1" class="pgkb-t pgkb-done" data-a="done">' + T("Готово") + "</button></div>";
+      var h = '<div class="pgkb-top">' + (o.noSys ? '<span class="pgkb-t pgkb-tl">' + (NAMES[NAMES[mode] ? mode : lang] || "") + "</span>" : '<button type="button" tabindex="-1" class="pgkb-t" data-a="sys">' + T("Системная клавиатура") + "</button>") + '<button type="button" tabindex="-1" class="pgkb-t pgkb-done" data-a="done">' + T("Готово") + "</button></div>";
       if (mode === "num") {
         var dec = cur && cur.type !== "tel";
         h += '<div class="pgkb-num">';
@@ -352,7 +352,9 @@
 
     function show(f) {
       cur = f; capsLock = false;
-      mode = isNum(f) ? "num" : (f.type === "email" || f.type === "url" ? "en" : lang);
+      /* 40.3: поле может попросить свою раскладку (код адресника — латиница): data-kb-lang="en" */
+      var fl = f.getAttribute("data-kb-lang");
+      mode = isNum(f) ? "num" : (f.type === "email" || f.type === "url" ? "en" : (fl && LAYOUTS[fl] ? fl : lang));
       shift = caps();
       clearTimeout(hideT);
       el.hidden = false;

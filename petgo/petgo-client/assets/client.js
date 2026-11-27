@@ -478,6 +478,52 @@
       var tp = D.getElementById("pgk-pp-" + pid); if (tp) tp.innerHTML = j.h;
     }).catch(function () {});
   }
+  /* 40.3: QR-адресник питомца — привязать по коду, отвязать, настройки анкеты для нашедшего */
+  var TG = { pet: 0 };
+  function tgFmt(v) { v = String(v || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8); return v.length > 4 ? v.slice(0, 4) + "-" + v.slice(4) : v; }
+  function tgOpen(pid, code) {
+    var s = kOpen("tag"); if (!s) return;
+    var pets = K.pets || [];
+    TG.pet = pid || (TG.pet && petOf(TG.pet) ? TG.pet : (pets.length ? pets[0].id : 0));
+    var box = $("[data-k-tg-pets]", s), inp = $("[data-k-tg-code]", s);
+    if (box) {
+      box.hidden = pets.length < 2 && !!TG.pet;
+      box.innerHTML = pets.map(function (p) { var on = TG.pet === p.id; return '<button type="button" class="pg-b pgk-bk-pet' + (on ? " on" : "") + '" data-tg-pet="' + p.id + '" role="radio" aria-checked="' + on + '">' + avHtml(p) + "<span>" + esc(p.name) + "</span></button>"; }).join("");
+    }
+    if (inp) { inp.value = tgFmt(code || ""); if (!code) setTimeout(function () { try { inp.focus(); } catch (x) {} }, 380); }
+  }
+  function tgBind(btn) {
+    var s = D.getElementById("pgk-tag"), inp = s && $("[data-k-tg-code]", s), code = inp ? inp.value : "";
+    if (!TG.pet) { toast(T("Сначала добавьте питомца"), true); return; }
+    if (tgFmt(code).length !== 9) { toast(T("Код — 8 букв и цифр, например ABCD-2345"), true); if (inp) inp.focus(); return; }
+    btn.disabled = true;
+    api("tag_bind", { pet: TG.pet, code: code }).then(function (j) {
+      btn.disabled = false;
+      if (!j.ok) { toast(j.msg || T("Не получилось — проверьте интернет."), true); return; }
+      K.tagc = "";
+      var pid = TG.pet, inPet = stack.some(function (x) { return x.id === "pgk-petp"; });
+      kClose(); toast(T("Адресник привязан"));
+      setTimeout(function () { petPage(pid); }, inPet ? 120 : 280);
+    }).catch(function () { btn.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
+  }
+  function tgDel(b) {
+    var code = b.getAttribute("data-k-tg-del"), box = b.closest("[data-k-tg-pet]"), pid = box ? +box.getAttribute("data-k-tg-pet") : 0;
+    if (!W.confirm(T("Отвязать адресник %s? Анкета по этому QR больше не откроется.").replace("%s", tgFmt(code)))) return;
+    b.disabled = true;
+    api("tag_unbind", { code: code }).then(function (j) {
+      if (!j.ok) { b.disabled = false; toast(j.msg || "", true); return; }
+      toast(T("Адресник отвязан")); petPage(j.pet || pid);
+    }).catch(function () { b.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
+  }
+  function tgOpt(el) {
+    var box = el.closest("[data-k-tg-pet]"); if (!box) return;
+    var k = el.getAttribute("data-k-tg-opt") || "note", v = k === "note" ? el.value : (el.checked ? "1" : "0");
+    if (k === "lost") { var row = el.closest(".pgk-tg-lost"); if (row) row.classList.toggle("on", el.checked); }
+    api("tag_opt", { pet: box.getAttribute("data-k-tg-pet"), k: k, v: v }).then(function (j) {
+      if (!j.ok) { if (k !== "note") el.checked = !el.checked; toast(j.msg || T("Не получилось — проверьте интернет."), true); return; }
+      toast(k === "note" ? T("Записка сохранена") : k === "lost" ? (el.checked ? T("Отмечено: питомец потерялся. На анкете — «Меня ищут!»") : T("Хорошо, что нашёлся!")) : T("Сохранено"));
+    }).catch(function () { if (k !== "note") el.checked = !el.checked; toast(T("Не получилось — проверьте интернет."), true); });
+  }
   function avHtml(p, cls) { return '<span class="pgk-av' + (cls ? " " + cls : "") + '">' + (p && p.av ? '<img src="' + esc(p.av) + '" alt="">' : "<b>" + esc(((p && (p.name || "")) || "?").charAt(0).toUpperCase()) + "</b>") + "</span>"; }
 
   /* ============================================================
@@ -1347,6 +1393,12 @@
     var hel = $("[data-k-hello]");
     if (hel) { var hr = new Date().getHours(); hel.textContent = T(hr >= 5 && hr < 12 ? "Доброе утро," : hr >= 12 && hr < 17 ? "Добрый день," : hr >= 17 && hr < 23 ? "Добрый вечер," : "Доброй ночи,"); }
     live();
+    /* 40.3: клиент отсканировал новый адресник до входа — приложение само предлагает привязать */
+    if (K.tagc) afterBoot(function () {
+      if (stack.length) return;
+      if (K.pets && K.pets.length) tgOpen(0, K.tagc);
+      else toast(T("Добавьте питомца — потом привяжите адресник"));
+    }, 650);
     /* няня уже у двери, когда клиент открыл кабинет — QR сразу на экране */
     if (K.door && K.door.length) afterBoot(function () { doorCheck(K.door); }, 450);
     /* прогулка завершилась — кабинет сам предлагает оценить няню (один раз) */
@@ -1728,10 +1780,12 @@
     x: '<circle cx="12" cy="12" r="8.5"/><path d="M9 9l6 6M15 9l-6 6"/>',
     pin: '<path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
     star: '<path d="M12 3.8l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.8l-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>',
-    bell: '<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7.5 2 7.5H4S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/>'
+    bell: '<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7.5 2 7.5H4S6 15 6 9"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+    qr: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.2"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.2"/><path d="M14 14h3v3M20.5 14v.01M14 20.5h3M20.5 17.5v3h-3"/>'
   };
   function ntAct(m) {
     if (m.k === "rv" && m.s) return m.rv ? '<span class="pgk-myrv">' + stars(m.rv) + "<small>" + esc(T("Спасибо за оценку")) + "</small></span>" : '<button type="button" class="pg-b pgk-btn pgk-btn-p pgk-btn-sm" data-k-review="' + m.s + '">' + svg(STAR) + esc(T("Оценить няню")) + "</button>";
+    if (m.k === "tag" && m.map) return '<a class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" href="' + esc(m.map) + '" target="_blank" rel="noopener">' + svg(NTI.pin) + esc(T("Открыть карту")) + "</a>";
     if (m.k === "loc" && m.pid) return '<button type="button" class="pg-b pgk-btn pgk-btn-s pgk-btn-sm" data-k-tab="map" data-k-focus="' + m.pid + '">' + svg(NTI.pin) + esc(T("Где сейчас")) + "</button>";
     return "";
   }
@@ -1866,6 +1920,10 @@
     if ((b = t.closest("[data-k-ct-cancel]"))) { e.preventDefault(); ctBack(""); return; }
     if ((b = t.closest("[data-k-ct-redo]"))) { e.preventDefault(); var cf = ctForm(), cd = $("[data-k-ct-done]"); if (cf) { cf.hidden = false; if (cd) cd.hidden = true; var ag = $(".pgk-ct-agree", cf), ab = $("[data-k-ct-click]", cf); if (ag) ag.hidden = true; if (ab) ab.hidden = true; } setTimeout(ctPrep, 300); return; }
     if ((b = t.closest("[data-k-ct]"))) { e.preventDefault(); ctOpen(); return; }
+    if ((b = t.closest("[data-k-tg-add]"))) { e.preventDefault(); tgOpen(+b.getAttribute("data-k-tg-add")); return; }
+    if ((b = t.closest("[data-k-tg-del]"))) { e.preventDefault(); tgDel(b); return; }
+    if ((b = t.closest("[data-tg-pet]"))) { e.preventDefault(); TG.pet = +b.getAttribute("data-tg-pet"); qa("[data-tg-pet]").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(on)); }); return; }
+    if ((b = t.closest("[data-k-tg-bind]"))) { e.preventDefault(); tgBind(b); return; }
     if ((b = t.closest("[data-k-pet]"))) { e.preventDefault(); petSheet(+b.getAttribute("data-k-pet")); return; }
     if ((b = t.closest("[data-k-petpage]"))) { e.preventDefault(); petPage(+b.getAttribute("data-k-petpage")); return; }
     if ((b = t.closest("[data-k-book]"))) { e.preventDefault(); book(b.getAttribute("data-k-book"), +(b.getAttribute("data-k-bpet") || 0)); return; }
@@ -1915,11 +1973,13 @@
       t.value = "";
     }
     if (t.matches('[data-k-send] input[name="photo"]')) t.closest("form").classList.toggle("has-ph", !!(t.files && t.files[0]));
+    if (t.matches("[data-k-tg-opt],[data-k-tg-note]")) tgOpt(t);
   });
   D.addEventListener("input", function (e) {
     var t = e.target;
     if (t.matches && t.matches("[data-k-send] textarea")) { t.style.height = "auto"; t.style.height = Math.min(140, t.scrollHeight) + "px"; }
     if (t.matches && t.matches("[data-k-nq]")) { NS.q = t.value; nList(); }
+    if (t.matches && t.matches("[data-k-tg-code]")) { var v = tgFmt(t.value); if (v !== t.value) t.value = v; }
   });
   D.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { if ($(".pgk-lb.on")) lbClose(); else if (stack.length) kClose(); }

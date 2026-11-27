@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 40.2.2
+ * Version: 40.3.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '40.2.2');
+define('PETGO_VER', '40.3.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -1232,6 +1232,7 @@ function petgo_ic($n) {
         'note'     => '<path d="M7 3h8l4 4v14H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
         'map'      => '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 7z"/><path d="M9 4v13M15 7v12.5"/>',
         'send'     => '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>',
+        'chev'     => '<path d="M9 6l6 6-6 6"/>',
         'idcard'   => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/>',
         'download' => '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
     );
@@ -1809,6 +1810,7 @@ require_once __DIR__ . '/includes/qr.php';
 /* 40.0: лента «Уведомления» сотрудника (колокольчик в шапке) */
 require_once __DIR__ . '/includes/feed.php';
 require_once __DIR__ . '/includes/badge.php';
+require_once __DIR__ . '/includes/tags.php';
 
 /* ============================================================
    11. ЖИВОЕ ОБНОВЛЕНИЕ: «ревизия» данных меняется при любой правке, телефон раз в 20 секунд спрашивает одно число

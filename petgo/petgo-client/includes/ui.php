@@ -460,6 +460,8 @@ function petgo_cl_petpage($pid, $s) {
     $h  .= '<b>' . esc_html($s['name']) . '</b><small>' . esc_html(implode(' · ', $sub)) . '</small></div>';
     $h  .= '<div class="pgk-pp-acts"><button type="button" class="pg-b pgk-btn pgk-btn-p" data-k-book="walk" data-k-bpet="' . (int) $pid . '">' . petgo_cp_icon('calendar') . esc_html($L('Заказать')) . '</button><button type="button" class="pg-b pgk-btn pgk-btn-s" data-k-pet="' . (int) $pid . '">' . petgo_cl_icon('edit') . esc_html($L('Анкета')) . '</button></div>';
     $h  .= '<div class="pgk-list"><button type="button" class="pg-b pgk-row" data-k-tab="map" data-k-focus="' . (int) $pid . '"><span class="pgk-row-i">' . petgo_cl_icon('map') . '</span><span class="pgk-row-t"><b>' . esc_html($L('Где сейчас')) . '</b><small class="pgk-st st-' . esc_attr($s['st']) . '" data-k-st="' . (int) $pid . '"><i></i><span>' . ($s['hi'] !== '' && $s['live'] ? esc_html($s['hi']) . ' ' : '') . esc_html($s['text']) . '</span></small></span>' . petgo_cl_icon('right', 'pg-i pgk-chev') . '</button></div>';
+    /* 40.3: QR-адресник и другие разделы от модулей */
+    $h .= (string) apply_filters('petgo_cl_petpage_extra', '', (int) $pid);
     $ph = array_reverse(petgo_photos($pid));
     if ($ph) {
         $h .= '<h4 class="pgk-gt">' . esc_html($L('Фото')) . ' · ' . count($ph) . '</h4><div class="pgk-grid">';

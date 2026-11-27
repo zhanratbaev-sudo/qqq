@@ -146,7 +146,7 @@ function petgo_cl_unread($uid) {
     }
     $lr = (int) $wpdb->get_var($wpdb->prepare('SELECT last_read FROM ' . petgo_tb('members') . ' WHERE chat_id=%d AND user_id=%d', $cid, $uid));
     /* 40.0: статусы заказов (sys, loc, rv) — в «Уведомлениях», не в счётчике чата */
-    return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . petgo_tb('msgs') . " WHERE chat_id=%d AND id>%d AND user_id<>%d AND kind NOT IN ('sys','loc','rv')", $cid, $lr, $uid));
+    return (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM ' . petgo_tb('msgs') . " WHERE chat_id=%d AND id>%d AND user_id<>%d AND kind NOT IN ('sys','loc','rv','tag')", $cid, $lr, $uid));
 }
 
 /* сообщение в чат клиента от имени клиента (или системы) + уведомление сотрудникам */

@@ -348,7 +348,7 @@ function petgo_cl_ajax() {
         foreach ((array) $rows as $r) {
             $max = max($max, (int) $r->id);
             /* 40.0: статусы заказов — в «Уведомлениях», в чате только разговор */
-            if (in_array((string) $r->kind, array('sys', 'loc', 'rv', 'mgr', 'note'), true)) {
+            if (in_array((string) $r->kind, array('sys', 'loc', 'rv', 'mgr', 'note', 'tag'), true)) {
                 continue;
             }
             $a     = (int) $r->user_id ? get_userdata((int) $r->user_id) : false;

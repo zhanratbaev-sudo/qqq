@@ -192,36 +192,53 @@
 	}
 
 	/* PDF: A4, по 9 бейджей (3 × 3) в настоящем размере, пунктир для вырезания */
-	function pdf(imgs) {
+	/* PDF-файл без сторонних библиотек.
+	   pages: [{ ops: "команды рисования PDF" }] (точки, начало — левый нижний угол листа A4);
+	   images: { имя: {w, h, b: JPEG-байты} } — картинки доступны на каждой странице как /имя;
+	   у каждой страницы есть шрифт /F1 (Helvetica-Bold, встроенный в любой просмотрщик PDF) */
+	function doc(pages, images) {
 		var enc = new TextEncoder(), parts = [], off = 0, offs = [];
 		function put(x) { var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
-		function f(v) { return (Math.round(v * 100) / 100).toString(); }
-		var K = 72 / 25.4, PW = 595.28, PH = 841.89, bw = 54, bh = 85, gap = 6, per = 9;
-		var mx = (210 - (3 * bw + 2 * gap)) / 2, my = (297 - (3 * bh + 2 * gap)) / 2;
-		var pages = Math.ceil(imgs.length / per), id = 3, pg = [];
-		for (var p = 0; p < pages; p++) { var o = { page: id++, cont: id++, im: [] }; for (var j = p * per; j < Math.min(imgs.length, p * per + per); j++) o.im.push(id++); pg.push(o); }
+		var PW = 595.28, PH = 841.89, id = 5, names = Object.keys(images || {}), imgId = {}, pg = [];
+		names.forEach(function (k) { imgId[k] = id++; });
+		pages.forEach(function () { pg.push({ page: id++, cont: id++ }); });
 		put(new Uint8Array([37, 80, 68, 70, 45, 49, 46, 52, 10, 37, 226, 227, 207, 211, 10]));
 		offs[1] = off; put("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-		offs[2] = off; put("2 0 obj\n<< /Type /Pages /Kids [" + pg.map(function (o) { return o.page + " 0 R"; }).join(" ") + "] /Count " + pages + " >>\nendobj\n");
-		pg.forEach(function (o, p) {
-			var xo = o.im.map(function (n, i) { return "/I" + i + " " + n + " 0 R"; }).join(" "), s = "";
-			o.im.forEach(function (n, i) {
-				var col = i % 3, row = Math.floor(i / 3), x = (mx + col * (bw + gap)) * K, y = PH - (my + row * (bh + gap) + bh) * K;
-				s += "q " + f(bw * K) + " 0 0 " + f(bh * K) + " " + f(x) + " " + f(y) + " cm /I" + i + " Do Q\n";
-				s += "q 0.72 0.77 0.75 RG 0.4 w [2 2] 0 d " + f(x - 1.5 * K) + " " + f(y - 1.5 * K) + " " + f((bw + 3) * K) + " " + f((bh + 3) * K) + " re S Q\n";
-			});
-			offs[o.page] = off; put(o.page + " 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + PW + " " + PH + "] /Resources << /XObject << " + xo + " >> >> /Contents " + o.cont + " 0 R >>\nendobj\n");
+		offs[2] = off; put("2 0 obj\n<< /Type /Pages /Kids [" + pg.map(function (o) { return o.page + " 0 R"; }).join(" ") + "] /Count " + pg.length + " >>\nendobj\n");
+		offs[3] = off; put("3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n");
+		offs[4] = off; put("4 0 obj\n<< /Font << /F1 3 0 R >> /XObject << " + names.map(function (k) { return "/" + k + " " + imgId[k] + " 0 R"; }).join(" ") + " >> >>\nendobj\n");
+		names.forEach(function (k) {
+			var im = images[k];
+			offs[imgId[k]] = off; put(imgId[k] + " 0 obj\n<< /Type /XObject /Subtype /Image /Width " + im.w + " /Height " + im.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + im.b.length + " >>\nstream\n");
+			put(im.b); put("\nendstream\nendobj\n");
+		});
+		pages.forEach(function (p, i) {
+			var o = pg[i], s = p.ops || "";
+			offs[o.page] = off; put(o.page + " 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + PW + " " + PH + "] /Resources 4 0 R /Contents " + o.cont + " 0 R >>\nendobj\n");
 			offs[o.cont] = off; put(o.cont + " 0 obj\n<< /Length " + enc.encode(s).length + " >>\nstream\n" + s + "\nendstream\nendobj\n");
-			o.im.forEach(function (n, i) {
-				var im = imgs[p * per + i];
-				offs[n] = off; put(n + " 0 obj\n<< /Type /XObject /Subtype /Image /Width " + im.w + " /Height " + im.h + " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + im.b.length + " >>\nstream\n");
-				put(im.b); put("\nendstream\nendobj\n");
-			});
 		});
 		var x = off, xr = "xref\n0 " + id + "\n0000000000 65535 f \n";
 		for (var k = 1; k < id; k++) xr += ("0000000000" + offs[k]).slice(-10) + " 00000 n \n";
 		put(xr + "trailer\n<< /Size " + id + " /Root 1 0 R >>\nstartxref\n" + x + "\n%%EOF\n");
 		return new Blob(parts, { type: "application/pdf" });
+	}
+	function f2(v) { return (Math.round(v * 100) / 100).toString(); }
+
+	/* бейджи: A4, по 9 (3 × 3) в настоящем размере, пунктир для вырезания */
+	function pdf(imgs) {
+		var K = 72 / 25.4, PH = 841.89, bw = 54, bh = 85, gap = 6, per = 9, images = {}, pages = [];
+		var mx = (210 - (3 * bw + 2 * gap)) / 2, my = (297 - (3 * bh + 2 * gap)) / 2;
+		imgs.forEach(function (im, i) { images["I" + i] = im; });
+		for (var p = 0; p * per < imgs.length; p++) {
+			var s = "";
+			for (var i = 0; i < per && p * per + i < imgs.length; i++) {
+				var col = i % 3, row = Math.floor(i / 3), x = (mx + col * (bw + gap)) * K, y = PH - (my + row * (bh + gap) + bh) * K;
+				s += "q " + f2(bw * K) + " 0 0 " + f2(bh * K) + " " + f2(x) + " " + f2(y) + " cm /I" + (p * per + i) + " Do Q\n";
+				s += "q 0.72 0.77 0.75 RG 0.4 w [2 2] 0 d " + f2(x - 1.5 * K) + " " + f2(y - 1.5 * K) + " " + f2((bw + 3) * K) + " " + f2((bh + 3) * K) + " re S Q\n";
+			}
+			pages.push({ ops: s });
+		}
+		return doc(pages, images);
 	}
 
 	/* ---------- выдача файла ---------- */
@@ -232,7 +249,7 @@
 			+ ".pgbd-b{width:min(440px,100%);margin:0 8px calc(env(safe-area-inset-bottom,0px) + 8px);padding:20px 16px 12px;border-radius:24px;background:var(--cd,#fff);color:var(--tx,#0F2A26);font-family:" + FONT + ";display:flex;flex-direction:column;gap:6px;text-align:center;transform:translateY(16px);transition:transform .28s cubic-bezier(.32,.72,0,1)}.pgbd.on .pgbd-b{transform:none}"
 			+ ".pgbd-b b{font-size:18px}.pgbd-b span{font-size:14px;line-height:1.4;color:var(--mu,#6B7A77)}.pgbd-b button{min-height:50px;margin-top:6px;border:0;border-radius:16px;font:600 16px/1 " + FONT + ";cursor:pointer;background:var(--ac,#024C46);color:var(--on,#fff)}.pgbd-b button.x{margin-top:0;background:transparent;color:var(--mu,#6B7A77)}"
 			+ ".pgbd-t{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:4001;transform:translateX(-50%);max-width:calc(100vw - 32px);padding:12px 18px;border-radius:16px;background:#0F2A26;color:#fff;font:500 14px/1.35 " + FONT + ";box-shadow:0 8px 24px rgba(0,0,0,.2);text-align:center}"
-			+ "@media(prefers-reduced-motion:reduce){.pgbd,.pgbd-b{transition:none}}";
+			+ "@media(prefers-reduced-motion:reduce){.pgbd,.pgbd-b{transition:none}}@media print{.pgbd,.pgbd-t{display:none!important}}";
 		D.head.appendChild(s);
 	}
 	function $(id) { return D.getElementById(id); }
@@ -307,6 +324,8 @@
 			}).catch(function () { toast("Не получилось сохранить картинку. Попробуйте ещё раз."); }).then(function () { busy(btn, false); });
 		}
 	};
+	/* общие инструменты — ими пользуются и наклейки-адресники (tags.js) */
+	PGB.lib = { load: load, rr: rr, tile: tile, svgUrl: svgUrl, pawSvg: pawSvg, FONT: FONT, MONO: MONO, doc: doc, f2: f2, bytes: bytes, give: give, toast: toast, busy: busy };
 	window.PGB = PGB;
 
 	D.addEventListener("click", function (e) {
