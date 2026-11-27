@@ -43,8 +43,11 @@ function petgo_badge_uid_from($t) {
 function petgo_badge_verify_url($uid) {
     return add_query_arg('petgo_id', petgo_badge_token($uid), home_url('/'));
 }
+/* 40.2.1: лист печати открывается внутри приложения сотрудников (тот же адрес и тот же вход).
+   Раньше он открывался в новом окне — на iPhone приложение с экрана «Домой» открывало его в Safari,
+   где сотрудник не вошёл, и вместо бейджей показывался вход. */
 function petgo_badge_print_url($uids) {
-    return add_query_arg(array('action' => 'petgo_badge_print', 'u' => is_array($uids) ? implode(',', array_map('intval', $uids)) : (string) $uids), admin_url('admin-post.php'));
+    return petgo_page_url(array('petgo_badges' => is_array($uids) ? implode(',', array_map('intval', $uids)) : (string) $uids));
 }
 
 function petgo_badge_phone() {
@@ -119,14 +122,19 @@ function petgo_badge_card($u, $qr = true, $inline = false) {
     $av   = $inline ? petgo_badge_photo_inline($u->ID) : petgo_user_avatar_url($u->ID);
     $off  = (bool) get_user_meta($u->ID, 'petgo_disabled', true);
     $ini  = mb_strtoupper(mb_substr(trim($u->display_name), 0, 1));
-    $h  = '<div class="pgb' . ($off ? ' off' : '') . '"><div class="pgb-top"><span class="pgb-logo">' . petgo_badge_logo() . '</span><span class="pgb-kind">' . esc_html('Сотрудник') . '</span></div>';
+    /* данные для файла (PDF / картинка), который собирается на телефоне */
+    $data = $qr ? ' data-b="' . esc_attr(wp_json_encode(array('n' => $u->display_name, 'r' => petgo_t('role_' . $role), 'id' => petgo_staff_no($u->ID), 'ph' => $av, 'q' => petgo_badge_verify_url($u->ID), 't' => petgo_badge_phone(), 'i' => $ini))) . '"' : '';
+    $h  = '<div class="pgb' . ($off ? ' off' : '') . '"' . $data . '><div class="pgb-top"><span class="pgb-logo">' . petgo_badge_logo() . '</span><span class="pgb-kind">' . esc_html('Сотрудник') . '</span></div>';
     $h .= '<div class="pgb-ph">' . ($av ? '<img src="' . ($inline ? esc_attr($av) : esc_url($av)) . '" alt="">' : '<b>' . esc_html($ini) . '</b>') . '</div>';
     $h .= '<div class="pgb-main"><div class="pgb-name">' . esc_html($u->display_name) . '</div><span class="pgb-role">' . esc_html(petgo_t('role_' . $role)) . '</span><div class="pgb-id"><small>ID</small><b>' . esc_html(petgo_staff_no($u->ID)) . '</b></div></div>';
     $h .= '<div class="pgb-bot">' . ($qr ? '<span class="pgb-qr" data-qr="' . esc_attr(petgo_badge_verify_url($u->ID)) . '"></span>' : '') . '<span class="pgb-bt"><b>Проверить сотрудника</b><span>Наведите камеру на QR-код</span><em>petgo.kz · ' . esc_html(petgo_badge_phone()) . '</em></span></div><i class="pgb-line"></i></div>';
     return $h;
 }
 
-/* QR рисует скрипт (qrcode-generator, MIT) — один для экрана, печати и проверки */
+/* QR рисует скрипт (qrcode-generator, MIT); badge.js собирает PDF и картинку */
+function petgo_badge_js() {
+    return petgo_badge_qr_js() . '<script src="' . esc_url(add_query_arg('v', PETGO_VER, petgo_asset_url('badge.js'))) . '"></script>';
+}
 function petgo_badge_qr_js() {
     return '<script src="' . esc_url(petgo_asset_url('vendor/qrcode.min.js')) . '"></script><script>(function(){function go(){if(!window.qrcode)return setTimeout(go,60);document.querySelectorAll("[data-qr]").forEach(function(e){if(e._q)return;e._q=1;var q=qrcode(0,"M");q.addData(e.getAttribute("data-qr"));q.make();e.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true})});window.pgbReady=1;document.dispatchEvent(new Event("pgb-ready"))}go()})();</script>';
 }
@@ -149,31 +157,46 @@ add_filter('petgo_app_page', function ($done, $pg) {
         echo '<p class="mu">' . esc_html('Нет доступа') . '</p>';
         return true;
     }
-    echo '<style>' . petgo_badge_css() . '.pgbw{display:flex;flex-direction:column;align-items:center;gap:16px;padding:6px 0 10px}.pgbw p{margin:0;max-width:330px;text-align:center;color:var(--mu);font-size:14.5px;line-height:1.45}.pgbw .pgc-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(330px,100%)}.pgbw .pgc-btns .pgc-btn{flex:1 1 0;justify-content:center;white-space:nowrap}.pgbw>.pgb{cursor:zoom-in}'
+    echo '<style>' . petgo_badge_css() . '.pgbw{display:flex;flex-direction:column;align-items:center;gap:16px;padding:6px 0 10px}.pgbw p{margin:0;max-width:330px;text-align:center;color:var(--mu);font-size:14.5px;line-height:1.45}.pgbw .pgc-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:min(330px,100%)}.pgbw .pgc-btns .pgc-btn{flex:1 1 0;justify-content:center;white-space:nowrap}.pgbw>.pgb{cursor:zoom-in}.pgbw .pgc-btns+.pgc-btns{margin-top:-6px}.pgc .pgbw-png{min-height:40px;padding:0 12px;border:0;background:none;color:var(--ac2,var(--ac));font-family:inherit;font-size:15px;font-weight:600;cursor:pointer}.pgbw [aria-busy]{opacity:.7}'
         . '.pgb-fs{position:fixed;inset:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px);background:' . petgo_paw_pattern('rgba(2,76,70,.05)') . ' 0 0/220px 220px repeat,#F4F6F3;opacity:0;transition:opacity .22s ease;cursor:zoom-out}.pgb-fs.on{opacity:1}'
         . '.pgb-fs .pgb{--bw:min(calc(100vw - 32px),calc((100vh - 90px) * .6308),calc((100dvh - 90px) * .6308));transform:scale(.96);transition:transform .32s cubic-bezier(.32,.72,0,1)}.pgb-fs.on .pgb{transform:none}.pgb-fs p{margin:0;font:500 13px/1.3 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:#6B7A77}'
         . '@media(prefers-reduced-motion:reduce){.pgb-fs,.pgb-fs .pgb{transition:none}}</style>';
     echo '<div class="pgbw">' . petgo_badge_card($u) . '<p>' . esc_html($uid === $me ? 'Покажите бейдж клиенту при встрече: по QR-коду он проверит, что вы работаете в PetGo.' : 'Бейдж сотрудника. По QR-коду клиент проверяет, что сотрудник работает в PetGo.') . '</p>';
-    echo '<div class="pgc-btns"><button type="button" class="pgc-btn pgb-show">' . petgo_icon('idcard') . '<span>Показать клиенту</span></button><a class="pgc-btn sec" href="' . esc_url(petgo_badge_print_url($uid)) . '" target="_blank" rel="noopener">' . petgo_icon('download') . '<span>Распечатать / PDF</span></a></div></div>';
-    echo petgo_badge_qr_js();
+    echo '<div class="pgc-btns"><button type="button" class="pgc-btn pgb-show">' . petgo_icon('idcard') . '<span>Показать клиенту</span></button></div>';
+    echo '<div class="pgc-btns"><button type="button" class="pgc-btn sec" data-pgb-pdf>' . petgo_icon('download') . '<span>Скачать PDF</span></button><a class="pgc-btn sec" data-ext href="' . esc_url(petgo_badge_print_url($uid)) . '">' . petgo_icon('print') . '<span>Распечатать</span></a></div>';
+    echo '<button type="button" class="pgbw-png" data-pgb-png>Сохранить картинкой</button></div>';
+    echo petgo_badge_js();
     /* «Показать клиенту»: бейдж на весь экран, нажатие в любом месте — закрыть */
     echo '<script>(function(){if(window.__pgbFs)return;window.__pgbFs=1;document.addEventListener("click",function(e){var b=e.target.closest(".pgb-show,.pgbw>.pgb");if(b){var c=document.querySelector(".pgbw>.pgb");if(!c)return;var o=document.createElement("div");o.className="pgb-fs";o.setAttribute("role","dialog");o.setAttribute("aria-label","Бейдж");o.appendChild(c.cloneNode(true));var h=document.createElement("p");h.textContent="Нажмите, чтобы закрыть";o.appendChild(h);document.body.appendChild(o);document.documentElement.classList.add("pgc-lock");requestAnimationFrame(function(){o.classList.add("on")});return}var f=e.target.closest(".pgb-fs");if(f){f.classList.remove("on");document.documentElement.classList.remove("pgc-lock");setTimeout(function(){f.remove()},220)}});document.addEventListener("keydown",function(e){var f=document.querySelector(".pgb-fs");if(f&&e.key==="Escape")f.click()})})();</script>';
     return true;
 }, 10, 2);
 
 /* ---------- печать: лист A4, бейджи 54 × 86 мм с линиями для вырезания ---------- */
-add_action('admin_post_petgo_badge_print', 'petgo_badge_print');
-add_action('admin_post_nopriv_petgo_badge_print', function () {
-    /* не вошли — на вход в приложение сотрудников */
-    wp_safe_redirect(petgo_page_url());
+/* старые ссылки 40.2.0 (admin-post.php) ведут на новый адрес */
+function petgo_badge_old_link() {
+    $u = isset($_GET['u']) ? sanitize_text_field(wp_unslash($_GET['u'])) : '';
+    wp_safe_redirect($u !== '' ? petgo_badge_print_url($u) : petgo_page_url());
     exit;
-});
+}
+add_action('admin_post_petgo_badge_print', 'petgo_badge_old_link');
+add_action('admin_post_nopriv_petgo_badge_print', 'petgo_badge_old_link');
+add_action('template_redirect', function () {
+    if (isset($_GET['petgo_badges'])) {
+        petgo_badge_print();
+    }
+}, 0);
 function petgo_badge_print() {
     if (!is_user_logged_in() || petgo_role_of() === '') {
-        auth_redirect();
+        /* не вошли — на вход в приложение сотрудников */
+        wp_safe_redirect(petgo_page_url());
+        exit;
+    }
+    if (!defined('DONOTCACHEPAGE')) {
+        define('DONOTCACHEPAGE', true);
     }
     $me  = get_current_user_id();
-    $arg = isset($_GET['u']) ? (string) wp_unslash($_GET['u']) : (string) $me;
+    $arg = (string) sanitize_text_field(wp_unslash($_GET['petgo_badges']));
+    $arg = $arg === '' ? (string) $me : $arg;
     if ($arg === 'all') {
         /* все работающие сотрудники; владелец, который печатает, — первым */
         $ids = petgo_is_owner() ? array($me) : array();
@@ -197,19 +220,19 @@ function petgo_badge_print() {
         }
     }
     petgo_audit('badge_print', implode(',', $ids));
+    $back = petgo_page_url(array('pg' => (petgo_can('admin') && $arg !== (string) $me) ? 'staff' : 'badge'));
     nocache_headers();
     header('Content-Type: text/html; charset=utf-8');
-    echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Бейджи PetGo</title><style>' . petgo_badge_css()
-        . '@page{size:A4;margin:10mm}html,body{margin:0;background:#F4F6F3;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:#0F2A26}'
-        . '.bar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:14px 16px;background:rgba(244,246,243,.95);border-bottom:.5px solid rgba(15,42,38,.1)}'
-        . '.bar b{flex-basis:100%;text-align:center;font-size:15px}.bar span{flex-basis:100%;text-align:center;font-size:13px;color:#6B7A77}'
-        . '.bar button{min-height:44px;padding:0 20px;border:0;border-radius:14px;background:#024C46;color:#fff;font:600 16px/1 inherit;cursor:pointer}.bar button.sec{background:#E1F2E9;color:#024C46}'
+    echo '<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#F4F6F3"><title>Бейджи PetGo</title><style>' . petgo_badge_css()
+        . '@view-transition{navigation:auto}@media(prefers-reduced-motion:reduce){@view-transition{navigation:none}}@page{size:A4;margin:10mm}html,body{margin:0;background:#F4F6F3;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;color:#0F2A26}'
+        . '.bar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 14px;background:rgba(244,246,243,.95);border-bottom:.5px solid rgba(15,42,38,.1)}'
+        . '.bar>b{flex-basis:100%;text-align:center;font-size:15px}.bar>.hint{flex-basis:100%;text-align:center;font-size:13px;line-height:1.35;color:#6B7A77}'
+        . '.bar button,.bar a{flex:1 1 140px;max-width:240px;display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 20px;border:0;border-radius:14px;background:#024C46;color:#fff;font:600 16px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif;text-decoration:none;cursor:pointer}.bar .sec{background:#E1F2E9;color:#024C46}.bar [aria-busy]{opacity:.7}'
         . '.sheet{display:flex;flex-wrap:wrap;justify-content:center;gap:24px;padding:24px 16px}'
         . '.cut{padding:0}'
         . '@media print{html,body{background:#fff}.bar{display:none}.sheet{display:grid;grid-template-columns:repeat(3,54mm);gap:6mm;justify-content:center;padding:0}.pgb{--bw:54mm;box-shadow:none;border-radius:3.4mm;break-inside:avoid}.cut{outline:.2mm dashed #B8C4C0;outline-offset:1.5mm;break-inside:avoid}}'
-        . '</style></head><body><div class="bar"><b>Бейджи PetGo · ' . count($ids) . '</b><span>Размер 54 × 86 мм, как банковская карта. В окне печати можно выбрать «Сохранить как PDF».</span><button type="button" onclick="window.print()">Распечатать</button><button type="button" class="sec" onclick="history.length>1?history.back():window.close()">Закрыть</button></div>'
-        . '<div class="sheet">' . $cards . '</div>' . petgo_badge_qr_js()
-        . '<script>(function(){function run(){var im=[].slice.call(document.images),n=im.filter(function(i){return!i.complete}).length;function p(){if(!window._pp){window._pp=1;setTimeout(function(){window.print()},350)}}if(!n)p();else im.forEach(function(i){if(!i.complete)i.addEventListener("load",function(){if(--n<=0)p()}),i.addEventListener("error",function(){if(--n<=0)p()})})}if(window.pgbReady)run();else document.addEventListener("pgb-ready",run)})()</script></body></html>';
+        . '</style></head><body><div class="bar"><b>Бейджи PetGo · ' . count($ids) . '</b><span class="hint">Размер 54 × 86 мм, как банковская карта, по 9 на лист A4 с пунктиром для вырезания.</span><button type="button" data-pgb-pdf><span>Скачать PDF</span></button><button type="button" class="sec" data-pgb-print><span>Распечатать</span></button><a class="sec" href="' . esc_url($back) . '" onclick="if(document.referrer.indexOf(location.origin)===0&&history.length>1){history.back();return false}">Назад</a></div>'
+        . '<div class="sheet">' . $cards . '</div>' . petgo_badge_js() . '</body></html>';
     exit;
 }
 

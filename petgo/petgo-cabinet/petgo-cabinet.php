@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 40.2.0
+ * Version: 40.2.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '40.2.0');
+define('PETGO_VER', '40.2.1');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -1642,7 +1642,7 @@ function petgo_admin_staff() {
     }
     echo '</div>';
     /* 40.2: бейджи — свой и все сразу (печать или PDF) */
-    echo '<div class="pgc-bdgbar"><a class="pgc-btn sec sm" href="' . esc_url(petgo_page_url(array('pg' => 'badge'))) . '">' . petgo_ic('idcard') . 'Мой бейдж</a><a class="pgc-btn sec sm" href="' . esc_url(petgo_badge_print_url('all')) . '" target="_blank" rel="noopener">' . petgo_ic('download') . 'Распечатать все бейджи</a></div>';
+    echo '<div class="pgc-bdgbar"><a class="pgc-btn sec sm" href="' . esc_url(petgo_page_url(array('pg' => 'badge'))) . '">' . petgo_ic('idcard') . 'Мой бейдж</a><a class="pgc-btn sec sm" data-ext href="' . esc_url(petgo_badge_print_url('all')) . '">' . petgo_ic('download') . 'Все бейджи: скачать или распечатать</a></div>';
     $S = petgo_staff_stats();
     usort($list, function ($a, $b) use ($S) {
         $x = isset($S[$a->ID]) ? $S[$a->ID]['done'] : 0;
