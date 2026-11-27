@@ -148,6 +148,31 @@ function petgo_tag_unbind($code, $uid = 0) {
     return (bool) ($uid ? $wpdb->query($wpdb->prepare($sql . ' AND uid=%d', $code, (int) $uid)) : $wpdb->query($wpdb->prepare($sql, $code)));
 }
 
+/* 40.5.1: питомца удалили (приложение сотрудников, корзина, очистка данных) — его QR-адресники
+   освобождаются: снова «новые», при сканировании открывается регистрация питомца.
+   Отключённый вручную адресник остаётся отключённым, но больше ни к кому не привязан. */
+function petgo_tag_free($col, $id) {
+    global $wpdb;
+    $n = (int) $wpdb->query($wpdb->prepare('UPDATE ' . petgo_tb('tags') . ' SET st=(CASE WHEN st=2 THEN 2 ELSE 0 END), pet=0, uid=0, bound=0, scans=0, seen=0 WHERE ' . ($col === 'uid' ? 'uid' : 'pet') . '=%d AND (pet>0 OR uid>0)', (int) $id));
+    if ($n) {
+        petgo_audit('tag_free', $col . '=' . (int) $id . ' · ' . $n);
+    }
+    return $n;
+}
+function petgo_tag_free_pet($pid) {
+    if (get_post_type($pid) === 'petgo_pet' && get_option('petgo_tags_db') === '1') {
+        petgo_tag_free('pet', $pid);
+    }
+}
+add_action('wp_trash_post', 'petgo_tag_free_pet');
+add_action('before_delete_post', 'petgo_tag_free_pet');
+/* удалили клиента (сотрудник или сам клиент) — его адресники тоже свободны: иначе нашедший увидит анкету без хозяина */
+add_action('delete_user', function ($uid) {
+    if (get_option('petgo_tags_db') === '1') {
+        petgo_tag_free('uid', $uid);
+    }
+});
+
 /* что видит нашедший — настраивает хозяин в приложении */
 function petgo_tag_opts($pid) {
     return array(

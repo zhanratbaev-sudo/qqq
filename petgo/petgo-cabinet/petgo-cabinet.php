@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 40.5.0
+ * Version: 40.5.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '40.5.0');
+define('PETGO_VER', '40.5.1');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -172,7 +172,7 @@ function petgo_dict() {
         'no_history' => array('Заказов ещё не было', 'Тапсырыс әлі болған жоқ', 'No orders yet', '暂无订单'),
         'wp_admin' => array('Админка WordPress', 'WordPress әкімші панелі', 'WordPress admin', 'WordPress 后台'),
         'no_access' => array('Нет доступа.', 'Қолжетімсіз.', 'No access.', '无权访问。'),
-        'q_delete_pet' => array('Удалить питомца?', 'Жануарды жою керек пе?', 'Delete this pet?', '删除该宠物？'),
+        'q_delete_pet' => array('Удалить питомца? Если у него есть QR-адресник, он освободится — его можно будет зарегистрировать заново.', 'Жануарды жою керек пе?', 'Delete this pet?', '删除该宠物？'),
         'q_delete_staff' => array('Удалить сотрудника? Его активные заказы станут неназначенными.', 'Қызметкерді жою керек пе? Оның белсенді тапсырыстары тағайындалмаған болады.', 'Delete this staff member? Active orders become unassigned.', '删除该员工？其进行中订单将变为未分配。'),
         'q_delete_photo' => array('Удалить фото?', 'Фотоны жою керек пе?', 'Delete this photo?', '删除该照片？'),
         'q_cancel' => array('Отменить заказ?', 'Тапсырыстан бас тарту керек пе?', 'Cancel this order?', '取消该订单？'),
@@ -778,8 +778,10 @@ function petgo_h_pet_del() {
         if (is_array($a) && !empty($a['file'])) {
             petgo_rm($a['file']);
         }
+        $tg = function_exists('petgo_tag_of_pet') ? count(petgo_tag_of_pet($id)) : 0;
         wp_trash_post($id);
-        petgo_flash(petgo_t('ok_deleted'));
+        /* 40.5.1: QR-адресник питомца освобождается — его можно зарегистрировать заново */
+        petgo_flash($tg ? rtrim(petgo_t('ok_deleted'), '.') . '. QR-адресник освобождён — его можно зарегистрировать заново.' : petgo_t('ok_deleted'));
     }
     petgo_back('pets');
 }
