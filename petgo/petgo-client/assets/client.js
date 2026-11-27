@@ -69,6 +69,32 @@
     d.action = "petgo_cl"; d.op = op; d.n = K.n; d.lang = K.lang || "ru";
     return post(d, files).then(function (j) { if (j && j.auth) location.reload(); return j; });
   }
+  /* 40.4: что клиент открывал — для сотрудников (карточка клиента → «Активность»). Копится и уходит пачкой */
+  var ACT = { q: [], t: 0, last: "" };
+  function act(k, w) {
+    if (!K || !K.n) return;
+    var key = k + ":" + (w == null ? "" : w);
+    if (key === ACT.last && k !== "v") return;
+    ACT.last = key;
+    ACT.q.push(w == null ? [k] : [k, w]);
+    if (ACT.q.length > 40) ACT.q.shift();
+    /* открыл приложение — сразу (через 1,5 с), остальное — пачкой раз в 20 секунд */
+    if (k === "v") { clearTimeout(ACT.t); ACT.t = setTimeout(actFlush, 1500); }
+    else if (!ACT.t) ACT.t = setTimeout(actFlush, 20000);
+  }
+  function actFlush(beacon) {
+    clearTimeout(ACT.t); ACT.t = 0;
+    if (!ACT.q.length || !K || !K.n) return;
+    var d = { action: "petgo_cl", op: "act", n: K.n, lang: K.lang || "ru", ev: JSON.stringify(ACT.q) };
+    ACT.q = [];
+    if (beacon && navigator.sendBeacon) {
+      var fd = new FormData(); Object.keys(d).forEach(function (k) { fd.append(k, d[k]); });
+      try { if (navigator.sendBeacon((K && K.aj) || C.ajax || "/wp-admin/admin-ajax.php", fd)) return; } catch (x) {}
+    }
+    post(d).catch(function () {});
+  }
+  D.addEventListener("visibilitychange", function () { if (D.hidden) actFlush(true); });
+  W.addEventListener("pagehide", function () { actFlush(true); });
   var toastT = 0;
   function toast(t, bad) {
     var el = $("[data-k-toast]");
@@ -84,6 +110,7 @@
     var s = D.getElementById("pgk-" + id);
     if (!s) return null;
     if (stack.indexOf(s) > -1) return s;
+    if (id !== "petp") act("s", id);
     if (W.PGCloseAI) W.PGCloseAI();
     s.style.zIndex = String(9996 + stack.length);
     s.inert = false;
@@ -259,6 +286,8 @@
     }
     CL.scroll[from] = scrollY();
     CL.tab = to;
+    /* вкладка при запуске открывается сама — это не действие клиента */
+    if (!opts.force) act("t", to);
     CL.box.setAttribute("data-tab", to);
     /* 38.0: новый экран въезжает с той стороны, куда переключаете (после свайпа он уже на месте) */
     var dir = TABS.indexOf(to) > TABS.indexOf(from) ? "l" : "r";
@@ -463,6 +492,7 @@
   }
   function petOf(id) { return (K.pets || []).filter(function (p) { return p.id === id; })[0]; }
   function petPage(pid) {
+    act("p", pid);
     var tpl = D.getElementById("pgk-pp-" + pid), s = kOpen("petp");
     if (!s || !tpl) return;
     var body = $("[data-k-pp-body]", s), tt = $("[data-k-sht]", s), p = petOf(pid);
@@ -1380,6 +1410,8 @@
     qa(".pgk-sheet,.pgk-lb,.pgk-toast,.pgk-tabbar", box).forEach(function (s) { layer.appendChild(s); });
     dragSheets(layer);
     themeApply();
+    /* 40.4: открыто приложение (с экрана «Домой» или в браузере) — для сотрудников */
+    act("v", (W.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true ? 1 : 0);
     var t = (location.hash || "").replace("#", "");
     try { if (TABS.indexOf(t) < 0) t = sessionStorage.getItem("pgk_tab") || "home"; } catch (x) { t = "home"; }
     tab(TABS.indexOf(t) > -1 ? t : "home", { force: true, keep: true });

@@ -272,6 +272,10 @@ function petgo_cl_ajax() {
     $op = sanitize_key((string) petgo_p('op'));
     $L  = 'petgo_site_l';
     global $wpdb;
+    /* 40.4: «был в сети» и понятные действия клиента — для сотрудников (карточка клиента → «Активность») */
+    if (function_exists('petgo_ca_touch')) {
+        petgo_ca_touch($uid, $op);
+    }
 
     if ($op === 'live') {
         /* 34.6: вместе со статусами питомцев — «Ближайшие» и отметка, изменились ли прогулки (заказ выполнен, отменён…) */
@@ -773,7 +777,7 @@ function petgo_page_clients() {
             petgo_mark_read($cid, get_current_user_id(), 0);
         }
         $names = wp_list_pluck($pets, 'post_title');
-        echo '<details class="pgc-ord pgcl" data-k="cl' . (int) $u->ID . '" data-q="' . esc_attr(mb_strtolower($u->display_name . ' ' . $u->user_login . ' ' . $ph . ' ' . petgo_cl_code($u->ID) . ' ' . implode(' ', $names))) . '"><summary>' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name, 'md') . '<div class="pgc-sm"><div class="pgc-l1"><b>' . esc_html($u->display_name) . '</b><span class="mu">@' . esc_html($u->user_login) . '</span></div><div class="pgc-l2">' . esc_html(petgo_cl_code($u->ID) . ($names ? ' · ' . implode(', ', $names) : '')) . '</div></div></summary><div class="pgc-body">';
+        echo '<details class="pgc-ord pgcl" data-k="cl' . (int) $u->ID . '" data-q="' . esc_attr(mb_strtolower($u->display_name . ' ' . $u->user_login . ' ' . $ph . ' ' . petgo_cl_code($u->ID) . ' ' . implode(' ', $names))) . '"><summary>' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name, 'md') . '<div class="pgc-sm"><div class="pgc-l1"><b>' . esc_html($u->display_name) . '</b><span class="mu">@' . esc_html($u->user_login) . '</span>' . (function_exists('petgo_ca_badge') ? petgo_ca_badge($u->ID) : '') . '</div><div class="pgc-l2">' . esc_html(petgo_cl_code($u->ID) . ($names ? ' · ' . implode(', ', $names) : '')) . '</div></div></summary><div class="pgc-body">';
         echo '<div class="pgf-list pgcl-info"><div class="pgf-row"><span>ID</span><b>' . esc_html(petgo_cl_code($u->ID)) . '</b></div><div class="pgf-row"><span>' . esc_html(petgo_t('login_s')) . '</span><b>' . esc_html($u->user_login) . '</b></div>';
         if ($ph !== '') {
             echo '<div class="pgf-row"><span>' . esc_html(petgo_t('phone')) . '</span><a href="tel:' . esc_attr(preg_replace('/[^0-9+]/', '', $ph)) . '">' . esc_html(petgo_phone_fmt($ph)) . '</a></div>';
@@ -795,6 +799,10 @@ function petgo_page_clients() {
                 echo '<span>' . petgo_av(petgo_pet_avatar_url($p->ID), $p->post_title, 'sm') . esc_html($p->post_title) . '<small>' . esc_html(petgo_pet_code($p->ID)) . '</small></span>';
             }
             echo '</div>';
+        }
+        /* 40.4: активность клиента — когда был, с каких устройств, что открывал и делал */
+        if (function_exists('petgo_ca_card')) {
+            echo petgo_ca_card($u->ID);
         }
         echo '<div class="pgi-btns"><a class="pgc-btn sec" href="' . esc_url(petgo_page_url(array('pg' => 'clients', 'c' => $cid ? $cid : petgo_cl_chat($u->ID)))) . '">' . petgo_ic('msg') . '<span>' . esc_html(petgo_t('c_write')) . '</span></a>';
         echo petgo_btn_form('cl_pass', array('uid' => $u->ID), petgo_t('cl_pw_reset'), 'pgc-btn sec', petgo_t('cl_pw_q'));

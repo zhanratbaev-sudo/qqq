@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Клиент
  * Description: Кабинет клиента на сайте PetGo: вход и регистрация, питомцы, заказ выгула и визитов, карта прогулки, отчёты нянь, отзывы, чат с менеджером и помощником. Своё оформление (стиль iPhone в цветах PetGo, светлая и тёмная тема). Нужны «PetGo Кабинет» и «PetGo Сайт».
- * Version: 40.3.0
+ * Version: 40.4.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('PETGO_CLIENT_FILE', __FILE__);
-define('PETGO_CLIENT_VER', '40.3.0');
+define('PETGO_CLIENT_VER', '40.4.0');
 
 add_action('plugins_loaded', function () {
     if (!defined('PETGO_VER') || !defined('PETGO_SITE_FILE')) {
@@ -26,7 +26,7 @@ add_action('plugins_loaded', function () {
     } else {
         petgo_asset_root(PETGO_CLIENT_FILE);
     }
-    foreach (array('client', 'client-plus', 'client-dict', 'ui', 'contract', 'app38', 'testweek', 'app394', 'notify40', 'tags-client') as $f) {
+    foreach (array('client', 'client-plus', 'client-dict', 'ui', 'contract', 'app38', 'testweek', 'app394', 'notify40', 'tags-client', 'activity') as $f) {
         require_once __DIR__ . '/includes/' . $f . '.php';
     }
     /* своё оформление кабинета: стили в <head>, скрипт — после скриптов сайта */
