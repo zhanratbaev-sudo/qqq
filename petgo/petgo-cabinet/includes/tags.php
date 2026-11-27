@@ -378,7 +378,8 @@ function petgo_tag_quick() {
     if (is_user_logged_in() && !$cl) {
         $out(false, 'Вы вошли как сотрудник. Откройте страницу в другом браузере или выйдите из приложения сотрудников.');
     }
-    if (!petgo_tag_limit('quick', $cl ? 30 : 8, HOUR_IN_SECONDS)) {
+    /* у мобильных операторов много абонентов за одним IP — лимит с запасом (раздача брелоков на улице) */
+    if (!petgo_tag_limit('quick', 30, HOUR_IN_SECONDS)) {
         $out(false, 'Слишком много попыток. Попробуйте через час.');
     }
     $pet = isset($_POST['pet']) ? sanitize_key(wp_unslash($_POST['pet'])) : 'new';
@@ -422,7 +423,7 @@ function petgo_tag_quick() {
         update_user_meta($uid, 'petgo_cl_since', time());
         /* имени пока нет: приветствие без имени, клиент добавит его в профиле */
         update_user_meta($uid, 'petgo_noname', 1);
-        update_user_meta($uid, 'petgo_src', array('last' => array('src' => 'qr-tag'), 'first' => array('src' => 'qr-tag')));
+        update_user_meta($uid, 'petgo_src', array('last' => array('s' => 'qr-tag', 'm' => 'брелок'), 'first' => array('s' => 'qr-tag', 'm' => 'брелок')));
         if (function_exists('petgo_site_lang')) {
             update_user_meta($uid, 'petgo_cl_lang', petgo_site_lang());
         }
