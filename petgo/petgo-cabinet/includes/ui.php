@@ -477,6 +477,9 @@ function petgo_render_app() {
     echo '<div class="pgc-off" id="pgc-off" hidden>' . esc_html(petgo_t('offline')) . '</div>';
     petgo_topbar($adm);
     echo '<main class="pgc-in" id="pgc-in">';
+    /* 40.1: крупный заголовок — в начале страницы (как в iPhone и в приложении клиента); при прокрутке он
+       уходит вверх, а в шапке появляется короткий заголовок */
+    echo '<h1 class="pgc-lt" aria-hidden="true">' . esc_html(petgo_page_title($adm)) . '</h1>';
     petgo_flash_show();
     if ($adm) {
         petgo_render_admin();

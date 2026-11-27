@@ -248,11 +248,14 @@
 		if (hit) {
 			var t = $("pgc-ttl");
 			if (t) t.textContent = hit.getAttribute("data-t");
+			/* 40.1: крупный заголовок в начале страницы — тот же */
+			var lt = D.querySelector("#pgc-in .pgc-lt");
+			if (lt) lt.textContent = hit.getAttribute("data-t");
 			root.setAttribute("data-pg", hit.getAttribute("data-pg"));
 		}
 		ind(true);
 	}
-	function loading() { var c = $("pgc-in"); if (c) c.innerHTML = '<div class="pgc-load"><i class="pgc-spin"></i></div>'; }
+	function loading() { var c = $("pgc-in"); if (c) { var lt = c.querySelector(".pgc-lt"); c.innerHTML = (lt ? lt.outerHTML : "") + '<div class="pgc-load"><i class="pgc-spin"></i></div>'; } }
 	/* направление перехода: вправо по меню — новая страница въезжает справа, как в iOS */
 	var navDir = 0;
 	function tabs() { return qa("#pgc-nav .pgc-navi a[data-pg]").filter(function (a) { return a.offsetParent !== null; }); }

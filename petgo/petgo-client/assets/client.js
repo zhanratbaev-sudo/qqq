@@ -1836,12 +1836,6 @@
     if ((b = t.closest("[data-k-close]"))) { e.preventDefault(); kClose(); return; }
     if ((b = t.closest("[data-k-push-on]"))) { e.preventDefault(); var inPush = b.closest("#pgk-push"); pushOn().then(function () { if (inPush) kClose(); }); return; }
     if ((b = t.closest("[data-k-push-later]"))) { e.preventDefault(); pushLater(); kClose(); return; }
-    /* 40.0: позвать менеджера в чат — помощник замолкает, менеджер отвечает здесь */
-    if ((b = t.closest("[data-k-mgr]"))) {
-      e.preventDefault(); if (b.disabled) return; b.disabled = true;
-      api("mgr").then(function (j) { toast(j.msg || T("Отправлено")); b.textContent = T("Менеджер позван"); if (CL.chatOpen && W.PGKChatPoll) W.PGKChatPoll(); }).catch(function () { b.disabled = false; toast(T("Не получилось — проверьте интернет."), true); });
-      return;
-    }
     if ((b = t.closest("[data-k-rvlater]"))) { e.preventDefault(); kClose(); return; }
     if ((b = t.closest("[data-k-bookdone]"))) { e.preventDefault(); try { history.replaceState(history.state, "", "#walks"); } catch (x) {} hardReload("walks"); return; }
     if ((b = t.closest("[data-k-lbx]")) || (t.classList && t.classList.contains("pgk-lb"))) { lbClose(); return; }

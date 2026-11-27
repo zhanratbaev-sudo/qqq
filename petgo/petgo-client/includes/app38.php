@@ -285,7 +285,7 @@ function petgo_cl_ai_fail($uid, $cid) {
     set_transient('petgo_cl_ai_fail_' . (int) $uid, 1, 20 * MINUTE_IN_SECONDS);
     global $wpdb;
     $tel = petgo_site_phone_fmt();
-    $wpdb->insert(petgo_tb('msgs'), array('chat_id' => (int) $cid, 'user_id' => 0, 'subject_id' => 0, 'kind' => 'note', 'body' => petgo_site_l('Помощник сейчас не может ответить. Ваше сообщение увидит менеджер и ответит здесь.') . ($tel !== '' ? ' ' . petgo_site_l('Срочно — позвоните:') . ' ' . $tel : ''), 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
+    $wpdb->insert(petgo_tb('msgs'), array('chat_id' => (int) $cid, 'user_id' => 0, 'subject_id' => 0, 'kind' => 'ai', 'body' => petgo_site_l('Помощник сейчас не может ответить. Ваше сообщение увидит менеджер и ответит здесь.') . ($tel !== '' ? ' ' . petgo_site_l('Срочно — позвоните:') . ' ' . $tel : ''), 'photo' => '', 'ts' => time()), array('%d', '%d', '%d', '%s', '%s', '%s', '%d'));
     if (function_exists('petgo_push_notify') && function_exists('petgo_push_users')) {
         $u = get_userdata($uid);
         petgo_push_notify(petgo_push_users(array('owner', 'admin', 'manager')), 'Клиент ждёт ответа (ИИ не ответил)', ($u ? $u->display_name . ' · ' : '') . petgo_cl_code($uid), petgo_page_url(array('c' => (int) $cid)));

@@ -94,7 +94,7 @@ add_filter('petgo_app_page', function ($done, $pg) {
     $seen  = isset($GLOBALS['petgo_feed_prev']) ? (int) $GLOBALS['petgo_feed_prev'] : (int) get_user_meta($uid, 'petgo_feed_seen', true);
     update_user_meta($uid, 'petgo_feed_seen', time());
     echo '<style>.pgfd{display:flex;flex-direction:column;gap:6px}.pgfd-d{margin:14px 4px 4px;font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--mu);text-transform:uppercase}.pgfd-d:first-child{margin-top:0}'
-        . '.pgfd-i{position:relative;display:flex;align-items:flex-start;gap:12px;padding:12px 14px;text-decoration:none;color:inherit}.pgfd-i.new{box-shadow:inset 3px 0 0 var(--ac,#1E9A5F)}'
+        . '.pgfd-i{position:relative;display:flex;align-items:flex-start;gap:12px;padding:12px 14px;text-decoration:none;color:inherit}.pgfd-i.new::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;border-radius:50%;background:var(--ac);transform:translateY(-50%)}'
         . '.pgfd-ic{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--so);color:var(--tx)}.pgfd-i.new .pgfd-ic{background:rgba(30,154,95,.14);color:#1E9A5F}.pgfd-ic svg{width:20px;height:20px}'
         . '.pgfd-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pgfd-t b{font-size:15.5px;line-height:1.3}.pgfd-t span{font-size:14.5px;line-height:1.4;color:var(--mu);overflow-wrap:anywhere}.pgfd-t time{font-size:12.5px;color:var(--mu)}'
         . '.pgfd-e{padding:40px 20px;text-align:center;color:var(--mu)}</style>';
