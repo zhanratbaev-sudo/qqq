@@ -2,7 +2,7 @@
 /**
  * Plugin Name: PetGo Кабинет
  * Description: База PetGo и приложение для сотрудников (PWA): заказы, календарь, заявки, питомцы, клиенты, сотрудники, отзывы, чаты, уведомления. Сайт — плагин «PetGo Сайт», кабинет клиента — «PetGo Клиент», помощник — «PetGo ИИ».
- * Version: 40.1.0
+ * Version: 40.2.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: web.for made
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('PETGO_VER', '40.1.0');
+define('PETGO_VER', '40.2.0');
 define('PETGO_FILE', __FILE__);
 
 /* ============================================================
@@ -700,8 +700,11 @@ function petgo_h_profile_save() {
     }
     wp_update_user($upd);
     update_user_meta($uid, 'petgo_phone', sanitize_text_field((string) petgo_p('phone')));
+    if (petgo_is_owner() && isset($_POST['staff_no'])) {
+        petgo_staff_no_save($uid, petgo_p('staff_no'));
+    }
     if (isset($_FILES['avatar'])) {
-        $r = petgo_save_image($_FILES['avatar'], 300, 70);
+        $r = petgo_save_image($_FILES['avatar'], 900, 82);
         if (is_array($r)) {
             $old = get_user_meta($uid, 'petgo_avatar', true);
             if (is_array($old)) {
@@ -873,6 +876,9 @@ function petgo_h_staff_save() {
     }
     wp_update_user(array('ID' => $u->ID, 'display_name' => $name, 'first_name' => $name, 'user_email' => $em));
     update_user_meta($u->ID, 'petgo_phone', sanitize_text_field((string) petgo_p('phone')));
+    if (isset($_POST['staff_no'])) {
+        petgo_staff_no_save($u->ID, petgo_p('staff_no'));
+    }
     $pass = (string) petgo_p('pass');
     if ($pass !== '') {
         if (strlen($pass) < 10) {
@@ -881,7 +887,7 @@ function petgo_h_staff_save() {
         wp_set_password($pass, $u->ID);
     }
     if (isset($_FILES['avatar'])) {
-        $r = petgo_save_image($_FILES['avatar'], 300, 70);
+        $r = petgo_save_image($_FILES['avatar'], 900, 82);
         if (is_array($r)) {
             $old = get_user_meta($u->ID, 'petgo_avatar', true);
             if (is_array($old)) {
@@ -1220,6 +1226,8 @@ function petgo_ic($n) {
         'note'     => '<path d="M7 3h8l4 4v14H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/>',
         'map'      => '<path d="M9 4L3 6.5v13L9 17l6 2.5 6-2.5v-13L15 7z"/><path d="M9 4v13M15 7v12.5"/>',
         'send'     => '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>',
+        'idcard'   => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/>',
+        'download' => '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
     );
     return isset($P[$n]) ? '<svg class="pgc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' . $P[$n] . '</svg>' : '';
 }
@@ -1473,7 +1481,7 @@ function petgo_modal_staff() {
         if (petgo_is_owner()) {
             $e .= petgo_role_select(petgo_role_of($eu));
         }
-        $e .= petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . (function_exists('petgo_staff_site_fields') ? petgo_staff_site_fields($eu) : '') . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
+        $e .= petgo_field('staff_no', 'ID сотрудника (на бейдже)', 'text', petgo_staff_no($eu->ID)) . petgo_field('pass', petgo_t('new_pass'), 'text') . '</div>' . (function_exists('petgo_staff_site_fields') ? petgo_staff_site_fields($eu) : '') . '<label class="pgc-ck"><input type="checkbox" name="disabled" value="1"' . checked((bool) get_user_meta($eu->ID, 'petgo_disabled', true), true, false) . '> <span>' . esc_html(petgo_t('st_off')) . '</span></label><button class="pgc-btn wide" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
         echo petgo_modal('pgc-m-staffe', $eu->display_name . ' · ' . $eu->user_login, $e, true);
     }
 }
@@ -1633,6 +1641,8 @@ function petgo_admin_staff() {
         echo '<a class="pgc-chip' . ($f === $k ? ' on' : '') . '" href="' . esc_url(petgo_page_url(array('pg' => 'staff', 'rl' => $k))) . '">' . esc_html(petgo_t($l)) . '<i>' . (int) $cn[$k] . '</i></a>';
     }
     echo '</div>';
+    /* 40.2: бейджи — свой и все сразу (печать или PDF) */
+    echo '<div class="pgc-bdgbar"><a class="pgc-btn sec sm" href="' . esc_url(petgo_page_url(array('pg' => 'badge'))) . '">' . petgo_ic('idcard') . 'Мой бейдж</a><a class="pgc-btn sec sm" href="' . esc_url(petgo_badge_print_url('all')) . '" target="_blank" rel="noopener">' . petgo_ic('download') . 'Распечатать все бейджи</a></div>';
     $S = petgo_staff_stats();
     usort($list, function ($a, $b) use ($S) {
         $x = isset($S[$a->ID]) ? $S[$a->ID]['done'] : 0;
@@ -1661,6 +1671,7 @@ function petgo_admin_staff() {
         if (petgo_is_owner()) {
             echo '<button type="button" class="pgc-btn sec pgc-dm" data-u="' . (int) $u->ID . '">' . petgo_ic('msg') . esc_html(petgo_t('c_write')) . '</button>';
         }
+        echo '<a class="pgc-btn sec" href="' . esc_url(petgo_page_url(array('pg' => 'badge', 'uid' => $u->ID))) . '">' . petgo_ic('idcard') . 'Бейдж</a>';
         if (petgo_can_manage($u)) {
             echo '<a class="pgc-btn sec" href="' . esc_url(petgo_page_url(array('pg' => 'staff', 'edit_staff' => $u->ID))) . '">' . petgo_ic('edit') . esc_html(petgo_t('edit')) . '</a>';
             echo petgo_btn_form('staff_del', array('uid' => $u->ID), petgo_t('delete'), 'pgc-btn red', petgo_t('q_delete_staff'), true);
@@ -1682,6 +1693,11 @@ function petgo_admin_staff() {
 
 /* ---------- сотрудник: активные заказы по порядку ---------- */
 function petgo_render_nanny() {
+    /* 40.2: страницы, открытые и няне (бейдж, события) */
+    $pg = isset($_GET['pg']) ? sanitize_key(wp_unslash($_GET['pg'])) : '';
+    if (in_array($pg, array('badge', 'feed'), true) && apply_filters('petgo_app_page', false, $pg)) {
+        return;
+    }
     $f    = (isset($_GET['st']) && $_GET['st'] === 'done') ? 'done' : 'cur';
     $act  = array();
     $done = array();
@@ -1786,6 +1802,7 @@ require_once __DIR__ . '/includes/api.php';
 require_once __DIR__ . '/includes/qr.php';
 /* 40.0: лента «Уведомления» сотрудника (колокольчик в шапке) */
 require_once __DIR__ . '/includes/feed.php';
+require_once __DIR__ . '/includes/badge.php';
 
 /* ============================================================
    11. ЖИВОЕ ОБНОВЛЕНИЕ: «ревизия» данных меняется при любой правке, телефон раз в 20 секунд спрашивает одно число

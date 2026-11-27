@@ -224,7 +224,9 @@
 			var t = s.getAttribute("type");
 			if (t && t !== "text/javascript" && t !== "module") return;
 			var x = D.createElement("script");
-			x.textContent = s.textContent;
+			/* 40.2: внешние скрипты страницы (например, генератор QR для бейджа) тоже подгружаются */
+			if (s.src) { if (qa('script[src="' + s.getAttribute("src") + '"]').length > 1) { s.parentNode.removeChild(s); return; } x.src = s.src; }
+			else x.textContent = s.textContent;
 			s.parentNode.replaceChild(x, s);
 		});
 	}

@@ -83,6 +83,7 @@ function petgo_icon($n) {
         'wp'       => '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
         'eye'      => '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
         'download' => '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
+        'idcard'   => '<rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M14.5 10h4M14.5 13.5h3"/>',
         'phone'    => '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
         'wa'       => '<path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3.5 20.5l1.4-4.8A8.5 8.5 0 1 1 21 11.5z"/>',
         'more'     => '<circle cx="12" cy="5" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="19" r="1.4" fill="currentColor"/>',
@@ -193,6 +194,7 @@ function petgo_topbar($adm) {
     echo '<div class="pgc-me"><button type="button" class="pgc-meb" data-menu="pgc-menu" aria-label="' . esc_attr(petgo_t('profile')) . '">' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name) . '<span class="pgc-mn desk">' . esc_html($u->display_name) . '</span></button>';
     echo '<div class="pgc-menu" id="pgc-menu"><div class="pgc-mt">' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name, 'md') . '<div><b>' . esc_html($u->display_name) . '</b><small>' . esc_html(petgo_t('role_' . petgo_role_of())) . '</small></div></div>';
     echo '<button type="button" class="pgc-mi" data-open="pgc-m-prof">' . petgo_icon('user') . esc_html(petgo_t('profile')) . '</button>';
+    echo function_exists('petgo_badge_menu_item') ? petgo_badge_menu_item() : '';
     echo '<button type="button" class="pgc-mi" data-open="pgc-m-set">' . petgo_icon('gear') . esc_html(petgo_t('settings')) . '</button>';
     $more = '';
     foreach ($items as $k => $it) {
@@ -341,7 +343,7 @@ function petgo_profile_modal() {
     $u = wp_get_current_user();
     $b = petgo_form_open('profile_save', 'enctype="multipart/form-data" class="pgc-prof"') . '<label class="pgc-avpick">' . petgo_av(petgo_user_avatar_url($u->ID), $u->display_name, 'xl') . '<span>' . esc_html(petgo_t('av_change')) . '</span><input class="pgc-vh" type="file" name="avatar" accept="image/*" data-preview></label>';
     $b .= '<div class="pgc-prn"><b>' . esc_html($u->display_name) . '</b><small>' . esc_html(petgo_t('role_' . petgo_role_of())) . ' · ' . esc_html($u->user_login) . '</small></div>';
-    $b .= '<div class="pgc-list">' . petgo_lrow('name', petgo_t('name'), 'text', $u->display_name, ' required autocomplete="name"') . petgo_lrow('phone', petgo_t('phone'), 'tel', (string) get_user_meta($u->ID, 'petgo_phone', true), ' autocomplete="tel"') . petgo_lrow('email', petgo_t('email'), 'email', petgo_real_email($u), ' autocomplete="email" autocapitalize="none"') . '</div>';
+    $b .= '<div class="pgc-list">' . petgo_lrow('name', petgo_t('name'), 'text', $u->display_name, ' required autocomplete="name"') . (petgo_is_owner() && function_exists('petgo_staff_no') ? petgo_lrow('staff_no', 'ID сотрудника', 'text', petgo_staff_no($u->ID), ' autocapitalize="characters" maxlength="20"') : '') . petgo_lrow('phone', petgo_t('phone'), 'tel', (string) get_user_meta($u->ID, 'petgo_phone', true), ' autocomplete="tel"') . petgo_lrow('email', petgo_t('email'), 'email', petgo_real_email($u), ' autocomplete="email" autocapitalize="none"') . '</div>';
     $b .= '<button class="pgc-btn wide lg" type="submit">' . esc_html(petgo_t('save')) . '</button></form>';
     echo petgo_modal('pgc-m-prof', petgo_t('profile'), $b);
 }
