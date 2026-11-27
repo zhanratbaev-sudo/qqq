@@ -483,30 +483,8 @@ add_filter('petgo_site_schema', function ($g, $page) {
     return $g;
 }, 30, 2);
 
-/* текст о сервисе внизу главной — короткий, для людей и для поиска */
-add_filter('petgo_site_home_sections', function ($sec) {
-    $L     = 'petgo_site_l';
-    $areas = petgo_ads_areas();
-    $h  = '<section class="pg-sec pg-seo"><div class="pg-wrap"><div class="pg-seo-in pg-rise"><h2 class="pg-h">' . esc_html($L('Выгул собак и няня для кошек в Алматы')) . '</h2>';
-    $h .= '<p>' . esc_html($L('PetGo — сервис нянь для собак и кошек в Алматы. Догситтер погуляет с вашей собакой в удобное время: прогулка от часа, на поводке, с играми, фото и отчётом после каждого выгула. Кэтситтер приходит к кошке домой: кормит, меняет лоток, играет и присылает фото.')) . '</p>';
-    $h .= '<p>' . esc_html(petgo_site_tx($L('Уезжаете в отпуск или задерживаетесь на работе — закажите ежедневные визиты на неделю. Выгул собаки — {walk} ₸ за час для первого заказа. Приход няни отмечается по геолокации, а следить за прогулкой можно в приложении My PetGo.'))) . '</p>';
-    if ($areas) {
-        $h .= '<p>' . esc_html($L('Работаем в ЖК и районах:') . ' ' . implode(', ', array_slice($areas, 0, 30)) . '.') . '</p>';
-    }
-    /* 39.1: ссылки на страницы услуг — по ним поиск находит «выгул собак» и «няня для кошек» */
-    $pgs = petgo_site_pages();
-    $lk  = array();
-    foreach (array('dogwalk', 'catsit') as $k) {
-        if (isset($pgs[$k])) {
-            $lk[] = '<a href="' . esc_url(petgo_site_url($k)) . '">' . esc_html($pgs[$k]['title']) . '</a>';
-        }
-    }
-    if ($lk) {
-        $h .= '<p class="pg-seo-links">' . esc_html($L('Подробнее об услугах:')) . ' ' . implode(' · ', $lk) . '</p>';
-    }
-    $sec[60] = $h . '</div></div></section>';
-    return $sec;
-}, 40);
+/* 40.4: текст о сервисе внизу главной убран (по просьбе владельца). Описание для поиска осталось
+   в разметке страницы (невидимо): название, услуги, город и районы. */
 
 add_filter('petgo_site_dict_more', function ($d) {
     return array_merge($d, array(
