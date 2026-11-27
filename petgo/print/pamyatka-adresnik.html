@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>PetGo — памятка к QR-адреснику</title>
+<!-- Памятка к QR-адреснику PetGo: лист A4, две памятки A5 (разрезать пополам).
+     PDF собирается из этого файла (Chromium → «Печать в PDF», A4, с фоном). -->
+<style>
+@page { size: A4; margin: 0; }
+@font-face { font-family: "PG Inter"; src: url("../petgo-client/includes/pdf-fonts/inter-r.ttf") format("truetype"); font-weight: 100 450; }
+@font-face { font-family: "PG Inter"; src: url("../petgo-client/includes/pdf-fonts/inter-sb.ttf") format("truetype"); font-weight: 451 900; }
+:root { --g: #024C46; --g2: #0B6B5C; --mint: #E1F2E9; --tx: #0F2A26; --mu: #5E6F6C; --line: #9FB3AE; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: "PG Inter", "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--tx); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.sheet { width: 210mm; height: 297mm; position: relative; }
+.card {
+  position: relative; width: 210mm; height: 148.5mm; padding: 7.5mm 9mm 7mm 10mm; overflow: hidden;
+  display: grid; grid-template-columns: 1fr 88mm; gap: 8mm;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='rgba(2,76,70,.05)'%3E%3Cg transform='translate(20 24) rotate(-22 15 15) scale(.3)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3Cg transform='translate(140 96) rotate(18 13 13) scale(.26)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3Cg transform='translate(54 156) rotate(-8 11 11) scale(.22)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0 / 46mm 46mm repeat,
+    #FBFCFA;
+}
+.card + .card { border-top: .3mm dashed #B8C4C0; }
+.cutnote { position: absolute; left: 50%; top: 148.5mm; transform: translate(-50%, -50%); padding: 0 3mm; background: #fff; font-size: 6.5pt; letter-spacing: .08em; text-transform: uppercase; color: #9AA8A5; z-index: 2; }
+
+/* левая часть: кому, код, слова благодарности, подпись */
+.l { display: flex; flex-direction: column; min-width: 0; }
+.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4mm; }
+.logo { height: 9.5mm; width: auto; display: block; }
+.pill { padding: 1.4mm 3.2mm; border-radius: 99mm; background: var(--mint); color: var(--g); font-size: 8pt; font-weight: 700; letter-spacing: .02em; }
+.fld { display: grid; grid-template-columns: 22mm 1fr; align-items: end; gap: 3mm; margin-bottom: 3.4mm; }
+.fld b { font-size: 9.5pt; font-weight: 600; color: var(--g); padding-bottom: 1mm; }
+.fld i { display: block; height: 8.5mm; border-bottom: .35mm solid var(--line); }
+.code { display: flex; align-items: center; gap: 3mm; margin: 1.4mm 0 4.6mm; }
+.code b { width: 22mm; font-size: 9.5pt; font-weight: 600; color: var(--g); }
+.boxes { display: flex; align-items: center; gap: 1.2mm; }
+.boxes i { width: 6.4mm; height: 7.6mm; border: .3mm solid var(--line); border-radius: 1.4mm; background: #fff; }
+.boxes span { width: 2.4mm; height: .4mm; margin: 0 .8mm; background: var(--line); }
+h1 { margin: 0 0 1.8mm; font-size: 14.5pt; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; color: var(--g); }
+.thx { margin: 0; font-size: 9.2pt; line-height: 1.45; color: #263C38; }
+.thx + .thx { margin-top: 1.6mm; }
+.sign { margin-top: auto; display: grid; grid-template-columns: 1fr 26mm; gap: 6mm; align-items: end; }
+.sign .who { font-size: 9.2pt; line-height: 1.4; color: #263C38; }
+.sign .who b { display: block; font-size: 10.5pt; color: var(--g); }
+.sl i { display: block; height: 8mm; border-bottom: .35mm solid var(--line); }
+.sl small { display: block; margin-top: 1mm; font-size: 7pt; color: var(--mu); letter-spacing: .04em; text-transform: uppercase; }
+.sigrow { display: grid; grid-template-columns: 1fr 26mm; gap: 6mm; margin-top: 1mm; }
+
+/* правая часть: инструкция */
+.r { position: relative; border-radius: 5mm; padding: 5.5mm 6mm 4.6mm; color: #fff; display: flex; flex-direction: column;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='rgba(255,255,255,.07)'%3E%3Cg transform='translate(20 24) rotate(-22 15 15) scale(.3)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3Cg transform='translate(140 96) rotate(18 13 13) scale(.26)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3Cg transform='translate(54 156) rotate(-8 11 11) scale(.22)'%3E%3Cpath d='M50 50c10 0 17 9 22 17 4 6 3 14-4 16-6 2-11-1-18-1s-12 3-18 1c-7-2-8-10-4-16 5-8 12-17 22-17z'/%3E%3Cellipse cx='24' cy='44' rx='9' ry='11' transform='rotate(-18 24 44)'/%3E%3Cellipse cx='40' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='60' cy='27' rx='9.5' ry='12'/%3E%3Cellipse cx='76' cy='44' rx='9' ry='11' transform='rotate(18 76 44)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0 / 40mm 40mm repeat,
+    linear-gradient(160deg, var(--g2), var(--g) 70%); }
+.r h2 { margin: 0 0 1mm; font-size: 12.5pt; line-height: 1.2; font-weight: 800; letter-spacing: -.01em; }
+.r .sub { margin: 0 0 3mm; font-size: 8.2pt; line-height: 1.4; color: rgba(255,255,255,.8); }
+.st { display: grid; grid-template-columns: 6mm 1fr; gap: 2.6mm; margin-bottom: 2.5mm; }
+.st > i { width: 6mm; height: 6mm; border-radius: 50%; background: #fff; color: var(--g); display: grid; place-items: center; font-style: normal; font-size: 8.5pt; font-weight: 800; }
+.st b { display: block; font-size: 9pt; line-height: 1.25; margin: .5mm 0 .6mm; }
+.st p { margin: 0; font-size: 8pt; line-height: 1.38; color: rgba(255,255,255,.86); }
+.st.lost > i { background: #FFD9D4; color: #B3261E; }
+.foot { margin-top: auto; display: flex; align-items: center; gap: 3.5mm; padding-top: 2.6mm; border-top: .25mm solid rgba(255,255,255,.22); }
+.qr { flex: none; width: 14mm; height: 14mm; padding: 1mm; border-radius: 1.6mm; background: #fff; }
+.qr svg { display: block; width: 100%; height: 100%; }
+.foot div { font-size: 8pt; line-height: 1.45; color: rgba(255,255,255,.86); }
+.foot b { color: #fff; font-size: 9pt; }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <template id="card">
+    <section class="card">
+      <div class="l">
+        <div class="top">
+          <svg class="logo" viewBox="0 0 254 72" aria-label="PetGo"><circle cx="32" cy="36" r="32" fill="#024C46"/><g transform="translate(0 4)" fill="#FBF9E8"><path d="M32 36c-8 0-14 6-14 11 0 5 4 7 8 6 3-1 4-2 6-2s3 1 6 2c4 1 8-1 8-6 0-5-6-11-14-11z"/><ellipse cx="19" cy="30" rx="4.5" ry="6" transform="rotate(-20 19 30)"/><ellipse cx="27" cy="22" rx="4.5" ry="6.5" transform="rotate(-6 27 22)"/><ellipse cx="37" cy="22" rx="4.5" ry="6.5" transform="rotate(6 37 22)"/><ellipse cx="45" cy="30" rx="4.5" ry="6" transform="rotate(20 45 30)"/></g><g transform="translate(76 4) scale(.62)" fill="none" stroke="#024C46" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 30V92"/><circle cx="34" cy="50" r="20"/><path d="M72 50H112A20 20 0 1 0 106.14 64.14"/><path d="M142 12V54Q142 70 158 70"/><path d="M130 32H156"/><circle cx="196" cy="50" r="20"/><path d="M216 30V80Q216 96 196 96Q182 96 176 88"/><circle cx="254" cy="50" r="20"/></g></svg>
+          <span class="pill">QR-адресник</span>
+        </div>
+        <div class="fld"><b>Хозяин</b><i></i></div>
+        <div class="fld"><b>Питомец</b><i></i></div>
+        <div class="code"><b>Код с бирки</b><span class="boxes"><i></i><i></i><i></i><i></i><span></span><i></i><i></i><i></i><i></i></span></div>
+        <h1>Спасибо, что вы с нами!</h1>
+        <p class="thx">Меня зовут Нуржан, я основатель PetGo. Этот адресник — наш маленький подарок, чтобы ваш питомец всегда находил дорогу домой.</p>
+        <p class="thx">Спасибо, что доверяете нам самое дорогое. Пусть каждая прогулка приносит радость, а домой вы всегда возвращаетесь вместе.</p>
+        <div class="sign">
+          <div class="who">С заботой о вас и вашем питомце,<b>Нуржан и команда PetGo</b></div>
+          <div></div>
+        </div>
+        <div class="sigrow">
+          <div class="sl"><i></i><small>Подпись</small></div>
+          <div class="sl"><i></i><small>Дата</small></div>
+        </div>
+      </div>
+      <div class="r">
+        <h2>Как пользоваться<br>QR-адресником</h2>
+        <p class="sub">Если питомец потеряется, человек наведёт камеру на бирку и сразу свяжется с вами.</p>
+        <div class="st"><i>1</i><div><b>Прикрепите бирку</b><p>На ошейник или шлейку — на кольцо, карабин или в прозрачный чехол. QR-код — наружу.</p></div></div>
+        <div class="st"><i>2</i><div><b>Привяжите к питомцу</b><p>Наведите камеру телефона на QR-код и войдите в My PetGo — приложение предложит выбрать питомца. Или: питомец → <span style="white-space:nowrap">«QR-адресник»</span> → код с бирки.</p></div></div>
+        <div class="st"><i>3</i><div><b>Заполните анкету</b><p>Добавьте записку для того, кто найдёт питомца, и оставьте включённым «Показывать мой телефон».</p></div></div>
+        <div class="st lost"><i>!</i><div><b>Если питомец потерялся</b><p>Включите «Питомец потерялся» — на анкете появится «Меня ищут!», а вам придёт уведомление с местом на карте, как только бирку отсканируют.</p></div></div>
+        <div class="foot"><span class="qr" data-qr="https://petgo.kz"></span><div><b>petgo.kz</b><br>WhatsApp +7 747 817 57 12<br>Что-то не получается — напишите, поможем.</div></div>
+      </div>
+    </section>
+  </template>
+</div>
+<script src="../petgo-cabinet/assets/vendor/qrcode.min.js"></script>
+<script>
+(function () {
+  var sheet = document.querySelector(".sheet"), t = document.getElementById("card");
+  for (var i = 0; i < 2; i++) sheet.appendChild(document.importNode(t.content, true));
+  var n = document.createElement("span"); n.className = "cutnote"; n.textContent = "линия реза"; sheet.appendChild(n);
+  document.querySelectorAll("[data-qr]").forEach(function (e) {
+    var q = qrcode(0, "M"); q.addData(e.getAttribute("data-qr")); q.make();
+    e.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  });
+  document.documentElement.setAttribute("data-ready", "1");
+})();
+</script>
+</body>
+</html>
